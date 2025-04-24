@@ -1,14 +1,17 @@
 {
   "name": "ermrestjs",
   "description": "ERMrest client library in JavaScript",
-  "version": "0.0.0",
+  "version": "2.0.0",
   "license": "Apache-2.0",
   "private": true,
-  "main": "build/ermrest.min.js",
   "scripts": {
-    "build": "make dist",
-    "pretest": "make dist && make deploy",
-    "test": "make test"
+    "build": "tsc && vite build",
+    "pretest": "make deps-test && make dist-w-deps",
+    "deploy": "make deploy",
+    "test": "make test",
+    "lint": "eslint src js --quiet",
+    "lint-w-warn": "eslint src js",
+    "format": "prettier --write src"
   },
   "repository": {
     "type": "git",
@@ -21,29 +24,40 @@
     "library"
   ],
   "dependencies": {
+    "@types/q": "^1.5.8",
+    "axios": "1.8.3",
+    "handlebars": "4.7.7",
     "jsdoc-to-markdown": "8.0.0",
     "jshint": "2.13.4",
-    "uglify-js": "3.9.2"
+    "lz-string": "^1.5.0",
+    "markdown-it": "12.3.2",
+    "moment": "2.29.4",
+    "moment-timezone": "0.5.48",
+    "mustache": "x",
+    "q": "1.5.1",
+    "spark-md5": "^3.0.0",
+    "terser": "^5.39.0",
+    "typescript": "~5.7.2",
+    "vite": "^6.2.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.23.0",
     "@isrd-isi-edu/ermrest-data-utils": "0.0.5",
-    "axios": "1.8.3",
+    "@types/node": "^22.13.14",
     "buffer-slice": "0.0.1",
+    "eslint": "^9.23.0",
+    "eslint-config-prettier": "^10.1.1",
+    "eslint-plugin-prettier": "^5.2.5",
     "file-api": "^0.10.4",
-    "handlebars": "4.7.7",
+    "globals": "^16.0.0",
     "jasmine": "2.5.3",
     "jasmine-expect": "3.7.1",
     "jasmine-spec-reporter": "2.5.0",
-    "lz-string": "1.4.4",
-    "markdown-it": "12.3.2",
     "mime": "1.4.1",
-    "moment": "2.29.4",
-    "moment-timezone": "0.5.14",
-    "mustache": "x",
     "nock": "13.5.4",
-    "q": "1.5.1",
+    "prettier": "^3.5.3",
     "require-reload": "^0.2.2",
     "set-cookie-parser": "x",
-    "spark-md5": "^3.0.0"
+    "typescript-eslint": "^8.28.0"
   }
 }

@@ -1,38 +1,42 @@
-    /**
-     * Given a string representing a hex, turn it into base64
-     * @private
-     * @param  {string} hex
-     * @return {string}
-     */
-    _hexToBase64 = function (hex) {
-        return window.btoa(String.fromCharCode.apply(null,
-          hex.replace(/\r|\n/g, "").replace(/([\da-fA-F]{2}) ?/g, "0x$1 ").replace(/ +$/, "").split(" "))
-        );
-    };
+/* eslint-disable no-control-regex */
+/* eslint-disable prettier/prettier */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable no-useless-escape */
+import { compressToEncodedURIComponent, decompressFromEncodedURIComponent } from 'lz-string';
+import moment from 'moment-timezone';
+import { default as mustache } from 'mustache';
 
-    /**
-     * Given a base64 string, url encode it.
-     *i.e. '+' and '/' are replaced with '-' and '_' also any trailing '=' removed.
-     *
-     * @private
-     * @param  {string} str
-     * @return {string}
-     */
-    _urlEncodeBase64 = function (str) {
-        return str.replace(/\+/g, '-').replace(/\//g, '_').replace(/\=+$/, '');
-    };
+import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
+import ConfigService from '@isrd-isi-edu/ermrestjs/src/services/config';
+import { InvalidFacetOperatorError } from '@isrd-isi-edu/ermrestjs/src/models/errors';
 
-    /**
-     * Given a url encoded base64 (output of `_urlEncodeBase64`), return the
-     * actual base64 string.
-     *
-     * @param  {string} str
-     * @return {string}
-     */
-    _urlDecodeBase64 = function (str) {
-        str = (str + '===').slice(0, str.length + (str.length % 4));
-        return str.replace(/-/g, '+').replace(/_/g, '/');
-    };
+// legacy
+import { isObject, isObjectAndNotNull, isValidColorRGBHex, isStringAndNotEmpty } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
+import { fixedEncodeURIComponent } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
+import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils';
+import {
+  _systemColumns,
+  _dataFormats,
+  _contextArray,
+  _contexts,
+  _annotations,
+  _nonSortableTypes,
+  _commentDisplayModes,
+  _facetingErrors,
+  URL_PATH_LENGTH_LIMIT,
+  _ERMrestFeatures,
+  _systemColumnNames,
+  _specialPresentation,
+  _classNames,
+  TEMPLATE_ENGINES,
+  _entryContexts,
+  _compactContexts,
+  ENV_IS_NODE,
+} from '@isrd-isi-edu/ermrestjs/src/utils/constants';
+import { parse } from '@isrd-isi-edu/ermrestjs/js/parser';
+import { Reference } from '@isrd-isi-edu/ermrestjs/js/reference';
+import { Column } from '@isrd-isi-edu/ermrestjs/js/core';
+import HandlebarsService from '@isrd-isi-edu/ermrestjs/src/services/handlebars';
 
     /**
      * Given a string represting a JSON document returns the compressed version of it.
@@ -40,13 +44,13 @@
      * @param  {String} str
      * @return {String}
      */
-    module.encodeFacetString = function (str) {
+    export function encodeFacetString(str) {
         try {
             JSON.parse(str);
         } catch (e) {
             return "";
         }
-        return module._LZString.compressToEncodedURIComponent(str);
+        return compressToEncodedURIComponent(str);
     };
 
     /**
@@ -56,8 +60,8 @@
      * @memberof ERMrest
      * @function encodeFacet
      */
-    module.encodeFacet = function (obj) {
-        return module._LZString.compressToEncodedURIComponent(JSON.stringify(obj,null,0));
+    export function encodeFacet(obj) {
+        return compressToEncodedURIComponent(JSON.stringify(obj,null,0));
     };
 
     /**
@@ -68,102 +72,22 @@
      * @memberof ERMrest
      * @function decodeFacet
      */
-    module.decodeFacet = function (blob, path) {
-        var err = new module.InvalidFacetOperatorError(
+    export function decodeFacet(blob, path) {
+        var err = new InvalidFacetOperatorError(
             typeof path === "string" ? path : "",
-            module._facetingErrors.invalidString
+            _facetingErrors.invalidString
         );
 
         try {
-            var str = module._LZString.decompressFromEncodedURIComponent(blob);
+            var str = decompressFromEncodedURIComponent(blob);
             if (str === null) {
                 throw err;
             }
             return JSON.parse(str);
         } catch (exception) {
-            module._log.error(exception);
+            $log.error(exception);
             throw err;
         }
-    };
-
-    /**
-     * Make sure the text is not rendered as HTML (by replacing speciall characters).
-     * @param {string} text 
-     * @returns HTML-escaped text
-     */
-    module.escapeHTML = function (text) {
-        return String(text).replaceAll("&", "&amp;")
-          .replaceAll("<", "&lt;")
-          .replaceAll(">", "&gt;")
-          .replaceAll('"', "&quot;")
-          .replaceAll("'", "&#39;");
-    };
-
-    /**
-     * Returns true if given parameter is not undefined and not null
-     * @param  {*} obj
-     * @return {boolean}
-     */
-    var isDefinedAndNotNull = function (v) {
-        return v !== undefined && v !== null;
-    };
-
-    /**
-     * Returns true if given parameter is object and not null
-     * @param  {*} obj
-     * @return {boolean}
-     */
-    var isObjectAndNotNull = function (obj) {
-        return typeof obj === "object" && obj !== null;
-    };
-
-    /**
-     * Returns true if given parameter is object and doesn't have any items.
-     * @param  {*} obj
-     * @return {boolean}
-     */
-    var isEmptyArray = function (obj) {
-        return Array.isArray(obj) && obj.length === 0;
-    };
-
-    var isStringAndNotEmpty = function (obj) {
-        return typeof obj === "string" && obj.length > 0;
-    };
-
-    /**
-     * Whether the given value is a valid color_rgb_hex value
-     * @param {*} value
-     * @returns {boolean}
-     */
-    var isValidColorRGBHex = function (value) {
-        return isStringAndNotEmpty(value) && (/#[0-9a-fA-F]{6}$/i.test(value));
-    };
-
-    /**
-     * Returns true if given paramter is object.
-     * @param  {*} obj
-     * @return {boolean}
-     */
-    var isObject = function (obj) {
-        return obj === Object(obj) && !Array.isArray(obj);
-    };
-
-    /**
-     * Returns true if given paramter is a non-empty string.
-     * @param  {*} obj
-     * @return {boolean}
-     */
-    var isStringAndNotEmpty = function (obj) {
-        return typeof obj === "string" && obj.length > 0;
-    };
-
-    /**
-     * Returns true if given parameter isan integer
-     * @param  {*} x
-     * @return {boolean}
-     */
-    var isInteger = function (x) {
-        return (typeof x === 'number') && (x % 1 === 0);
     };
 
     /**
@@ -183,7 +107,7 @@
      * - if greater argument is true, we're doing a greater check so
      *   in the identical case this function will return -1.
      */
-    var compareColumnPositions = function (a, b, greater) {
+    export function compareColumnPositions(a, b, greater) {
         for (var i = 0; i < a.length && i < b.length ; i++) {
             if (a[i] !== b[i]) {
                 return a[i] > b[i] ? 1 : -1;
@@ -196,12 +120,6 @@
         return greater ? -1 : 0;
     };
 
-    var verifyClientConfig = function () {
-        if (module._clientConfig === null) {
-            throw new module.InvalidInputError("this function requires cliet-config which is not set properly.");
-        }
-    };
-
     /**
      * Given an object and two string (k1, k2), if object has k1 key, will
      * rename that key to k2 instead (values that were accessible through k1
@@ -210,25 +128,13 @@
      * @param {String} oldKey
      * @param {String} newKey
      */
-    var renameKey = function (obj, oldKey, newKey) {
+    export function renameKey(obj, oldKey, newKey) {
         if (!isObjectAndNotNull(obj)) return;
         if (oldKey === newKey) return;
-        if (!obj.hasOwnProperty(oldKey)) return;
+        if (!Object.prototype.hasOwnProperty.call(obj, oldKey)) return;
 
         Object.defineProperty(obj, newKey, Object.getOwnPropertyDescriptor(obj, oldKey));
         delete obj[oldKey];
-    };
-
-    /**
-     * Check if object has all the keys in the given array
-     * @param  {Object} obj the object
-     * @param  {String[]} arr array of key strings
-     * @return {boolean}
-     */
-    module.ObjectHasAllKeys = function (obj, arr) {
-        return arr.every(function (item) {
-            return obj.hasOwnProperty(item);
-        });
     };
 
     /**
@@ -256,7 +162,7 @@
      * @param {String=} replacement the string that the invalid characters should be replaced with
      * @return {String} sanitized filename
      */
-    module._sanitizeFilename = function (str, replacement) {
+    export function _sanitizeFilename(str, replacement) {
         replacement = (typeof replacement == "string") ? replacement : '_';
 
         var illegalRe = /[\/\?<>\\:\*\|":]/g;
@@ -284,64 +190,12 @@
      * This function will take care of copying those functions.
      * *Must be called after defining parent prototype and child constructor*
      */
-    module._extends = function (child, parent) {
+    export function _extends(child, parent) {
         var childFns = child.prototype;
         child.prototype = Object.create(parent.prototype);
         child.prototype.constructor = child;
         child.superClass = parent;
         child.super = parent.prototype;
-    };
-
-    /**
-     * @function
-     * @param {Object} copyTo the object to copy values to.
-     * @param {Object} copyFrom the object to copy value from.
-     * @desc
-     * This private utility function does a shallow copy between objects.
-     */
-    module._shallowCopy = function (copyTo, copyFrom) {
-        for (var key in copyFrom) {
-            // only copy those properties that were set in the object, this
-            // will skip properties from the source object's prototype
-            if (copyFrom.hasOwnProperty(key)) {
-                copyTo[key] = copyFrom[key];
-            }
-        }
-    };
-
-    /**
-     * This private utility function copies the attributes of one object into another if,
-     *  - the attribute is missing from the original, or
-     *  - the attribute is part of enforcedList.
-     * @param  {Object} copyTo       The object to copy values to.
-     * @param  {Object} copyFrom     The object to copy values from.
-     * @param  {String[]} enforcedList the list of attributes that must be copied.
-     */
-    module._shallowCopyExtras = function (copyTo, copyFrom, enforcedList) {
-        for (var key in copyFrom) {
-            if (copyFrom.hasOwnProperty(key) && (!copyTo.hasOwnProperty(key) || (Array.isArray(enforcedList) && enforcedList.indexOf(key) !== -1))) {
-                copyTo[key] = copyFrom[key];
-            }
-        }
-    };
-
-    /**
-     * @private
-     * @function
-     * @param  {Object} source the object that you want to be copied
-     * @desc
-     * Creat a deep copy of the given object.
-     * NOTE: This is very limited and only works for simple objects.
-     * Some of its limitations are:
-     * 1. Cannot copy functions.
-     * 2. Cannot work on circular references.
-     * 3. Will convert date objects back to UTC in the string representation in the ISO8601 format.
-     * 4. It will fail to copy anything that is not in the JSON spec.
-     *
-     * ONLY USE THIS FUNCTION IF IT IS NOT ANY OF THE GIVEN LIMIATIONS.
-     */
-    module._simpleDeepCopy = function (source) {
-        return JSON.parse(JSON.stringify(source));
     };
 
     /**
@@ -351,7 +205,7 @@
      * @param  {String} path the string path (`a.b.c`)
      * @return {Object}      value
      */
-    module._getPath = function (obj, path) {
+    export function _getPath(obj, path) {
         var pathNodes;
 
         if (typeof path === "string") {
@@ -366,7 +220,7 @@
         }
 
         for (var i = 0; i < pathNodes.length; i++) {
-            if (!obj.hasOwnProperty(pathNodes[i])) {
+            if (!Object.prototype.hasOwnProperty.call(obj, pathNodes[i])) {
                 return undefined;
             }
             obj = obj[pathNodes[i]];
@@ -380,7 +234,7 @@
      * @desc
      * Converts a string to title case (separators are space, hyphen, and underscore)
      */
-    module._toTitleCase = function (str) {
+    export function _toTitleCase(str) {
         return str.replace(/([^\x00-\x7F]|([^\W_]))[^\-\s_]*/g, function(txt){
             return txt.charAt(0).toLocaleUpperCase() + txt.substr(1).toLocaleLowerCase();
         });
@@ -393,34 +247,8 @@
     * @desc
     * Replaces underline with space.
     */
-    module._underlineToSpace = function (str) {
+    export function _underlineToSpace(str) {
       return str.replace(/_/g, ' ');
-    };
-
-    /**
-     * @function
-     * @private
-     * @param {Object} obj the object
-     * @param {String} key the key that we want from the object
-     * @desc
-     * matches the keys by removing `.`, `-`, `_`, and space.
-     */
-    module._getClosest = function(obj, key) {
-        if (key in obj) { // return the exact
-            return {"data": obj[key], "key": key};
-        }
-
-        var removeExtra = function (str) { // remove `.`, `-`, `_`, and space
-            return str.replace(/[\.\s\_-]+/g, "").toLocaleLowerCase();
-        };
-
-        var newKey = removeExtra(key);
-        for (var objKey in obj) { // find the closest
-            if (obj.hasOwnProperty(objKey) && removeExtra(objKey) == newKey) {
-                return {"data": obj[objKey], "key": objKey};
-            }
-        }
-        return undefined;
     };
 
     /**
@@ -434,10 +262,10 @@
      *  1. Replacing the dots in keys to underscore.
      *  2. Ignoring any custom-type objects. The given object should be JSON not JavaScript object.
      */
-    module._replaceDotWithUnderscore = function (obj) {
+    export function _replaceDotWithUnderscore(obj) {
         var res = {}, val, k, newK;
         for (k in obj) {
-            if (!obj.hasOwnProperty(k)) continue;
+            if (!Object.prototype.hasOwnProperty.call(obj, k)) continue;
             val = obj[k];
 
             // we don't accept custom type objects (we're not detecting circular reference)
@@ -450,7 +278,7 @@
             }
 
             if (isObject(val)) {
-                res[newK] = module._replaceDotWithUnderscore(val);
+                res[newK] = _replaceDotWithUnderscore(val);
             } else {
                 res[newK] = val;
             }
@@ -458,48 +286,12 @@
         return res;
     };
 
-    module._stripTrailingSlash = function (str) {
-        return str.endsWith("/") ? str.slice(0, -1) : str;
-    };
-
-    /**
-     * Strip the trailing slash if there's any
-     * @private
-     * @param  {String} str
-     * @return {String}
-     */
-    module._stripTrailingSlash = function (str) {
-        return str.endsWith("/") ? str.slice(0, -1) : str;
-    };
-
-    /**
-     * trim the slashes that might exist at the begining or end of the string
-     * @param  {String} str
-     * @return {String}
-     */
-    module.trimSlashes = function (str) {
-        return str.replace(/^\/+|\/+$/g, '');
-    };
-
-    /**
-     * @function
-     * @param {String} str string to be encoded.
-     * @desc
-     * converts a string to an URI encoded string
-     */
-    module._fixedEncodeURIComponent = function (str) {
-        var result = encodeURIComponent(str).replace(/[!'()*]/g, function(c) {
-            return '%' + c.charCodeAt(0).toString(16).toUpperCase();
-        });
-        return result;
-    };
-
     /**
      * @function
      * @param {String} regExp string to be regular expression encoded
      * @desc converts the string into a regular expression with properly encoded characters
      */
-    module._encodeRegexp = function (str) {
+    export function _encodeRegexp(str) {
         var stringReplaceExp = /[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$]/g;
         // the first '\' escapes the second '\' which is used to escape the matched character in the returned string
         // $& represents the matched character
@@ -508,7 +300,7 @@
         return escapedRegexString;
     };
 
-    module._nextChar = function (c) {
+    export function _nextChar(c) {
         return String.fromCharCode(c.charCodeAt(0) + 1);
     };
 
@@ -520,18 +312,18 @@
      * @desc This function determines the display name for the schema, table, or
      * column elements of a model.
      */
-    module._determineDisplayName = function (element, useName, parentElement) {
+    export function _determineDisplayName(element, useName, parentElement) {
         var value = useName ? element.name : undefined,
             unformatted = useName ? element.name : undefined,
             hasDisplayName = false,
             isHTML = false;
         try {
-            var display_annotation = element.annotations.get(module._annotations.DISPLAY);
+            var display_annotation = element.annotations.get(_annotations.DISPLAY);
             if (display_annotation && display_annotation.content) {
 
                 //get the markdown display name
                 if(display_annotation.content.markdown_name) {
-                    value = module.renderMarkdown(display_annotation.content.markdown_name, true);
+                    value = renderMarkdown(display_annotation.content.markdown_name, true);
                     unformatted = display_annotation.content.name ? display_annotation.content.name : display_annotation.content.markdown_name;
                     hasDisplayName = true;
                     isHTML = true;
@@ -556,7 +348,7 @@
         // if name styles are undefined, get them from the parent element
         // if it's a system column, don't use the name_styles that are defined on the parent.
         // NOTE: underline_space, title_case, markdown might be null.
-        if(parentElement && !(element instanceof Column && module._systemColumns.indexOf(element.name) !== -1)){
+        if(parentElement && !(element instanceof Column && _systemColumns.indexOf(element.name) !== -1)){
             if(!("underline_space" in element._nameStyle)){
                element._nameStyle.underline_space = parentElement._nameStyle.underline_space;
             }
@@ -571,16 +363,16 @@
         // if name was not specified and name styles are defined, apply the heuristic functions (name styles)
         if(useName && !hasDisplayName && element._nameStyle){
             if(element._nameStyle.markdown){
-                value = module.renderMarkdown(element.name, true);
+                value = renderMarkdown(element.name, true);
                 isHTML = true;
             } else {
                 if(element._nameStyle.underline_space){
-                    value = module._underlineToSpace(value);
-                    unformatted = module._underlineToSpace(unformatted);
+                    value = _underlineToSpace(value);
+                    unformatted = _underlineToSpace(unformatted);
                 }
                 if(element._nameStyle.title_case){
-                    value = module._toTitleCase(value);
-                    unformatted = module._toTitleCase(unformatted);
+                    value = _toTitleCase(value);
+                    unformatted = _toTitleCase(unformatted);
                 }
             }
         }
@@ -596,13 +388,13 @@
      * @desc This function returns the list that should be used for the given context.
      * Used for visible columns and visible foreign keys.
      */
-    module._getRecursiveAnnotationValue = function (context, annotation, dontUseDefaultContext) {
-        var contextedAnnot = module._getAnnotationValueByContext(context, annotation, dontUseDefaultContext);
+    export function _getRecursiveAnnotationValue(context, annotation, dontUseDefaultContext) {
+        var contextedAnnot = _getAnnotationValueByContext(context, annotation, dontUseDefaultContext);
         if (contextedAnnot !== -1) { // found the context
-            if (typeof contextedAnnot == "object" || (module._contextArray.indexOf(contextedAnnot) === -1) ) {
+            if (typeof contextedAnnot == "object" || (_contextArray.indexOf(contextedAnnot) === -1) ) {
                 return contextedAnnot;
             } else {
-                return module._getRecursiveAnnotationValue(contextedAnnot, annotation, dontUseDefaultContext); // go to next level
+                return _getRecursiveAnnotationValue(contextedAnnot, annotation, dontUseDefaultContext); // go to next level
             }
         }
 
@@ -615,7 +407,7 @@
     * @param {Boolean} dontUseDefaultContext Whether we should use the default (*) context
     * @desc returns the annotation value based on the given context.
     */
-    module._getAnnotationValueByContext = function (context, annotation, dontUseDefaultContext) {
+    export function _getAnnotationValueByContext(context, annotation, dontUseDefaultContext) {
 
         // check annotation is an object
         if (typeof annotation !== "object" || annotation == null) {
@@ -636,8 +428,8 @@
         }
 
         // if context wasn't in the annotations but there is a default context
-        if (dontUseDefaultContext !== true && module._contexts.DEFAULT in annotation) {
-            return annotation[module._contexts.DEFAULT];
+        if (dontUseDefaultContext !== true && _contexts.DEFAULT in annotation) {
+            return annotation[_contexts.DEFAULT];
         }
 
         return -1; // there was no annotation
@@ -651,9 +443,9 @@
     * @param {String} annotKey the annotation key that you want the annotation value for
     * @param {Boolean} isTable if the first parameter is table, you should pass `true` for this parameter
     */
-    module._getHierarchicalDisplayAnnotationValue = function (obj, context, annotKey, isTable) {
+    export function _getHierarchicalDisplayAnnotationValue(obj, context, annotKey, isTable) {
         var hierarichy = [obj], table, annot, value = -1;
-        var displayAnnot = module._annotations.DISPLAY;
+        var displayAnnot = _annotations.DISPLAY;
 
         if (!isTable) {
             table = obj.table;
@@ -668,7 +460,7 @@
 
             annot = hierarichy[i].annotations.get(displayAnnot);
             if (annot && annot.content && annot.content[annotKey]) {
-                value = module._getAnnotationValueByContext(context, annot.content[annotKey]);
+                value = _getAnnotationValueByContext(context, annot.content[annotKey]);
                 if (value !== -1) break;
             }
         }
@@ -682,17 +474,17 @@
     * @param {Array} elements All the possible levels of heirarchy (column, table, schema).
     * @desc returns the null value for the column based on context and annotation and sets in the ref object too.
     */
-    module._getNullValue = function (ref, context, isTable) {
+    export function _getNullValue(ref, context, isTable) {
         if (context in ref._nullValue) { // use the cached value
             return ref._nullValue[context];
         }
 
-        var value = module._getHierarchicalDisplayAnnotationValue(ref, context, "show_null", isTable);
+        var value = _getHierarchicalDisplayAnnotationValue(ref, context, "show_null", isTable);
 
         // backward compatibility: try show_nulls too
         // TODO eventually should be removed
         if (value === -1) {
-            value = module._getHierarchicalDisplayAnnotationValue(ref, context, "show_nulls", isTable);
+            value = _getHierarchicalDisplayAnnotationValue(ref, context, "show_nulls", isTable);
         }
 
         if (value === false) { //eliminate the field
@@ -700,7 +492,7 @@
         } else if (value === true) { //empty field
             value = "";
         } else if (typeof value !== "string") { // default
-            if (context === module._contexts.DETAILED) {
+            if (context === _contexts.DETAILED) {
                 value = null; // default null value for DETAILED context
             } else {
                 value = ""; //default null value
@@ -722,7 +514,7 @@
      *  - defaultValue: if annotation is not defined
      * @private
      */
-    _processACLAnnotation = function (annotations, key, defaultValue) {
+    export function _processACLAnnotation(annotations, key, defaultValue) {
         if (annotations.contains(key)) {
             var ndAnnot = annotations.get(key).content;
             if (ndAnnot !== false) {
@@ -735,7 +527,7 @@
 
     // given a reference and associated data to it, will return a list of Values
     // corresponding to its sort object
-    _getPagingValues = function (ref, rowData, rowLinkedData) {
+    export function _getPagingValues(ref, rowData, rowLinkedData) {
         if (!rowData) {
             return null;
         }
@@ -795,7 +587,7 @@
      * @return {Array=} If it's undefined, the column_order that is defined is not valid
      * @private
      */
-    _processColumnOrderList = function (columnOrder, table, options) {
+    export function _processColumnOrderList(columnOrder, table, options) {
         options = options || {};
 
         if (columnOrder === false) {
@@ -821,10 +613,10 @@
                         continue; // invalid syntax
                     }
 
-                    col = table.columns.get(colName);
+                    const col = table.columns.get(colName);
 
                     // make sure it's sortable
-                    if (module._nonSortableTypes.indexOf(col.type.name) !== -1) {
+                    if (_nonSortableTypes.indexOf(col.type.name) !== -1) {
                         continue;
                     }
 
@@ -839,7 +631,9 @@
                         column: col,
                         descending: descending,
                     });
-                } catch(exception) {}
+                } catch(exception) {
+                    // ignore
+                }
             }
         }
         return res; // it might be undefined
@@ -849,7 +643,7 @@
      * Given the source object and default comment props, will return the comment that should be used.
      * @private
      */
-    _processSourceObjectComment = function (sourceObject, defaultComment, defaultCommentRenderMd, defaultDisplayMode) {
+    export function _processSourceObjectComment(sourceObject, defaultComment, defaultCommentRenderMd, defaultDisplayMode) {
         if (sourceObject && _isValidModelComment(sourceObject.comment)) {
             defaultComment = sourceObject.comment;
         }
@@ -869,12 +663,12 @@
      * @param {string} displayMode the display mode of the comment (inline, tooltip)
      * @private
      */
-    _processModelComment = function (comment, isMarkdown, displayMode) {
+    export function _processModelComment(comment, isMarkdown, displayMode) {
         if (comment !== false && typeof comment !== 'string') {
             return null;
         }
 
-        var usedDisplayMode = _isValidModelCommentDisplay(displayMode) ? displayMode : module._commentDisplayModes.tooltip;
+        var usedDisplayMode = _isValidModelCommentDisplay(displayMode) ? displayMode : _commentDisplayModes.tooltip;
         if (comment === false) {
             return { isHTML: false, unformatted: '', value: '', displayMode: usedDisplayMode };
         }
@@ -882,7 +676,7 @@
         return {
             isHTML: isMarkdown !== false,
             unformatted: comment,
-            value: (isMarkdown !== false && comment.length > 0) ? module.renderMarkdown(comment) : comment,
+            value: (isMarkdown !== false && comment.length > 0) ? renderMarkdown(comment) : comment,
             displayMode: usedDisplayMode
         };
     };
@@ -894,7 +688,7 @@
      *   - otherwise returns false
      * @private
      */
-    _isValidModelComment = function (comment) {
+    export function _isValidModelComment(comment) {
         return typeof comment === "string" || comment === false;
     };
 
@@ -904,8 +698,8 @@
      *   - otherwise returns false
      * @private
      */
-    _isValidModelCommentDisplay = function (display) {
-        return typeof display === "string" && module._commentDisplayModes[display] !== -1;
+    export function _isValidModelCommentDisplay(display) {
+        return typeof display === "string" && _commentDisplayModes[display] !== -1;
     };
 
     /**
@@ -915,7 +709,7 @@
      *
      * @private
      */
-    _isValidForeignKeyName = function (fkName) {
+    export function _isValidForeignKeyName(fkName) {
         return Array.isArray(fkName) && fkName.length === 2 && typeof fkName[0] === 'string' && typeof fkName[1] === 'string';
     };
 
@@ -926,7 +720,7 @@
      *
      * @private
      */
-    _isValidBulkCreateForeignKey = function (bulkCreateProp) {
+    export function _isValidBulkCreateForeignKey(bulkCreateProp) {
         return bulkCreateProp === false || bulkCreateProp === null || _isValidForeignKeyName(bulkCreateProp);
     };
 
@@ -942,7 +736,7 @@
      * this function is written for the purpose of being used in markdown.
      * @private
      */
-    module._getFormattedKeyValues = function(table, context, data, linkedData) {
+    export function _getFormattedKeyValues(table, context, data, linkedData) {
         var keyValues, k, fkData, col, cons, rowname, v;
 
         var getTableValues = function (d, currTable) {
@@ -954,7 +748,7 @@
                     k = col.name;
                     v = col.formatvalue(d[k], context);
                     if (col.type.isArray) {
-                        v = module._formatUtils.printArray(v, {isMarkdown: true});
+                        v = _formatUtils.printArray(v, {isMarkdown: true});
                     }
 
                     res[k] = v;
@@ -984,7 +778,7 @@
         if (linkedData && typeof linkedData === "object" && table.sourceDefinitions.fkeys.length > 0) {
             keyValues.$fkeys = {};
             table.sourceDefinitions.fkeys.forEach(function (fk) {
-                var p = module._generateRowLinkProperties(fk.key, linkedData[fk.name], context);
+                var p = _generateRowLinkProperties(fk.key, linkedData[fk.name], context);
                 if (!p) return;
 
                 cons = fk.constraint_names[0];
@@ -1016,7 +810,7 @@
      * @return {string|false} the column name. if couldn't find any columns will return false.
      * @private
      */
-    module._getCandidateRowNameColumn = function (columnNames) {
+    export function _getCandidateRowNameColumn(columnNames) {
         var candidates = [
             'title', 'name', 'term', 'label', 'accessionid', 'accessionnumber'
         ];
@@ -1050,13 +844,13 @@
      * @param  {ERMrest.Reference=} ref to avoid creating a new reference
      * @return {Object}
      */
-    module._getRowTemplateVariables = function (table, context, data, linkedData, key) {
+    export function _getRowTemplateVariables(table, context, data, linkedData, key) {
         var uri = _generateRowURI(table, data, key);
         if (uri == null) return {};
-        var ref = new Reference(module.parse(uri), table.schema.catalog);
+        var ref = new Reference(parse(uri), table.schema.catalog);
         return {
-            values: module._getFormattedKeyValues(table, context, data, linkedData),
-            rowName: module._generateRowName(table, context, data, linkedData).unformatted,
+            values: _getFormattedKeyValues(table, context, data, linkedData),
+            rowName: _generateRowName(table, context, data, linkedData).unformatted,
             uri: {
                 detailed: ref.contextualize.detailed.appLink
             }
@@ -1070,7 +864,7 @@
      * @param {Object} linkedData data to use to generate the unique id
      * @returns string | null - unique id for the row the linkedData represents
      */
-    module._generateTupleUniqueId = function (tableShortestKey, linkedData) {
+    export function _generateTupleUniqueId(tableShortestKey, linkedData) {
         var keyName, hasNull = false, _uniqueId = "";
 
         for (var i = 0; i < tableShortestKey.length; i++) {
@@ -1101,17 +895,17 @@
      * @desc Returns the row name (html) using annotation or heuristics.
      * @private
      */
-    module._generateRowName = function (table, context, data, linkedData, isTitle) {
+    export function _generateRowName(table, context, data, linkedData, isTitle) {
         var annotation, col, template, keyValues, pattern, actualContext;
 
-        var templateVariables = module._getFormattedKeyValues(table, context, data, linkedData);
+        var templateVariables = _getFormattedKeyValues(table, context, data, linkedData);
 
         // If table has table-display annotation then set it in annotation variable
-        if (table.annotations && table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
+        if (table.annotations && table.annotations.contains(_annotations.TABLE_DISPLAY)) {
             actualContext = isTitle ? "title" : (typeof context === "string" && context !== "*" ? context : "");
-            annotation = module._getRecursiveAnnotationValue(
-                [module._contexts.ROWNAME, actualContext].join("/"),
-                table.annotations.get(module._annotations.TABLE_DISPLAY).content
+            annotation = _getRecursiveAnnotationValue(
+                [_contexts.ROWNAME, actualContext].join("/"),
+                table.annotations.get(_annotations.TABLE_DISPLAY).content
             );
         }
 
@@ -1119,7 +913,7 @@
         if (annotation && typeof annotation.row_markdown_pattern === 'string') {
             template = annotation.row_markdown_pattern;
 
-            pattern = module._renderTemplate(template, templateVariables, table.schema.catalog, {templateEngine: annotation.template_engine});
+            pattern = _renderTemplate(template, templateVariables, table.schema.catalog, {templateEngine: annotation.template_engine});
 
         }
 
@@ -1127,7 +921,7 @@
         if (pattern == null || pattern.trim() === '') {
 
             // no row_name annotation, use column with title, name, term
-            var candidate = module._getCandidateRowNameColumn(Object.keys(data)), result;
+            var candidate = _getCandidateRowNameColumn(Object.keys(data)), result;
             if (candidate !== false) {
                 result = templateVariables[candidate];
             }
@@ -1178,7 +972,7 @@
             keyValues = {"name": result};
 
             // get templated patten after replacing the values using Mustache
-            pattern = module._renderTemplate(template, keyValues, table.schema.catalog);
+            pattern = _renderTemplate(template, keyValues, table.schema.catalog);
         }
 
         // Render markdown content for the pattern
@@ -1187,7 +981,7 @@
         }
 
         return {
-            "value": module.renderMarkdown(pattern, true),
+            "value": renderMarkdown(pattern, true),
             "unformatted": pattern,
             "isHTML": true
         };
@@ -1206,7 +1000,7 @@
      * NOTE the function might return `null`.
      * @private
      */
-    module._generateKeyPresentation = function (key, data, context, templateVariables, addLink) {
+    export function _generateKeyPresentation(key, data, context, templateVariables, addLink) {
         // if data is empty
         if (typeof data === "undefined" || data === null || Object.keys(data).length === 0) {
             return null;
@@ -1223,20 +1017,20 @@
 
         // make sure that templateVariables is defined
         if (!isObjectAndNotNull(templateVariables)) {
-           templateVariables = module._getFormattedKeyValues(key.table, context, data);
+           templateVariables = _getFormattedKeyValues(key.table, context, data);
         }
 
         // use the markdown_pattern that is defiend in key-display annotation
         var display = key.getDisplay(context);
         if (display.isMarkdownPattern) {
-            unformatted = module._renderTemplate(
+            unformatted = _renderTemplate(
                 display.markdownPattern,
                 templateVariables,
                 key.table.schema.catalog,
                 {templateEngine: display.templateEngine}
             );
             unformatted = (unformatted === null || unformatted.trim() === '') ? "" : unformatted;
-            caption = module.renderMarkdown(unformatted, true);
+            caption = renderMarkdown(unformatted, true);
         } else {
             var values = [], unformattedValues = [];
 
@@ -1264,7 +1058,7 @@
         if (!addLink || caption.match(/<a\b.+href=/)) {
             value = caption;
         } else {
-            var keyRef = new Reference(module.parse(rowURI), key.table.schema.catalog);
+            var keyRef = new Reference(parse(rowURI), key.table.schema.catalog);
             var appLink = keyRef.contextualize.detailed.appLink;
 
             value = '<a href="' + appLink +'">' + caption + '</a>';
@@ -1285,8 +1079,8 @@
      * @param  {boolean} addLink   whether the function should attach link or just the rowname.
      * @return {Object}            an object with `caption`, and `reference` object which can be used for getting uri.
      */
-    module._generateRowPresentation = function (key, data, context, addLink) {
-        var presentation = module._generateRowLinkProperties(key, data, context);
+    export function _generateRowPresentation(key, data, context, addLink) {
+        var presentation = _generateRowLinkProperties(key, data, context);
 
         if (!presentation) {
             return null;
@@ -1296,7 +1090,7 @@
 
         // if we don't want link, or caption has a link, or  or context is EDIT: don't add the link.
         // create the link using reference.
-        if (!addLink || presentation.caption.match(/<a\b.+href=/) || module._isEntryContext(context)) {
+        if (!addLink || presentation.caption.match(/<a\b.+href=/) || _isEntryContext(context)) {
             value = presentation.caption;
             unformatted = presentation.unformatted;
         } else {
@@ -1316,7 +1110,7 @@
      * @return {String|null} filter that represents the current row. If row data
      * is missing, it will return null.
      */
-    _generateRowURI = function (table, data, key) {
+    export function _generateRowURI(table, data, key) {
         if (data == null) return null;
 
         var cols = (isObjectAndNotNull(key) && key.colset) ? key.colset.columns : table.shortestKey;
@@ -1324,7 +1118,7 @@
         for (i = 0; i < cols.length; i++) {
             col = cols[i].name;
             if (data[col] == null) return null;
-            keyPair +=  module._fixedEncodeURIComponent(col) + "=" + module._fixedEncodeURIComponent(data[col]);
+            keyPair +=  fixedEncodeURIComponent(col) + "=" + fixedEncodeURIComponent(data[col]);
             if (i != cols.length - 1) {
                 keyPair += "&";
             }
@@ -1346,7 +1140,7 @@
      * Creates the properies for generating a link to the given row of data.
      * It might return `null`.
      */
-    module._generateRowLinkProperties = function (key, data, context) {
+    export function _generateRowLinkProperties(key, data, context) {
 
         // if data is empty
         if (typeof data === "undefined" || data === null || Object.keys(data).length === 0) {
@@ -1363,13 +1157,13 @@
         }
 
         // use row name as the caption
-        rowname = module._generateRowName(table, context, data);
+        rowname = _generateRowName(table, context, data);
         caption = rowname.value;
         unformatted = rowname.unformatted;
 
         // use key for displayname: "col_1:col_2:col_3"
         if (caption.trim() === '') {
-            var templateVariables = module._getFormattedKeyValues(table, context, data),
+            var templateVariables = _getFormattedKeyValues(table, context, data),
                 formattedKeyCols = [],
                 unformattedKeyCols = [],
                 pres, col;
@@ -1397,7 +1191,7 @@
         return {
             unformatted: unformatted,
             caption: caption,
-            reference:  new Reference(module.parse(rowURI), table.schema.catalog)
+            reference:  new Reference(parse(rowURI), table.schema.catalog)
         };
     };
 
@@ -1415,18 +1209,18 @@
      *                                  if the given value is negative, we will not check the url length limitation.
      * @param {string} displayname the displayname of reference, used for error message
      */
-    module.generateKeyValueFilters = function (keyColumns, data, catalogObject, pathOffsetLength, displayname) {
-        var encode = module._fixedEncodeURIComponent, pathLimit = module.URL_PATH_LENGTH_LIMIT;
+    export function generateKeyValueFilters(keyColumns, data, catalogObject, pathOffsetLength, displayname) {
+        var encode = fixedEncodeURIComponent, pathLimit = URL_PATH_LENGTH_LIMIT;
 
         // see if the quantified syntax can be used
         var canUseQuantified = false;
         if (keyColumns.length > 1 || data.length === 1) {
             canUseQuantified = false;
         }
-        else if (catalogObject && keyColumns.length === 1 && keyColumns[0].name === module._systemColumnNames.RID) {
-            canUseQuantified = catalogObject.features[module._ERMrestFeatures.QUANTIFIED_RID_LISTS];
+        else if (catalogObject && keyColumns.length === 1 && keyColumns[0].name === _systemColumnNames.RID) {
+            canUseQuantified = catalogObject.features[_ERMrestFeatures.QUANTIFIED_RID_LISTS];
         } else if (catalogObject) {
-            canUseQuantified = catalogObject.features[module._ERMrestFeatures.QUANTIFIED_VALUE_LISTS];
+            canUseQuantified = catalogObject.features[_ERMrestFeatures.QUANTIFIED_VALUE_LISTS];
         }
 
         var result = []; // computed, keyData
@@ -1523,195 +1317,7 @@
         return {successful: true, filters: result};
     };
 
-    /**
-     * @function
-     * @param  {string} errorStatusText    http error status text
-     * @param  {string} generatedErrMessage response data returned by http request
-     * @return {object}                    error object
-     * @desc
-     *  - Integrity error message: This entry cannot be deleted as it is still referenced from the Human Age table.
-     *                           All dependent entries must be removed before this item can be deleted.
-     *  - Duplicate error message: The entry cannot be created/updated. Please use a different ID for this record.
-     *                            Or (The entry cannot be created. Please use a combination of different _fields_ to create new record.)
-     *
-     */
-    module._conflictErrorMapping = function(errorStatusText, generatedErrMessage, reference, actionFlag) {
-      var mappedErrMessage, refTable, tableDisplayName = '';
-      var conflictErrorPrefix = [
-        "409 Conflict\nThe request conflicts with the state of the server. ",
-        'Request conflicts with state of server.'
-      ];
-      var siteAdminMsg = "\nIf you have trouble removing dependencies please contact the site administrator.";
-
-      if (generatedErrMessage.indexOf("violates foreign key constraint") > -1 && actionFlag == module._operationsFlag.DELETE) {
-
-          var referenceTable = "";
-
-          var detail = generatedErrMessage.search(/DETAIL:/g);
-          if (detail > -1) {
-            detail = generatedErrMessage.substring(detail, generatedErrMessage.length);
-            referenceTable = detail.match(/referenced from table \"(.*)\"(.*)/);
-            if(referenceTable && referenceTable.length > 1){
-                refTable = referenceTable[1];
-                referenceTable =  refTable;
-            }
-          }
-
-
-            var fkConstraint = generatedErrMessage.match(/foreign key constraint \"(.*?)\"/)[1];    //get constraintName
-            if(typeof reference === 'object' && typeof fkConstraint === 'string' && fkConstraint != ''){
-              var relatedRef = reference.related; //get all related references
-
-              for(var i = 0; i < relatedRef.length; i++){
-                  key  = relatedRef[i];
-                  if(key.origFKR && key.origFKR.constraint_names["0"][1] == fkConstraint && key.origFKR._table.name == refTable){
-                    referenceTable = key.displayname.value;
-                    siteAdminMsg = "";
-                    break;
-                  }
-                }
-            }
-
-          // make sure referenceTable is defined first
-          if (referenceTable) {
-              referenceTable =  "the <code>"+ referenceTable +"</code>";
-          } else {
-              referenceTable = "another";
-          }
-
-          // NOTE we cannot make any assumptions abou tthe table name. for now we just show the table name that database sends us.
-          mappedErrMessage = "This entry cannot be deleted as it is still referenced from " + referenceTable +" table. \n All dependent entries must be removed before this item can be deleted." + siteAdminMsg;
-          return new module.IntegrityConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
-      } else if (generatedErrMessage.indexOf("violates unique constraint") > -1) {
-          var msgTail, primaryColumns, conflictValues;
-
-          var keyValueMap = {},
-              duplicateReference = null,
-              columnRegExp = /\(([^)]+)\)/,
-              valueRegExp = /=\(([^)]+)\)/,
-              matches = columnRegExp.exec(generatedErrMessage),
-              values = valueRegExp.exec(generatedErrMessage);
-
-          // parse out column names and values from generatedErrMessage
-          primaryColumns =  matches[1].split(',');
-          conflictValues = values[1].split(',');
-
-          // trim first because sort will put strings with whitespace in front of them before other strings, i.e. " id"
-          primaryColumns.forEach(function (col, index) {
-              var trimmedName = col.trim();
-              // strip off " character, if present
-              if (trimmedName.indexOf('"') != -1) trimmedName = trimmedName.split('"')[1];
-              primaryColumns[index] = trimmedName;
-              keyValueMap[trimmedName] = conflictValues[index].trim();
-          });
-
-          if (matches && matches.length > 1) {
-              var numberOfKeys = primaryColumns.length;
-
-              if (numberOfKeys > 1){
-                  var columnString = "";
-                  // sort the keys because ermrest returns them in a random order every time
-                  primaryColumns.sort();
-                  primaryColumns.forEach(function (col, index) {
-                      columnString += (index != 0 ? ', ' : "") + col;
-                  });
-
-                  msgTail = "combination of " + columnString;
-              } else {
-                  msgTail = primaryColumns;
-              }
-          }
-
-          mappedErrMessage = "The entry cannot be created/updated. ";
-          if (msgTail) {
-              mappedErrMessage += "Please use a different "+ msgTail +" for this record.";
-          } else {
-              mappedErrMessage += "Input data violates unique constraint.";
-          }
-
-          var conflictKeyValues = [];
-          primaryColumns.forEach(function (colName, idx) {
-              conflictKeyValues.push(module._fixedEncodeURIComponent(colName) + "=" + module._fixedEncodeURIComponent(keyValueMap[colName]));
-          });
-
-          if (reference) {
-              var uri = reference.unfilteredReference.uri + '/' + conflictKeyValues.join('&');
-              // Reference for the conflicting row that already exists with the unique constraints
-              duplicateReference = new Reference(module.parse(uri), reference.table.schema.catalog);
-          }
-          return new module.DuplicateConflictError(errorStatusText, mappedErrMessage, generatedErrMessage, duplicateReference);
-      } else {
-          mappedErrMessage = generatedErrMessage;
-
-          // remove the previx if exists
-          var hasPrefix = false;
-          conflictErrorPrefix.forEach(function (p) {
-            if (!hasPrefix && mappedErrMessage.startsWith(p)){
-                mappedErrMessage = mappedErrMessage.slice(p.length);
-                hasPrefix = true;
-            }
-          });
-
-
-          // remove the suffix is exists
-          errEnd = mappedErrMessage.search(/CONTEXT:/g);
-          if (errEnd > -1){
-            mappedErrMessage = mappedErrMessage.substring(0, errEnd - 1);
-          }
-
-          return new module.ConflictError(errorStatusText, mappedErrMessage, generatedErrMessage);
-      }
-    };
-
-    /**
-     * @function
-     * @desc create an error object from http response
-     * @param {Object} response http response object
-     * @param {ERMrest.Reference=} reference the reference object
-     * @param {string=} actionFlag the flag that signals the action that the error occurred from
-     * @return {Object} error object
-     */
-    module.responseToError = function (response, reference, actionFlag) {
-        var status = response.status;
-        if (response instanceof module.ERMrestError) {
-            return response;
-        }
-        switch(status) {
-            case -1:
-                return new module.NoConnectionError(response.data);
-            case 0:
-                return new module.TimedOutError(response.statusText, response.data);
-            case 400:
-                if (response.data.includes("Query run time limit exceeded")) return new module.QueryTimeoutError(response.statusText, response.data);
-                return new module.BadRequestError(response.statusText, response.data);
-            case 401:
-                return new module.UnauthorizedError(response.statusText, response.data);
-            case 403:
-                return new module.ForbiddenError(response.statusText, response.data);
-            case 404:
-                return new module.NotFoundError(response.statusText, response.data);
-            case 408:
-                return new module.TimedOutError(response.statusText, response.data);
-            case 409:
-                return module._conflictErrorMapping(response.statusText, response.data, reference, actionFlag);
-            case 412:
-                return new module.PreconditionFailedError(response.statusText, response.data);
-            case 500:
-                return new module.InternalServerError(response.statusText, response.data);
-            case 502:
-                return new module.BadGatewayError(response.statusText, response.data);
-            case 503:
-                return new module.ServiceUnavailableError(response.statusText, response.data);
-            default:
-                if (response.statusText || response.data) {
-                    return new Error(response.statusText, response.data);
-                } else {
-                    return new Error(response);
-                }
-        }
-    };
-
-    module._stringToDate = function(_date, _format, _delimiter) {
+    export function _stringToDate(_date, _format, _delimiter) {
         var formatLowerCase=_format.toLowerCase();
         var formatItems=formatLowerCase.split(_delimiter);
         var dateItems=_date.split(_delimiter);
@@ -1733,7 +1339,7 @@
      * @param {number} precision
      * @param {number} minAllowedPrecision
      */
-    module._toPrecision = function (num, precision, minAllowedPrecision) {
+    export function _toPrecision(num, precision, minAllowedPrecision) {
         precision = parseInt(precision);
         precision = isNaN(precision) || precision < minAllowedPrecision ? minAllowedPrecision : precision;
 
@@ -1764,7 +1370,7 @@
      * @desc An object of pretty print utility functions
      * @private
      */
-    module._formatUtils = {
+    export const _formatUtils = {
         /**
          * @function
          * @param {Object} value A boolean value to transform
@@ -1809,7 +1415,6 @@
          * @desc Formats a given timestamp value into a string for display.
          */
         printTimestamp: function printTimestamp(value, options) {
-            var moment = module._moment;
             options = (typeof options === 'undefined') ? {} : options;
             if (value === null) {
                 return '';
@@ -1818,17 +1423,17 @@
             try {
                 value = value.toString();
             } catch (exception) {
-                module._log.error("Couldn't extract timestamp from input: " + value);
-                module._log.error(exception);
+                $log.error("Couldn't extract timestamp from input: " + value);
+                $log.error(exception);
                 return '';
             }
 
             if (!moment(value).isValid()) {
-                module._log.error("Couldn't transform input to a valid timestamp: " + value);
+                $log.error("Couldn't transform input to a valid timestamp: " + value);
                 return '';
             }
 
-            return moment(value).format(module._dataFormats.DATETIME.display);
+            return moment(value).format(_dataFormats.DATETIME.display);
         },
 
         /**
@@ -1840,7 +1445,6 @@
          * If any time information is provided, it will be left off.
          */
         printDate: function printDate(value, options) {
-            var moment = module._moment;
             options = (typeof options === 'undefined') ? {} : options;
             if (value === null) {
                 return '';
@@ -1849,17 +1453,17 @@
             try {
                 value = value.toString();
             } catch (exception) {
-                module._log.error("Couldn't extract date info from input: " + value);
-                module._log.error(exception);
+                $log.error("Couldn't extract date info from input: " + value);
+                $log.error(exception);
                 return '';
             }
 
             if (!moment(value).isValid()) {
-                module._log.error("Couldn't transform input to a valid date: " + value);
+                $log.error("Couldn't transform input to a valid date: " + value);
                 return '';
             }
 
-            return moment(value).format(module._dataFormats.DATE);
+            return moment(value).format(_dataFormats.DATE);
         },
 
         /**
@@ -1938,16 +1542,7 @@
                 return '';
             }
 
-            try {
-                if (options.inline) {
-                    return module._markdownIt.renderInline(value);
-                }
-                return module._markdownIt.render(value);
-            } catch (e) {
-                module._log.error("Couldn't parse the given markdown value: " + value);
-                module._log.error(e);
-                return value;
-            }
+            return renderMarkdown(value, options.inline);
         },
 
         /**
@@ -2024,10 +1619,10 @@
                 formattedSeq += '`';
 
                 // Run it through renderMarkdown to get the sequence in a fixed-width font
-                return module._markdownIt.renderInline(formattedSeq);
+                return renderMarkdown(formattedSeq, true);
             } catch (e) {
-                module._log.error("Couldn't parse the given markdown value: " + value);
-                module._log.error(e);
+                $log.error("Couldn't parse the given markdown value: " + value);
+                $log.error(e);
                 return value;
             }
 
@@ -2056,15 +1651,15 @@
                 var isMarkdown = (options.isMarkdown === true);
                 var pv = v;
                 if (v === "") {
-                    pv = module._specialPresentation.EMPTY_STR;
+                    pv = _specialPresentation.EMPTY_STR;
                     isMarkdown = true;
                 }
                 else if (v == null) {
-                    pv = module._specialPresentation.NULL;
+                    pv = _specialPresentation.NULL;
                     isMarkdown = true;
                 }
 
-                if (!isMarkdown) pv = module._escapeMarkdownCharacters(pv);
+                if (!isMarkdown) pv = _escapeMarkdownCharacters(pv);
                 return pv;
             });
 
@@ -2080,7 +1675,7 @@
             }
 
             value = value.toUpperCase();
-            return ':span: :/span:{.' + module._classNames.colorPreview + ' style=background-color:' + value +'} ' + value;
+            return ':span: :/span:{.' + _classNames.colorPreview + ' style=background-color:' + value +'} ' + value;
         },
 
         /**
@@ -2104,7 +1699,7 @@
 
             if (isNaN(v)) return '';
             if (v === 0 || mode === 'raw') {
-                return module._formatUtils.printInteger(value);
+                return _formatUtils.printInteger(value);
             }
 
             var divisor = 1000, units = ['B', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
@@ -2123,16 +1718,16 @@
 
             // our units don't support this, so just return the "raw" mode value.
             if (u >= units.length) {
-                return module._formatUtils.printInteger(value);
+                return _formatUtils.printInteger(value);
             }
 
             // we don't want to truncate the value, so we should set a minimum
             var minP = mode === "si" ? 3 : 4;
 
-            var res = (u ? module._toPrecision(v, precision, minP) : v) + ' ' + units[u];
+            var res = (u ? _toPrecision(v, precision, minP) : v) + ' ' + units[u];
             if (typeof withTooltip === 'boolean' && withTooltip && u > 0) {
-                var numBytes = module._formatUtils.printInteger(Math.pow(divisor, u));
-                var tooltip = module._formatUtils.printInteger(value);
+                var numBytes = _formatUtils.printInteger(Math.pow(divisor, u));
+                var tooltip = _formatUtils.printInteger(value);
                 tooltip += ' bytes (1 ' + units[u] + ' = ' + numBytes + ' bytes)';
                 res = ':span:' + res + ':/span:{data-chaise-tooltip="' + tooltip + '"}';
             }
@@ -2146,8 +1741,8 @@
      * @param {Object} data - the 'raw' data value.
      * @returns {string} The formatted value.
      */
-    _formatValueByType = function(type, data, options) {
-        var utils = module._formatUtils;
+    export function _formatValueByType(type, data, options) {
+        var utils = _formatUtils;
         switch(type.name) {
             case 'timestamp':
             case 'timestamptz':
@@ -2191,828 +1786,10 @@
         return data;
     };
 
-    /**
-     * @param {Object} value The Markdown to transform
-     * @param {Object} [options] Configuration options.
-     * @return {string} A string representation of value
-     * @desc render a given markdown value to HTML
-     * @memberof ERMrest
-     * @function renderMarkdown
-     */
-    module.renderMarkdown = function(value, inline) {
-      return module._formatUtils.printMarkdown(value, {inline: inline});
-    };
-
-    module._parsedFilterToERMrestFilter = function(filter, table) {
-        if (filter.type === "BinaryPredicate") {
-            return new ERMrest.BinaryPredicate(
-                table.columns.get(filter.column),
-                filter.operator,
-                filter.value
-            );
-        } else {
-            // convert nested filter structure to Conjunction or Disjunction filter
-            var filters = [];
-
-            if (filter.filters) {
-                for (var i = 0; i < filter.filters.length; i++) {
-                    var f = filter.filters[i];
-                    var f1 = parsedFilterToERMrestFilter(f, table);
-                    filters.push(f1);
-                }
-            }
-
-            if (filter.type === "Conjunction") {
-                return new ERMrest.Conjunction(filters);
-            } else {
-                return new ERMrest.Disjunction(filters);
-            }
-        }
-    };
-
-    module._isValidSortElement = function(element, index, array) {
+    export function _isValidSortElement(element, index, array) {
         return (typeof element == 'object' &&
             typeof element.column == 'string' &&
             typeof element.descending == 'boolean');
-    };
-
-    /**
-     * @function
-     * @private
-     * @param {Object} md The markdown-it object
-     * @param {Object} md The markdown-it-container object.
-     * @desc Sets functionality for custom markdown tags like `iframe` and `dropdown` using `markdown-it-container` plugin.
-     * The functions that are required for each custom tag are
-     * - validate: to match a given token with the new rule that we are adding.
-     * - render: the render rule for the token. This function will be called
-     * for opening and closing block tokens that match. The function should be written
-     * in a way to handle just the current token and its values. It should not try
-     * to modify the whole parse process. Doing so will grant the correct behavior
-     * from the markdown-it. If we don't follow this rule while writing the render
-     * function, we might lose extra features (recursive blocks, etc.) that the parser
-     * can handle. For instance the `iframe` tag is written in a way that you have
-     * to follow the given syntax. You cannot have any other tags in iframe and
-     * we're not supporting recursive iframe tags. the render function is only
-     * handling an iframe with the given syntax. Nothing extra.
-     * But we tried to write the `div` tag in a way that you can have
-     * hierarichy of `div`s. If you look at its implementation, it has two simple rules.
-     * One for the opening tag and the other for the closing.
-     *
-     */
-    module._bindCustomMarkdownTags = function(md, mdContainer) {
-
-        // Set typography to enable breaks on "\n"
-        md.set({ typographer: true });
-
-        // Dependent on 'markdown-it-container' and 'markdown-it-attrs' plugins
-        // Injects `iframe` tag
-        md.use(mdContainer, 'iframe', {
-            /*
-             * Checks whether string matches format "::: iframe [CAPTION](LINK){ATTR=VALUE .CLASSNAME}"
-             * String inside '{}' is Optional, specifies attributes to be applied to prev element
-             */
-            validate: function(params) {
-                return params.trim().match(/iframe\s+(.*)$/i);
-            },
-
-            render: function (tokens, idx) {
-                // Get token string after regexp matching to determine actual internal markdown
-                var m = tokens[idx].info.trim().match(/iframe\s+(.*)$/i);
-
-                // If this is the opening tag i.e. starts with "::: iframe "
-                if (tokens[idx].nesting === 1 && m.length > 0) {
-
-                    // Extract remaining string before closing tag and get its parsed markdown attributes
-                    var attrs = md.parseInline(m[1]), html = "";
-
-                    if (attrs && attrs.length == 1 && attrs[0].children) {
-
-                        // Check If the markdown is a link
-                        if (attrs[0].children[0].type == "link_open") {
-                            var iframeHTML = "<iframe", openingLink = attrs[0].children[0];
-                            var captionLink, captionTarget= "", posTop = true, captionClass = "", captionStyle = "", figureClass = "", figureStyle = "",
-                                iframeSrc = "", frameWidth = "", widthStyles = [], fullscreenTarget = "";
-                            var isYTlink = false, videoURL = "", iframeClasses = [];
-
-                            // Add all attributes to the iframe
-                            openingLink.attrs.forEach(function(attr) {
-                                switch(attr[0]) {
-                                    case "href":
-                                        isYTlink  = (attr[1].match("^(http(s)?:\/\/)?((w){3}.)?youtu(be|.be)?(\.com)?\/.+") != null);
-                                        iframeSrc = attr[1];
-                                        iframeHTML += ' src="' + attr[1] + '"';
-                                        videoText = 'Note: YouTube video ( ' + attr[1] + ' ) is hidden in print';
-                                        break;
-                                    case "link": // NOTE: link will be deprecated but leaving in conditional for backwards compatibility
-                                    case "caption-link":
-                                        captionLink = attr[1];
-                                        break;
-                                    case "pos":
-                                        posTop = attr[1].toLowerCase() == 'bottom' ? false : true;
-                                        break;
-                                    case "fullscreen-target":
-                                        fullscreenTarget = attr[1];
-                                        break;
-                                    case "target":
-                                    case "caption-target":
-                                        captionTarget = attr[1];
-                                        break;
-                                    case "caption-class":
-                                        captionClass = attr[1];
-                                        break;
-                                    case "caption-style":
-                                        captionStyle = attr[1];
-                                        break;
-                                    case "iframe-class": // NOTE: iframe-class will be deprecated but leaving in conditional for backwards compatibility
-                                    case "figure-class":
-                                        figureClass = attr[1];
-                                        break;
-                                    case "iframe-style": // NOTE: iframe-style will be deprecated but leaving in conditional for backwards compatibility
-                                    case "figure-style":
-                                        figureStyle = attr[1];
-                                        break;
-                                    case "class":
-                                        if (attr[1].length > 0) {
-                                            iframeClasses.push(attr[1]);
-                                            // NOTE: we return here to avoid adding `" "` to iframeHTML?
-                                            return; //we're going to add classes at the end
-                                        }
-                                        break;
-                                    default:
-                                        if (attr[0] == "width") {
-                                            frameWidth = attr[1];
-                                        }
-
-                                        var endStyleIdx, subStrStyle;
-                                        // handles `style="some: style;"` case from template
-                                        // min/max width needs to be applied to the wrapper of the caption and fullscreen button for consistent button placement
-                                        // check for min-width style
-                                        var minWidthIdx = attr[1].indexOf("min-width");
-                                        if (minWidthIdx != -1) {
-                                            endStyleIdx = attr[1].indexOf(";", minWidthIdx);
-                                            // get the min-width `key: value` pair
-                                            if (endStyleIdx != -1) {
-                                                subStrStyle = attr[1].substring(minWidthIdx, endStyleIdx);
-                                            } else {
-                                                // if no `;` after min-width, assume end of string
-                                                subStrStyle = attr[1].substring(minWidthIdx);
-                                            }
-                                            widthStyles.push(subStrStyle);
-                                        }
-
-                                        // check for max-width style
-                                        var maxWidthIdx = attr[1].indexOf("max-width");
-                                        if (maxWidthIdx != -1) {
-                                            endStyleIdx = attr[1].indexOf(";", maxWidthIdx);
-                                            // get the max-width `key: value` pair
-                                            if (endStyleIdx != -1) {
-                                                subStrStyle = attr[1].substring(maxWidthIdx, endStyleIdx);
-                                            } else {
-                                                // if no `;` after max-width, assume end of string
-                                                subStrStyle = attr[1].substring(maxWidthIdx);
-                                            }
-                                            widthStyles.push(subStrStyle);
-                                        }
-
-                                        iframeHTML += " " + attr[0] + '="' + attr[1] + '"';
-                                        break;
-                                }
-                            });
-
-                            //During print we need to display that the iframe with YouTube video is replaced with a note
-                            if(isYTlink){
-                              /*
-                               * NOTE: we're using display:none because visibility:hidden had aligment issues.
-                               * With visibility hidden eventhough the element is invisibile, it will still take up space,
-                               * and will add extra unnecessary space between the iframe and fullscreen button.
-                               */
-                              html = '<span class="' + module._classNames.showInPrintMode + '" style="display:none;">' + videoText + "</span>";
-                              iframeClasses.push(module._classNames.hideInPrintMode);
-                            }
-
-                            // add the iframe tag
-                            html += iframeHTML;
-
-                            // attach the iframe tag classes
-                            if (iframeClasses.length > 0) {
-                                html += ' class="' + iframeClasses.join(" ") + '"';
-                            }
-                            html += "></iframe>";
-
-                            var captionHTML = "";
-
-                            // If the next attribute is not a closing link then iterate
-                            // over all the children until link_close is encountered rednering their markdown
-                            if (attrs[0].children[1].type != 'link_close') {
-                                for(var i=1; i<attrs[0].children.length; i++) {
-                                    // If there is a caption then add it as a "div" with "caption" class
-                                    if (attrs[0].children[i].type == "text") {
-                                       captionHTML += md.renderInline(attrs[0].children[i].content);
-                                    } else if (attrs[0].children[i].type !== 'link_close'){
-                                       captionHTML += md.renderer.renderToken(attrs[0].children,i,{});
-                                    } else {
-                                        break;
-                                    }
-                                }
-                            }
-
-                            // If enlarge link is set then add an anchor tag for captionHTML
-                            if (captionLink) {
-                                // set the fullscreen target string for the fullscreen button
-                                if (captionTarget) captionTarget = " target=" + captionTarget;
-                                if (!captionHTML.trim().length) captionHTML = "Enlarge";
-                                captionHTML = '<a href="' + captionLink + '"' + captionTarget + '>'  + captionHTML + '</a>';
-                            }
-
-                            // set the fullscreen target string for the fullscreen button
-                            if (fullscreenTarget) fullscreenTarget = " target=" + fullscreenTarget;
-
-                            // Checks for a width being defined. If it's defined and not a number, assume it has `px` or `%` appended already and use as is.
-                            // If no width, default to "100%"
-                            var captionContainerWidth = "100%";
-                            if (frameWidth) {
-                                captionContainerWidth = frameWidth;
-                                // If width is defined and is a number, assume it's in pixels and append `px`.
-                                captionContainerWidth += (isNaN(parseInt(frameWidth)) ? "" : "px");
-                            }
-
-                            // add separator in case more styles are appended
-                            captionContainerWidth += ";";
-
-                            // if min/max width are defined for the iframe, apply to the captiona nd button container as well
-                            if (widthStyles.length > 0) {
-                                captionContainerWidth += widthStyles.join(";");
-                            }
-
-                            // captionContainerWidth should be "<width-value>; min-width: val; max-width: val"
-                            var contentsWidthStyle = 'style="width: ' + captionContainerWidth + '"';
-
-                            // fullscreen button html that is attached to the top right corner of the iframe
-                            var buttonHtml = '<div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="' + iframeSrc + '"' + fullscreenTarget + '><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a></div>';
-
-                            // Encapsulate the captionHTML inside a figcaption tag with class embed-caption
-                            if (posTop) {
-                                // if caption is at the top, we need to wrap the caption and fullscreen button in a div so the width can be applied and allow the caption to flex around the button
-                                html = '<div class="figcaption-wrapper" ' + contentsWidthStyle + '><figcaption class="embed-caption' + (captionClass.length ? (" " + captionClass) : "") +'"' + (captionStyle.length ? (' style="' + captionStyle) + '"' : "") + '>' + captionHTML + "</figcaption>" + buttonHtml + "</div>" + html;
-                            } else {
-                                html = buttonHtml + html + '<figcaption class="embed-caption' + (captionClass.length ? (" " + captionClass) : "") + '"' + (captionStyle.length ? (' style="' + captionStyle) + '"' : '') + '>' + captionHTML + "</figcaption>";
-                            }
-
-                            // Encapsulate the iframe inside a figure tag
-                            html = '<figure class="embed-block ' + module._classNames.postLoad + (figureClass.length ? (" "  + figureClass) : "") + '"' + (figureStyle.length ? (' style="' + figureStyle) + '"' : '') + '>' + html + "</figure>";
-                        }
-                    }
-                    // if attrs was empty or it didn't find any link simply render the internal markdown
-                    if (html === "") {
-                        html = md.render(m[1]);
-                    }
-
-                    return html;
-                } else {
-                  // closing tag
-                  return '';
-                }
-            }
-        });
-
-        // Dependent on 'markdown-it-container' and 'markdown-it-attrs' plugins
-        // Injects `dropdwown` tag
-        md.use(mdContainer, 'dropdown', {
-            /*
-             * Checks whether string matches format "::: dropdown DROPDOWN_TITLE{.btn-success} [CAPTION](LINK){ATTR=VALUE .CLASSNAME}"
-             * String inside '{}' is Optional, specifies attributes to be applied to prev element
-             */
-            validate: function(params) {
-                return params.trim().match(/dropdown\s+(.*)$/i);
-            },
-
-            render: function (tokens, idx) {
-
-                var html = "";
-                // Get token string after regeexp matching to determine caption and other links
-                var m = tokens[idx].info.trim().match(/dropdown\s+(.*)$/i);
-
-                if (tokens[idx].nesting === 1 && m && m.length > 0) {
-
-                    // If content found after dropdown string
-                    if (m && m.length > 0) {
-
-                        var linkTokens = md.parseInline(m[1]);
-
-                        // If the linkTokens contains an inline tag
-                        // with children, and type is text for the first child
-                        if (linkTokens.length === 1 && linkTokens[0].type === 'inline' &&
-                            linkTokens[0].children.length && linkTokens[0].children[0].type === 'text') {
-
-                            var caption = linkTokens[0].children[0].content;
-                            var cTokens = md.parse(caption);
-
-                            // If caption is set for the dropdown button between
-                            if (cTokens.length === 3 && cTokens[0].type === 'paragraph_open' && cTokens[1].type === 'inline' && cTokens[2].type === 'paragraph_close') {
-
-                                // Build button html and button dropdown html
-                                var classes = [];
-                                var classNotParsed;
-                                var buttonHtml = '<button type="button" ';
-                                var buttonDDHtml = '<button type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" ';
-
-                                // If the caption has any attrs add them to the button
-                                if (cTokens[0].attrs) {
-                                    cTokens[0].attrs.forEach(function(a) {
-                                        if(a[0] === 'class') {
-                                            classes.push(a[1]);
-                                        } else {
-                                            buttonHtml += attr[0] + '="' + attr[1] + '" ';
-                                        }
-                                    });
-                                }
-
-                                var openBracketLastIndex = cTokens[1].content.lastIndexOf('{');
-                                // '{' index > -1, meaning it exists in the string
-                                // '}' index > '{' index, meaning it exists in the string in the right place (i.e. '{...}')
-                                if (openBracketLastIndex > -1 && cTokens[1].content.lastIndexOf('}') > openBracketLastIndex) {
-                                    classNotParsed = cTokens[1].content.slice(0, openBracketLastIndex).trim();
-                                } else {
-                                    classNotParsed = cTokens[1].content;
-                                }
-
-                                buttonHtml += ' class="btn btn-primary ' + classes.join(' ') + '">' +  classNotParsed + '</button>';
-                                buttonDDHtml += ' class="btn btn-primary dropdown-toggle ' + classes.join(' ') + '"><span class="caret"></span><span class="sr-only">Toggle Dropdown</span></button>';
-
-                                // Build unordered list
-                                var lists = [], isValid = true;
-                                for (var i=1 ;i < linkTokens[0].children.length;i=i+3) {
-                                    if (linkTokens[0].children[i].type === 'link_open' &&
-                                        linkTokens[0].children[i+1].type === 'text' &&
-                                        linkTokens[0].children[i+2].type === 'link_close') {
-
-                                        var link = linkTokens[0].children[i], listHTML = '<li><a ';
-                                        for (var j=0; j< link.attrs.length; j++) {
-                                            listHTML +=  link.attrs[j][0] + '="' + link.attrs[j][1] + '" ';
-                                        }
-
-                                        listHTML += ">" + linkTokens[0].children[i+1].content + "</a></li>";
-                                        lists.push(listHTML);
-                                        // If the next element in the list is of type text skip it
-                                        if (linkTokens[0].children[i+3] &&      linkTokens[0].children[i+3].type === 'text') {
-                                          i++;
-                                        }
-                                    } else {
-                                        isValid = false;
-                                        break;
-                                    }
-                                }
-
-                                if (isValid) {
-                                    var ullistHTML = '<ul class="dropdown-menu">' + lists.join('') + '</ul>';
-                                    html = '<div class="btn-group markdown-dropdown">' + buttonHtml + buttonDDHtml + ullistHTML + "</div>";
-                                }
-                            }
-                        }
-                    }
-                }
-                return html;
-            }
-        });
-
-        // Dependent on 'markdown-it-container' and 'markdown-it-attrs' plugins
-        // Injects `image` tag
-        md.use(mdContainer, 'image', {
-            /*
-             * Checks whether string matches format ":::image [CAPTION](LINK){ATTR=VALUE .CLASSNAME}"
-             * String inside '{}' is Optional, specifies attributes to be applied to prev element
-             */
-            validate: function(params) {
-                return params.trim().match(/image\s+(.*$)/i);
-            },
-
-            render: function (tokens, idx) {
-
-                // Get token string after regeexp matching to determine actual internal markdown
-                var m = tokens[idx].info.trim().match(/image\s+(.*)$/i);
-
-                // If this is the opening tag i.e. starts with "::: image "
-                if (tokens[idx].nesting === 1 && m.length > 0) {
-
-                    // Extract remaining string before closing tag and get its parsed markdown attributes
-                    var attrs = md.parseInline(m[1]), html = "", figureClass = '', figureStyle = '';
-                    if (attrs && attrs.length == 1 && attrs[0].children) {
-
-                        // Check If the markdown is a link
-                        if (attrs[0].children[0].type == "link_open") {
-                            var imageHTML = "<img ", openingLink = attrs[0].children[0];
-                            var enlargeLink, posTop = true;
-
-                            // Add all attributes to the image
-                            openingLink.attrs.forEach(function(attr) {
-                                switch(attr[0]) {
-                                    case "figure-style":
-                                        figureStyle = attr[1];
-                                        break;
-                                    case "figure-class":
-                                        figureClass = attr[1];
-                                        break;
-                                    case "href":
-                                        imageHTML += 'src="' + attr[1] + '" ';
-                                        break;
-                                    case "link":
-                                        enlargeLink = attr[1];
-                                        break;
-                                    case "pos":
-                                        posTop = attr[1].toLowerCase() == 'bottom' ? false : true;
-                                        break;
-                                    default:
-                                        imageHTML +=  attr[0] + '="' + attr[1] + '" ';
-                                }
-                            });
-
-                            html += imageHTML + "/>";
-
-                            var captionHTML = "";
-
-                            // If the next attribute is not a closing link then iterate
-                            // over all the children until link_close is encountered rednering their markdown
-                            if (attrs[0].children[1].type != 'link_close') {
-                                for(var i=1; i<attrs[0].children.length; i++) {
-                                    // If there is a caption then add it as a "div" with "caption" class
-                                    if (attrs[0].children[i].type == "text") {
-                                       captionHTML += md.renderInline(attrs[0].children[i].content);
-                                    } else if (attrs[0].children[i].type !== 'link_close'){
-                                       captionHTML += md.renderer.renderToken(attrs[0].children,i,{});
-                                    } else {
-                                        break;
-                                    }
-                                }
-                            }
-
-                            // Add caption html
-                            if (posTop) {
-                                html = '<figcaption class="embed-caption">' + captionHTML + "</figcaption>" + html;
-                            } else {
-                                html = html + '<figcaption class="embed-caption">' + captionHTML + "</figcaption>";
-                            }
-
-                            // If link is specified, then wrap the image and figcaption inside anchor tag
-                            if (enlargeLink) {
-                                html = '<a href="' + enlargeLink + '" target="_blank">' + html + '</a>' ;
-                            }
-
-                            // Encapsulate the iframe inside a paragraph tag
-                            html = '<figure class="embed-block ' + module._classNames.postLoad + (figureClass.length ? (" "  + figureClass) : "") + '" style="' + (figureStyle.length ? figureStyle : 'display:inline-block;') + '">' + html + "</figure>";
-                        }
-                    }
-
-                    // if attrs was empty or it didn't find any link simply render the internal markdown
-                    if (html === "") {
-                        html = md.render(m[1]);
-                    }
-
-
-                    return html;
-                } else {
-                  // closing tag
-                  return '';
-                }
-            }
-        });
-
-        md.use(mdContainer, 'video', {
-            /*
-             * Checks whether string matches format ":::video (LINK){ATTR=VALUE .CLASSNAME}"
-             * String inside '{}' is Optional, specifies attributes to be applied to prev element
-             */
-            validate: function(params) {
-                return params.trim().match(/video\s+(.*$)/i);
-            },
-
-            render: function (tokens, idx) {
-                // Get token string after regeexp matching to determine actual internal markdown
-                var m = tokens[idx].info.trim().match(/video\s+(.*)$/i);
-
-                // If this is the opening tag i.e. starts with "::: video "
-                if (tokens[idx].nesting === 1 && m.length > 0) {
-                    // Extract remaining string before closing tag and get its parsed markdown attributes
-                    var attrs = md.parseInline(m[1]), html = "";
-
-                    if (attrs && attrs.length == 1 && attrs[0].children) {
-                        // Check If the markdown is a link
-                        if (attrs[0].children[0].type == "link_open") {
-                            var videoHTML="<video controls ", videoClass='class="' + module._classNames.postLoad + " " + module._classNames.hideInPrintMode, openingLink = attrs[0].children[0];
-                            var srcHTML="", videoAttrs="", flag = true, posTop = true;
-                            var videoText="";
-                            var infoHTML = "";
-
-                            // Add all attributes to the video
-                            openingLink.attrs.forEach(function(attr) {
-                                if (attr[0] == "href") {
-                                    if(attr[1] == ""){
-                                        flag= false;
-                                        return "";
-                                    }
-                                    videoText = "Note: Video " + "(" + attr[1] + ")" + " is hidden in print ";
-                                    srcHTML += '<source src="' + attr[1] + '" type="video/mp4">';
-                                }
-                                else if ( (attr[0] == "width" || attr[0] == "height") && attr[1]!=="") {
-                                    videoAttrs +=  attr[0]+ "="+ attr[1] +" ";
-                                }
-                                else if ( (attr[0] == "loop" || attr[0] == "preload" || attr[0] == "muted" || attr[0] == "autoload") && attr[1]=="") {
-                                    videoAttrs +=  attr[0]+ " ";
-                                }
-                                else if ( (attr[0] == "class") && attr[1]!=="") {
-                                    // class was defined above to begin with "class=" and a class name
-                                    videoClass += " " + attr[1];
-                                }
-                                else if ( (attr[0] == "pos") && attr[1]!=="") {
-                                    posTop =  attr[1].toLowerCase() == 'bottom' ? false : true;
-                                }
-                            });
-                            // add closing quote
-                            videoClass += '"' + " " + videoAttrs;
-                            /*
-                            * NOTE: we're using display:none because visibility:hidden had aligment issues.
-                            * With visibility hidden eventhough the element is invisibile, it will still take up space,
-                            * and will add extra unnecessary space between the iframe and fullscreen button.
-                            */
-                            infoHTML = '<span class="' + module._classNames.showInPrintMode + '" style="display:none;">' + videoText + "</span>";
-
-                            var captionHTML="";
-                            // If the next attribute is not a closing link then iterate
-                            // over all the children until link_close is encountered rednering their markdown
-                            if (attrs[0].children[1].type != 'link_close') {
-                                for(var i=1; i<attrs[0].children.length; i++) {
-                                    // If there is a caption then add it as a "div" with "caption" class
-                                    if (attrs[0].children[i].type == "text") {
-                                       captionHTML += md.renderInline(attrs[0].children[i].content);
-                                    } else if (attrs[0].children[i].type !== 'link_close'){
-                                       captionHTML += md.renderer.renderToken(attrs[0].children,i,{});
-                                    } else {
-                                        break;
-                                    }
-                                }
-                            }
-
-                            if(captionHTML.trim().length && flag && posTop){
-                                html +=  "<figure><figcaption>"+captionHTML+ "</figcaption>" + infoHTML + videoHTML + videoClass +">"+ srcHTML +"</video></figure>" ;
-                            }else if(captionHTML.trim().length && flag){
-                                html +=  "<figure>"+ videoHTML + videoClass +">"+ srcHTML +"</video><figcaption>"+captionHTML+ "</figcaption>" + infoHTML + "</figure>" ;
-                            } else if(flag)
-                                html += infoHTML + videoHTML + videoClass +">"+ srcHTML +"</video>";
-                            else
-                                return '';
-                        }
-                    }
-                    // if attrs was empty or it didn't find any link simply render the internal markdown
-                    if (html === "") {
-                        html = md.render(m[1]);
-                    }
-                    return html;
-                } else {
-                  // closing tag
-                  return '';
-                }
-            }
-        });
-
-        md.use(mdContainer, 'div', {
-
-            /*
-             * Checks whether string matches format ":::div CONTENT \n:::"
-             * string inside `{}` is optional, specifies attributes to be applied to element
-             */
-            validate: function (params) {
-                return params.trim().match(/div(.*)$/i);
-            },
-
-            render: function (tokens, idx) {
-                var m = tokens[idx].info.trim().match(/div(.*)$/i);
-
-                // opening tag
-                if (tokens[idx].nesting === 1) {
-
-                    // if the next tag is a paragraph, we can change the paragraph into a div
-                    var attrs = md.parse(m[1]);
-                    if (attrs && attrs.length > 0 && attrs[0].type === "paragraph_open") {
-                        var html = md.render(m[1]).trim();
-
-                        // this will remove the closing and opening p tag.
-                        return "<div" + html.slice(2, html.length-4);
-                    }
-
-                    // otherwise just add the div tag
-                    return "<div>\n" + md.render(m[1]).trim();
-                }
-                // the closing tag
-                else {
-                    return "</div>\n";
-                }
-            }
-        });
-
-        md.use(mdContainer, 'geneSequence', {
-            validate: function (params) {
-                return params.trim().match(/geneSequence\s+(.*)$/i);
-            },
-
-            render: function (tokens, idx) {
-                var m = tokens[idx].info.trim().match(/geneSequence(.*)$/i);
-                var html = '';
-                // opening tag
-                if (tokens[idx].nesting === 1 && m.length > 0) {
-                    var attrs = md.parse(m[1]);
-                    if (
-                        !attrs || attrs.length !== 3 || attrs[0].type !== 'paragraph_open' ||
-                        attrs[1].type !== 'inline' || attrs[1].children.length !== 1
-                    ) {
-                        return html;
-                    }
-
-                    var containerAttributes = '', containerClasses = ['chaise-gene-sequence'];
-
-                    // get the attributes of the container
-                    if (Array.isArray(attrs[0].attrs)) {
-                        attrs[0].attrs.forEach(function (attr) {
-                            switch(attr[0]) {
-                                case 'class':
-                                    if (attr[1].length > 0 && containerClasses.indexOf(attr[1]) === -1) {
-                                        containerClasses.push(attr[1]);
-                                    }
-                                    break;
-                                default:
-                                    containerAttributes += ' ' + attr[0] + '="' + attr[1] + '"';
-                                    break;
-                            }
-                        });
-                    }
-
-                    // get the content 
-                    var sequence = attrs[1].children[0].content, inc = 10, sequenceHTML = '';
-                    while (sequence.length >= inc) {
-                        var chunk = sequence.slice(0, inc);
-                        sequenceHTML += '<span class="chaise-gene-sequence-chunk">' + chunk + '</span>';
-                        sequence = sequence.slice(inc);
-                    }
-                    sequenceHTML += '<span class="chaise-gene-sequence-chunk">' + sequence + '</span>';
-                    html += '<div class="' + containerClasses.join(" ") + '" ' + containerAttributes + ' >';
-                    html += '<div class="chaise-gene-sequence-toolbar">';
-                    // html += '<div class="chaise-btn chaise-btn-tertiary chaise-btn-chaise-gene-sequence-copy-btn" data-chaise-tooltip="Copy the sequence to clipboard">Copy sequence</div>';
-                    html += '</div>';
-                    html += sequenceHTML;
-                    html += '</div>';
-                }
-
-                return html;
-            }
-        });
-
-        // Note: Following how this was done in markdown-it-sub and markdown-it-span
-        md.use(function rid_plugin(md) {
-            // same as UNESCAPE_MD_RE plus a space
-            var UNESCAPE_RE = /\\([ \\!"#$%&'()*+,.\/:;<=>?@[\]^_`{|}~-])/g;
-
-            // we want the link rule to take precedence over this added rule
-            // [[rid]]() should be -> <a href="">[rid]</a> which preserves the inner brackets
-            md.inline.ruler.after('link', 'rid', function rid(state, silent) {
-                var found,
-                    content,
-                    token,
-                    max = state.posMax,
-                    start = state.pos;
-
-                if (silent) { return false; } // don't run any pairs in validation mode
-                if (start + 4 >= max) { return false; } // this assumes the template is at least [[x]]
-                // if (start + 5 >= max) { return false; } // string isn't long enough to be proper, this assumes RID has to be larger than 1 character
-
-                // check the current and next character to make sure they are both `[`.
-                // If not, iterate to the next character (state.pos)
-                // 0x5B -> `[`
-                if (state.src.charCodeAt(start) !== 0x5B || state.src.charCodeAt(start + 1) !== 0x5B) { return false; }
-
-                // move to the first character after `[[`
-                state.pos = start + 2;
-
-                // find the end
-                while (state.pos < max) {
-                    if (state.src.charCodeAt(state.pos) === 0x5D && state.src.charCodeAt(state.pos + 1) === 0x5D) {
-                        found = true;
-                        break;
-                    }
-
-                    state.md.inline.skipToken(state);
-                }
-
-                // NOTE: still not sure what the latter condition does
-                if (!found || start + 1 === state.pos) {
-                    state.pos = start;
-                    return false;
-                }
-
-                // state.pos is the first end character. Slice the string to the char right before it
-                content = state.src.slice(start + 2, state.pos);
-
-                // don't allow unescaped newlines inside (space is allowed)
-                if (content.match(/(^|[^\\])(\\\\)*[\n]/)) {
-                    state.pos = start;
-                    return false;
-                }
-
-                // found!
-                state.posMax = state.pos;
-                state.pos = start + 2;
-
-                // Earlier we checked !silent, but this implementation does not need it
-                token         = state.push('a_open', 'a', 1);
-                token.attrPush([ 'href', '/id/' + content.replace(UNESCAPE_RE, '$1') ]);
-                token.markup  = '[[';
-
-                token         = state.push('text', '', 0);
-                token.content = content.replace(UNESCAPE_RE, '$1');
-
-                token         = state.push('a_close', 'a', -1);
-                token.markup  = ']]';
-
-                state.pos = state.posMax + 2;
-                state.posMax = max;
-                return true;
-            });
-        });
-
-        /**
-         * Change the image function to add a specific classes to image tags
-         * this is done on the image tag instead of link_open to prevent polluting other html tags
-         * make sure we're calling this just once
-         */
-        if (typeof module._markdownItDefaultImageRenderer === "undefined") {
-            module._markdownItDefaultImageRenderer = md.renderer.rules.image || function(tokens, idx, options, env, self) {
-                return self.renderToken(tokens, idx, options);
-            };
-        }
-
-        // the class that we should add
-        var className = module._classNames.postLoad;
-        md.renderer.rules.image = function (tokens, idx, options, env, self) {
-            var token = tokens[idx];
-
-            var cIndex = token.attrIndex('class');
-            if (cIndex < 0) {
-                token.attrPush(['class', className]);
-            } else {
-                token.attrs[cIndex][1] += " " + className;
-            }
-
-            return module._markdownItDefaultImageRenderer(tokens, idx, options, env, self);
-        };
-    };
-
-    /**
-     * @private
-     * @desc
-     * Change the link_open function to add classes to links, based on clientConfig
-     * It will add
-     *  - external-link-icon
-     *  - exteranl-link if clientConfig.disableExternalLinkModal is not true
-     *
-     * NOTE we should call this function only ONCE when the setClientConfig is done
-     */
-    module._markdownItLinkOpenAddExternalLink = function () {
-        verifyClientConfig();
-
-        // if we haven't changed the function yet, and there's no internalHosts then don't do anything
-        if (typeof module._markdownItDefaultLinkOpenRenderer === "undefined" && module._clientConfig.internalHosts.length === 0) {
-            return;
-        }
-
-        // make sure we're calling this just once
-        if (typeof module._markdownItDefaultLinkOpenRenderer === "undefined") {
-            module._markdownItDefaultLinkOpenRenderer = module._markdownIt.renderer.rules.link_open || function(tokens, idx, options, env, self) {
-                return self.renderToken(tokens, idx, options);
-            };
-        }
-
-        // the classes that we should add
-        var className = module._classNames.externalLinkIcon;
-        if (module._clientConfig.disableExternalLinkModal !== true) {
-            className += " " + module._classNames.externalLink;
-        }
-        module._markdownIt.renderer.rules.link_open = function (tokens, idx, options, env, self) {
-            var token = tokens[idx];
-
-            // find the link value
-            var hrefIndex = token.attrIndex('href');
-            if (hrefIndex < 0) return;
-            var href = token.attrs[hrefIndex][1];
-
-            // only add the class if it's not the same origin
-            if (module._isSameHost(href) === false) {
-                var cIndex = token.attrIndex('class');
-                if (cIndex < 0) {
-                    token.attrPush(['class', className]);
-                } else {
-                    token.attrs[cIndex][1] += " " + className;
-                }
-            }
-
-            return module._markdownItDefaultLinkOpenRenderer(tokens, idx, options, env, self);
-        };
     };
 
     /**
@@ -3025,9 +1802,10 @@
      * @param  {string} url    url string
      * @return {boolean|null}
      */
-    module._isSameHost = function (url) {
+    export function _isSameHost(url) {
         // chaise-config internalHosts are not defined, so we cannot determine
-        if (!isObjectAndNotNull(module._clientConfig) || module._clientConfig.internalHosts.length == 0) return null;
+        const _clientConfig = ConfigService.clientConfig;
+        if (!isObjectAndNotNull(_clientConfig) || _clientConfig.internalHosts.length == 0) return null;
 
         var hasProtocol = new RegExp('^(?:[a-z]+:)?//', 'i').test(url);
 
@@ -3040,13 +1818,13 @@
         if (urlParts.length < 3) return null;
 
         // actual comparission of the origin
-        return module._clientConfig.internalHosts.some(function (host) {
+        return _clientConfig.internalHosts.some(function (host) {
             return typeof host === "string" && host.length > 0 && urlParts[2].indexOf(host) === 0;
         });
     };
 
     // Characters to replace Markdown special characters
-    module._escapeReplacementsForMarkdown = [
+    const _escapeReplacementsForMarkdown = [
       [ /\*/g, '\\*' ],
       [ /#/g, '\\#' ],
       [ /\//g, '\\/' ],
@@ -3073,8 +1851,8 @@
      * It is used with Mustache to escape value of variables that have markdown characters in them
      * @returns {String} String after escaping
      */
-    module._escapeMarkdownCharacters = function(text) {
-      return module._escapeReplacementsForMarkdown.reduce(
+    export function _escapeMarkdownCharacters(text) {
+      return _escapeReplacementsForMarkdown.reduce(
         function(text, replacement) {
           return text.replace(replacement[0], replacement[1]);
         }, text);
@@ -3087,9 +1865,9 @@
      * @return {Function} A function that is called by Mustache when it stumbles across
      * {{#encode}} string while parsing the template.
      */
-    module._encodeForMustacheTemplate = function() {
+    export function _encodeForMustacheTemplate() {
         return function(text, render) {
-            return module._fixedEncodeURIComponent(render(text));
+            return fixedEncodeURIComponent(render(text));
         };
     };
 
@@ -3100,23 +1878,10 @@
      * @return {Function} A function that is called by Mustache when it stumbles across
      * {{#escape}} string while parsing the template.
      */
-    module._escapeForMustacheTemplate = function() {
+    export function _escapeForMustacheTemplate() {
         return function(text, render) {
-            return module._escapeMarkdownCharacters(render(text));
+            return _escapeMarkdownCharacters(render(text));
         };
-    };
-
-    module._injectHandlebarHelpers = function() {
-        // inject the custom handlebars
-        module._injectCustomHandlebarHelpers(module._handlebars);
-
-        // loop through handlebars defined list of helpers and check against the enum in ermrestJs
-        // if not in enum, set helper to false
-        // should help defend against new helpers being exposed without us being aware of it
-        module._handlebarsHelpersHash = {};
-        Object.keys(module._handlebars.helpers).forEach(function (key) {
-            module._handlebarsHelpersHash[key] = module._handlebarsHelpersList.includes(key);
-        });
     };
 
     /**
@@ -3125,7 +1890,7 @@
      * Gets currDate object once the page loads for future access in templates
      * @return {Object} A date object that contains all properties
      */
-    var getCurrDate = function() {
+    const getCurrDate = function() {
         var date = new Date();
 
         var dateObj = {};
@@ -3155,7 +1920,7 @@
 
         return dateObj;
     };
-    module._currDate = getCurrDate();
+    export const _currDate = getCurrDate();
 
     /**
      * @function
@@ -3163,13 +1928,13 @@
      * Add utility objects such as date (Computed value) to mustache data obj
      * so that they can be accessed in the template
      */
-    module._addErmrestVarsToTemplate = function(obj, catalog) {
+    export function _addErmrestVarsToTemplate(obj, catalog) {
 
         // date object
-        obj.$moment = module._currDate;
+        obj.$moment = _currDate;
 
         // if there is a window object, we are in the browser
-        if (window && window.location) {
+        if (!ENV_IS_NODE && typeof window === 'object' && window.location) {
             var chaiseBasePath = '/chaise/';
             if (isObjectAndNotNull(window.chaiseBuildVariables)) {
                 // new version
@@ -3209,8 +1974,8 @@
             if (catalogSnapshot.length === 2) obj.$catalog.version = catalogSnapshot[1];
         }
 
-        if (module._session) {
-            var session = module._session;
+        if (ConfigService.session) {
+            var session = ConfigService.session;
 
             obj.$session = {};
             Object.keys(session).forEach(function (key) {
@@ -3240,23 +2005,23 @@
      *
      * @return {Object} obj
      */
-    module._addTemplateVars = function(keyValues, catalog, options) {
+    export function _addTemplateVars(keyValues, catalog, options) {
 
         var obj = {};
         if (keyValues && isObject(keyValues)) {
             try {
                 // recursively replace dot with underscore in column names.
-                obj = module._replaceDotWithUnderscore(keyValues);
+                obj = _replaceDotWithUnderscore(keyValues);
             } catch (err) {
                 // This should not happen since we're guarding against custom type objects.
                 obj = keyValues;
-                module._log.error("Could not process the given keyValues in _renderTemplate. Ignoring the _replaceDotWithUnderscore logic.");
-                module._log.error(err);
+                $log.error("Could not process the given keyValues in _renderTemplate. Ignoring the _replaceDotWithUnderscore logic.");
+                $log.error(err);
             }
         }
 
         // Inject ermrest internal utility objects such as date
-        module._addErmrestVarsToTemplate(obj, catalog);
+        _addErmrestVarsToTemplate(obj, catalog);
 
         // Inject other functions provided in the options.functions array if needed
         if (options.functions && options.functions.length) {
@@ -3279,27 +2044,27 @@
      * @return {string} A string produced after templating
      * @desc Returns a string produced as a result of templating using `Mustache`.
      */
-    module._renderMustacheTemplate = function(template, keyValues, catalog, options) {
+    export function renderMustacheTemplate(template, keyValues, catalog, options) {
 
         options = options || {};
 
-        var obj = module._addTemplateVars(keyValues, catalog, options), content;
+        var obj = _addTemplateVars(keyValues, catalog, options), content;
 
         // Inject the encode function in the obj object
-        obj.encode = module._encodeForMustacheTemplate;
+        obj.encode = _encodeForMustacheTemplate;
 
         // Inject the escape function in the obj object
-        obj.escape = module._escapeForMustacheTemplate;
+        obj.escape = _escapeForMustacheTemplate;
 
         // If we should validate, validate the template and if returns false, return null.
-        if (!options.avoidValidation && !module._validateMustacheTemplate(template, obj, catalog)) {
+        if (!options.avoidValidation && !_validateMustacheTemplate(template, obj, catalog)) {
             return null;
         }
 
         try {
-            content = module._mustache.render(template, obj);
+            content = mustache.render(template, obj);
         } catch(e) {
-            module._log.error(e);
+            $log.error(e);
             content = null;
         }
 
@@ -3319,11 +2084,11 @@
      * @param  {Array.<string>=} ignoredColumns the columns that should be ignored (optional)
      * @return {boolean} true if all the used keys have values
      */
-    module._validateMustacheTemplate = function (template, keyValues, catalog, ignoredColumns) {
+    export function _validateMustacheTemplate(template, keyValues, catalog, ignoredColumns) {
 
         // Inject ermrest internal utility objects such as date
         // needs to be done in the case _validateTemplate is called without first calling _renderTemplate
-        module._addErmrestVarsToTemplate(keyValues, catalog);
+        _addErmrestVarsToTemplate(keyValues, catalog);
 
         var conditionalRegex = /\{\{(#|\^)([^\{\}]+)\}\}/, i, key, value;
 
@@ -3351,162 +2116,7 @@
                     if (key[0] == "{") key = key.substring(1, key.length -1);
 
                     // find the value.
-                    value = module._getPath(keyValues, key.trim());
-
-                    // TODO since we're not going inside the object this logic of ignoredColumns is not needed anymore,
-                    // it was a hack that was added for asset columns.
-                    // If key is not in ingored columns value for the key is null or undefined then return null
-                    if ((!Array.isArray(ignoredColumns) || ignoredColumns.indexOf(key) == -1) && (value === null || value === undefined)) {
-                       return false;
-                    }
-                }
-            }
-        }
-        return true;
-    };
-
-    /*
-     * @function
-     * @public
-     * @param {String} template The template string to transform
-     * @param {Object} keyValues The key-value pair of object to be used for template tags replacement.
-     * @param {Object} catalog The catalog object created by ermrestJS representing the current catalog from the url
-     * @param {Object} [options] Configuration options.
-     * @return {string} A string produced after templating
-     * @desc Calls the private function to return a string produced as a result of templating using `Handlebars`.
-     */
-    module._renderHandlebarsTemplate = function (template, keyValues, catalog, options) {
-        return module.renderHandlebarsTemplate(template, keyValues, catalog, options);
-    };
-
-    /**
-     * @param {String} template The template string to transform
-     * @param {Object} keyValues The key-value pair of object to be used for template tags replacement.
-     * @param {Object} catalog The catalog object created by ermrestJS representing the current catalog from the url
-     * @param {Object} [options] Configuration options.
-     * @return {string} A string produced after templating
-     * @desc Returns a string produced as a result of templating using `Handlebars`.
-     * @memberof ERMrest
-     * @function renderHandlebarsTemplate
-     */
-    module.renderHandlebarsTemplate = function(template, keyValues, catalog, options) {
-
-        options = options || {};
-
-        var obj = module._addTemplateVars(keyValues, catalog, options), content, _compiledTemplate;
-
-        // If we should validate, validate the template and if returns false, return null.
-        if (!options.avoidValidation && !module._validateHandlebarsTemplate(template, obj, catalog)) {
-            return null;
-        }
-
-        try {
-            // Read template from cache
-            _compiledTemplate = module._handlebarsCompiledTemplates[template];
-
-            // If template not found then add it to cache
-            if (!_compiledTemplate) {
-                var compileOptions = {
-                    knownHelpersOnly: true,
-                    knownHelpers: module._handlebarsHelpersHash
-                };
-
-                module._handlebarsCompiledTemplates[template] = _compiledTemplate = module._handlebars.compile(template, compileOptions);
-            }
-
-            // Generate content from the template
-            content = _compiledTemplate(obj);
-        } catch(e) {
-            module._log.error(e);
-            content = null;
-        }
-
-        return content;
-    };
-
-    // Cache to store all the handlebar templates to reduce compute time
-    module._handlebarsCompiledTemplates = {};
-
-    /**
-     * Returns true if all the used keys have values.
-     *
-     * NOTE:
-     * This implementation is very limited and if conditional Handlebar statements
-     * of the form {{#if }}{{/if}} or {{^if VARNAME}}{{/if}} or {{#unless VARNAME}}{{/unless}} or {{^unless }}{{/unless}} found then it won't check
-     * for null values and will return true.s
-     *
-     * @param  {string}   template       mustache template
-     * @param  {object}   keyValues      key-value pairs
-     * @param  {Array.<string>=} ignoredColumns the columns that should be ignored (optional)
-     * @return {boolean} true if all the used keys have values
-     */
-    module._validateHandlebarsTemplate = function (template, keyValues, catalog, ignoredColumns) {
-        var conditionalRegex = /\{\{(((#|\^)([^\{\}]+))|(if|unless|else))([^\{\}]+)\}\}/, i, key, value;
-
-        // Inject ermrest internal utility objects such as date
-        // needs to be done in the case _validateTemplate is called without first calling _renderTemplate
-        module._addErmrestVarsToTemplate(keyValues, catalog);
-
-        // If no conditional handlebars statements of the form {{#if VARNAME}}{{/if}} or {{^if VARNAME}}{{/if}} or {{#unless VARNAME}}{{/unless}} or {{^unless VARNAME}}{{/unless}} not found then do direct null check
-        if (!conditionalRegex.exec(template)) {
-
-            // Grab all placeholders ({{PROP_NAME}}) in the template
-            var placeholders = template.match(/\{\{([^\{\}\(\)\s]+)\}\}/ig);
-
-            // These will match the placeholders that are encapsulated in square brackets {{[string with space]}} or {{{[string with space]}}}
-            var specialPlaceholders = template.match(/\{\{((\[[^\{\}]+\])|(\{\[[^\{\}]+\]\}))\}\}/gi);
-
-            // If there are any placeholders
-            if (placeholders && placeholders.length) {
-
-                // Get unique placeholders
-                placeholders = placeholders.filter(function(item, i, ar) { return ar.indexOf(item) === i && item !== 'else'; });
-
-                /*
-                 * Iterate over all placeholders to set pattern as null if any of the
-                 * values turn out to be null or undefined
-                 */
-                for (i=0; i<placeholders.length;i++) {
-
-                    // Grab actual key from the placeholder {{name}} = name, remove "{{" and "}}" from the string for key
-                    key = placeholders[i].substring(2, placeholders[i].length - 2);
-
-                    if (key[0] == "{") key = key.substring(1, key.length -1);
-
-                    // find the value.
-                    value = module._getPath(keyValues, key.trim());
-
-                    // TODO since we're not going inside the object this logic of ignoredColumns is not needed anymore,
-                    // it was a hack that was added for asset columns.
-                    // If key is not in ingored columns value for the key is null or undefined then return null
-                    if ((!Array.isArray(ignoredColumns) || ignoredColumns.indexOf(key) == -1) && (value === null || value === undefined)) {
-                       return false;
-                    }
-                }
-            }
-
-            // If there are any placeholders
-            if (specialPlaceholders && specialPlaceholders.length) {
-
-                // Get unique placeholders
-                specialPlaceholders = specialPlaceholders.filter(function(item, i, ar) { return ar.indexOf(item) === i && item !== 'else'; });
-
-                /*
-                 * Iterate over all specialPlaceholders to set pattern as null if any of the
-                 * values turn out to be null or undefined
-                 */
-                for (i=0; i<specialPlaceholders.length;i++) {
-
-                    // Grab actual key from the placeholder {{name}} = name, remove "{{" and "}}" from the string for key
-                    key = specialPlaceholders[i].substring(2, specialPlaceholders[i].length - 2);
-
-                    if (key[0] == "{") key = key.substring(1, key.length -1);
-
-                    // Remove [] from the key {{[name]}} = name, remove "[" and "]" from the string for key
-                    key = key.substring(1, key.length - 1);
-
-                    // find the value.
-                    value = module._getPath(keyValues, key.trim());
+                    value = _getPath(keyValues, key.trim());
 
                     // TODO since we're not going inside the object this logic of ignoredColumns is not needed anymore,
                     // it was a hack that was added for asset columns.
@@ -3525,22 +2135,23 @@
      * otherwise get it from the client config.
      * @param {string} engine
      */
-    module._getTemplateEngine = function (engine) {
+    export function _getTemplateEngine(engine) {
         var isValid = function (val) {
-            return isStringAndNotEmpty(val) && Object.values(module.TEMPLATE_ENGINES).indexOf(val) !== -1;
+            return isStringAndNotEmpty(val) && Object.values(TEMPLATE_ENGINES).indexOf(val) !== -1;
         };
         if (isValid(engine)) {
             return engine;
         }
-        if (isObjectAndNotNull(module._clientConfig) && isObjectAndNotNull(module._clientConfig.templating) &&
-            isValid(module._clientConfig.templating.engine)) {
-            return module._clientConfig.templating.engine;
+        const _clientConfig = ConfigService.clientConfig;
+        if (isObjectAndNotNull(_clientConfig) && isObjectAndNotNull(_clientConfig.templating) &&
+            isValid(_clientConfig.templating.engine)) {
+            return _clientConfig.templating.engine;
         }
-        return module.TEMPLATE_ENGINES.MUSTACHE;
+        return TEMPLATE_ENGINES.MUSTACHE;
     };
 
     /**
-     * A wrapper for {ERMrest._renderMustacheTemplate}
+     * A wrapper for {ERMrest.renderMustacheTemplate}
      * acceptable options:
      * - templateEngine: "mustache" or "handlbars"
      * - avoidValidation: to avoid validation of the template
@@ -3553,19 +2164,19 @@
      * @param  {Array.<Object>=} options optioanl parameters
      * @return {string} Returns a string produced as a result of templating using options.templateEngine or `Mustache` by default.
      */
-    module._renderTemplate = function (template, keyValues, catalog, options) {
+    export function _renderTemplate(template, keyValues, catalog, options) {
 
         if (typeof template !== 'string') return null;
 
         options = options || {};
 
         var res, objRes;
-        if (module._getTemplateEngine(options.templateEngine) === module.TEMPLATE_ENGINES.HANDLEBARS) {
+        if (_getTemplateEngine(options.templateEngine) === TEMPLATE_ENGINES.HANDLEBARS) {
             // render the template using Handlebars
-            res = module.renderHandlebarsTemplate(template, keyValues, catalog, options);
+            res = HandlebarsService.render(template, keyValues, catalog, options);
         } else {
             // render the template using Mustache
-            res = module._renderMustacheTemplate(template, keyValues, catalog, options);
+            res = renderMustacheTemplate(template, keyValues, catalog, options);
         }
 
         if (options.allowObject) {
@@ -3575,7 +2186,9 @@
                 if (typeof objRes === "object") {
                     return objRes;
                 }
-            } catch (exp) {}
+            } catch {
+                // ignore
+            }
         }
 
         return res;
@@ -3595,10 +2208,10 @@
      * @param  {Array.<string>=} ignoredColumns the columns that should be ignored (optional)
      * @return {boolean} True if the template is valid.
      */
-    module._validateTemplate = function (template, data, linkedData, table, context, options) {
+    export function _validateTemplate(template, data, linkedData, table, context, options) {
 
         var ignoredColumns;
-        if (typeof options !== undefined && Array.isArray(options.ignoredColumns)) {
+        if (options !== undefined && Array.isArray(options.ignoredColumns)) {
             ignoredColumns = options.ignoredColumns;
         }
 
@@ -3612,16 +2225,16 @@
                 });
             }
 
-            data = module._getFormattedKeyValues(table, context, data, linkedData);
+            data = _getFormattedKeyValues(table, context, data, linkedData);
         }
 
-        if (module._getTemplateEngine(options.templateEngine) === module.TEMPLATE_ENGINES.HANDLEBARS) {
+        if (_getTemplateEngine(options.templateEngine) === TEMPLATE_ENGINES.HANDLEBARS) {
             // call the actual Handlebar validator
-            return module._validateHandlebarsTemplate(template, data, table.schema.catalog, ignoredColumns);
+            return HandlebarsService.validate(template, data, table.schema.catalog, ignoredColumns)
         }
 
         // call the actual mustache validator
-        return module._validateMustacheTemplate(template, data, table.schema.catalog, ignoredColumns);
+        return _validateMustacheTemplate(template, data, table.schema.catalog, ignoredColumns);
     };
 
     /**
@@ -3637,64 +2250,15 @@
      * @memberof ERMrest
      * @function processMarkdownPattern
      */
-    module.processMarkdownPattern = function (template, data, table, context, options) {
-        var res = module._renderTemplate(template, data, table ? table.schema.catalog : null, options);
+    export function processMarkdownPattern(template, data, table, context, options) {
+        var res = _renderTemplate(template, data, table ? table.schema.catalog : null, options);
 
         if (res === null || res.trim() === '') {
             res = table ? table._getNullValue(context) : "";
             return {isHTML: false, value: res, unformatted: res};
         }
         var isInline = options && options.isInline ? true : false;
-        return {isHTML: true, value: module.renderMarkdown(res, isInline), unformatted: res};
-    };
-
-    // module._constraintNames[catalogId][schemaName][constraintName] will return an object.
-    module._constraintNames = {};
-    var consIndex = 0;
-
-    /**
-     * Creaes a map from catalog id, schema name, and constraint names to the actual object.
-     *
-     * @private
-     * @param  {string} catalogId      catalog id
-     * @param  {string} schemaName     schema name
-     * @param  {string} constraintName the constraint name of the object
-     * @param  {string} obj            the object that we want to store
-     * @param  {string} subject        one of module._constraintTypes
-     */
-    module._addConstraintName = function (catalogId, schemaName, constraintName, obj, subject) {
-        if (!(catalogId in module._constraintNames)) {
-            module._constraintNames[catalogId] = {};
-        }
-
-        if (!(schemaName in this._constraintNames[catalogId])) {
-            module._constraintNames[catalogId][schemaName] = {};
-        }
-
-        module._constraintNames[catalogId][schemaName][constraintName] = {
-            "subject": subject,
-            "object": obj,
-            "code": "c" + (consIndex++),
-            "RID": obj.RID
-        };
-    };
-
-    /**
-     * Return an object given catalog id, schema name, and constraint name.
-     *
-     * @private
-     * @param  {string} catalogId      catalog id
-     * @param  {string} schemaName     schema name
-     * @param  {string} constraintName the constraint name of the object
-     * @param  {string} subject        one of module._constraintTypes
-     * @return {object}                the constraint object. It will have .subject (any of module._constraintTypes) and .object (actual object)
-     */
-    module._getConstraintObject = function (catalogId, schemaName, constraintName, subject) {
-        var result;
-        if ((catalogId in module._constraintNames) && (schemaName in module._constraintNames[catalogId])){
-            result = module._constraintNames[catalogId][schemaName][constraintName];
-        }
-        return (result === undefined || (subject !== undefined && result.subject !== subject)) ? null : result;
+        return {isHTML: true, value: renderMarkdown(res, isInline), unformatted: res};
     };
 
     /**
@@ -3704,7 +2268,7 @@
      * @param  {string} url     URL to be parsed
      * @return {object}         The location object
      */
-    module._parseUrl = function(url) {
+    export function _parseUrl(url) {
         var m = url.match(/^(([^:\/?#]+:)?(?:\/\/(([^\/?#:]*)(?::([^\/?#:]*))?)))?([^?#]*)(\?[^#]*)?(#.*)?$/),
             r = {
                 hash: m[8] || "",                    // #asd
@@ -3726,20 +2290,11 @@
     };
 
     /**
-     * Given an object will make sure it's safe for header.
-     * @param  {object} obj JavaScript object or JSON object
-     * @return {string} A safe string for http header
-     */
-    module._encodeHeaderContent = function (obj) {
-        return unescape(module._fixedEncodeURIComponent(JSON.stringify(obj)));
-    };
-
-    /**
      *  version is a 64-bit integer representing microseconds since the Unix "epoch"
      *  The 64-bit integer is encoded using a custom base32 encoding scheme
      *  @returns {String} the version decoded to it's time since epoch in milliseconds
      */
-    module.versionDecodeBase32 = function (version) {
+    export function versionDecodeBase32(version) {
         // use 5-bit value as index to find symbol
         // e.g. b32_symbols[15] == 'F'
         var b32Symbols = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
@@ -3783,190 +2338,10 @@
         return (accum / 2.0)/1000;
     };
 
-    /**
-     * @private
-     * @desc
-     * Given a header object, will encode and if neccessary truncate it.
-     * Maximum allowed length of a header after encoding: 6500 characters.
-     * The logic is as follows:
-     *  1. If the encoded string is not lengthy, return it.
-     *  2. otherwise,
-     *    2.1. Return an empty object if the minimal header (defined below) goes over the limit.
-     *    2.2. Otherwise start truncating `stack` object by doing the following. In each step,
-     *         if the encoded and truncated header goes below the length limit, return it.
-     *         - replace all foreign key constraints with their RIDs (if RID is defined for all of them).
-     *         - replace values (`choices`, `ranges`, `search`) in the filters with the number of values.
-     *         - replace all `filters.and` with the number of filters.
-     *         - replace all source paths with the number of path nodes.
-     *         - use replace stack value with the number of stack nodes.
-     *         If after performing all these steps, the header is still lengthy, return the minimal header.
-     *
-     * A minimal header will have the following attributes:
-     *  - cid, pid, wid, action, schema_table, catalog, t:1
-     * And might have these optional attributes:
-     *  - elapsed_ms, cqp, ppid, pcid
-     *
-     * @param {object} header - the header context
-     * @return {object}
-     */
-    module._certifyContextHeader = function (header) {
-        var MAX_LENGTH = module.CONTEXT_HEADER_LENGTH_LIMIT;
-
-        var shorter = module._shorterVersion;
-        var replaceConstraintWithRID = function (src, noRID) {
-            if (noRID) return false;
-
-            var o = shorter.outbound, i = shorter.inbound, fk;
-            if (Array.isArray(srcs)) {
-                src.forEach(function (srcNode) {
-                    if (noRID) return;
-                    [shorter.outbound, shorter.inbound].forEach(function (direction) {
-                        if (noRID) return;
-
-                        if (Array.isArray(srcNode[direction])) {
-                            fk = module._getConstraintObject(catalog, srcNode[direction][0], srcNode[direction][1]);
-                            if (fk && fk.RID) {
-                                srcNode[direction] = fk.RID;
-                            } else {
-                                noRID = true;
-                                return;
-                            }
-                        }
-                    });
-                });
-            }
-
-            return !noRID;
-        };
-
-        var encode = module._encodeHeaderContent, i;
-
-        var res = encode(header);
-
-        if (res.length < MAX_LENGTH) {
-            return res;
-        }
-
-        var catalog = header.catalog;
-        var minimalObj = {
-            cid: header.cid,
-            wid: header.wid,
-            pid: header.pid,
-            catalog: header.catalog,
-            schema_table: header.schema_table,
-            action: header.action,
-            t: 1
-        };
-
-        // these attributes might not be available on the header, but if they
-        // are, we must include them in the minimal header content
-        ['elapsed_ms', 'cqp', 'ppid', 'pcid'].forEach(function (attr) {
-            if (header[attr]) {
-                minimalObj[attr] = header[attr];
-            }
-        });
-
-        // if even minimal is bigger than the limit, don't log anything
-        if (encode(minimalObj).length >= MAX_LENGTH) {
-            return {};
-        }
-
-        // truncation is based on stack, if there's no stack, just log the minimal object
-        if (!Array.isArray(header.stack)) {
-            return minimalObj;
-        }
-
-        var truncated = module._simpleDeepCopy(header);
-
-        // replace all fk constraints with their RID
-        // if RID is not available on even one fk, we will not replacing any of RIDs
-        // and go to the next step.
-        var noRID = false;
-        truncated.stack.forEach(function (stackEl) {
-            if (noRID) return;
-
-            // filters
-            if (stackEl.filters && Array.isArray(stackEl.filters.and)) {
-                stackEl.filters.and.forEach(function (facet) {
-                    if (noRID) return;
-
-                    if (Array.isArray(facet[shorter.source])) {
-                        noRID = !replaceConstraintWithRID(facet[shorter.source]);
-                    }
-                });
-            }
-
-            // sources
-            if (stackEl.source && Array.isArray(stackEl.source)) {
-                noRID = !replaceConstraintWithRID(stackEl.source);
-            }
-        });
-
-        if (noRID) {
-            truncated = module._simpleDeepCopy(header);
-        } else {
-            res = encode(truncated);
-            if (res.length < MAX_LENGTH) {
-            return res;
-        }
-        }
-
-        // replace choices, ranges, search with number of values
-        truncated.stack.forEach(function (stackEl) {
-            if (stackEl.filters && Array.isArray(stackEl.filters.and)) {
-                stackEl.filters.and.forEach(function (facet) {
-                    [shorter.choices, shorter.ranges, shorter.search].forEach(function (k) {
-                        facet[k] = Array.isArray(facet[k]) ? facet[k].length : 1;
-                    });
-                });
-            }
-        });
-
-        res = encode(truncated);
-        if (res.length < MAX_LENGTH) {
-            return res;
-        }
-
-        // replace all filters.and with the number of filters
-        truncated.stack.forEach(function (stackEl) {
-            if (stackEl.filters && Array.isArray(stackEl.filters.and)) {
-                stackEl.filters.and = stackEl.filters.and.length;
-            }
-        });
-
-        res = encode(truncated);
-        if (res.length < MAX_LENGTH) {
-            return res;
-        }
-
-        // replace all source paths with the number of path nodes
-        truncated.stack.forEach(function (stackEl) {
-            if (stackEl.source) {
-                stackEl.source = Array.isArray(stackEl.source) ? stackEl.source.length : 1;
-            }
-        });
-
-        res = encode(truncated);
-        if (res.length < MAX_LENGTH) {
-            return res;
-        }
-
-        // replace stack with the number of elements
-        truncated.stack = truncated.stack.length;
-
-        res = encode(truncated);
-        if (res.length < MAX_LENGTH) {
-            return res;
-        }
-
-        // if none of the truncation works, just return the minimal obj
-        return encode(minimalObj);
+    export function _isEntryContext(context) {
+        return _entryContexts.indexOf(context) !== -1;
     };
 
-    module._isEntryContext = function(context) {
-        return module._entryContexts.indexOf(context) !== -1;
-    };
-
-    module._isCompactContext = function(context) {
-        return module._compactContexts.indexOf(context) !== -1;
+    export function _isCompactContext(context) {
+        return _compactContexts.indexOf(context) !== -1;
     };

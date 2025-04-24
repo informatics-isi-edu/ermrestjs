@@ -1,4 +1,3 @@
-
 name: ERMrestJS tests
 
 on: [push]
@@ -101,6 +100,7 @@ jobs:
         id: unit-test
         run: |
           cd ermrestjs
+          make deps-test
           make test
       - name: Diagnosis after failure
         if: ${{ failure() }}

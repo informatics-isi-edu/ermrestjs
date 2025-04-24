@@ -85,7 +85,7 @@ exports.execute = function (options) {
         var i, facetObj, ref;
 
         var currDate = new Date();
-        var currentDateString = options.ermRest._fixedEncodeURIComponent(currDate.getFullYear() + "-" + (currDate.getMonth()+1) + "-" + currDate.getDate());
+        var currentDateString = options.ermRest.fixedEncodeURIComponent(currDate.getFullYear() + "-" + (currDate.getMonth()+1) + "-" + currDate.getDate());
 
         var createURL = function (tableName, facet) {
             var res = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableName;

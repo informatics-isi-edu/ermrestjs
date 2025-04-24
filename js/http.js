@@ -1,7 +1,19 @@
+/* eslint-disable prettier/prettier */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+// services
+import CatalogService from '@isrd-isi-edu/ermrestjs/src/services/catalog';
+import ConfigService from '@isrd-isi-edu/ermrestjs/src/services/config';
+
+// utils
+import { _shorterVersion, CONTEXT_HEADER_LENGTH_LIMIT, contextHeaderName } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
+import { fixedEncodeURIComponent, simpleDeepCopy } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
+
+// legacy
+import { getElapsedTime, onload } from '@isrd-isi-edu/ermrestjs/js/setup/node';
 
     /**
      * Enumeration of HTTP Response Status Codes, which are used within this
-     * sub-module. For internal use only.
+     * sub- For internal use only.
      * @private
      * @type {Object}
      */
@@ -66,14 +78,14 @@
      * @type {function}
      * @private
      */
-    module._http401Handler = null;
+    var _http401Handler = null;
 
     /**
      * set callback function which will be called when a HTTP 401 Error occurs
      * @param {httpUnauthorizedFn} fn callback function
      */
-    module.setHTTP401Handler = function(fn) {
-        module._http401Handler = fn;
+    export function setHTTP401Handler(fn) {
+        _http401Handler = fn;
     };
 
 
@@ -104,8 +116,8 @@
      * This function is used by http. It resolves promises by calling this function
      * to make sure _encountered401Error is false.
      */
-    module._onHttpAuthFlowFn = function(skipHTTP401Handling) {
-        var defer = module._q.defer();
+    function _onHttpAuthFlowFn(skipHTTP401Handling) {
+        var defer = ConfigService.q.defer();
 
         // If _encountered401Error is true then push the defer to _authorizationDefers
         // else just resolve it directly
@@ -123,12 +135,21 @@
      *
      * The response is always going to be an object
      */
-    module.getResponseHeader = function (response) {
+    export function getResponseHeader(response) {
         if (!response || response.headers == null) return {};
         if (typeof response.headers === "function") return response.headers();
         if (!("headers" in response)) return {};
 
         return response.headers;
+    };
+
+    var _onHTTPSuccess = function () {};
+    /**
+     * set callback function that triggers when a request returns with success
+     * @param {onHTTPSuccess} fn callback function
+     */
+    export function onHTTPSuccess(fn) {
+        _onHTTPSuccess = fn;
     };
 
     /**
@@ -137,7 +158,7 @@
      * @function
      * @private
      */
-    module._wrap_http = function(http) {
+    export function _wrap_http(http) {
 
         // wrapping function
         function wrap(method, fn, scope) {
@@ -164,10 +185,10 @@
                 if (this.contextHeaderParams) {
                     // Iterate over headers iff they do not collide
                     var contextHeader;
-                    if (typeof config.headers[module.contextHeaderName] === "object" && config.headers[module.contextHeaderName]) {
-                        contextHeader = config.headers[module.contextHeaderName];
+                    if (typeof config.headers[contextHeaderName] === "object" && config.headers[contextHeaderName]) {
+                        contextHeader = config.headers[contextHeaderName];
                     } else {
-                        contextHeader = config.headers[module.contextHeaderName] = {};
+                        contextHeader = config.headers[contextHeaderName] = {};
                     }
                     for (var key in this.contextHeaderParams) {
                         if (!(key in contextHeader)) {
@@ -186,21 +207,21 @@
                   *     alpha: A - Z and a - z
                   *
                   **/
-                if (typeof config.headers[module.contextHeaderName] === 'object') {
-                    config.headers[module.contextHeaderName].elapsed_ms = module.getElapsedTime();
+                if (typeof config.headers[contextHeaderName] === 'object') {
+                    config.headers[contextHeaderName].elapsed_ms = getElapsedTime();
                     // encode and make sure it's not very lengthy
-                    config.headers[module.contextHeaderName] = module._certifyContextHeader(config.headers[module.contextHeaderName]);
+                    config.headers[contextHeaderName] = _certifyContextHeader(config.headers[contextHeaderName]);
                 }
 
                 // now call the fn, with retry logic
-                var deferred = module._q.defer();
+                var deferred = ConfigService.q.defer();
                 var max_retries = (this.max_retries !== undefined && this.max_retries !== null) ? this.max_retries : _default_max_retries;
                 var delay = (this.initial_delay !== undefined && this.initial_delay !== null) ? this.initial_delay : _default_initial_delay;
                 var count = 0;
                 function asyncfn() {
                     fn.apply(scope, args).then(function(response) {
-                        module._onHTTPSuccess();
-                        module.onload().then(function() {
+                        _onHTTPSuccess();
+                        onload().then(function() {
                             deferred.resolve(response);
                         });
                     },
@@ -211,6 +232,7 @@
                          *
                          * https://github.com/axios/axios/issues/383
                          */
+                        // eslint-disable-next-line no-extra-boolean-cast
                         if (!!error.isAxiosError) {
                             if (typeof error.response !== 'object') {
                                 error = { response: { status: _http_status_codes.no_connection } };
@@ -230,21 +252,21 @@
                          * not that we got an error from server.
                          */
                         if (typeof response !== "object" || response == null) {
-                            module.onload().then(function() {
+                            onload().then(function() {
                                 deferred.reject(error);
                             });
                             return;
                         }
 
 
-                        var contentType = module.getResponseHeader(response)["content-type"];
+                        var contentType = getResponseHeader(response)["content-type"];
 
                         // if retry flag is set, skip on -1 and 0
                         var skipRetry = config.skipRetryBrowserError && (response.status == -1 || response.status == 0);
                         if ((_retriable_error_codes.indexOf(response.status) != -1) && count < max_retries && !skipRetry) {
                             count += 1;
                             setTimeout(function() {
-                                module._onHttpAuthFlowFn().then(function() {
+                                _onHttpAuthFlowFn().then(function() {
                                     asyncfn();
                                 });
                             }, delay);
@@ -269,7 +291,7 @@
                                 response.status = _http_status_codes.no_content;
                             }
 
-                            module.onload().then(function() {
+                            onload().then(function() {
                                 deferred.resolve(response);
                             });
                         } else if (response.status == _http_status_codes.unauthorized) {
@@ -284,13 +306,13 @@
                             if (_encountered401Error === false) {
 
                                 // If callback has been registered in _http401Handler
-                                if (typeof module._http401Handler == 'function') {
+                                if (typeof _http401Handler == 'function') {
 
                                     // Set _encountered401Error to avoid the handler from being called again
                                     _encountered401Error = true;
 
                                     // Push the current call to _authroizationDefers by calling _onHttpAuthFlowFn
-                                    module._onHttpAuthFlowFn().then(function() {
+                                    _onHttpAuthFlowFn().then(function() {
                                         asyncfn();
                                     });
 
@@ -299,7 +321,7 @@
                                     // So that other calls which failed due to 401 or were trigerred after the 401
                                     // are reexecuted
                                     // differentUser variable is a boolean variable that states whether the different user logged in after the 401 error was thrown
-                                    module._http401Handler().then(function(differentUser) {
+                                    _http401Handler().then(function(differentUser) {
                                         // if not a different user, continue with retrying previous requests
                                         // This should handle the case where 'differentUser' is undefined or null as well
                                         if (!differentUser) {
@@ -320,7 +342,7 @@
                                 }
                             } else {
                                 // Push the current call to _authroizationDefers by calling _onHttpAuthFlowFn
-                                module._onHttpAuthFlowFn().then(function() {
+                                _onHttpAuthFlowFn().then(function() {
                                     asyncfn();
                                 });
                             }
@@ -333,7 +355,7 @@
                                 // keep response.data the way it is, so client can provide more info to users
                             }
 
-                            module.onload().then(function() {
+                            onload().then(function() {
                                 deferred.reject(response);
                             });
                         }
@@ -343,7 +365,7 @@
                 // Push the current call to _authorizationDefers by calling _onHttpAuthFlowFn
                 // If the _encountered401Error is false then asyncfn will be called immediately
                 // else it will be queued
-                module._onHttpAuthFlowFn(config.skipHTTP401Handling).then(function() {
+                _onHttpAuthFlowFn(config.skipHTTP401Handling).then(function() {
                     asyncfn();
                 });
 
@@ -359,3 +381,191 @@
 
         return wrapper;
     };
+
+        /**
+     * Given an object will make sure it's safe for header.
+     */
+    function _encodeHeaderContent(obj) {
+        return unescape(fixedEncodeURIComponent(JSON.stringify(obj)));
+    }
+    
+    /**
+     * @private
+     * @desc
+     * Given a header object, will encode and if neccessary truncate it.
+     * Maximum allowed length of a header after encoding: 6500 characters.
+     * The logic is as follows:
+     *  1. If the encoded string is not lengthy, return it.
+     *  2. otherwise,
+     *    2.1. Return an empty object if the minimal header (defined below) goes over the limit.
+     *    2.2. Otherwise start truncating `stack` object by doing the following. In each step,
+     *         if the encoded and truncated header goes below the length limit, return it.
+     *         - replace all foreign key constraints with their RIDs (if RID is defined for all of them).
+     *         - replace values (`choices`, `ranges`, `search`) in the filters with the number of values.
+     *         - replace all `filters.and` with the number of filters.
+     *         - replace all source paths with the number of path nodes.
+     *         - use replace stack value with the number of stack nodes.
+     *         If after performing all these steps, the header is still lengthy, return the minimal header.
+     *
+     * A minimal header will have the following attributes:
+     *  - cid, pid, wid, action, schema_table, catalog, t:1
+     * And might have these optional attributes:
+     *  - elapsed_ms, cqp, ppid, pcid
+     *
+     * @param {object} header - the header context
+     * @return {object}
+     */
+    export function _certifyContextHeader(header) {
+        var MAX_LENGTH = CONTEXT_HEADER_LENGTH_LIMIT;
+
+        var shorter = _shorterVersion;
+        var replaceConstraintWithRID = function (src, noRID) {
+            if (noRID) return false;
+
+            var o = shorter.outbound, i = shorter.inbound, fk;
+            if (Array.isArray(src)) {
+                src.forEach(function (srcNode) {
+                    if (noRID) return;
+                    [shorter.outbound, shorter.inbound].forEach(function (direction) {
+                        if (noRID) return;
+
+                        if (Array.isArray(srcNode[direction])) {
+                            fk = CatalogService.getConstraintObject(catalog, srcNode[direction][0], srcNode[direction][1]);
+                            if (fk && fk.RID) {
+                                srcNode[direction] = fk.RID;
+                            } else {
+                                noRID = true;
+                                return;
+                            }
+                        }
+                    });
+                });
+            }
+
+            return !noRID;
+        };
+
+        var encode = _encodeHeaderContent, i;
+
+        var res = encode(header);
+
+        if (res.length < MAX_LENGTH) {
+            return res;
+        }
+
+        var catalog = header.catalog;
+        var minimalObj = {
+            cid: header.cid,
+            wid: header.wid,
+            pid: header.pid,
+            catalog: header.catalog,
+            schema_table: header.schema_table,
+            action: header.action,
+            t: 1
+        };
+
+        // these attributes might not be available on the header, but if they
+        // are, we must include them in the minimal header content
+        ['elapsed_ms', 'cqp', 'ppid', 'pcid'].forEach(function (attr) {
+            if (header[attr]) {
+                minimalObj[attr] = header[attr];
+            }
+        });
+
+        // if even minimal is bigger than the limit, don't log anything
+        if (encode(minimalObj).length >= MAX_LENGTH) {
+            return {};
+        }
+
+        // truncation is based on stack, if there's no stack, just log the minimal object
+        if (!Array.isArray(header.stack)) {
+            return minimalObj;
+        }
+
+        var truncated = simpleDeepCopy(header);
+
+        // replace all fk constraints with their RID
+        // if RID is not available on even one fk, we will not replacing any of RIDs
+        // and go to the next step.
+        var noRID = false;
+        truncated.stack.forEach(function (stackEl) {
+            if (noRID) return;
+
+            // filters
+            if (stackEl.filters && Array.isArray(stackEl.filters.and)) {
+                stackEl.filters.and.forEach(function (facet) {
+                    if (noRID) return;
+
+                    if (Array.isArray(facet[shorter.source])) {
+                        noRID = !replaceConstraintWithRID(facet[shorter.source]);
+                    }
+                });
+            }
+
+            // sources
+            if (stackEl.source && Array.isArray(stackEl.source)) {
+                noRID = !replaceConstraintWithRID(stackEl.source);
+            }
+        });
+
+        if (noRID) {
+            truncated = simpleDeepCopy(header);
+        } else {
+            res = encode(truncated);
+            if (res.length < MAX_LENGTH) {
+            return res;
+        }
+        }
+
+        // replace choices, ranges, search with number of values
+        truncated.stack.forEach(function (stackEl) {
+            if (stackEl.filters && Array.isArray(stackEl.filters.and)) {
+                stackEl.filters.and.forEach(function (facet) {
+                    [shorter.choices, shorter.ranges, shorter.search].forEach(function (k) {
+                        facet[k] = Array.isArray(facet[k]) ? facet[k].length : 1;
+                    });
+                });
+            }
+        });
+
+        res = encode(truncated);
+        if (res.length < MAX_LENGTH) {
+            return res;
+        }
+
+        // replace all filters.and with the number of filters
+        truncated.stack.forEach(function (stackEl) {
+            if (stackEl.filters && Array.isArray(stackEl.filters.and)) {
+                stackEl.filters.and = stackEl.filters.and.length;
+            }
+        });
+
+        res = encode(truncated);
+        if (res.length < MAX_LENGTH) {
+            return res;
+        }
+
+        // replace all source paths with the number of path nodes
+        truncated.stack.forEach(function (stackEl) {
+            if (stackEl.source) {
+                stackEl.source = Array.isArray(stackEl.source) ? stackEl.source.length : 1;
+            }
+        });
+
+        res = encode(truncated);
+        if (res.length < MAX_LENGTH) {
+            return res;
+        }
+
+        // replace stack with the number of elements
+        truncated.stack = truncated.stack.length;
+
+        res = encode(truncated);
+        if (res.length < MAX_LENGTH) {
+            return res;
+        }
+
+        // if none of the truncation works, just return the minimal obj
+        return encode(minimalObj);
+    };
+        

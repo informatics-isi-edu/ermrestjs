@@ -1,6 +1,81 @@
-/**
- * @namespace ERMrest.Reference
- */
+/* eslint-disable no-useless-escape */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-this-alias */
+/* eslint-disable prettier/prettier */
+import moment from 'moment-timezone';
+
+// models
+// import DeferredPromise from '@isrd-isi-edu/ermrestjs/src/models/deferred-promise';
+
+// services
+import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
+import ErrorService from '@isrd-isi-edu/ermrestjs/src/services/error';
+import ConfigService from '@isrd-isi-edu/ermrestjs/src/services/config';
+
+// utils
+import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils';
+import { isDefinedAndNotNull, isObject, isObjectAndNotNull, isStringAndNotEmpty, verify } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
+import { fixedEncodeURIComponent, simpleDeepCopy } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
+import {
+  _annotations,
+  _contexts,
+  _classNames,
+  _dataFormats,
+  _facetFilterTypes,
+  _facetUXModes,
+  _facetUXModeNames,
+  _foreignKeyInputModes,
+  _histogramSupportedTypes,
+  _HTMLColumnType,
+  _specialSourceDefinitions,
+  _parserAliases,
+  _pseudoColAggregateFns,
+  _pseudoColEntityAggregateFns,
+  _pseudoColAggregateExplicitName,
+  _pseudoColAggregateNames,
+  URL_PATH_LENGTH_LIMIT,
+} from '@isrd-isi-edu/ermrestjs/src/utils/constants';
+
+// legacy
+import { parse } from '@isrd-isi-edu/ermrestjs/js/parser';
+import { Type } from '@isrd-isi-edu/ermrestjs/js/core';
+import { Page, Reference, _referenceCopy } from '@isrd-isi-edu/ermrestjs/js/reference';
+import {
+  AttributeGroupColumn,
+  AttributeGroupReference,
+  AttributeGroupLocation,
+  BucketAttributeGroupReference,
+} from '@isrd-isi-edu/ermrestjs/js/ag_reference';
+import {
+  _determineDisplayName,
+  _extends,
+  encodeFacet,
+  _formatUtils,
+  _getAnnotationValueByContext,
+  _generateRowName,
+  _getRowTemplateVariables,
+  _generateTupleUniqueId,
+  generateKeyValueFilters,
+  _generateRowPresentation,
+  _generateKeyPresentation,
+  _getFormattedKeyValues,
+  _isSameHost,
+  _isValidBulkCreateForeignKey,
+  _isEntryContext,
+  _renderTemplate,
+  _processColumnOrderList,
+  _processModelComment,
+  processMarkdownPattern,
+  _processACLAnnotation,
+  _processSourceObjectComment,
+} from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
+import {
+  _compressSource,
+  _sourceColumnHelpers,
+  SourceObjectNode,
+  SourceObjectWrapper,
+  _processWaitForList,
+} from '@isrd-isi-edu/ermrestjs/js/utils/pseudocolumn_helpers';
 
 /**
  * Will create the appropriate ReferenceColumn object based on the given sourceObject.
@@ -22,7 +97,7 @@
  * @param  {String=}  name         the name to avoid computing it again.
  * @return {ERMrest.ReferenceColumn}
  */
-module._createPseudoColumn = function (reference, sourceObjectWrapper, mainTuple) {
+export const _createPseudoColumn = function (reference, sourceObjectWrapper, mainTuple) {
     var sourceObject = sourceObjectWrapper.sourceObject,
     column = sourceObjectWrapper.column,
     name  = sourceObjectWrapper.name,
@@ -32,11 +107,6 @@ module._createPseudoColumn = function (reference, sourceObjectWrapper, mainTuple
     var generalPseudo = function () {
         return new PseudoColumn(reference, sourceObjectWrapper.column, sourceObjectWrapper, name, mainTuple);
     };
-
-    var getFK = function (constraint) {
-        return module._getConstraintObject(reference.table.schema.catalog.id, constraint[0], constraint[1]).object;
-    };
-
 
 
     // has aggregate
@@ -96,7 +166,7 @@ module._createPseudoColumn = function (reference, sourceObjectWrapper, mainTuple
  * @desc
  * Constructor for ReferenceColumn. This class is a wrapper for {@link ERMrest.Column}.
  */
-function ReferenceColumn(reference, cols, sourceObjectWrapper, name, mainTuple) {
+export function ReferenceColumn(reference, cols, sourceObjectWrapper, name, mainTuple) {
     this._baseReference = reference;
     this._context = reference._context;
     this._baseCols = cols;
@@ -208,7 +278,7 @@ ReferenceColumn.prototype = {
         if (this._displayname === undefined) {
             if (this.sourceObject.markdown_name) {
                 this._displayname = {
-                    value: module.renderMarkdown(this.sourceObject.markdown_name, true),
+                    value: renderMarkdown(this.sourceObject.markdown_name, true),
                     unformatted: this.sourceObject.markdown_name,
                     isHTML: true
                 };
@@ -503,7 +573,7 @@ ReferenceColumn.prototype = {
             }
 
             Object.assign(keyValues, templateVariables, selfTemplateVariables);
-            return module.processMarkdownPattern(
+            return processMarkdownPattern(
                 this.display.sourceMarkdownPattern,
                 keyValues,
                 this.table,
@@ -536,10 +606,10 @@ ReferenceColumn.prototype = {
         var cols = this._baseCols, generated, i;
 
         // TODO does the following make sense? shouldn't it also check for ACLs and etc (column.inputDisabled)?
-        if (context == module._contexts.CREATE) {
+        if (context == _contexts.CREATE) {
             // if one is not generated
             for (i = 0; i < cols.length; i++) {
-                if (!_processACLAnnotation(cols[i].annotations, module._annotations.GENERATED, false)) {
+                if (!_processACLAnnotation(cols[i].annotations, _annotations.GENERATED, false)) {
                     return false;
                 }
             }
@@ -549,18 +619,18 @@ ReferenceColumn.prototype = {
                 message: "Automatically generated"
             };
 
-        } else if (context == module._contexts.EDIT) {
+        } else if (context == _contexts.EDIT) {
             // at least one is IMMUTABLE, so the whole thing is immutable
             var atLesatOneImmutable = cols.some(function (col) {
-                return _processACLAnnotation(col.annotations, module._annotations.IMMUTABLE, false);
+                return _processACLAnnotation(col.annotations, _annotations.IMMUTABLE, false);
             });
             if (atLesatOneImmutable) {
                 return true;
             }
             // if all are generated, the whole thing is immutable
             var allAreGenerated = cols.every(function (col) {
-                var isImmutable = _processACLAnnotation(col.annotations, module._annotations.IMMUTABLE, null),
-                    isGenerated = _processACLAnnotation(col.annotations, module._annotations.GENERATED, false);
+                var isImmutable = _processACLAnnotation(col.annotations, _annotations.IMMUTABLE, null),
+                    isGenerated = _processACLAnnotation(col.annotations, _annotations.GENERATED, false);
                 // if isImmutable===false, then that column is mutable based on annotation
                 return isImmutable !== false && isGenerated;
             });
@@ -665,7 +735,7 @@ ReferenceColumn.prototype = {
                 wfDef = self.sourceObject.display.wait_for;
             }
 
-            var res = module._processWaitForList(wfDef, self._baseReference, self._currentTable, self, self._mainTuple, "pseudo-column=`" + self.displayname.value + "`");
+            var res = _processWaitForList(wfDef, self._baseReference, self._currentTable, self, self._mainTuple, "pseudo-column=`" + self.displayname.value + "`");
             this._waitFor = res.waitForList;
             this._hasWaitFor = res.hasWaitFor;
             this._hasWaitForAggregate = res.hasWaitForAggregate;
@@ -710,12 +780,12 @@ ReferenceColumn.prototype = {
                     };
                 } else {
                     selfTemplateVariables = {
-                        "$self": module._getRowTemplateVariables(self.table, context, mainTuple._linkedData[self.name])
+                        "$self": _getRowTemplateVariables(self.table, context, mainTuple._linkedData[self.name])
                     };
                 }
             } else if (self.isKey) {
                 selfTemplateVariables = {
-                    "$self": module._getRowTemplateVariables(self.table, context, mainTuple._data)
+                    "$self": _getRowTemplateVariables(self.table, context, mainTuple._data)
                 };
             } else if (baseCol) {
                 selfTemplateVariables = {
@@ -725,7 +795,7 @@ ReferenceColumn.prototype = {
             }
 
             Object.assign(keyValues, templateVariables, selfTemplateVariables);
-            return module.processMarkdownPattern(
+            return processMarkdownPattern(
                 self.display.sourceMarkdownPattern,
                 keyValues,
                 self.table,
@@ -768,13 +838,13 @@ ReferenceColumn.prototype = {
         var self = this;
         var baseTable = self._baseReference.table;
 
-        var keyValues = module._getFormattedKeyValues(baseTable, self._context, data, linkedData);
+        var keyValues = _getFormattedKeyValues(baseTable, self._context, data, linkedData);
 
         if (!self.isInputIframe) {
             return '';
         }
 
-        var url = module._renderTemplate(
+        var url = _renderTemplate(
             self.inputIframeProps.urlPattern,
             keyValues,
             baseTable.schema.catalog,
@@ -806,7 +876,7 @@ ReferenceColumn.prototype = {
  * @constructor
  * @class
  */
-function VirtualColumn(reference, sourceObjectWrapper, name, mainTuple) {
+export function VirtualColumn(reference, sourceObjectWrapper, name, mainTuple) {
     VirtualColumn.superClass.call(this, reference, [], sourceObjectWrapper, name, mainTuple);
 
     this.isPseudo = true;
@@ -815,10 +885,10 @@ function VirtualColumn(reference, sourceObjectWrapper, name, mainTuple) {
 }
 
 // extend the prototype
-module._extends(VirtualColumn, ReferenceColumn);
+_extends(VirtualColumn, ReferenceColumn);
 
 /**
- * If you want to create an object of this type, use the `module._createPseudoColumn` method.
+ * If you want to create an object of this type, use the `_createPseudoColumn` method.
  * This will only be used for general purpose pseudo-columns, using that method ensures That
  * we're creating the more specific object instead. Therefore only these cases should
  * be using this type of object:
@@ -835,7 +905,7 @@ module._extends(VirtualColumn, ReferenceColumn);
  * @constructor
  * @class
  */
-function PseudoColumn (reference, column, sourceObjectWrapper, name, mainTuple) {
+export function PseudoColumn (reference, column, sourceObjectWrapper, name, mainTuple) {
     PseudoColumn.superClass.call(this, reference, [column], sourceObjectWrapper, name, mainTuple);
 
     /**
@@ -877,7 +947,7 @@ function PseudoColumn (reference, column, sourceObjectWrapper, name, mainTuple) 
     this.table = column.table;
 }
 // extend the prototype
-module._extends(PseudoColumn, ReferenceColumn);
+_extends(PseudoColumn, ReferenceColumn);
 
 /**
  * Format the presentation value corresponding to this pseudo-column definition.
@@ -906,7 +976,7 @@ PseudoColumn.prototype.formatPresentation = function(data, context, templateVari
         unformatted: this._getNullValue(context)
     };
 
-    if (module._isEntryContext(context)) {
+    if (_isEntryContext(context)) {
         return nullValue;
     }
 
@@ -926,7 +996,7 @@ PseudoColumn.prototype.formatPresentation = function(data, context, templateVari
 
     // make sure templateVariables is valid
     if (!isObjectAndNotNull(templateVariables)) {
-        templateVariables = module._getFormattedKeyValues(this.table, context, data);
+        templateVariables = _getFormattedKeyValues(this.table, context, data);
     }
 
     // not in entity mode, just return the column value.
@@ -940,10 +1010,10 @@ PseudoColumn.prototype.formatPresentation = function(data, context, templateVari
 
     if (this.display.sourceMarkdownPattern) {
         var keyValues = {}, selfTemplateVariables = {
-            "$self": module._getRowTemplateVariables(this.table, context, data)
+            "$self": _getRowTemplateVariables(this.table, context, data)
         };
         Object.assign(keyValues, templateVariables, selfTemplateVariables);
-        return module.processMarkdownPattern(
+        return processMarkdownPattern(
             this.display.sourceMarkdownPattern,
             keyValues,
             this.table,
@@ -953,7 +1023,7 @@ PseudoColumn.prototype.formatPresentation = function(data, context, templateVari
     }
 
     // in entity mode, return the foreignkey value
-    var pres = module._generateRowPresentation(this.lastForeignKeyNode.nodeObject.key, data, context, this._getShowForeignKeyLink(context));
+    var pres = _generateRowPresentation(this.lastForeignKeyNode.nodeObject.key, data, context, this._getShowForeignKeyLink(context));
     return pres ? pres: nullValue;
 };
 
@@ -988,7 +1058,7 @@ PseudoColumn.prototype.formatPresentation = function(data, context, templateVari
  * @return {Promise}
  */
 PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams) {
-    var defer = module._q.defer(),
+    var defer = ConfigService.q.defer(),
         self = this,
         promises = [], values = [],
         mainTable = this._currentTable,
@@ -1002,10 +1072,10 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
     var sourceTemplateEngine = this.display.sourceTemplateEngine;
 
     // this will dictates whether we should show rowname or not
-    var isRow = self.isEntityMode && module._pseudoColEntityAggregateFns.indexOf(self.sourceObject.aggregate) != -1;
+    var isRow = self.isEntityMode && _pseudoColEntityAggregateFns.indexOf(self.sourceObject.aggregate) != -1;
 
     // use `compact` context for entity array aggregates
-    var context = isRow ? module._contexts.COMPACT : self._context;
+    var context = isRow ? _contexts.COMPACT : self._context;
 
     // verify the input
     try {
@@ -1046,7 +1116,7 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
     // will format a single value
     var getFormattedValue = function (val) {
         if (isRow) {
-            var pres = module._generateRowPresentation(self.key, val, context, self._getShowForeignKeyLink(context));
+            var pres = _generateRowPresentation(self.key, val, context, self._getShowForeignKeyLink(context));
 
             return pres ? pres.unformatted : null;
         }
@@ -1102,7 +1172,7 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
         }
 
         // formatted array result
-        var arrayRes = module._formatUtils.printArray(
+        var arrayRes = _formatUtils.printArray(
             val.map(getFormattedValue),
             {
                 isMarkdown: (column.type.name === "markdown") || isRow,
@@ -1143,13 +1213,13 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
         } else {
             templateVariables = {
                 "$self": val.map(function (v) {
-                    return module._getRowTemplateVariables(column.table, context, v);
+                    return _getRowTemplateVariables(column.table, context, v);
                 })
             };
         }
 
         if (sourceMarkdownPattern) {
-            res = module._renderTemplate(
+            res = _renderTemplate(
                 sourceMarkdownPattern,
                 templateVariables,
                 column.table.schema.catalog,
@@ -1160,7 +1230,7 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
                 res = column.table._getNullValue(context);
             }
         }
-        return {value: module.renderMarkdown(res, false), templateVariables: templateVariables};
+        return {value: renderMarkdown(res, false), templateVariables: templateVariables};
     };
 
     // return empty list if page is empty
@@ -1171,7 +1241,7 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
 
     // make sure table has shortestkey of length 1
     if (mainTable.shortestKey.length > 1) {
-        module._log.warn("This function only works with tables that have at least a simple key.");
+        $log.warn("This function only works with tables that have at least a simple key.");
         defer.resolve(values);
         return defer.promise;
     }
@@ -1180,31 +1250,31 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
     var baseTable = self.hasPath ? "M": currTable;
 
     keyColName = mainTable.shortestKey[0].name;
-    keyColNameEncoded = module._fixedEncodeURIComponent(mainTable.shortestKey[0].name);
+    keyColNameEncoded = fixedEncodeURIComponent(mainTable.shortestKey[0].name);
     projection = "/c:=:" + baseTable + ":" + keyColNameEncoded +
                  ";v:=" + self.sourceObject.aggregate +
-                 "(" + currTable + ":" + (isRow ? "*" : module._fixedEncodeURIComponent(column.name)) + ")";
+                 "(" + currTable + ":" + (isRow ? "*" : fixedEncodeURIComponent(column.name)) + ")";
 
     // generate the base path in the following format:
     // <baseUri><basePath><filters><path-to-pseudo-col><projection>
     // the following shows where `/` is stored for each part:
     // <baseUri/><basePath/><filters></path-from-main-to-pseudo-col></projection>
     baseUri = [location.service, "catalog", location.catalog, "attributegroup"].join("/") + "/";
-    basePath = baseTable + ":=" + module._fixedEncodeURIComponent(mainTable.schema.name) + ":" + module._fixedEncodeURIComponent(mainTable.name) + "/";
+    basePath = baseTable + ":=" + fixedEncodeURIComponent(mainTable.schema.name) + ":" + fixedEncodeURIComponent(mainTable.name) + "/";
     pathToCol = self.sourceObjectWrapper.toString(false, false, currTable);
     if (pathToCol.length > 0) {
         pathToCol = "/" + pathToCol;
     }
 
     // make sure just projection and base uri doesn't go over limit.
-    if (basePath.length + pathToCol.length + projection.length >= module.URL_PATH_LENGTH_LIMIT) {
-        module._log.warn("couldn't generate the requests because of url limitation");
+    if (basePath.length + pathToCol.length + projection.length >= URL_PATH_LENGTH_LIMIT) {
+        $log.warn("couldn't generate the requests because of url limitation");
         defer.resolve(values);
         return defer.promise;
     }
 
     // get the computed filters
-    var keyValueRes = module.generateKeyValueFilters(
+    var keyValueRes = generateKeyValueFilters(
         mainTable.shortestKey,
         page.tuples.map(function (t) { return t.data;  }),
         mainTable.schema.catalog,
@@ -1213,7 +1283,7 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
     );
 
     if (!keyValueRes.successful) {
-        module._log.warn(keyValueRes.message);
+        $log.warn(keyValueRes.message);
         defer.resolve(values);
         return defer.promise;
     }
@@ -1225,12 +1295,12 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
 
     // if adding any of the filters would go over url limit
     if (promises.length === 0) {
-        module._log.warn("couldn't generate the requests because of url limitation");
+        $log.warn("couldn't generate the requests because of url limitation");
         defer.resolve(values);
         return defer.promise;
     }
 
-    module._q.all(promises).then(function (response) {
+    ConfigService.q.all(promises).then(function (response) {
         var values = [],
             result = [],
             value, res, isHTML, arrayValues;
@@ -1268,7 +1338,7 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
             // cnt and cnt_d are special since they will generate integer always
             if (["cnt", "cnt_d"].indexOf(self.sourceObject.aggregate) !== -1) {
                 isHTML = false;
-                formatted = module._formatUtils.printInteger(value.v);
+                formatted = _formatUtils.printInteger(value.v);
             } else {
                 isHTML = (column.type.name === "markdown");
                 formatted = getFormattedValue(value.v);
@@ -1278,7 +1348,7 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
             var templateVariables = { "$self": formatted, "$_self": value.v };
             if (sourceMarkdownPattern) {
                 isHTML = true;
-                res = module._renderTemplate(
+                res = _renderTemplate(
                     sourceMarkdownPattern,
                     templateVariables,
                     column.table.schema.catalog,
@@ -1292,7 +1362,7 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
             }
 
             if (isHTML) {
-                res = module.renderMarkdown(res, false);
+                res = renderMarkdown(res, false);
             }
 
             result.push({isHTML: isHTML, value: res, templateVariables: templateVariables});
@@ -1300,7 +1370,7 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
 
         defer.resolve(result);
     }).catch(function (err) {
-        defer.reject(module.responseToError(err));
+        defer.reject(ErrorService.responseToError(err));
     });
 
     return defer.promise;
@@ -1376,13 +1446,13 @@ Object.defineProperty(PseudoColumn.prototype, "comment", {
                     }
 
                     // otherwise generate one
-                    var agIndex = module._pseudoColAggregateFns.indexOf(self.sourceObject.aggregate);
+                    var agIndex = _pseudoColAggregateFns.indexOf(self.sourceObject.aggregate);
                     var dname = self._baseCols[0].displayname.unformatted;
                     if (self.isEntityMode) {
                         dname = self._baseCols[0].table.displayname.unformatted;
                     }
 
-                    return _processModelComment([module._pseudoColAggregateExplicitName[agIndex], dname].join(" "), false);
+                    return _processModelComment([_pseudoColAggregateExplicitName[agIndex], dname].join(" "), false);
                 }
 
                 // if it's not aggregate, we can get it from the table or column depending on entity mode:
@@ -1427,7 +1497,7 @@ Object.defineProperty(PseudoColumn.prototype, "displayname", {
             var attachDisplayname = function (self) {
                 if (self.sourceObject.markdown_name) {
                     self._displayname = {
-                        value: module.renderMarkdown(self.sourceObject.markdown_name, true),
+                        value: renderMarkdown(self.sourceObject.markdown_name, true),
                         unformatted: self.sourceObject.markdown_name,
                         isHTML: true
                     };
@@ -1440,8 +1510,8 @@ Object.defineProperty(PseudoColumn.prototype, "displayname", {
                     var displayname = self.isEntityMode ? self._baseCols[0].table.displayname : self._displayname;
 
                     // prefix
-                    var agIndex = module._pseudoColAggregateFns.indexOf(self.sourceObject.aggregate);
-                    var name = module._pseudoColAggregateNames[agIndex];
+                    var agIndex = _pseudoColAggregateFns.indexOf(self.sourceObject.aggregate);
+                    var name = _pseudoColAggregateNames[agIndex];
 
                     self._displayname =  {
                         value: (name ? [name, displayname.value].join(" ") : displayname.value),
@@ -1520,7 +1590,7 @@ Object.defineProperty(PseudoColumn.prototype, "reference", {
                     uri = self._baseReference.location.compactUri + "/" + self.sourceObjectWrapper.toString(false, false);
                 }
 
-                self._reference = new Reference(module.parse(uri), self.table.schema.catalog);
+                self._reference = new Reference(parse(uri), self.table.schema.catalog);
 
                 // make sure data exists
                 if (isObjectAndNotNull(facet)) {
@@ -1611,7 +1681,7 @@ Object.defineProperty(PseudoColumn.prototype, "canUseScalarProjection", {
  * Constructor for ForeignKeyPseudoColumn. This class is a wrapper for {@link ERMrest.ForeignKeyRef}.
  * This class extends the {@link ERMrest.ReferenceColumn}
  */
-function ForeignKeyPseudoColumn (reference, fk, sourceObjectWrapper, name) {
+export function ForeignKeyPseudoColumn (reference, fk, sourceObjectWrapper, name) {
     // call the parent constructor
     ForeignKeyPseudoColumn.superClass.call(this, reference, fk.colset.columns, sourceObjectWrapper, name);
 
@@ -1632,14 +1702,14 @@ function ForeignKeyPseudoColumn (reference, fk, sourceObjectWrapper, name) {
     var ermrestURI = [
         table.schema.catalog.server.uri ,"catalog" ,
         table.schema.catalog.id, "entity",
-        [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":")
+        [fixedEncodeURIComponent(table.schema.name),fixedEncodeURIComponent(table.name)].join(":")
     ].join("/");
 
     /**
      * @type {ERMrest.Reference}
      * @desc The reference object that represents the table of this PseudoColumn
      */
-    this.reference =  new Reference(module.parse(ermrestURI), table.schema.catalog);
+    this.reference =  new Reference(parse(ermrestURI), table.schema.catalog);
 
     /**
      * @type {ERMrest.ForeignKeyRef}
@@ -1661,7 +1731,7 @@ function ForeignKeyPseudoColumn (reference, fk, sourceObjectWrapper, name) {
     this.table = this.foreignKey.key.table;
 }
 // extend the prototype
-module._extends(ForeignKeyPseudoColumn, ReferenceColumn);
+_extends(ForeignKeyPseudoColumn, ReferenceColumn);
 
 /**
  * Given the available tuple data, generate the uniqueId for the selected row from the table this pseudo column points to
@@ -1669,7 +1739,7 @@ module._extends(ForeignKeyPseudoColumn, ReferenceColumn);
  * @param {Object} linkedData key-value pairs of column values of the table this pseudocolumn points to
  */
 ForeignKeyPseudoColumn.prototype.generateUniqueId = function (linkedData) {
-    return module._generateTupleUniqueId(this.reference.table.shortestKey, linkedData);
+    return _generateTupleUniqueId(this.reference.table.shortestKey, linkedData);
 };
 
 // properties to be overriden:
@@ -1698,12 +1768,12 @@ ForeignKeyPseudoColumn.prototype.filteredRef = function(data, linkedData) {
             cfacets; // custom facet created based on the filter pattern
 
         // if the annotaion didn't exist
-        if (!self.foreignKey.annotations.contains(module._annotations.FOREIGN_KEY)) {
-            return new Reference(module.parse(currURI), currTable.schema.catalog);
+        if (!self.foreignKey.annotations.contains(_annotations.FOREIGN_KEY)) {
+            return new Reference(parse(currURI), currTable.schema.catalog);
         }
 
-        keyValues = module._getFormattedKeyValues(baseTable, self._context, data, linkedData);
-        content = self.foreignKey.annotations.get(module._annotations.FOREIGN_KEY).content;
+        keyValues = _getFormattedKeyValues(baseTable, self._context, data, linkedData);
+        content = self.foreignKey.annotations.get(_annotations.FOREIGN_KEY).content;
 
         // make sure the annotation is properly defined
         if (isObjectAndNotNull(content.domain_filter) && isStringAndNotEmpty(content.domain_filter.ermrest_path_pattern)) {
@@ -1712,7 +1782,7 @@ ForeignKeyPseudoColumn.prototype.filteredRef = function(data, linkedData) {
 
             // if displayname is passed, process it
             if (isStringAndNotEmpty(content.domain_filter.display_markdown_pattern)) {
-                displaynameMkdn = module._renderTemplate(
+                displaynameMkdn = _renderTemplate(
                     content.domain_filter.display_markdown_pattern,
                     keyValues,
                     baseTable.schema.catalog,
@@ -1720,7 +1790,7 @@ ForeignKeyPseudoColumn.prototype.filteredRef = function(data, linkedData) {
                 );
 
                 if (displaynameMkdn != null && displaynameMkdn.trim() !== '') {
-                    displayname = module.renderMarkdown(displaynameMkdn, true);
+                    displayname = renderMarkdown(displaynameMkdn, true);
                 }
             }
         }
@@ -1732,7 +1802,7 @@ ForeignKeyPseudoColumn.prototype.filteredRef = function(data, linkedData) {
 
         // process the filter pattern
         if (filterPattern) {
-            uriFilter = module._renderTemplate(
+            uriFilter = _renderTemplate(
                 filterPattern,
                 keyValues,
                 baseTable.schema.catalog,
@@ -1756,15 +1826,15 @@ ForeignKeyPseudoColumn.prototype.filteredRef = function(data, linkedData) {
 
             // see if we can parse the url, otherwise ignore the annotaiton
             try {
-                location = module.parse(currURI + '/*::cfacets::' + module.encodeFacet(cfacets));
+                location = parse(currURI + '/*::cfacets::' + encodeFacet(cfacets));
             } catch (exp) {
-                module._log.error("given domain_filter throws error, ignoring it. ", exp);
+                $log.error("given domain_filter throws error, ignoring it. ", exp);
             }
         }
 
         // if the annotation is missing or is invalid, location will be undefined
         if (!location) {
-            location = module.parse(currURI);
+            location = parse(currURI);
         }
 
         return new Reference(location, currTable.schema.catalog);
@@ -1804,12 +1874,12 @@ ForeignKeyPseudoColumn.prototype.getDefaultDisplay = function (rowValues) {
             col = keyColumns[i];
             keyValues.push(col.formatvalue(fkValues[col.name], this._context));
             keyPairs.push(
-                module._fixedEncodeURIComponent(col.name) + "=" + module._fixedEncodeURIComponent(fkValues[col.name])
+                fixedEncodeURIComponent(col.name) + "=" + fixedEncodeURIComponent(fkValues[col.name])
             );
         }
 
         // use row name as the caption
-        rowName = module._generateRowName(this.table, this._context, fkValues);
+        rowName = _generateRowName(this.table, this._context, fkValues);
         caption = rowName.value; isHTML = rowName.isHTML;
 
         // use "col_1:col_2:col_3"
@@ -1823,10 +1893,10 @@ ForeignKeyPseudoColumn.prototype.getDefaultDisplay = function (rowValues) {
         var refURI = [
             table.schema.catalog.server.uri ,"catalog" ,
             table.schema.catalog.id, this._baseReference.location.api,
-            [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":"),
+            [fixedEncodeURIComponent(table.schema.name),fixedEncodeURIComponent(table.name)].join(":"),
             keyPairs.join("&")
         ].join("/");
-        ref = new Reference(module.parse(refURI), table.schema.catalog);
+        ref = new Reference(parse(refURI), table.schema.catalog);
     }
 
     return {
@@ -1875,10 +1945,10 @@ ForeignKeyPseudoColumn.prototype.formatPresentation = function(data, context, te
 
     if (this.display.sourceMarkdownPattern) {
         var keyValues = {}, selfTemplateVariables = {
-            "$self": module._getRowTemplateVariables(this.table, context, data)
+            "$self": _getRowTemplateVariables(this.table, context, data)
         };
         Object.assign(keyValues, templateVariables, selfTemplateVariables);
-        return module.processMarkdownPattern(
+        return processMarkdownPattern(
             this.display.sourceMarkdownPattern,
             keyValues,
             this.table,
@@ -1887,7 +1957,7 @@ ForeignKeyPseudoColumn.prototype.formatPresentation = function(data, context, te
         );
     }
 
-    var pres = module._generateRowPresentation(this.foreignKey.key, data, context, this._getShowForeignKeyLink(context));
+    var pres = _generateRowPresentation(this.foreignKey.key, data, context, this._getShowForeignKeyLink(context));
     return pres ? pres: nullValue;
 };
 ForeignKeyPseudoColumn.prototype._determineSortable = function () {
@@ -1937,13 +2007,13 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "hasDomainFilter", {
         if (this._hasDomainFilter === undefined) {
             var populateDomainFilterProps = function (self) {
                 // the annotaion didn't exist
-                if (!self.foreignKey.annotations.contains(module._annotations.FOREIGN_KEY)) {
+                if (!self.foreignKey.annotations.contains(_annotations.FOREIGN_KEY)) {
                     self._domainFilterRawString = '';
                     self._domainFilterUsedColumns = [];
                     return false;
                 }
 
-                var content = self.foreignKey.annotations.get(module._annotations.FOREIGN_KEY).content;
+                var content = self.foreignKey.annotations.get(_annotations.FOREIGN_KEY).content;
 
                 // the annotation is properly defined
                 if (isObjectAndNotNull(content.domain_filter) && isStringAndNotEmpty(content.domain_filter.ermrest_path_pattern)) {
@@ -2074,7 +2144,7 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "displayname", {
             var value, isHTML, unformatted;
             if (this.sourceObject.markdown_name) {
                 unformatted = this.sourceObject.markdown_name;
-                value = module.renderMarkdown(unformatted, true);
+                value = renderMarkdown(unformatted, true);
                 isHTML = true;
             } else if (toName) {
                 value = unformatted = toName;
@@ -2161,7 +2231,7 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "display", {
                     sourceDisplay.sourceTemplateEngine = displ.template_engine;
                 }
 
-                if (module._foreignKeyInputModes.indexOf(displ.selector_ux_mode) !== -1) {
+                if (_foreignKeyInputModes.indexOf(displ.selector_ux_mode) !== -1) {
                     sourceDisplay.inputDisplayMode = displ.selector_ux_mode;
                 }
 
@@ -2212,7 +2282,7 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "compressedDataSource", 
  * Constructor for KeyPseudoColumn. This class is a wrapper for {@link ERMrest.Key}.
  * This class extends the {@link ERMrest.ReferenceColumn}
  */
-function KeyPseudoColumn (reference, key, sourceObjectWrapper, name) {
+export function KeyPseudoColumn (reference, key, sourceObjectWrapper, name) {
     // call the parent constructor
     KeyPseudoColumn.superClass.call(this, reference, key.colset.columns, sourceObjectWrapper, name);
 
@@ -2239,7 +2309,7 @@ function KeyPseudoColumn (reference, key, sourceObjectWrapper, name) {
     this._constraintName = key._constraintName;
 }
 // extend the prototype
-module._extends(KeyPseudoColumn, ReferenceColumn);
+_extends(KeyPseudoColumn, ReferenceColumn);
 
 // properties to be overriden:
 
@@ -2277,10 +2347,10 @@ KeyPseudoColumn.prototype.formatPresentation = function(data, context, templateV
     }
     if (this.display.sourceMarkdownPattern) {
         var keyValues = {}, selfTemplateVariables = {
-            "$self": module._getRowTemplateVariables(this.table, context, data, null, this.key)
+            "$self": _getRowTemplateVariables(this.table, context, data, null, this.key)
         };
         Object.assign(keyValues, templateVariables, selfTemplateVariables);
-        return module.processMarkdownPattern(
+        return processMarkdownPattern(
             this.display.sourceMarkdownPattern,
             keyValues,
             this.table,
@@ -2289,7 +2359,7 @@ KeyPseudoColumn.prototype.formatPresentation = function(data, context, templateV
         );
     }
 
-    var pres = module._generateKeyPresentation(this.key, data, context, templateVariables, this.display.showKeyLink);
+    var pres = _generateKeyPresentation(this.key, data, context, templateVariables, this.display.showKeyLink);
     return pres ? pres : nullValue;
  };
 KeyPseudoColumn.prototype._determineSortable = function () {
@@ -2331,12 +2401,12 @@ Object.defineProperty(KeyPseudoColumn.prototype, "displayname", {
         if (this._displayname === undefined) {
             if (this.sourceObject.markdown_name) {
                 this._displayname = {
-                    value: module.renderMarkdown(this.sourceObject.markdown_name, true),
+                    value: renderMarkdown(this.sourceObject.markdown_name, true),
                     unformatted: this.sourceObject.markdown_name,
                     isHTML: true
                 };
             } else {
-                this._displayname = module._determineDisplayName(this.key, false);
+                this._displayname = _determineDisplayName(this.key, false);
 
                 // if was undefined, fall back to default
                 if (this._displayname.value === undefined || this._displayname.value.trim() === "") {
@@ -2411,13 +2481,13 @@ Object.defineProperty(KeyPseudoColumn.prototype, "display", {
  * This class is a wrapper for {@link ERMrest.Column} objects that have asset annotation.
  * This class extends the {@link ERMrest.ReferenceColumn}
  */
-function AssetPseudoColumn (reference, column, sourceObjectWrapper, name) {
+export function AssetPseudoColumn (reference, column, sourceObjectWrapper, name) {
     // call the parent constructor
     AssetPseudoColumn.superClass.call(this, reference, [column], sourceObjectWrapper, name);
 
     this._baseCol = column;
 
-    this._annotation = column.annotations.get(module._annotations.ASSET).content || {};
+    this._annotation = column.annotations.get(_annotations.ASSET).content || {};
 
     /**
      * @type {boolean}
@@ -2432,7 +2502,7 @@ function AssetPseudoColumn (reference, column, sourceObjectWrapper, name) {
     this.isAsset = true;
 }
 // extend the prototype
-module._extends(AssetPseudoColumn, ReferenceColumn);
+_extends(AssetPseudoColumn, ReferenceColumn);
 
 /**
  * If url_pattern is invalid or browser_upload=false the input will be disabled.
@@ -2497,12 +2567,12 @@ AssetPseudoColumn.prototype.getMetadata = function (data, context, options) {
     }
 
     // assume same origin because most paths should be relative
-    var sameHost = module._isSameHost(result.url) !== false;
+    var sameHost = _isSameHost(result.url) !== false;
 
     result.sameHost = sameHost;
 
     // in detailed, we want to show the host information if not on the same origin
-    if (!sameHost && typeof context === "string" && context === module._contexts.DETAILED) {
+    if (!sameHost && typeof context === "string" && context === _contexts.DETAILED) {
         // see if link contains absolute paths that start with https:// or http://
         var hasProtocol = new RegExp('^(?:[a-z]+:)?//', 'i').test(result.url);
         var urlParts = result.url.split("/");
@@ -2581,7 +2651,7 @@ AssetPseudoColumn.prototype.formatPresentation = function(data, context, templat
     };
 
     // in edit return the original data
-    if (module._isEntryContext(context)) {
+    if (_isEntryContext(context)) {
         return { isHTML: false, value: data[this._baseCol.name], unformatted: data[this._baseCol.name]};
     }
 
@@ -2600,7 +2670,7 @@ AssetPseudoColumn.prototype.formatPresentation = function(data, context, templat
     }
 
     // var currentOrigin = server.url.origin
-    var classNames = module._classNames;
+    var classNames = _classNames;
     var metadata = this.getMetadata(data, context, options);
     var caption = metadata.caption,
         hostInfo = metadata.hostInformation,
@@ -2629,8 +2699,8 @@ AssetPseudoColumn.prototype.formatPresentation = function(data, context, templat
         template += ":span:(source: {{{hostInfo}}}):/span:{.asset-source-description}";
     }
 
-    var unformatted = module._renderTemplate(template, keyValues, this.table.schema.catalog);
-    return {isHTML: true, value: module.renderMarkdown(unformatted, true), unformatted: unformatted};
+    var unformatted = _renderTemplate(template, keyValues, this.table.schema.catalog);
+    return {isHTML: true, value: renderMarkdown(unformatted, true), unformatted: unformatted};
 };
 
 /**
@@ -2814,7 +2884,7 @@ Object.defineProperty(AssetPseudoColumn.prototype, "filenameExtFilter", {
 
             var reg = this._annotation.filename_ext_regexp;
             if (typeof reg == 'string') {
-                this._filenameExtRegexp.push(ext);
+                this._filenameExtRegexp.push(reg);
             } else if (Array.isArray(reg)) {
                 this._filenameExtRegexp = reg;
             }
@@ -2832,7 +2902,7 @@ Object.defineProperty(AssetPseudoColumn.prototype, "displayImagePreview", {
     get: function () {
         if (this._displayImagePreview === undefined) {
             var disp = this._annotation.display;
-            var currDisplay = isObjectAndNotNull(disp) ? module._getAnnotationValueByContext(this._context, disp) : null;
+            var currDisplay = isObjectAndNotNull(disp) ? _getAnnotationValueByContext(this._context, disp) : null;
             this._displayImagePreview = isObjectAndNotNull(currDisplay) &&  currDisplay.image_preview === true;
         }
         return this._displayImagePreview;
@@ -2856,7 +2926,7 @@ Object.defineProperty(AssetPseudoColumn.prototype, "displayImagePreview", {
  *
  * This class extends the {@link ERMrest.ReferenceColumn}
  */
-function InboundForeignKeyPseudoColumn (reference, relatedReference, sourceObjectWrapper, name) {
+export function InboundForeignKeyPseudoColumn (reference, relatedReference, sourceObjectWrapper, name) {
     var fk = relatedReference.origFKR;
 
     // call the parent constructor
@@ -2905,7 +2975,7 @@ function InboundForeignKeyPseudoColumn (reference, relatedReference, sourceObjec
 }
 
 // extend the prototype
-module._extends(InboundForeignKeyPseudoColumn, ReferenceColumn);
+_extends(InboundForeignKeyPseudoColumn, ReferenceColumn);
 
 // properties to be overriden:
 InboundForeignKeyPseudoColumn.prototype.formatPresentation = function(data, context, templateVariables, options) {
@@ -2985,7 +3055,7 @@ Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "compressedDataSo
  * @memberof ERMrest
  * @constructor
  */
-function FacetColumn (reference, index, facetObjectWrapper, filters) {
+export function FacetColumn (reference, index, facetObjectWrapper, filters) {
 
     /**
      * The column object that the filters are based on
@@ -3094,7 +3164,7 @@ FacetColumn.prototype = {
      */
     get preferredMode() {
         if (this._preferredMode === undefined) {
-            var modes = module._facetUXModes;
+            var modes = _facetUXModes;
 
             // a facet is in range mode if it's column's type is integer, float, date, timestamp, or serial
             var isRangeMode = function (column) {
@@ -3132,7 +3202,7 @@ FacetColumn.prototype = {
                 }
 
                 // use the defined ux_mode
-                if (module._facetUXModeNames.indexOf(self._facetObject.ux_mode) !== -1) {
+                if (_facetUXModeNames.indexOf(self._facetObject.ux_mode) !== -1) {
                     return self._facetObject.ux_mode;
                 }
 
@@ -3157,7 +3227,7 @@ FacetColumn.prototype = {
             this._barPlot = (this._facetObject.bar_plot === false) ? false : true;
 
             // if it's not in the list of spported types we won't show it even if the user defined it in the annotation
-            if (module._histogramSupportedTypes.indexOf(this.column.type.rootName) === -1) {
+            if (_histogramSupportedTypes.indexOf(this.column.type.rootName) === -1) {
                 this._barPlot = false;
             }
 
@@ -3230,10 +3300,10 @@ FacetColumn.prototype = {
 
             // TODO might be able to improve this
             if (typeof loc.searchTerm === "string") {
-                jsonFilters.push({"sourcekey": module._specialSourceDefinitions.SEARCH_BOX, "search": [loc.searchTerm]});
+                jsonFilters.push({"sourcekey": _specialSourceDefinitions.SEARCH_BOX, "search": [loc.searchTerm]});
             }
 
-            var newLoc = module.parse(loc.compactUri, loc.catalogObject);
+            var newLoc = parse(loc.compactUri, loc.catalogObject);
 
             //get all the filters from other facetColumns
             if (loc.facets) {
@@ -3260,7 +3330,7 @@ FacetColumn.prototype = {
             }
 
             // add custom facets as the facets of the parent
-            var alias =  module._parserAliases.JOIN_TABLE_PREFIX + (newLoc.hasJoin ? newLoc.pathParts.length : "");
+            var alias =  _parserAliases.JOIN_TABLE_PREFIX + (newLoc.hasJoin ? newLoc.pathParts.length : "");
             if (loc.customFacets) {
                 //NOTE this is just a hack, and since the whole feature is just a hack it's fine.
                 // In the ermrest_path we're allowing them to use the M alias. In here, we are making
@@ -3275,11 +3345,11 @@ FacetColumn.prototype = {
                 // You can see why we are changing $M to $T.
                 //
                 // As I mentioned this is hacky, so we should eventually find a way around this.
-                cfacet = module._simpleDeepCopy(loc.customFacets.decoded);
+                const cfacet = simpleDeepCopy(loc.customFacets.decoded);
                 if (cfacet.ermrest_path && self.sourceObjectNodes.length > 0) {
                     // switch the alias names, the cfacet is originally written with the assumption of
                     // the main table having "M" alias. So we just have to swap the aliases.
-                    var mainAlias = module._parserAliases.MAIN_TABLE;
+                    var mainAlias = _parserAliases.MAIN_TABLE;
                     cfacet.ermrest_path = cfacet.ermrest_path.replaceAll("$" + mainAlias, "$" + alias);
                 }
                 newLoc.customFacets = cfacet;
@@ -3301,7 +3371,7 @@ FacetColumn.prototype = {
                 // TODO can this be improved?
                 var filterPath = self.sourceObjectWrapper.toString(false, false);
                 if (filterPath.length > 0) {
-                    newLoc = module.parse(newLoc.compactUri + "/" + filterPath);
+                    newLoc = parse(newLoc.compactUri + "/" + filterPath);
                 }
             }
 
@@ -3329,7 +3399,7 @@ FacetColumn.prototype = {
             var getDisplayname = function (self) {
                 if (self._facetObject.markdown_name) {
                     return {
-                        value: module.renderMarkdown(self._facetObject.markdown_name, true),
+                        value: renderMarkdown(self._facetObject.markdown_name, true),
                         unformatted: self._facetObject.markdown_name,
                         isHTML: true
                     };
@@ -3345,7 +3415,7 @@ FacetColumn.prototype = {
                 // Otherwise
                 var value, unformatted, isHTML = false;
                 var lastFKIsInbound = self.lastForeignKeyNode.isInbound;
-                var lastFKDisplay = lastFK.getDisplay(module._contexts.COMPACT_SELECT);
+                var lastFKDisplay = lastFK.getDisplay(_contexts.COMPACT_SELECT);
 
                 // use from_name of the last fk if it's inbound
                 if (lastFKIsInbound && lastFKDisplay.fromName) {
@@ -3386,10 +3456,10 @@ FacetColumn.prototype = {
         if (this._comment === undefined) {
             var commentDisplayMode, disp;
             if (!this.isEntityMode) {
-                disp = this._column.getDisplay(module._contexts.COMPACT_SELECT);
+                disp = this._column.getDisplay(_contexts.COMPACT_SELECT);
                 commentDisplayMode = disp.commentDisplayMode;
             } else {
-                disp = this._column.table.getDisplay(module._contexts.COMPACT_SELECT);
+                disp = this._column.table.getDisplay(_contexts.COMPACT_SELECT);
                 commentDisplayMode = disp.tableCommentDisplayMode;
             }
             this._comment = _processSourceObjectComment(
@@ -3599,9 +3669,9 @@ FacetColumn.prototype = {
             var fastFilter = this._facetObject.fast_filter_source;
             if (fastFilter !== undefined || fastFilter !== null) {
                 try {
-                    res = new SourceObjectWrapper({source: fastFilter}, self.reference.table, module._constraintNames, true);
+                    res = new SourceObjectWrapper({source: fastFilter}, self.reference.table, true);
                 } catch (exp) {
-                    module._log.warn("given fast_filter_source for facet index=`" + self.index + "` is not valid.");
+                    $log.warn("given fast_filter_source for facet index=`" + self.index + "` is not valid.");
                     res = null;
                 }
             }
@@ -3627,20 +3697,20 @@ FacetColumn.prototype = {
      * @return {Promise} A promise resolved with list of objects that have `uniqueId`, and `displayname`.
      */
     getChoiceDisplaynames: function (contextHeaderParams) {
-        var defer = module._q.defer(), filters =  [], self = this;
+        var defer = ConfigService.q.defer(), filters =  [], self = this;
         var table = this._column.table, columnName = this._column.name;
         // whether the output must be displayed as markdown or not
-        var isHTML = (module._HTMLColumnType.indexOf(this._column.type.name) != -1);
+        var isHTML = (_HTMLColumnType.indexOf(this._column.type.name) != -1);
 
         var createRef = function (filterStrs) {
             var uri = [
                 table.schema.catalog.server.uri ,"catalog" ,
                 table.schema.catalog.id, "entity",
-                module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name),
+                fixedEncodeURIComponent(table.schema.name) + ":" + fixedEncodeURIComponent(table.name),
                 filterStrs.join(";")
             ].join("/");
 
-            var ref = new Reference(module.parse(uri), table.schema.catalog).contextualize.compactSelect;
+            var ref = new Reference(parse(uri), table.schema.catalog).contextualize.compactSelect;
             ref = ref.sort([{"column": columnName, "descending": false}]);
             return ref;
         };
@@ -3649,7 +3719,7 @@ FacetColumn.prototype = {
             return {
                 uniqueId: f.term,
                 displayname: {
-                    value: isHTML ? module.renderMarkdown(f.toString(), true) : f.toString(),
+                    value: isHTML ? renderMarkdown(f.toString(), true) : f.toString(),
                     isHTML: isHTML
                 },
                 tuple: null
@@ -3693,7 +3763,7 @@ FacetColumn.prototype = {
                 }
 
                 filterStr.push(
-                    module._fixedEncodeURIComponent(columnName) + "=" + module._fixedEncodeURIComponent(f.term)
+                    fixedEncodeURIComponent(columnName) + "=" + fixedEncodeURIComponent(f.term)
                 );
                 filterTerms[f.term] = index;
             });
@@ -3730,7 +3800,7 @@ FacetColumn.prototype = {
 
                 defer.resolve(filters);
             }).catch(function (err) {
-                defer.reject(module.responseToError(err));
+                defer.reject(ErrorService.responseToError(err));
             });
 
         }
@@ -3795,6 +3865,7 @@ FacetColumn.prototype = {
                      * stringifying it will turn it into "\"test\"" which is
                      * the valid JSON value.
                      */
+                    let value;
                      if (typeof f.term === "string") {
                          value = JSON.stringify(f.term);
                      } else {
@@ -3854,8 +3925,8 @@ FacetColumn.prototype = {
         }
 
         // create choice filters
-        if (Array.isArray(json[module._facetFilterTypes.CHOICE])) {
-            json[module._facetFilterTypes.CHOICE].forEach(function (ch) {
+        if (Array.isArray(json[_facetFilterTypes.CHOICE])) {
+            json[_facetFilterTypes.CHOICE].forEach(function (ch) {
 
                 /*
                  * We cannot distinguish between json `null` in sql and actual `null`,
@@ -3891,8 +3962,8 @@ FacetColumn.prototype = {
         }
 
         // create range filters
-        if (!hasNotNull && Array.isArray(json[module._facetFilterTypes.RANGE])) {
-            json[module._facetFilterTypes.RANGE].forEach(function (ch) {
+        if (!hasNotNull && Array.isArray(json[_facetFilterTypes.RANGE])) {
+            json[_facetFilterTypes.RANGE].forEach(function (ch) {
                 current = self.filters.filter(function (f) {
                     return (f instanceof RangeFacetFilter) && f.min === ch.min && f.max === ch.max;
                 })[0];
@@ -3906,8 +3977,8 @@ FacetColumn.prototype = {
         }
 
         // create search filters
-        if (!hasNotNull && Array.isArray(json[module._facetFilterTypes.SEARCH])) {
-            json[module._facetFilterTypes.SEARCH].forEach(function (ch) {
+        if (!hasNotNull && Array.isArray(json[_facetFilterTypes.SEARCH])) {
+            json[_facetFilterTypes.SEARCH].forEach(function (ch) {
                 current = self.filters.filter(function (f) {
                     return (f instanceof SearchFacetFilter) && f.term === ch;
                 })[0];
@@ -4182,7 +4253,7 @@ FacetColumn.prototype = {
 
         // TODO might be able to improve this
         if (typeof loc.searchTerm === "string") {
-            jsonFilters.push({"sourcekey": module._specialSourceDefinitions.SEARCH_BOX, "search": [this.reference.location.searchTerm]});
+            jsonFilters.push({"sourcekey": _specialSourceDefinitions.SEARCH_BOX, "search": [this.reference.location.searchTerm]});
         }
 
         // apply the hidden facets
@@ -4228,7 +4299,7 @@ FacetFilter.prototype = {
         if (this.term == null) {
             return null;
         }
-        return this._column.formatvalue(this.term, module._contexts.COMPACT_SELECT);
+        return this._column.formatvalue(this.term, _contexts.COMPACT_SELECT);
     },
 
     /**
@@ -4251,9 +4322,9 @@ FacetFilter.prototype = {
  */
 function SearchFacetFilter(term, column) {
     SearchFacetFilter.superClass.call(this, term, column);
-    this.facetFilterKey = module._facetFilterTypes.SEARCH;
+    this.facetFilterKey = _facetFilterTypes.SEARCH;
 }
-module._extends(SearchFacetFilter, FacetFilter);
+_extends(SearchFacetFilter, FacetFilter);
 
 /**
  * Represent choice filters that can be applied to facet.
@@ -4267,9 +4338,9 @@ module._extends(SearchFacetFilter, FacetFilter);
  */
 function ChoiceFacetFilter(value, column) {
     ChoiceFacetFilter.superClass.call(this, value, column);
-    this.facetFilterKey = module._facetFilterTypes.CHOICE;
+    this.facetFilterKey = _facetFilterTypes.CHOICE;
 }
-module._extends(ChoiceFacetFilter, FacetFilter);
+_extends(ChoiceFacetFilter, FacetFilter);
 
 /**
  * Represent range filters that can be applied to facet.
@@ -4291,10 +4362,10 @@ function RangeFacetFilter(min, minExclusive, max, maxExclusive, column) {
     this.minExclusive = (minExclusive === true) ? true: false;
     this.max = !isDefinedAndNotNull(max) ? null : max;
     this.maxExclusive = (maxExclusive === true) ? true: false;
-    this.facetFilterKey = module._facetFilterTypes.RANGE;
+    this.facetFilterKey = _facetFilterTypes.RANGE;
     this.uniqueId = this.toString();
 }
-module._extends(RangeFacetFilter, FacetFilter);
+_extends(RangeFacetFilter, FacetFilter);
 
 /**
  * String representation of range filter. With the format of:
@@ -4308,7 +4379,7 @@ module._extends(RangeFacetFilter, FacetFilter);
 RangeFacetFilter.prototype.toString = function () {
     var opt, self = this;
     var getValue = function (isMin) {
-        return self._column.formatvalue((isMin ? self.min : self.max), module._contexts.COMPACT_SELECT);
+        return self._column.formatvalue((isMin ? self.min : self.max), _contexts.COMPACT_SELECT);
     };
 
     // assumption: at least one of them is defined
@@ -4370,7 +4441,7 @@ function NotNullFacetFilter () {
  * @class
  * @param {ERMrest.ReferenceColumn} column - the column that is used for creating column aggregates
  */
-function ColumnAggregateFn (column) {
+export function ColumnAggregateFn (column) {
     this.column = column;
 }
 
@@ -4380,7 +4451,7 @@ ColumnAggregateFn.prototype = {
      * @desc minimum aggregate representation
      */
     get minAgg() {
-        return "min(" + module._fixedEncodeURIComponent(this.column.name) + ")";
+        return "min(" + fixedEncodeURIComponent(this.column.name) + ")";
     },
 
     /**
@@ -4388,7 +4459,7 @@ ColumnAggregateFn.prototype = {
      * @desc maximum aggregate representation
      */
     get maxAgg() {
-        return "max(" + module._fixedEncodeURIComponent(this.column.name) + ")";
+        return "max(" + fixedEncodeURIComponent(this.column.name) + ")";
     },
 
     /**
@@ -4396,7 +4467,7 @@ ColumnAggregateFn.prototype = {
      * @desc not null count aggregate representation
      */
     get countNotNullAgg() {
-        return "cnt(" + module._fixedEncodeURIComponent(this.column.name) + ")";
+        return "cnt(" + fixedEncodeURIComponent(this.column.name) + ")";
     },
 
     /**
@@ -4404,7 +4475,7 @@ ColumnAggregateFn.prototype = {
      * @desc distinct count aggregate representation
      */
     get countDistinctAgg() {
-        return "cnt_d(" + module._fixedEncodeURIComponent(this.column.name) + ")";
+        return "cnt_d(" + fixedEncodeURIComponent(this.column.name) + ")";
     }
 };
 
@@ -4419,7 +4490,7 @@ ColumnAggregateFn.prototype = {
  * @memberof ERMrest
  * @constructor
  */
-function ColumnGroupAggregateFn (column) {
+export function ColumnGroupAggregateFn (column) {
     this.column = column;
 
     this._ref = this.column._baseReference;
@@ -4447,7 +4518,7 @@ ColumnGroupAggregateFn.prototype = {
         }
 
         var countColName = "count",
-            context = module._contexts.COMPACT_SELECT,
+            context = _contexts.COMPACT_SELECT,
             column = this.column,
             self = this,
             sortCounts = false,
@@ -4459,7 +4530,7 @@ ColumnGroupAggregateFn.prototype = {
             colAlias = (i++).toString();
             keyColumns.push(new AttributeGroupColumn(
                 colAlias,
-                module._fixedEncodeURIComponent(col.name),
+                fixedEncodeURIComponent(col.name),
                 col, displayname, null, col.getDisplay(context).comment, true, isVisible
             ));
             return colAlias;
@@ -4472,7 +4543,7 @@ ColumnGroupAggregateFn.prototype = {
             sortColumns.forEach(function (sc) {
                 // if column is not sortable
                 if (sc.column && typeof sc.column._getSortColumns(context) === 'undefined') {
-                    module._log.info("column " + sc.column.name + " is not sortable and we're removing it from sort columns (entityCounts).");
+                    $log.info("column " + sc.column.name + " is not sortable and we're removing it from sort columns (entityCounts).");
                     return;
                 }
 
@@ -4492,7 +4563,6 @@ ColumnGroupAggregateFn.prototype = {
         } else {
             // by default we're sorting based on descending count and ascending raw value.
             sortObj = [{column: countColName, descending: true}, {column: "0", descending: false}];
-            showFrequency = true;
         }
 
         // search will be on the table not the aggregated results, so the column name must be the column name in the database
@@ -4500,7 +4570,7 @@ ColumnGroupAggregateFn.prototype = {
 
         var path = self._ref.location.ermrestCompactPath;
         if (dontAllowNull) {
-            var encodedColName = module._fixedEncodeURIComponent(self.column.name);
+            var encodedColName = fixedEncodeURIComponent(self.column.name);
             path += "/!(" + encodedColName + "::null::";
             // when it's json, we cannot possibly know the difference between database null and
             // json null, so we need to filter both.
@@ -4518,7 +4588,7 @@ ColumnGroupAggregateFn.prototype = {
         if (!hideNumOccurrences || sortCounts) {
             var countName = "cnt(*)";
             if (self._ref.location.hasJoin) {
-                countName = "cnt_d(" + self._ref.location.facetBaseTableAlias + ":" + module._fixedEncodeURIComponent(self._ref.facetBaseTable.shortestKey[0].name) + ")";
+                countName = "cnt_d(" + self._ref.location.facetBaseTableAlias + ":" + fixedEncodeURIComponent(self._ref.facetBaseTable.shortestKey[0].name) + ")";
             }
 
             aggregateColumns.push(
@@ -4550,7 +4620,7 @@ ColumnGroupAggregateFn.prototype = {
             throw new Error("Cannot use this API on pseudo-column.");
         }
 
-        if (module._histogramSupportedTypes.indexOf(column.type.rootName) === -1) {
+        if (_histogramSupportedTypes.indexOf(column.type.rootName) === -1) {
             throw new Error("Binning is not supported on column type " + column.type.name);
         }
 
@@ -4560,8 +4630,7 @@ ColumnGroupAggregateFn.prototype = {
 
         var width, range, minMoment, maxMoment;
 
-        var absMax = max,
-            moment = module._moment;
+        var absMax = max;
 
         if (column.type.rootName.indexOf("date") > -1) {
             // we don't want to make a request for date aggregates that split in the middle of a day, so the max
@@ -4581,7 +4650,7 @@ ColumnGroupAggregateFn.prototype = {
             // We don't want a bucket to represent a portion of a day, so define our width as the next largest number of days
             width = Math.ceil( moment.duration( (maxMoment.diff(minMoment))/bucketCount ).asDays() );
             // This is adjusted so that if we have 30 buckets and a range of 2 days, one day isn't split into multiple buckets (dates represent a whole day)
-            absMax = minMoment.add(width*bucketCount, 'd').format(module._dataFormats.DATE);
+            absMax = minMoment.add(width*bucketCount, 'd').format(_dataFormats.DATE);
         } else if (column.type.rootName.indexOf("timestamp") > -1) {
             minMoment = moment(min);
             maxMoment = moment(max);
@@ -4590,7 +4659,7 @@ ColumnGroupAggregateFn.prototype = {
             if (maxMoment.diff(minMoment) === 0) {
                 // generate a new max value so each bucket represents a 10 second period of time
                 maxMoment.add(10*bucketCount, 's');
-                absMax = maxMoment.format(module._dataFormats.DATETIME.submission);
+                absMax = maxMoment.format(_dataFormats.DATETIME.submission);
             }
 
             width = Math.round( moment.duration( (maxMoment.diff(minMoment))/bucketCount ).asSeconds() );

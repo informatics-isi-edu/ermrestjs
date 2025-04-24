@@ -120,7 +120,7 @@ exports.execute = function (options) {
             it('search() using conjunction of words. ', function(done) {
                 reference2 = reference1.search("\"hanks\" 111111");
                 expect(reference2.location.searchTerm).toBe("\"hanks\" 111111", "searchTerm missmatch.");
-                var encodedNumber = options.ermRest._fixedEncodeURIComponent(intRegexPrefix + "111111" + intRegexSuffix);
+                var encodedNumber = options.ermRest.fixedEncodeURIComponent(intRegexPrefix + "111111" + intRegexSuffix);
                 expect(reference2.location.ermrestCompactPath).toBe(
                     useQuantifiedSyntax ? `${path}*::ciregexp::all(hanks,${encodedNumber})` : `${path}*::ciregexp::hanks&*::ciregexp::${encodedNumber}`,
                     "ermrestCompactPath missmatch."
@@ -153,7 +153,7 @@ exports.execute = function (options) {
                 reference2 = reference1.search(searchTerm);
                 expect(reference2.location.searchTerm).toBe(searchTerm, "searchTerm missmatch.");
                 expect(reference2.location.ermrestCompactPath).toBe(
-                    path + "*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(intRegexPrefix + searchTerm + intRegexSuffix),
+                    path + "*::ciregexp::" + options.ermRest.fixedEncodeURIComponent(intRegexPrefix + searchTerm + intRegexSuffix),
                     "ermrestCompactPath missmatch."
                 );
 
@@ -183,7 +183,7 @@ exports.execute = function (options) {
                 expect(reference2.location.searchTerm).toBe(searchTerm, "searchTerm missmatch.");
                 // Can't use searchTerm in the encode function because the term has to be regular expression encoded first, '\' is the regex escape character
                 expect(reference2.location.ermrestCompactPath).toBe(
-                    path + "*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(floatRegexPrefix + "11\\.1"),
+                    path + "*::ciregexp::" + options.ermRest.fixedEncodeURIComponent(floatRegexPrefix + "11\\.1"),
                     "ermrestCompactPath missmatch."
                 );
 
@@ -214,7 +214,7 @@ exports.execute = function (options) {
                 expect(reference2.location.searchTerm).toBe(searchTerm, "searchTerm missmatch.");
                 // Can't use searchTerm in the encode function because the term has to be regular expression encoded first, '\' is the regex escape character
                 expect(reference2.location.ermrestCompactPath).toBe(
-                    path + "*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(floatRegexPrefix + "11\\."),
+                    path + "*::ciregexp::" + options.ermRest.fixedEncodeURIComponent(floatRegexPrefix + "11\\."),
                     "ermrestCompactPath missmatch."
                 );
 
@@ -244,7 +244,7 @@ exports.execute = function (options) {
                 expect(reference2.location.searchTerm).toBe(searchTerm, "searchTerm missmatch.");
                 // Can't use searchTerm in the encode function because the term has to be regular expression encoded first, '\' is the regex escape character
                 expect(reference2.location.ermrestCompactPath).toBe(
-                    path + "*::ciregexp::" + options.ermRest._fixedEncodeURIComponent(floatRegexPrefix + "\\.1"),
+                    path + "*::ciregexp::" + options.ermRest.fixedEncodeURIComponent(floatRegexPrefix + "\\.1"),
                     "ermrestCompactPath missmatch."
                 );
 
@@ -380,7 +380,7 @@ exports.execute = function (options) {
                 // also testing that we're ignoring empty search terms
                 reference2 = reference1.search("\"william\" \"\" \"171717\"");
                 expect(reference2.location.searchTerm).toBe("\"william\" \"\" \"171717\"", "searchTerm missmatch.");
-                var encodedNumber = options.ermRest._fixedEncodeURIComponent(intRegexPrefix + "171717" + intRegexSuffix);
+                var encodedNumber = options.ermRest.fixedEncodeURIComponent(intRegexPrefix + "171717" + intRegexSuffix);
                 expect(reference2.location.ermrestCompactPath).toBe(
                      useQuantifiedSyntax ? `${path}*::ciregexp::all(william,${encodedNumber})` : `${path}*::ciregexp::william&*::ciregexp::${encodedNumber}`,
                     "ermrestCompactPath missmatch."
@@ -506,7 +506,7 @@ exports.execute = function (options) {
 
             it('location should have correct search parameters ', function() {
                 expect(reference3.location.searchTerm).toBe("hanks 111111", "searchTerm missmatch.");
-                var encodedNumber = options.ermRest._fixedEncodeURIComponent(intRegexPrefix + "111111" + intRegexSuffix);
+                var encodedNumber = options.ermRest.fixedEncodeURIComponent(intRegexPrefix + "111111" + intRegexSuffix);
                 expect(reference3.location.ermrestCompactPath).toBe(
                     useQuantifiedSyntax ? `${path}*::ciregexp::all(hanks,${encodedNumber})` : `${path}*::ciregexp::hanks&*::ciregexp::${encodedNumber}`,
                     "ermrestCompactPath missmatch."

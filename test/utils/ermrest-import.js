@@ -1,4 +1,4 @@
-const q = require('q');
+const { DeferredPromise } = require('./utilities.js');
 const requireReload = require('./require-reload.js').reload;
 const includes = require(__dirname + '/../utils/ermrest-init.js').init();
 const ermrestUtils = require('@isrd-isi-edu/ermrest-data-utils');
@@ -12,36 +12,40 @@ const ermrestUtils = require('@isrd-isi-edu/ermrest-data-utils');
  * @param  {string} catalogId         the catalog id (might be undefined)
  */
 exports.importSchemas = function (configFilePaths, catalogId) {
-  var defer = q.defer(), entities = {}, schemas = {}, catalog = {};
+  var defer = new DeferredPromise(),
+    entities = {},
+    schemas = {},
+    catalog = {};
   var config, schema, schemaName;
 
   if (!configFilePaths || configFilePaths.length === 0) {
-    return defer.resolve({ catalogId: catalogId, entities: {} }), defer.promise;
+    defer.resolve({ catalogId: catalogId, entities: {} });
+    return defer.promise;
   }
 
   // for the structure of settings, please refer to ErmrestDataUtils
   var settings = {
     url: includes.url,
-    authCookie: includes.authCookie
+    authCookie: includes.authCookie,
   };
 
   configFilePaths.forEach(function (filePath) {
-    config = requireReload(process.env.PWD + "/test/specs" + filePath);
+    config = requireReload(process.env.PWD + '/test/specs' + filePath);
 
     // copy annotations and ACLs over to the submitted catalog object
-    if (config.catalog && typeof config.catalog === "object") {
+    if (config.catalog && typeof config.catalog === 'object') {
       // if empty object, this loop is skipped
       for (var prop in config.catalog) {
         // if property is set already
         if (catalog[prop]) {
-          console.log(prop + " is already defined on catalog object, overriding previously set value with new one")
+          console.log(prop + ' is already defined on catalog object, overriding previously set value with new one');
         }
         catalog[prop] = config.catalog[prop];
       }
     }
 
     schemas[config.schema.name] = {
-      path: config.schema.path
+      path: config.schema.path,
     };
 
     if (config.entities) {
@@ -60,69 +64,73 @@ exports.importSchemas = function (configFilePaths, catalogId) {
     settings.setup.catalog.id = catalogId;
   }
 
-  ermrestUtils.createSchemasAndEntities(settings).then(function (data) {
-    process.env.catalogId = data.catalogId;
+  ermrestUtils
+    .createSchemasAndEntities(settings)
+    .then(function (data) {
+      process.env.catalogId = data.catalogId;
 
-    // create the entities object
-    if (data.schemas) {
-      for (schemaName in data.schemas) {
-        if (!data.schemas.hasOwnProperty(schemaName)) continue;
+      // create the entities object
+      if (data.schemas) {
+        for (schemaName in data.schemas) {
+          if (!data.schemas.hasOwnProperty(schemaName)) continue;
 
-        schema = data.schemas[schemaName];
-        entities[schema.name] = {};
+          schema = data.schemas[schemaName];
+          entities[schema.name] = {};
 
-        for (var t in schema.tables) {
-          if (!schema.tables.hasOwnProperty(t)) continue;
+          for (var t in schema.tables) {
+            if (!schema.tables.hasOwnProperty(t)) continue;
 
-          entities[schema.name][t] = schema.tables[t].entities;
+            entities[schema.name][t] = schema.tables[t].entities;
+          }
         }
+        console.log('Attached entities for the schemas');
       }
-      console.log("Attached entities for the schemas");
-    }
-    defer.resolve({ entities: entities, catalogId: data.catalogId });
-  }).catch(function (err) {
-    console.log("error while importing the schemas.");
-    defer.reject(err);
-  });
+      defer.resolve({ entities: entities, catalogId: data.catalogId });
+    })
+    .catch(function (err) {
+      console.log('error while importing the schemas.');
+      defer.reject(err);
+    });
 
   return defer.promise;
 };
 
-
 exports.importAcls = function (params) {
-  var defer = q.defer();
-  ermrestUtils.importACLS({
-    url: includes.url,
-    authCookie: includes.authCookie,
-    setup: params
-  }).then(function () {
-    defer.resolve();
-  }, function (err) {
-    defer.reject(err);
-  });
+  var defer = new DeferredPromise();
+  ermrestUtils
+    .importACLS({
+      url: includes.url,
+      authCookie: includes.authCookie,
+      setup: params,
+    })
+    .then(
+      function () {
+        defer.resolve();
+      },
+      function (err) {
+        defer.reject(err);
+      },
+    );
   return defer.promise;
 };
 
 exports.setCatalogAnnotations = function (id, annotations) {
   return new Promise((resolve, reject) => {
-    ermrestUtils.createOrModifyCatalog(
-      { url: includes.url, id },
-      annotations,
-      null,
-      includes.authCookie
-    ).then(() => resolve()).catch((err) => reject(err));
+    ermrestUtils
+      .createOrModifyCatalog({ url: includes.url, id }, annotations, null, includes.authCookie)
+      .then(() => resolve())
+      .catch((err) => reject(err));
   });
 };
 
 var cleanup = function (configFilePaths, defer, catalogId, deleteCatalog) {
-
   if (configFilePaths.length == 0) {
     defer.resolve(catalogId);
     return;
   }
 
   var configFilePath = configFilePaths.shift();
-  var config = requireReload(process.env.PWD + "/test/specs" + configFilePath);
+  var config = requireReload(process.env.PWD + '/test/specs' + configFilePath);
 
   if (deleteCatalog) {
     configFilePaths = [];
@@ -131,23 +139,29 @@ var cleanup = function (configFilePaths, defer, catalogId, deleteCatalog) {
     config.catalog.id = catalogId;
   }
 
-  ermrestUtils.tear({
-    setup: config,
-    catalogId: catalogId,
-    url: includes.url,
-    authCookie: includes.authCookie
-  }).then(function (data) {
-    cleanup(configFilePaths, defer, catalogId, deleteCatalog);
-  }, function (err) {
-    defer.reject(err);
-  }).catch(function (err) {
-    console.log(err);
-    defer.reject(err);
-  });
+  ermrestUtils
+    .tear({
+      setup: config,
+      catalogId: catalogId,
+      url: includes.url,
+      authCookie: includes.authCookie,
+    })
+    .then(
+      function (data) {
+        cleanup(configFilePaths, defer, catalogId, deleteCatalog);
+      },
+      function (err) {
+        defer.reject(err);
+      },
+    )
+    .catch(function (err) {
+      console.log(err);
+      defer.reject(err);
+    });
 };
 
 exports.tear = function (configFilePaths, catalogId, deleteCatalog) {
-  var defer = q.defer();
+  var defer = new DeferredPromise();
 
   if (!configFilePaths || !configFilePaths.length || !catalogId) {
     defer.resolve();

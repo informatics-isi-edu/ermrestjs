@@ -1,5 +1,33 @@
-
-    module.ParsedFilter = ParsedFilter;
+/* eslint-disable prettier/prettier */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-this-alias */
+/* eslint-disable no-useless-escape */
+// models
+import {
+    MalformedURIError,
+    InvalidCustomFacetOperatorError,
+    InvalidInputError,
+    InvalidPageCriteria,
+    InvalidFacetOperatorError,
+    InvalidFilterOperatorError,
+  } from '@isrd-isi-edu/ermrestjs/src/models/errors';
+  
+  // utils
+  import {
+    _ERMrestFeatures,
+    _ERMrestFilterPredicates,
+    _facetFilterTypes,
+    _facetFilterTypeNames,
+    FILTER_TYPES,
+    _systemColumnNames,
+  } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
+  import { isObjectAndNotNull, isStringAndNotEmpty, verify } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
+  import { fixedEncodeURIComponent, simpleDeepCopy, stripTrailingSlash, trimSlashes } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
+  import { _facetingErrors, _FacetsLogicalOperators, _specialSourceDefinitions, _parserAliases } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
+  
+  // legacy
+  import { decodeFacet, encodeFacet, _encodeRegexp, versionDecodeBase32 } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
+  import { PathPrefixAliasMapping, _renderFacet, _sourceColumnHelpers } from '@isrd-isi-edu/ermrestjs/js/utils/pseudocolumn_helpers';
 
     /**
      * The ERMrest service name. Internal use only.
@@ -18,10 +46,10 @@
      * @throws {ERMrest.InvalidInputError} If the URI does not contain the
      * service name.
      */
-    module.parse = function (uri, catalogObject) {
+    export const parse = function (uri, catalogObject) {
         var svc_idx = uri.indexOf(_service_name);
         if (svc_idx < 0) {
-            throw new module.InvalidInputError('uri not contain the expected service name: ' + _service_name);
+            throw new InvalidInputError('uri not contain the expected service name: ' + _service_name);
         }
 
         return new Location(uri, catalogObject);
@@ -41,12 +69,12 @@
      * @param  {string[]?} searchColumNames the name of columns that should be used for search
      * @return {string}                     a path that ERMrestJS understands and can parse, can be undefined
      */
-    module.createSearchPath = function (catalogId, schemaName, tableName, searchTerm, searchColumNames) {
+    export const createSearchPath = function (catalogId, schemaName, tableName, searchTerm, searchColumNames) {
         verify(typeof catalogId === "string" && catalogId.length > 0, "catalogId must be a string.");
         verify(typeof tableName === "string" && tableName.length > 0, "tableName must be a string.");
 
         var hasSearch = (typeof searchTerm === "string" && searchTerm.trim().length > 0);
-        var encode = module._fixedEncodeURIComponent;
+        var encode = fixedEncodeURIComponent;
 
         if (hasSearch && Array.isArray(searchColumNames) && searchColumNames.length > 0) {
             var compactPath = "#" + catalogId + "/";
@@ -72,7 +100,7 @@
             };
         }
 
-        return module.createPath(catalogId, schemaName, tableName, facets);
+        return createPath(catalogId, schemaName, tableName, facets);
 
     };
 
@@ -86,22 +114,22 @@
      * @param  {object} cfacets    an object
      * @return {string}            a path that ERMrestJS understands and can parse, can be undefined
      */
-    module.createPath = function (catalogId, schemaName, tableName, facets, cfacets) {
+    export const createPath = function (catalogId, schemaName, tableName, facets, cfacets) {
         verify(typeof catalogId === "string" && catalogId.length > 0, "catalogId must be a string.");
         verify(typeof tableName === "string" && tableName.length > 0, "tableName must be a string.");
 
         var compactPath = "#" + catalogId + "/";
         if (schemaName) {
-            compactPath += module._fixedEncodeURIComponent(schemaName) + ":";
+            compactPath += fixedEncodeURIComponent(schemaName) + ":";
         }
-        compactPath += module._fixedEncodeURIComponent(tableName);
+        compactPath += fixedEncodeURIComponent(tableName);
 
         if (facets && typeof facets === "object" && Object.keys(facets).length !== 0) {
-            compactPath += "/*::facets::" + module.encodeFacet(facets);
+            compactPath += "/*::facets::" + encodeFacet(facets);
         }
 
         if (cfacets && typeof cfacets === "object" && Object.keys(cfacets).length !== 0) {
-            compactPath += "/*::cfacets::" + module.encodeFacet(cfacets);
+            compactPath += "/*::cfacets::" + encodeFacet(cfacets);
         }
 
         return compactPath;
@@ -118,27 +146,27 @@
      * @param  {ERMrest.Catalog} [catalogObject] the catalog object (optional)
      * @return {string}            a path that ERMrestJS understands and can parse, can be undefined
      */
-    module.createLocation = function (service, catalogId, schemaName, tableName, facets, cfacets, catalogObject) {
+    export const createLocation = function (service, catalogId, schemaName, tableName, facets, cfacets, catalogObject) {
         verify(typeof service === "string" && service.length > 0, "service must be a string.");
         verify(typeof catalogId === "string" && catalogId.length > 0, "catalogId must be a string.");
         verify(typeof tableName === "string" && tableName.length > 0, "tableName must be a string.");
 
         var compactPath = "";
         if (schemaName) {
-            compactPath += module._fixedEncodeURIComponent(schemaName) + ":";
+            compactPath += fixedEncodeURIComponent(schemaName) + ":";
         }
-        compactPath += module._fixedEncodeURIComponent(tableName);
+        compactPath += fixedEncodeURIComponent(tableName);
 
         if (facets && typeof facets === "object" && Object.keys(facets).length !== 0) {
-            compactPath += "/*::facets::" + module.encodeFacet(facets);
+            compactPath += "/*::facets::" + encodeFacet(facets);
         }
 
         if (cfacets && typeof cfacets === "object" && Object.keys(cfacets).length !== 0) {
-            compactPath += "/*::cfacets::" + module.encodeFacet(cfacets);
+            compactPath += "/*::cfacets::" + encodeFacet(cfacets);
         }
 
         if (service.endsWith("/")) service = service.slice(0, -1);
-        return module.parse(service + "/catalog/" + catalogId + "/entity/" + compactPath, catalogObject);
+        return parse(service + "/catalog/" + catalogId + "/entity/" + compactPath, catalogObject);
     };
 
     /**
@@ -166,7 +194,7 @@
      * @param {ERMrest.Catalog} the catalog object for parsing some parts of url might be needed.
      * @constructor
      */
-    function Location(uri, catalogObject) {
+    export function Location(uri, catalogObject) {
 
         // full uri
         this._uri = uri;
@@ -192,7 +220,7 @@
             this._compactUri = uri;
         }
         // there might be an extra slash at the end of the url
-        this._compactUri = module._stripTrailingSlash(this._compactUri);
+        this._compactUri = stripTrailingSlash(this._compactUri);
 
         // service
         parts = uri.match(/(.*)\/catalog\/([^\/]*)\/(entity|attribute|aggregate|attributegroup)\/(.*)/);
@@ -207,7 +235,7 @@
 
         if (catalogObject) {
             if (catalogObject.id !== this._catalogSnapshot) {
-                throw new module.InvalidInputError("Given catalog object is not the same catalog used in the url.");
+                throw new InvalidInputError("Given catalog object is not the same catalog used in the url.");
             }
 
             this._catalogObject = catalogObject;
@@ -225,7 +253,7 @@
         this._compactPath = (modifiers === "" ? this._path : this._path.split(modifiers)[0]);
 
         // there might be an extra slash at the end of the url
-        this._compactPath = module._stripTrailingSlash(this._compactPath);
+        this._compactPath = stripTrailingSlash(this._compactPath);
 
         // <sort>/<page>
         // sort and paging
@@ -238,7 +266,7 @@
                 if (this._sort) {
                     this._before = modifiers.match(/(@before\([^\)]*\))/)[1];
                 } else {
-                    throw new module.InvalidPageCriteria("Sort modifier is required with paging.", this._path);
+                    throw new InvalidPageCriteria("Sort modifier is required with paging.", this._path);
                 }
             }
 
@@ -246,7 +274,7 @@
                 if (this._sort) {
                     this._after = modifiers.match(/(@after\([^\)]*\))/)[1];
                 } else {
-                    throw new module.InvalidPageCriteria("Sort modifier is required with paging.", this._path);
+                    throw new InvalidPageCriteria("Sort modifier is required with paging.", this._path);
                 }
             }
         }
@@ -254,7 +282,7 @@
         // Split compact path on '/'
         var parts = this._compactPath.split('/');
 
-        if (parts.length === 0) throw new ERMrest.MalformedURIError("Given url must start with `schema:table.");
+        if (parts.length === 0) throw new MalformedURIError("Given url must start with `schema:table.");
 
         //<schema:table>
         // first schema name and first table name
@@ -306,7 +334,7 @@
                         startWithT1 = true;
                     }
                     if (startWithT1) aliasNumber++;
-                    alias = module._parserAliases.JOIN_TABLE_PREFIX + (aliasNumber > 0 ? aliasNumber : "");
+                    alias = _parserAliases.JOIN_TABLE_PREFIX + (aliasNumber > 0 ? aliasNumber : "");
                     pathParts.push(new PathPart(alias, joins, schema, table, facets, cfacets, filter, filtersString));
                     filter = undefined; filtersString = undefined; cfacets = undefined; facets = undefined; join = undefined; joins = [];
                 }
@@ -327,7 +355,7 @@
             match = part.match(facetsRegExp);
             if (match) {
                 if (facets) {
-                    throw new module.InvalidFacetOperatorError(self._path, module._facetingErrors.duplicateFacets);
+                    throw new InvalidFacetOperatorError(self._path, _facetingErrors.duplicateFacets);
                 }
                 facets = new ParsedFacets(match[1], self._path);
                 return;
@@ -337,7 +365,7 @@
             match = part.match(customFacetsRegExp);
             if (match) {
                 if (cfacets) {
-                    throw new module.InvalidCustomFacetOperatorError(self._path, module._facetingErrors.duplicateFacets);
+                    throw new InvalidCustomFacetOperatorError(self._path, _facetingErrors.duplicateFacets);
                 }
                 cfacets = new CustomFacets(match[1], self._path);
                 return;
@@ -350,7 +378,7 @@
 
         // this is for the last part of url that might not end with join.
         if (filter || cfacets || facets || joins.length > 0) {
-            pathParts.push(new PathPart(module._parserAliases.MAIN_TABLE, joins, schema, table, facets, cfacets, filter, filtersString));
+            pathParts.push(new PathPart(_parserAliases.MAIN_TABLE, joins, schema, table, facets, cfacets, filter, filtersString));
         }
 
         this._pathParts = pathParts;
@@ -419,9 +447,9 @@
                 var self = this;
                 var uri = "";
                 if (this.rootSchemaName) {
-                    uri += module._fixedEncodeURIComponent(this.rootSchemaName) + ":";
+                    uri += fixedEncodeURIComponent(this.rootSchemaName) + ":";
                 }
-                uri += module._fixedEncodeURIComponent(this.rootTableName);
+                uri += fixedEncodeURIComponent(this.rootTableName);
 
                 uri += this.pathParts.reduce(function (prev, part, i) {
                     var res = prev;
@@ -629,15 +657,15 @@
                     facetRes = _renderFacet(
                         part.facets.decoded, part.alias, part.schema, part.table, self.catalog,
                         self.catalogObject, usedRef,
-                        currUsedSourceObjects, forcedAliases, module._constraintNames
+                        currUsedSourceObjects, forcedAliases
                     );
                     if (!facetRes.successful) {
-                        throw new module.InvalidFacetOperatorError(self.path, facetRes.message);
+                        throw new InvalidFacetOperatorError(self.path, facetRes.message);
                     }
                     if (facetRes.rightJoin) {
                         // we only allow one right join (null fitler)
                         if (rightJoinIndex !== -1) {
-                            throw new module.MalformedURIError("Only one facet in url can have `null` filter.");
+                            throw new MalformedURIError("Only one facet in url can have `null` filter.");
                         }
                         rightJoinIndex = index;
                     }
@@ -658,13 +686,13 @@
                         facetRes = _renderFacet(
                             part.customFacets.facets.decoded, part.alias, part.schema, part.table, self.catalog,
                             self.catalogObject, usedRef,
-                            null, null, module._constraintNames
+                            null, null
                         );
                         if (!facetRes.successful) {
-                            throw new module.InvalidCustomFacetOperatorError(self.path, facetRes.message);
+                            throw new InvalidCustomFacetOperatorError(self.path, facetRes.message);
                         }
                         if (facetRes.rightJoin) {
-                            throw new module.InvalidCustomFacetOperatorError(self.path, "`null` choice facet is not allowed in custom facets");
+                            throw new InvalidCustomFacetOperatorError(self.path, "`null` choice facet is not allowed in custom facets");
                         }
                         res.push(facetRes.parsed);
                     }
@@ -689,9 +717,9 @@
             if (rightJoinIndex === -1) {
                 uri = self.rootTableAlias + ":=";
                 if (self.rootSchemaName) {
-                    uri += module._fixedEncodeURIComponent(self.rootSchemaName) + ":";
+                    uri += fixedEncodeURIComponent(self.rootSchemaName) + ":";
                 }
-                uri += module._fixedEncodeURIComponent(self.rootTableName);
+                uri += fixedEncodeURIComponent(self.rootTableName);
             }
             // we have right index, then every path before null must be reversed
             else {
@@ -832,7 +860,7 @@
         */
         get versionAsMillis() {
             if (this._versionAsMillis === undefined) {
-                this._versionAsMillis = module.versionDecodeBase32(this._version);
+                this._versionAsMillis = versionDecodeBase32(this._version);
             }
             return this._versionAsMillis;
         },
@@ -936,7 +964,7 @@
          * @type {String}
          */
         get mainTableAlias() {
-            return module._parserAliases.MAIN_TABLE;
+            return _parserAliases.MAIN_TABLE;
         },
 
 
@@ -1160,12 +1188,13 @@
 
         /**
          *
-         * @returns {String} The string format of the paging modifier in the form of @before(..)@after(...)
+         * @returns {String|undefined} The string format of the paging modifier in the form of @before(..)@after(...)
          */
         get paging() {
             if (this.after || this.before) {
                 return (this.after ? this.after : "") + (this.before ? this.before : "");
             }
+            return undefined;
         },
 
         /**
@@ -1207,7 +1236,7 @@
                     this._beforeObject = values;
                     this._before = _getPagingModifier(values, true);
                 } else {
-                    throw new module.InvalidPageCriteria("Error setting before: Paging not allowed without sort", this.path);
+                    throw new InvalidPageCriteria("Error setting before: Paging not allowed without sort", this.path);
                 }
             }
 
@@ -1254,7 +1283,7 @@
                     this._afterObject = values;
                     this._after = _getPagingModifier(values, false);
                 } else {
-                    throw new module.InvalidPageCriteria("Error setting after: Paging not allowed without sort", this.path);
+                    throw new InvalidPageCriteria("Error setting after: Paging not allowed without sort", this.path);
                 }
             }
 
@@ -1273,10 +1302,10 @@
                 return;
             }
 
-            var newSearchFacet = {"sourcekey": module._specialSourceDefinitions.SEARCH_BOX, "search": [term]};
+            var newSearchFacet = {"sourcekey": _specialSourceDefinitions.SEARCH_BOX, "search": [term]};
             var hasSearch = this.searchTerm != null;
             var hasFacets = this.facets != null;
-            var andOperator = module._FacetsLogicalOperators.AND;
+            var andOperator = _FacetsLogicalOperators.AND;
 
             var facetObject, andFilters;
             if (term === null) {
@@ -1284,7 +1313,7 @@
                 // if term === null, that means the searchTerm is not null, therefore has search
                 facetObject = [];
                 this.facets.decoded[andOperator].forEach(function (f) {
-                    if (f.sourcekey !== module._specialSourceDefinitions.SEARCH_BOX) {
+                    if (f.sourcekey !== _specialSourceDefinitions.SEARCH_BOX) {
                         facetObject.push(f);
                     }
                 });
@@ -1300,7 +1329,7 @@
                     } else {
                         andFilters  = facetObject[andOperator];
                         for (var i = 0; i < andFilters.length; i++) {
-                            if (andFilters[i].sourcekey === module._specialSourceDefinitions.SEARCH_BOX) {
+                            if (andFilters[i].sourcekey === _specialSourceDefinitions.SEARCH_BOX) {
                                 if (Array.isArray(andFilters[i].search)) {
                                     andFilters[i].search = [term];
                                 }
@@ -1338,7 +1367,7 @@
          * @private
          */
         _clone: function(referenceObject) {
-            var res = module.parse(this.uri, this.catalogObject);
+            var res = parse(this.uri, this.catalogObject);
             if (isObjectAndNotNull(referenceObject)) {
                 res.referenceObject = referenceObject;
             }
@@ -1368,7 +1397,7 @@
          */
         set catalogObject(obj) {
             if (obj.id !== this.catalog) {
-                throw new module.InvalidInputError("Given catalog object is not the same catalog used in the url.");
+                throw new InvalidInputError("Given catalog object is not the same catalog used in the url.");
             }
             this._catalogObject = obj;
         },
@@ -1432,14 +1461,14 @@
                     aliasNumber = loc.pathParts.length - 1;
                 }
 
-                var alias = module._parserAliases.JOIN_TABLE_PREFIX + aliasNumber;
+                var alias = _parserAliases.JOIN_TABLE_PREFIX + aliasNumber;
                 lastPart.alias = alias;
             }
 
             // add a join to parts based on the given input
             var pathPart = new PathPart(
                 // make sure the proper alias is used for the last part
-                module._parserAliases.MAIN_TABLE,
+                _parserAliases.MAIN_TABLE,
                 [new ParsedJoin(null, null, toSchema, toTable, null, sourceObjectWrapper)],
                 toSchema,
                 toTable
@@ -1514,7 +1543,7 @@
         set alias(alias) {
             // sanity check to make sure code is working as expected
             if (!isStringAndNotEmpty(alias)) {
-                throw new module.InvalidInputError("Given alias must be string.");
+                throw new InvalidInputError("Given alias must be string.");
             }
             this._alias = alias;
         },
@@ -1531,7 +1560,7 @@
      * @returns {Object} the query params object
      * @private
      */
-    _getQueryParams = function (params) {
+    export const _getQueryParams = function (params) {
         var queryParams = {},
             parts = params.split("&"),
             part, i;
@@ -1548,7 +1577,7 @@
      * @return {string} string modifier @sort(...)
      * @private
      */
-    _getSortModifier = function(sort) {
+    export const _getSortModifier = function(sort) {
 
         // if no sorting
         if (!sort || !Array.isArray(sort) || sort.length === 0) {
@@ -1558,8 +1587,8 @@
         var modifier = "@sort(";
         for (var i = 0; i < sort.length; i++) {
             if (i !== 0) modifier = modifier + ",";
-            if (!sort[i].column) throw new module.InvalidInputError("Invalid sort object.");
-            modifier = modifier + module._fixedEncodeURIComponent(sort[i].column) + (sort[i].descending ? "::desc::" : "");
+            if (!sort[i].column) throw new InvalidInputError("Invalid sort object.");
+            modifier = modifier + fixedEncodeURIComponent(sort[i].column) + (sort[i].descending ? "::desc::" : "");
         }
         modifier = modifier + ")";
         return modifier;
@@ -1572,7 +1601,7 @@
      * @return {string} string modifier @after/before(...)
      * @private
      */
-    _getPagingModifier = function(values, isBefore) {
+    export const _getPagingModifier = function(values, isBefore) {
 
         // no paging
         if (!Array.isArray(values) || values.length === 0) {
@@ -1582,7 +1611,7 @@
         var modifier = (isBefore ? "@before(" : "@after(");
         for (var i = 0; i < values.length; i++) {
             if (i !== 0) modifier = modifier + ",";
-            modifier = modifier + ((values[i] === null || values[i] === undefined ) ? "::null::" : module._fixedEncodeURIComponent(values[i]));
+            modifier = modifier + ((values[i] === null || values[i] === undefined ) ? "::null::" : fixedEncodeURIComponent(values[i]));
         }
         modifier = modifier + ")";
         return modifier;
@@ -1595,20 +1624,20 @@
      * @return {string} corresponding ermrest filter
      * @private
      */
-    _convertSearchTermToFilter = function (term, column, alias, catalogObject) {
+    export const _convertSearchTermToFilter = function (term, column, alias, catalogObject) {
         var filterString = "";
 
         // see if the quantified_value_lists syntax can be used
         var useQuantified = false;
         if (catalogObject) {
-            if (column === module._systemColumnNames.RID) {
-                useQuantified = catalogObject.features[module._ERMrestFeatures.QUANTIFIED_RID_LISTS];
+            if (column === _systemColumnNames.RID) {
+                useQuantified = catalogObject.features[_ERMrestFeatures.QUANTIFIED_RID_LISTS];
             } else {
-                useQuantified = catalogObject.features[module._ERMrestFeatures.QUANTIFIED_VALUE_LISTS];
+                useQuantified = catalogObject.features[_ERMrestFeatures.QUANTIFIED_VALUE_LISTS];
             }
         }
 
-        column = (typeof column !== 'string' || column === "*") ? "*": module._fixedEncodeURIComponent(column);
+        column = (typeof column !== 'string' || column === "*") ? "*": fixedEncodeURIComponent(column);
         if (isStringAndNotEmpty(alias)) {
             column = alias + ":" + column;
         }
@@ -1641,25 +1670,25 @@
             if (terms.length < 2) useQuantified = false;
 
             if (useQuantified) {
-                filterString = column + module._ERMrestFilterPredicates.CASE_INS_REG_EXP + 'all(';
+                filterString = column + _ERMrestFilterPredicates.CASE_INS_REG_EXP + 'all(';
             }
             terms.forEach(function(t, index, array) {
                 var exp;
                 // matches an integer, aka just a number
                 if (t.match(/^[0-9]+$/)) {
-                    exp = "^(.*[^0-9.])?0*" + module._encodeRegexp(t) + "([^0-9].*|$)";
+                    exp = "^(.*[^0-9.])?0*" + _encodeRegexp(t) + "([^0-9].*|$)";
                 // matches a float, aka a number one decimal
                 } else if (t.match(/^([0-9]+[.][0-9]*|[0-9]*[.][0-9]+)$/)) {
-                    exp = "^(.*[^0-9.])?0*" + module._encodeRegexp(t);
+                    exp = "^(.*[^0-9.])?0*" + _encodeRegexp(t);
                 // matches everything else (words and anything with multiple decimals)
                 } else {
-                    exp = module._encodeRegexp(t);
+                    exp = _encodeRegexp(t);
                 }
 
                 if (useQuantified) {
-                    filterString += (index === 0? "" : ",") + module._fixedEncodeURIComponent(exp);
+                    filterString += (index === 0? "" : ",") + fixedEncodeURIComponent(exp);
                 } else {
-                    filterString += (index === 0? "" : "&") + column + module._ERMrestFilterPredicates.CASE_INS_REG_EXP + module._fixedEncodeURIComponent(exp);
+                    filterString += (index === 0? "" : "&") + column + _ERMrestFilterPredicates.CASE_INS_REG_EXP + fixedEncodeURIComponent(exp);
                 }
             });
             if (useQuantified) {
@@ -1677,12 +1706,12 @@
      * @param  {object} facetObject the facet object
      * @return {string}             search term
      */
-    _getSearchTerm = function (facetObject) {
-        var andFilters = facetObject[module._FacetsLogicalOperators.AND],
+    export const _getSearchTerm = function (facetObject) {
+        var andFilters = facetObject[_FacetsLogicalOperators.AND],
             searchTerm = "";
 
         for (var i = 0; i < andFilters.length; i++) {
-            if (andFilters[i].sourcekey === module._specialSourceDefinitions.SEARCH_BOX) {
+            if (andFilters[i].sourcekey === _specialSourceDefinitions.SEARCH_BOX) {
                 if (Array.isArray(andFilters[i].search)) {
                     searchTerm = andFilters[i].search.join("|");
                 }
@@ -1779,7 +1808,7 @@
      * @desc
      * Constructor for a ParsedFilter.
      */
-     function ParsedFilter (type) {
+     export function ParsedFilter (type) {
          this.type = type;
      }
 
@@ -1833,7 +1862,7 @@
          var items = part.match(regExp);
 
          if (!items) {
-             throw new module.InvalidFilterOperatorError("Couldn't parse '" + part + "' in the url.", path, part);
+             throw new InvalidFilterOperatorError("Couldn't parse '" + part + "' in the url.", path, part);
          }
 
          // if a single filter
@@ -1865,16 +1894,16 @@
 
              } else if (type === null && items[i] === "&") {
                  // first level filter type
-                 type = module.filterTypes.CONJUNCTION;
+                 type = FILTER_TYPES.CONJUNCTION;
              } else if (type === null && items[i] === ";") {
                  // first level filter type
-                 type = module.filterTypes.DISJUNCTION;
-             } else if (type === module.filterTypes.CONJUNCTION && items[i] === ";") {
+                 type = FILTER_TYPES.DISJUNCTION;
+             } else if (type === FILTER_TYPES.CONJUNCTION && items[i] === ";") {
                  // using combination of ! and & without ()
-                 throw new module.InvalidFilterOperatorError("Parser doesn't support combination of conjunction and disjunction filters.", path,  part);
-             } else if (type === module.filterTypes.DISJUNCTION && items[i] === "&") {
+                 throw new InvalidFilterOperatorError("Parser doesn't support combination of conjunction and disjunction filters.", path,  part);
+             } else if (type === FILTER_TYPES.DISJUNCTION && items[i] === "&") {
                  // using combination of ! and & without ()
-                 throw new module.InvalidFilterOperatorError("Parser doesn't support combination of conjunction and disjunction filters.", path, part);
+                 throw new InvalidFilterOperatorError("Parser doesn't support combination of conjunction and disjunction filters.", path, part);
              } else if (items[i] !== "&" && items[i] !== ";") {
                  // single filter on the first level
                  var binaryFilter = _processSingleFilterString(items[i], path);
@@ -1898,7 +1927,7 @@
         //check for '=' or '::' to decide what split to use
         var f, filter;
         var throwError = function () {
-            throw new module.InvalidFilterOperatorError("Couldn't parse '" + filterString + "' filter.", path, filterString);
+            throw new InvalidFilterOperatorError("Couldn't parse '" + filterString + "' filter.", path, filterString);
         };
         if (filterString.indexOf("=") !== -1) {
             f = filterString.split('=');
@@ -1912,15 +1941,15 @@
                     if (vals.length === 0) {
                         throwError();
                     }
-                    filter = new ParsedFilter(module.filterTypes.DISJUNCTION);
+                    filter = new ParsedFilter(FILTER_TYPES.DISJUNCTION);
                     filter.setFilters(vals.map(function (v) {
-                        var temp = new ParsedFilter(module.filterTypes.BINARYPREDICATE);
+                        var temp = new ParsedFilter(FILTER_TYPES.BINARYPREDICATE);
                         temp.setBinaryPredicate(decodeURIComponent(f[0]), "=", decodeURIComponent(v));
                         return temp;
                     }));
 
                 } else {
-                    filter = new ParsedFilter(module.filterTypes.BINARYPREDICATE);
+                    filter = new ParsedFilter(FILTER_TYPES.BINARYPREDICATE);
                     filter.setBinaryPredicate(decodeURIComponent(f[0]), "=", decodeURIComponent(f[1]));
                 }
 
@@ -1929,7 +1958,7 @@
         } else {
             f = filterString.split("::");
             if (f.length === 3) {
-                filter = new ParsedFilter(module.filterTypes.BINARYPREDICATE);
+                filter = new ParsedFilter(FILTER_TYPES.BINARYPREDICATE);
                 filter.setBinaryPredicate(decodeURIComponent(f[0]), "::"+f[1]+"::", decodeURIComponent(f[2]));
                 return filter;
             }
@@ -1951,16 +1980,16 @@
         for (var i = 0; i < filterStrings.length; i++) {
             if (type === null && filterStrings[i] === "&") {
                 // first level filter type
-                type = module.filterTypes.CONJUNCTION;
+                type = FILTER_TYPES.CONJUNCTION;
             } else if (type === null && filterStrings[i] === ";") {
                 // first level filter type
-                type = module.filterTypes.DISJUNCTION;
-            } else if (type === module.filterTypes.CONJUNCTION && filterStrings[i] === ";") {
+                type = FILTER_TYPES.DISJUNCTION;
+            } else if (type === FILTER_TYPES.CONJUNCTION && filterStrings[i] === ";") {
                 // throw invalid filter error (using combination of ! and &)
-                throw new module.InvalidFilterOperatorError("Couldn't parse '" + filterString + "' filter.", path, filterString);
-            } else if (type === module.filterTypes.DISJUNCTION && filterStrings[i] === "&") {
+                throw new InvalidFilterOperatorError("Couldn't parse '" + filterStrings + "' filter.", path, filterStrings);
+            } else if (type === FILTER_TYPES.DISJUNCTION && filterStrings[i] === "&") {
                 // throw invalid filter error (using combination of ! and &)
-                throw new module.InvalidFilterOperatorError("Couldn't parse '" + filterString + "' filter.", path, filterString);
+                throw new InvalidFilterOperatorError("Couldn't parse '" + filterStrings + "' filter.", path, filterStrings);
             } else if (filterStrings[i] !== "&" && filterStrings[i] !== ";") {
                 // single filter on the first level
                 var binaryFilter = _processSingleFilterString(filterStrings[i]);
@@ -1994,7 +2023,7 @@
 
         // if facet didn't have any operator, then we create one with and
         if (!("or" in facet) && !("and" in facet)) {
-          facet = {and: [module._simpleDeepCopy(facet)]};
+          facet = {and: [simpleDeepCopy(facet)]};
           depth = 1;
         }
 
@@ -2006,29 +2035,29 @@
         var facet = {}, orSources = {}, parsed, op, i, f, nextRes, parentDepth;
 
         // base for binary predicate filters
-        if (parsedFilter instanceof ParsedFilter && parsedFilter.type === module.filterTypes.BINARYPREDICATE){
+        if (parsedFilter instanceof ParsedFilter && parsedFilter.type === FILTER_TYPES.BINARYPREDICATE){
             facet.source = parsedFilter.column;
             switch (parsedFilter.operator) {
-                case module._ERMrestFilterPredicates.GREATER_THAN_OR_EQUAL_TO:
-                    facet[module._facetFilterTypes.RANGE] = [{min: parsedFilter.value}];
+                case _ERMrestFilterPredicates.GREATER_THAN_OR_EQUAL_TO:
+                    facet[_facetFilterTypes.RANGE] = [{min: parsedFilter.value}];
                     break;
-                case module._ERMrestFilterPredicates.LESS_THAN_OR_EQUAL_TO:
-                    facet[module._facetFilterTypes.RANGE] = [{max: parsedFilter.value}];
+                case _ERMrestFilterPredicates.LESS_THAN_OR_EQUAL_TO:
+                    facet[_facetFilterTypes.RANGE] = [{max: parsedFilter.value}];
                     break;
-                case module._ERMrestFilterPredicates.GREATER_THAN:
-                    facet[module._facetFilterTypes.RANGE] = [{min: parsedFilter.value, min_exclusive: true}];
+                case _ERMrestFilterPredicates.GREATER_THAN:
+                    facet[_facetFilterTypes.RANGE] = [{min: parsedFilter.value, min_exclusive: true}];
                     break;
-                case module._ERMrestFilterPredicates.LESS_THAN:
-                    facet[module._facetFilterTypes.RANGE] = [{max: parsedFilter.value, max_exclusive: true}];
+                case _ERMrestFilterPredicates.LESS_THAN:
+                    facet[_facetFilterTypes.RANGE] = [{max: parsedFilter.value, max_exclusive: true}];
                     break;
-                case module._ERMrestFilterPredicates.NULL:
-                    facet[module._facetFilterTypes.CHOICE] = [null];
+                case _ERMrestFilterPredicates.NULL:
+                    facet[_facetFilterTypes.CHOICE] = [null];
                     break;
-                case module._ERMrestFilterPredicates.CASE_INS_REG_EXP:
-                    facet[module._facetFilterTypes.SEARCH] = [parsedFilter.value];
+                case _ERMrestFilterPredicates.CASE_INS_REG_EXP:
+                    facet[_facetFilterTypes.SEARCH] = [parsedFilter.value];
                     break;
-                case module._ERMrestFilterPredicates.EQUAL:
-                    facet[[module._facetFilterTypes.CHOICE]] = [parsedFilter.value];
+                case _ERMrestFilterPredicates.EQUAL:
+                    facet[[_facetFilterTypes.CHOICE]] = [parsedFilter.value];
                     break;
                 default:
                     // operator is not supported by facet
@@ -2044,9 +2073,9 @@
             depth++;
 
             // set the filter type
-            if (parsedFilter.type === module.filterTypes.DISJUNCTION) {
+            if (parsedFilter.type === FILTER_TYPES.DISJUNCTION) {
                 op = "or";
-            } else if (parsedFilter.type === module.filterTypes.CONJUNCTION) {
+            } else if (parsedFilter.type === FILTER_TYPES.CONJUNCTION) {
                 op = "and";
             } else {
                 return null;
@@ -2079,11 +2108,11 @@
                 // if operator is or and the filter is binary we can merge them
                 // for example id=1;id=2 can turned into {source: "id", choices: ["1", "2"]}
                 // or id=1;id::geq::2 can be {source: "id", "choices": ["1"], "ranges": [{min: 2}]}
-                if (op === "or" && f.type === module.filterTypes.BINARYPREDICATE) {
+                if (op === "or" && f.type === FILTER_TYPES.BINARYPREDICATE) {
                     if (orSources[parsed.source] > -1) {
                         // the source existed before, so it can be merged
                         var index = orSources[parsed.source];
-                        module._facetFilterTypeNames.forEach(mergeFacets);
+                        _facetFilterTypeNames.forEach(mergeFacets);
                         continue;
                     } else {
                         orSources[parsed.source] = facet[op].length;
@@ -2107,14 +2136,6 @@
        // invalid filter
        return null;
     }
-
-    module.filterTypes = Object.freeze({
-        BINARYPREDICATE: "BinaryPredicate",
-        CONJUNCTION: "Conjunction",
-        DISJUNCTION: "Disjunction",
-        UNARYPREDICATE: "UnaryPredicate",
-        NEGATION: "Negation"
-    });
 
     /**
      * The complete structure of ermrest JSON filter is as follows:
@@ -2157,7 +2178,7 @@
      * https://github.com/informatics-isi-edu/ermrestjs/issues/447
      *
      * @param       {String|Object} str Can be blob or json (object).
-     * @param       {String} path to generate rediretUrl in error module.
+     * @param       {String} path to generate rediretUrl in error 
      * @constructor
      */
     function ParsedFacets (str, path) {
@@ -2173,17 +2194,17 @@
              * JSON object that represents facets
              * @type {string}
              */
-            this.encoded = module.encodeFacet(str);
+            this.encoded = encodeFacet(str);
         } else {
             this.encoded = str;
-            this.decoded = module.decodeFacet(str, path);
+            this.decoded = decodeFacet(str, path);
         }
 
-        var andOperator = module._FacetsLogicalOperators.AND, obj = this.decoded;
-        if (!obj.hasOwnProperty(andOperator) || !Array.isArray(obj[andOperator])) {
+        var andOperator = _FacetsLogicalOperators.AND, obj = this.decoded;
+        if (!Object.prototype.hasOwnProperty.call(obj, andOperator) || !Array.isArray(obj[andOperator])) {
             // we cannot actually parse the facet now, because we haven't
             // introspected the whole catalog yet, and don't have access to the constraint objects.
-            throw new module.InvalidFacetOperatorError(path, module._facetingErrors.invalidBooleanOperator);
+            throw new InvalidFacetOperatorError(path, _facetingErrors.invalidBooleanOperator);
         }
 
         /**
@@ -2199,7 +2220,7 @@
          * @type {boolean}
          */
         this.hasNonSearchBoxVisibleFilters = obj[andOperator].some(function (f) {
-            return !f.hidden && (!f.sourcekey || f.sourcekey !== module._specialSourceDefinitions.SEARCH_BOX);
+            return !f.hidden && (!f.sourcekey || f.sourcekey !== _specialSourceDefinitions.SEARCH_BOX);
         });
 
         /**
@@ -2216,13 +2237,13 @@
      *
      *
      * @param       {String|Object} str Can be blob or json (object).
-     * @param       {String} path to generate rediretUrl in error module.
+     * @param       {String} path to generate rediretUrl in error 
      * @constructor
      */
     function CustomFacets (str, path) {
 
         // the eror that we should throw if it's invalid
-        var error = new module.InvalidCustomFacetOperatorError('', path);
+        var error = new InvalidCustomFacetOperatorError('', path);
 
         if (typeof str === 'object') {
             /**
@@ -2235,12 +2256,12 @@
              * JSON object that represents facets
              * @type {string}
              */
-            this.encoded = module.encodeFacet(str);
+            this.encoded = encodeFacet(str);
         } else {
             this.encoded = str;
 
             try {
-                this.decoded = module.decodeFacet(str, path);
+                this.decoded = decodeFacet(str, path);
             } catch(exp) {
                 // the exp will be InvalidFacetOperatorError, so we should change it to custom-facet
                 throw error;
@@ -2248,7 +2269,7 @@
         }
 
         var obj = this.decoded;
-        if ((!obj.hasOwnProperty("facets") && !obj.hasOwnProperty("ermrest_path"))) {
+        if ((!Object.prototype.hasOwnProperty.call(obj, "facets") && !Object.prototype.hasOwnProperty.call(obj, "ermrest_path"))) {
             throw error;
         }
 
@@ -2265,7 +2286,7 @@
              * The ermrset string path that will be appended to the url
              * @type {String}
              */
-            this.ermrestPath = module.trimSlashes(obj.ermrest_path);
+            this.ermrestPath = trimSlashes(obj.ermrest_path);
         }
 
         this.removable = true;

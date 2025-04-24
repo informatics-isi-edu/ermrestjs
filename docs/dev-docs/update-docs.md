@@ -5,14 +5,6 @@ figure out whether you need to update any of the documents.
 
 > The following sections were added to make sure you didn't miss any relevant piece of documentation and they are not necessarily applicable to your changes.
 
-## Update API docs
-
-After each change, make sure the api docs are updated, you can do so by running
-
-```
-$ make all
-```
-
 ## Update annotation docs
 
 If you changed any annotation-based feature, you need to make sure the [annotation doc](../user-docs/annotation.md) is updated and contains the latest information.

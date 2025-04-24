@@ -1,4 +1,5 @@
 var nock = require('nock');
+const { DeferredPromise } = require("../../../utils/utilities.js");
 
 exports.execute = function (options) {
 
@@ -47,7 +48,7 @@ exports.execute = function (options) {
               .reply(401, 'Unauthorized Error');
 
             ermRest.setHTTP401Handler(function() {
-                var defer = ermRest._q.defer();
+                const defer = new DeferredPromise();
 
                 nock(url, ops)
                     .get("/ermrest/catalog/" + id)
@@ -76,7 +77,7 @@ exports.execute = function (options) {
               .persist();
 
             ermRest.setHTTP401Handler(function() {
-                var defer = ermRest._q.defer();
+                const defer = new DeferredPromise();
 
                 nock(url, ops)
                     .get("/ermrest/catalog/" + id)

@@ -1,10 +1,35 @@
-module.AttributeGroupReference = AttributeGroupReference;
-module.AttributeGroupLocation = AttributeGroupLocation;
-module.AttributeGroupColumn = AttributeGroupColumn;
+/* eslint-disable @typescript-eslint/no-this-alias */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable prettier/prettier */
+import moment from 'moment-timezone';
 
-/**
- * @namespace ERMrest.AttributeGroupReference
- */
+// models
+import { MalformedURIError, NotFoundError } from '@isrd-isi-edu/ermrestjs/src/models/errors';
+// import DeferredPromise from '@isrd-isi-edu/ermrestjs/src/models/deferred-promise';
+
+// services
+import ConfigService from '@isrd-isi-edu/ermrestjs/src/services/config';
+import ErrorService from '@isrd-isi-edu/ermrestjs/src/services/error';
+
+// utils
+import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils';
+import { isDefinedAndNotNull, isObject, isObjectAndNotNull, isStringAndNotEmpty, verify } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
+import { fixedEncodeURIComponent } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
+import {
+  contextHeaderName,
+  _commentDisplayModes,
+  _dataFormats,
+  _HTMLColumnType,
+  URL_PATH_LENGTH_LIMIT,
+} from '@isrd-isi-edu/ermrestjs/src/utils/constants';
+
+// legacy
+import { _convertSearchTermToFilter, _getSortModifier, _getPagingModifier } from '@isrd-isi-edu/ermrestjs/js/parser';
+import { _isValidSortElement, _formatValueByType, _extends } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
+import { _compressFacetObject } from '@isrd-isi-edu/ermrestjs/js/utils/pseudocolumn_helpers';
+
+import { Type } from '@isrd-isi-edu/ermrestjs/js/core';
+
 
 /**
  * Constructs a Reference object.
@@ -28,7 +53,7 @@ module.AttributeGroupColumn = AttributeGroupColumn;
  * @constructor
  * @memberof ERMrest
  */
-function AttributeGroupReference(keyColumns, aggregateColumns, location, catalog, sourceTable, context) {
+export function AttributeGroupReference(keyColumns, aggregateColumns, location, catalog, sourceTable, context) {
 
     this.isAttributeGroup = true;
 
@@ -76,16 +101,6 @@ AttributeGroupReference.prototype = {
     constructor: AttributeGroupReference,
 
     /**
-     * the displayname of the reference
-     * TODO not sure if this sis needed
-     * @type {object}
-     */
-    get displayname() {
-        //TODO
-        notimplemented();
-    },
-
-    /**
      * Visible columns
      * @type {AttributeGroupColumn[]}
      */
@@ -120,7 +135,7 @@ AttributeGroupReference.prototype = {
     sort: function (sort) {
         if (sort) {
             verify((sort instanceof Array), "input should be an array");
-            verify(sort.every(module._isValidSortElement), "invalid arguments in array");
+            verify(sort.every(_isValidSortElement), "invalid arguments in array");
         }
 
         // TODO doesn't support sort based on other columns.
@@ -170,7 +185,7 @@ AttributeGroupReference.prototype = {
       */
      get unfilteredReference() {
          verify(this.table, "table is not defined for current reference");
-         var newLocation = new AttributeGroupLocation(this.location.service, this.location.catalog, [module._fixedEncodeURIComponent(this.table.schema.name),module._fixedEncodeURIComponent(this.table.name)].join(":"));
+         var newLocation = new AttributeGroupLocation(this.location.service, this.location.catalog, [fixedEncodeURIComponent(this.table.schema.name),fixedEncodeURIComponent(this.table.name)].join(":"));
          return new AttributeGroupReference(this._keyColumns, this._aggregateColumns, newLocation, this._catalog, this.table, this._context);
      },
 
@@ -212,7 +227,7 @@ AttributeGroupReference.prototype = {
              // make sure page object and sort are compatible
              if ((loc.afterObject && loc.afterObject.length !== self.ermrestSortObject.length) ||
                 (loc.beforeObject && loc.beforeObject.length !== self.ermrestSortObject.length)) {
-                 throw new module.MalformedURIError("The given page options are not compatible with sort criteria (Attributegroup Reference).");
+                 throw new MalformedURIError("The given page options are not compatible with sort criteria (Attributegroup Reference).");
              }
 
              // add extra sort columns to the key
@@ -225,7 +240,7 @@ AttributeGroupReference.prototype = {
                  if (k) return;
 
                  keyColumns.push(
-                     module._fixedEncodeURIComponent(so.column) + ":=" + module._fixedEncodeURIComponent(so.term)
+                     fixedEncodeURIComponent(so.column) + ":=" + fixedEncodeURIComponent(so.term)
                  );
              });
 
@@ -286,7 +301,7 @@ AttributeGroupReference.prototype = {
                      try {
                          col = self.getColumnByName(so.column);
                      } catch(e) {
-                         throw new module.MalformedURIError("The sort criteria is invalid. Column `" + so.column +"` was not found (Attributegroup Reference).");
+                         throw new MalformedURIError("The sort criteria is invalid. Column `" + so.column +"` was not found (Attributegroup Reference).");
                      }
 
                      // don't add duplciates
@@ -295,7 +310,7 @@ AttributeGroupReference.prototype = {
 
                      // make sure column is sortable
                      if(!col.sortable) {
-                         throw new module.MalformedURIError("column '" + col.name + "' is not sortable (Attributegroup)");
+                         throw new MalformedURIError("column '" + col.name + "' is not sortable (Attributegroup)");
                      }
 
                      // go through list of sort columns and add them to the key
@@ -334,7 +349,7 @@ AttributeGroupReference.prototype = {
      */
     read: function (limit, contextHeaderParams, dontCorrectPage) {
         try {
-            var defer = module._q.defer();
+            var defer = ConfigService.q.defer();
             var hasPaging = (typeof limit === "number" && limit > 0);
 
             var uri = this.uri;
@@ -402,20 +417,20 @@ AttributeGroupReference.prototype = {
                 }
 
             }).catch(function (response) {
-                var error = module.responseToError(response);
+                var error = ErrorService.responseToError(response);
                 defer.reject(error);
             });
 
             return defer.promise;
 
         } catch (e) {
-            return module._q.reject(e);
+            return ConfigService.q.reject(e);
         }
 
     },
 
     getAggregates: function (aggregateList, contextHeaderParams) {
-        var defer = module._q.defer();
+        var defer = ConfigService.q.defer();
         var url;
         var urlSet = [];
         var loc = this.location;
@@ -444,7 +459,7 @@ AttributeGroupReference.prototype = {
             }
 
             // if adding the next aggregate to the url will push it past url length limit, push url onto the urlSet and reset the working url
-            if ((url + i + ":=" + agg).length > module.URL_PATH_LENGTH_LIMIT) {
+            if ((url + i + ":=" + agg).length > URL_PATH_LENGTH_LIMIT) {
                 // strip off an extra ','
                 if (url.charAt(url.length-1) === ',') {
                     url = url.substring(0, url.length-1);
@@ -469,7 +484,7 @@ AttributeGroupReference.prototype = {
             aggregatePromises.push(http.get(loc.service + "/catalog/" + loc.catalog.id + "/aggregate/" + urlSet[j], config));
         }
 
-        module._q.all(aggregatePromises).then(function getAggregates(response) {
+        ConfigService.q.all(aggregatePromises).then(function getAggregates(response) {
             // all response rows merged into one object
             var singleResponse = {};
 
@@ -485,7 +500,7 @@ AttributeGroupReference.prototype = {
 
             defer.resolve(responseArray);
         }, function error(response) {
-            var error = module.responseToError(response);
+            var error = ErrorService.responseToError(response);
             return defer.reject(error);
         }).catch(function (error) {
             return defer.reject(error);
@@ -502,7 +517,7 @@ AttributeGroupReference.prototype = {
     getColumnByName: function (name) {
 
         var findCol = function (list) {
-            for (i = 0; i < list.length; i++) {
+            for (let i = 0; i < list.length; i++) {
                 if (list[i].name === name) {
                     return list[i];
                 }
@@ -514,7 +529,7 @@ AttributeGroupReference.prototype = {
         if (c) {
             return c;
         }
-        throw new module.NotFoundError("", "Column " + name + " not found.");
+        throw new NotFoundError("", "Column " + name + " not found.");
     },
 
     /**
@@ -559,7 +574,7 @@ AttributeGroupReference.prototype = {
         }
 
         var headers = {};
-        headers[module.contextHeaderName] = contextHeaderParams;
+        headers[contextHeaderName] = contextHeaderParams;
         return headers;
     },
 };
@@ -590,7 +605,7 @@ AttributeGroupReference.prototype = {
  * @constructor
  * @memberof ERMrest
  */
-function AttributeGroupPage(reference, data, hasPrevious, hasNext) {
+export function AttributeGroupPage(reference, data, hasPrevious, hasNext) {
     /**
      * The page's associated reference.
      * @type {ERMrest.AttributeGroupReference}
@@ -744,7 +759,7 @@ AttributeGroupPage.prototype = {
  * @constructor
  * @memberof ERMrest
  */
-function AttributeGroupTuple(page, data) {
+export function AttributeGroupTuple(page, data) {
     this._page = page;
     this._data = data;
 }
@@ -847,14 +862,14 @@ AttributeGroupTuple.prototype = {
                 hasNull = hasNull || data[c.name] == null;
                 if (hasNull) return;
 
-                hasMarkdown = hasMarkdown || (module._HTMLColumnType.indexOf(c.type.name) != -1);
+                hasMarkdown = hasMarkdown || (_HTMLColumnType.indexOf(c.type.name) != -1);
                 values.push(c.formatvalue(data[c.name], self._page.reference._context));
             });
 
             value = hasNull ? null: values.join(":");
 
             this._displayname = {
-                "value": hasMarkdown ? module.renderMarkdown(value, true) : value,
+                "value": hasMarkdown ? renderMarkdown(value, true) : value,
                 "unformatted": value,
                 "isHTML": hasMarkdown
             };
@@ -882,7 +897,7 @@ AttributeGroupTuple.prototype = {
  * @param       {Boolean} visible    Whether we want this column be returned in the tuples
  * @constructor
  */
-function AttributeGroupColumn(alias, term, baseColumn, displayname, colType, comment, sortable, visible) {
+export function AttributeGroupColumn(alias, term, baseColumn, displayname, colType, comment, sortable, visible) {
     /**
      * The alias for the column.
      * The alias might be undefined. If it's aggregate column and it has an aggregate function
@@ -946,7 +961,7 @@ function AttributeGroupColumn(alias, term, baseColumn, displayname, colType, com
             isHTML: false,
             value: comment,
             unformatted: comment,
-            displayMode: module._commentDisplayModes.tooltip
+            displayMode: _commentDisplayModes.tooltip
         };
     }
 
@@ -967,7 +982,7 @@ AttributeGroupColumn.prototype = {
     toString: function () {
         var res = "";
         if (typeof this._alias === "string" && this._alias.length !== 0) {
-            res += module._fixedEncodeURIComponent(this._alias) + ":=";
+            res += fixedEncodeURIComponent(this._alias) + ":=";
         }
         res += this.term;
         return res;
@@ -1018,8 +1033,8 @@ AttributeGroupColumn.prototype = {
          * are aliases and not the actual column names in the table.
          *
          */
-        if (module._HTMLColumnType.indexOf(this.type.name) != -1) {
-            return {isHTML: true, value: module.renderMarkdown(formattedValue, true), unformatted: formattedValue};
+        if (_HTMLColumnType.indexOf(this.type.name) != -1) {
+            return {isHTML: true, value: renderMarkdown(formattedValue, true), unformatted: formattedValue};
         }
         return {isHTML: false, value: formattedValue, unformatted: formattedValue};
     },
@@ -1094,7 +1109,7 @@ AttributeGroupColumn.prototype = {
  * @param       {Object[]} beforeObject the object that will be used for paging to define before. It's an array of data
  * @constructor
  */
-function AttributeGroupLocation(service, catalog, path, searchObject, sortObject, afterObject, beforeObject) {
+export function AttributeGroupLocation(service, catalog, path, searchObject, sortObject, afterObject, beforeObject) {
     /**
      * The uri to ermrest service
      * @type {string}
@@ -1235,7 +1250,7 @@ AttributeGroupLocation.prototype = {
  * @memberof ERMrest
  * @constructor
  */
-function AttributeGroupReferenceAggregateFn (reference) {
+export function AttributeGroupReferenceAggregateFn (reference) {
     this._ref = reference;
 }
 
@@ -1254,12 +1269,6 @@ AttributeGroupReferenceAggregateFn.prototype = {
         return "cnt_d(" + this._ref.shortestKey[0].term + ")";
     }
 };
-
-
-module.BucketAttributeGroupReference = BucketAttributeGroupReference;
-/**
- * @namespace ERMrest.BucketAttributeGroupReference
- */
 
 /**
  * Constructs a Reference object based on {@link ERMrest.AttributeGroupReference}.
@@ -1282,9 +1291,9 @@ module.BucketAttributeGroupReference = BucketAttributeGroupReference;
  * @param       {String} bucketWidth the width of each bucket
  * @constructor
  */
-function BucketAttributeGroupReference(baseColumn, baseRef, min, max, numberOfBuckets, bucketWidth) {
+export function BucketAttributeGroupReference(baseColumn, baseRef, min, max, numberOfBuckets, bucketWidth) {
     var location = new AttributeGroupLocation(baseRef.location.service, baseRef.table.schema.catalog, baseRef.location.ermrestCompactPath);
-    var binTerm = "bin(" + module._fixedEncodeURIComponent(baseColumn.name) + ";" + numberOfBuckets + ";" + module._fixedEncodeURIComponent(min) + ";" + module._fixedEncodeURIComponent(max) + ")";
+    var binTerm = "bin(" + fixedEncodeURIComponent(baseColumn.name) + ";" + numberOfBuckets + ";" + fixedEncodeURIComponent(min) + ";" + fixedEncodeURIComponent(max) + ")";
 
     var keyColumns = [
         new AttributeGroupColumn("c1", binTerm, baseColumn, baseColumn.displayname, baseColumn.type, baseColumn.comment, true, true)
@@ -1294,7 +1303,7 @@ function BucketAttributeGroupReference(baseColumn, baseRef, min, max, numberOfBu
 
     // if there's a join, we cannot use cnt(*) and we should count the shortestkeys of facet base table (not the projected table)
     if (baseRef.location.hasJoin) {
-        countName = "cnt_d(" + baseRef.location.facetBaseTableAlias + ":" + module._fixedEncodeURIComponent(baseRef.facetBaseTable.shortestKey[0].name) + ")";
+        countName = "cnt_d(" + baseRef.location.facetBaseTableAlias + ":" + fixedEncodeURIComponent(baseRef.facetBaseTable.shortestKey[0].name) + ")";
     }
 
     var aggregateColumns = [
@@ -1312,15 +1321,15 @@ function BucketAttributeGroupReference(baseColumn, baseRef, min, max, numberOfBu
 }
 
 // extend the prototype
-module._extends(BucketAttributeGroupReference, AttributeGroupReference);
+_extends(BucketAttributeGroupReference, AttributeGroupReference);
 
 // properties to be overriden:
 BucketAttributeGroupReference.prototype.sort = function (sort) {
-    verify(true == false, "Invalid function");
+    verify(false, "Invalid function");
 };
 
 BucketAttributeGroupReference.prototype.search = function (term) {
-    verify(true == false, "Invalid function");
+    verify(false, "Invalid function");
 };
 
 /**
@@ -1338,16 +1347,14 @@ BucketAttributeGroupReference.prototype.search = function (term) {
  * @return {Object} data object that contains 2 arrays and another object with 2 arrays
  */
 BucketAttributeGroupReference.prototype.read = function (contextHeaderParams) {
-    var moment = module._moment;
-
     // uses the current known min value and adds the binWidth to it to generate the max label
     // which is then used as the next min label (because we didn't have a next min)
     function calculateWidthLabel(min, binWidth) {
         var nextLabel;
         if (currRef._keyColumns[0].type.rootName.indexOf("date") > -1)  {
-            nextLabel = moment(min).add(binWidth, 'd').format(module._dataFormats.DATE);
+            nextLabel = moment(min).add(binWidth, 'd').format(_dataFormats.DATE);
         } else if (currRef._keyColumns[0].type.rootName.indexOf("timestamp") > -1) {
-            nextLabel = moment(min).add(binWidth, 's').format(module._dataFormats.DATETIME.return);
+            nextLabel = moment(min).add(binWidth, 's').format(_dataFormats.DATETIME.return);
         } else {
             nextLabel = (min + binWidth);
         }
@@ -1355,7 +1362,7 @@ BucketAttributeGroupReference.prototype.read = function (contextHeaderParams) {
     }
 
     try {
-        var defer = module._q.defer();
+        var defer = ConfigService.q.defer();
 
         var uri = this.uri;
 
@@ -1392,11 +1399,11 @@ BucketAttributeGroupReference.prototype.read = function (contextHeaderParams) {
                     max = response.data[i].c1[2];
 
                     if (currRef._keyColumns[0].type.rootName.indexOf("date") > -1) {
-                        min = min !== null ? moment(min).format(module._dataFormats.DATE) : null;
-                        max = max !== null ? moment(max).format(module._dataFormats.DATE) : null;
+                        min = min !== null ? moment(min).format(_dataFormats.DATE) : null;
+                        max = max !== null ? moment(max).format(_dataFormats.DATE) : null;
                     } else if (currRef._keyColumns[0].type.rootName.indexOf("timestamp") > -1) {
-                        min = min !== null ? moment(min).format(module._dataFormats.DATETIME.return) : null;
-                        max = max !== null ? moment(max).format(module._dataFormats.DATETIME.return) : null;
+                        min = min !== null ? moment(min).format(_dataFormats.DATETIME.return) : null;
+                        max = max !== null ? moment(max).format(_dataFormats.DATETIME.return) : null;
                     }
 
                     labels.min[index] = min;
@@ -1433,9 +1440,9 @@ BucketAttributeGroupReference.prototype.read = function (contextHeaderParams) {
                             max = currRef._min;
 
                             if (currRef._keyColumns[0].type.rootName.indexOf("date") > -1) {
-                                max = moment(max).format(module._dataFormats.DATE);
+                                max = moment(max).format(_dataFormats.DATE);
                             } else if (currRef._keyColumns[0].type.rootName.indexOf("timestamp") > -1) {
-                                max = moment.utc(max).format(module._dataFormats.DATETIME.return);
+                                max = moment.utc(max).format(_dataFormats.DATETIME.return);
                             }
                         } else {
                             max = calculateWidthLabel(min, currRef._bucketWidth);
@@ -1461,13 +1468,13 @@ BucketAttributeGroupReference.prototype.read = function (contextHeaderParams) {
             defer.resolve(data);
 
         }).catch(function (response) {
-            var error = module.responseToError(response);
+            var error = ErrorService.responseToError(response);
             defer.reject(error);
         });
 
         return defer.promise;
 
     } catch (e) {
-        return module._q.reject(e);
+        return ConfigService.q.reject(e);
     }
 };

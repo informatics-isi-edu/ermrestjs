@@ -1,10 +1,59 @@
-    /**
+/* eslint-disable prettier/prettier */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-this-alias */
+import { hash as sparkMD5Hash } from 'spark-md5';
+
+// models
+// import DeferredPromise from '@isrd-isi-edu/ermrestjs/src/models/deferred-promise';
+
+// services
+import CatalogService from '@isrd-isi-edu/ermrestjs/src/services/catalog';
+import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
+import ConfigService from '@isrd-isi-edu/ermrestjs/src/services/config';
+
+// utils
+import { isObjectAndNotNull, isObject, isDefinedAndNotNull, isStringAndNotEmpty } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
+import {
+  fixedEncodeURIComponent,
+  hexToBase64,
+  simpleDeepCopy,
+  shallowCopyExtras,
+  urlEncodeBase64,
+} from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
+import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils';
+import {
+  _constraintTypes,
+  _contexts,
+  _ERMrestFeatures,
+  _ERMrestFilterPredicates,
+  _ERMrestLogicalOperators,
+  _facetingErrors,
+  _facetFilterTypes,
+  _facetHeuristicIgnoredTypes,
+  _FacetsLogicalOperators,
+  _facetUnsupportedTypes,
+  _pseudoColAggregateFns,
+  _shorterVersion,
+  _sourceDefinitionAttributes,
+  _sourceProperties,
+  _specialSourceDefinitions,
+  _systemColumnNames,
+  _warningMessages,
+} from '@isrd-isi-edu/ermrestjs/src/utils/constants';
+
+// legacy
+import { generateKeyValueFilters, renameKey, _renderTemplate } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
+import { _createPseudoColumn } from '@isrd-isi-edu/ermrestjs/js/column';
+import { Reference } from '@isrd-isi-edu/ermrestjs/js/reference';
+import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/parser';
+
+/**
      * The functions that are used by _renderFacet
      * @ignore
      */
-    _renderFacetHelpers = {
+    export const _renderFacetHelpers = {
         hasNullChoice: function (term) {
-            var choice = module._facetFilterTypes.CHOICE;
+            var choice = _facetFilterTypes.CHOICE;
             return Array.isArray(term[choice]) && term[choice].some(function (v) {
                 return !isDefinedAndNotNull(v);
             });
@@ -27,7 +76,7 @@
                 return '';
             }
 
-            var encode = module._fixedEncodeURIComponent, nullFilter = module._ERMrestFilterPredicates.NULL;
+            var encode = fixedEncodeURIComponent, nullFilter = _ERMrestFilterPredicates.NULL;
             var canUseQuantified = false, hasNull = false, colsString ='', notFirst = false;
 
             // returns a simple key=value
@@ -46,10 +95,10 @@
 
             // see if the quantified syntax can be used
             if (catalogObject) {
-                if (column === module._systemColumnNames.RID) {
-                    canUseQuantified = catalogObject.features[module._ERMrestFeatures.QUANTIFIED_RID_LISTS];
+                if (column === _systemColumnNames.RID) {
+                    canUseQuantified = catalogObject.features[_ERMrestFeatures.QUANTIFIED_RID_LISTS];
                 } else {
-                    canUseQuantified = catalogObject.features[module._ERMrestFeatures.QUANTIFIED_VALUE_LISTS];
+                    canUseQuantified = catalogObject.features[_ERMrestFeatures.QUANTIFIED_VALUE_LISTS];
                 }
             }
 
@@ -87,7 +136,7 @@
 
         // parse ranges constraint
         parseRanges: function (ranges, column) {
-            var encode = module._fixedEncodeURIComponent;
+            var encode = fixedEncodeURIComponent;
             var res = "", hasFilter = false, operator;
             ranges.forEach(function (range, index) {
                 if (hasFilter) {
@@ -96,9 +145,9 @@
                 }
 
                 if (isDefinedAndNotNull(range.min)) {
-                    operator = module._ERMrestFilterPredicates.GREATER_THAN_OR_EQUAL_TO;
+                    operator = _ERMrestFilterPredicates.GREATER_THAN_OR_EQUAL_TO;
                     if (range.min_exclusive === true) {
-                        operator = module._ERMrestFilterPredicates.GREATER_THAN;
+                        operator = _ERMrestFilterPredicates.GREATER_THAN;
                     }
 
                     res += encode(column) + operator + encode(_renderFacetHelpers.valueToString(range.min));
@@ -106,9 +155,9 @@
                 }
 
                 if (isDefinedAndNotNull(range.max)) {
-                    operator = module._ERMrestFilterPredicates.LESS_THAN_OR_EQUAL_TO;
+                    operator = _ERMrestFilterPredicates.LESS_THAN_OR_EQUAL_TO;
                     if (range.max_exclusive === true) {
-                        operator = module._ERMrestFilterPredicates.LESS_THAN;
+                        operator = _ERMrestFilterPredicates.LESS_THAN;
                     }
 
                     if (hasFilter) {
@@ -231,11 +280,10 @@
          * @param {String} tableName
          * @param {String} catalogId
          * @param {Boolean} reverse - this will reverse the datasource and adds the root alias to the end
-         * @param {Object} consNames
          * @ignore
          */
-        parseDataSource: function (source, sourcekey, alias, rootTable, tableName, catalogId, reverse, consNames, pathPrefixAliasMapping) {
-            var res = _sourceColumnHelpers.processDataSourcePath(source, rootTable, tableName, catalogId, consNames);
+        parseDataSource: function (source, sourcekey, alias, rootTable, tableName, catalogId, reverse, pathPrefixAliasMapping) {
+            var res = _sourceColumnHelpers.processDataSourcePath(source, rootTable, tableName, catalogId);
 
             if (res.error || res.sourceObjectNodes.length == 0) {
                 // TODO FILTER_IN_SOURCE should we log the error?
@@ -276,11 +324,10 @@
          * NOTE will return an error if the given filter is invalid
          * @param {Object} filter the facet filter
          * @param {ERMrest.Reference} referenceObject  the reference object
-         * @param {Object} consNames  the constraint names
          */
-        findMappingFacet: function (filter, referenceObject, consNames) {
+        findMappingFacet: function (filter, referenceObject) {
             // turn this facet into a proper object so we can find its "name"
-            var currObj = new SourceObjectWrapper(filter, referenceObject.table, consNames, true);
+            var currObj = new SourceObjectWrapper(filter, referenceObject.table, true);
 
             // find the facet based on name
             return referenceObject.facetColumns.find(function (fc) {
@@ -320,7 +367,6 @@
      * @param       {ERMrest.catalog} [catalogObject] the catalog object (could be undefined)
      * @param       {ERMrest.Reference} [referenceObject] the reference object (could be undefined)
      * @param       {Array} usedSourceObjects (optional) the source objects that are used in other parts (outbound)
-     * @param       {Object[]} [consNames] the constraint names (could be undefined)
      * @constructor
      * @return      {object} An object that will have the following attributes:
      * - successful: Boolean (true means successful, false means cannot be parsed).
@@ -329,8 +375,8 @@
      *
      * @ignore
      */
-    _renderFacet = function(json, alias, schemaName, tableName, catalogId, catalogObject, referenceObject, usedSourceObjects, forcedAliases, consNames) {
-        var facetErrors = module._facetingErrors;
+    export const _renderFacet = function(json, alias, schemaName, tableName, catalogId, catalogObject, referenceObject, usedSourceObjects, forcedAliases) {
+        var facetErrors = _facetingErrors;
         var rootSchemaName = schemaName, rootTableName = tableName;
 
         var rootTable = null;
@@ -348,17 +394,17 @@
             // fail silently
         }
 
-        var andOperator = module._FacetsLogicalOperators.AND;
+        var andOperator = _FacetsLogicalOperators.AND;
 
         // NOTE we only support and at the moment.
-        if (!json.hasOwnProperty(andOperator) || !Array.isArray(json[andOperator])) {
+        if (!Object.prototype.hasOwnProperty.call(json, andOperator) || !Array.isArray(json[andOperator])) {
             return {successful: false, message: "Only conjunction of facets are supported."};
         }
 
         var and = json[andOperator],
             rightJoins = [], // if we have null in the filter, we have to use join
             innerJoins = [], // all the other facets that have been parsed
-            encode = module._fixedEncodeURIComponent, sourcekey,
+            encode = fixedEncodeURIComponent, sourcekey,
             i, term, col, path, constraints, parsed, hasNullChoice,
             useRightJoin, rightJoinSchemaTable,
             mappedFacet, currObj, temp;
@@ -390,15 +436,15 @@
                 }
 
                 // parse the main search
-                if (term.sourcekey === module._specialSourceDefinitions.SEARCH_BOX) {
+                if (term.sourcekey === _specialSourceDefinitions.SEARCH_BOX) {
 
                     // this sourcekey is reserved for search and search constraint is required
-                    if (!Array.isArray(term[module._facetFilterTypes.SEARCH])) {
+                    if (!Array.isArray(term[_facetFilterTypes.SEARCH])) {
                         _renderFacetHelpers.getErrorOutput(facetErrors.missingConstraints, i);
                     }
 
                     // add the main search filter
-                    innerJoins.push(_renderFacetHelpers.parseSearchBox(term[module._facetFilterTypes.SEARCH], rootTable, alias, pathPrefixAliasMapping, catalogObject));
+                    innerJoins.push(_renderFacetHelpers.parseSearchBox(term[_facetFilterTypes.SEARCH], rootTable, alias, pathPrefixAliasMapping, catalogObject));
 
                     // we can go to the next source in the and filter
                     continue;
@@ -413,7 +459,7 @@
                     }
 
                     // copy the elements that are defined in the source def but not the one already defined
-                    module._shallowCopyExtras(term, sd.sourceObject, module._sourceDefinitionAttributes);
+                    shallowCopyExtras(term, sd.sourceObject, _sourceDefinitionAttributes);
                 }
             }
 
@@ -433,7 +479,7 @@
             mappedFacet = null;
             if (!hasNullChoice && isObjectAndNotNull(referenceObject) && referenceObject.table.aggressiveFacetLookup && referenceObject.facetColumns.length > 0) {
                 try {
-                    mappedFacet = _renderFacetHelpers.findMappingFacet(term, referenceObject, consNames);
+                    mappedFacet = _renderFacetHelpers.findMappingFacet(term, referenceObject);
                 } catch (exp) {
                     return _renderFacetHelpers.getErrorOutput(exp.message, i);
                 }
@@ -458,7 +504,7 @@
 
                 // if there's a null filter and source has path, we have to use right join
                 // parse the datasource
-                temp = _renderFacetHelpers.parseDataSource(term.source, sourcekey, alias, rootTable, tableName, catalogId, hasNullChoice, consNames, pathPrefixAliasMapping);
+                temp = _renderFacetHelpers.parseDataSource(term.source, sourcekey, alias, rootTable, tableName, catalogId, hasNullChoice, pathPrefixAliasMapping);
 
                 // if the data-path was invalid, ignore this facet
                 if (temp === null) {
@@ -483,22 +529,22 @@
             // ---------------- parse the constraints ---------------- //
             constraints = []; // the current constraints for this source
 
-            if (Array.isArray(term[module._facetFilterTypes.CHOICE])) {
-                parsed = _renderFacetHelpers.parseChoices(term[module._facetFilterTypes.CHOICE], col, catalogObject);
+            if (Array.isArray(term[_facetFilterTypes.CHOICE])) {
+                parsed = _renderFacetHelpers.parseChoices(term[_facetFilterTypes.CHOICE], col, catalogObject);
                 if (!parsed) {
                     return _renderFacetHelpers.getErrorOutput(facetErrors.invalidChoice, i);
                 }
                 constraints.push(parsed);
             }
-            if (Array.isArray(term[module._facetFilterTypes.RANGE])) {
-                parsed = _renderFacetHelpers.parseRanges(term[module._facetFilterTypes.RANGE], col);
+            if (Array.isArray(term[_facetFilterTypes.RANGE])) {
+                parsed = _renderFacetHelpers.parseRanges(term[_facetFilterTypes.RANGE], col);
                 if (!parsed) {
                     return _renderFacetHelpers.getErrorOutput(facetErrors.invalidRange, i);
                 }
                 constraints.push(parsed);
             }
-            if (Array.isArray(term[module._facetFilterTypes.SEARCH])) {
-                parsed = _renderFacetHelpers.parseSearch(term[module._facetFilterTypes.SEARCH], col, null, catalogObject);
+            if (Array.isArray(term[_facetFilterTypes.SEARCH])) {
+                parsed = _renderFacetHelpers.parseSearch(term[_facetFilterTypes.SEARCH], col, null, catalogObject);
                 if (!parsed) {
                     return _renderFacetHelpers.getErrorOutput(facetErrors.invalidSearch, i);
                 }
@@ -540,11 +586,11 @@
      * for full list of values that are compressed
      * @private
      */
-    _compressSource = function (source) {
+    export const _compressSource = function (source) {
         if (!source) return source;
 
-        var res = module._simpleDeepCopy(source);
-        var shorter = module._shorterVersion;
+        var res = simpleDeepCopy(source);
+        var shorter = _shorterVersion;
         var shorten = function (node) {
             return function (k) {
                 renameKey(node, k, shorter[k]);
@@ -585,11 +631,11 @@
      * NOTE: This function supports combination of conjunction and disjunction.
      * @private
      */
-    _compressFacetObject = function (facet) {
-        var res = module._simpleDeepCopy(facet),
-            and = module._FacetsLogicalOperators.AND,
-            or = module._FacetsLogicalOperators.OR,
-            shorter = module._shorterVersion;
+    export const _compressFacetObject = function (facet) {
+        var res = simpleDeepCopy(facet),
+            and = _FacetsLogicalOperators.AND,
+            or = _FacetsLogicalOperators.OR,
+            shorter = _shorterVersion;
 
         var shorten = function (node) {
             return function (k) {
@@ -634,7 +680,7 @@
      * @param {String} message - the message that should be appended to warning messages.
      * @private
      */
-    module._processWaitForList = function (waitFor, baseReference, currentTable, currentColumn, mainTuple, message) {
+    export const _processWaitForList = function (waitFor, baseReference, currentTable, currentColumn, mainTuple, message) {
         var wfList = [], hasWaitFor = false, hasWaitForAggregate = false, waitFors = [];
         if (Array.isArray(waitFor)) {
             waitFors = waitFor;
@@ -646,7 +692,7 @@
         waitFors.forEach(function (wf, index) {
             var errorMessage = "wait_for defined on table=`" + currentTable.name + "`, " + message + "`, index=" + index + ": ";
             if (typeof wf !== "string") {
-                module._log.warn(errorMessage + "must be a string");
+                $log.warn(errorMessage + "must be a string");
                 return;
             }
 
@@ -667,8 +713,8 @@
                 var sd = currentTable.sourceDefinitions.sources[wf];
 
                 // entitysets are only allowed in detailed
-                if (sd.hasInbound && !sd.sourceObject.aggregate && baseReference._context !== module._contexts.DETAILED) {
-                    module._log.warn(errorMessage + "entity sets are not allowed in non-detailed.");
+                if (sd.hasInbound && !sd.sourceObject.aggregate && baseReference._context !== _contexts.DETAILED) {
+                    $log.warn(errorMessage + "entity sets are not allowed in non-detailed.");
                     return;
                 }
 
@@ -685,7 +731,7 @@
 
                 // NOTE this could be in the table.sourceDefinitions
                 // the only issue is that in there we don't have the mainTuple...
-                var pc = module._createPseudoColumn(
+                var pc = _createPseudoColumn(
                     baseReference,
                     /**
                      * cloning so,
@@ -696,8 +742,7 @@
                      */
                     sd.clone(
                         {"sourcekey": wf},
-                        currentTable,
-                        module._constraintNames
+                        currentTable
                     ),
                     mainTuple
                 );
@@ -727,7 +772,7 @@
      * The functions that are used in Reference.facetColumns API
      * @ignore
      */
-    _facetColumnHelpers = {
+    export const _facetColumnHelpers = {
 
         /**
          * Given a ReferenceColumn, InboundForeignKeyPseudoColumn, or ForeignKeyPseudoColumn
@@ -745,9 +790,9 @@
 
                 // integer and serial key columns should show choice picker
                 if (baseCol.type.name.indexOf("int") === 0 || baseCol.type.name.indexOf("serial") === 0) {
-                    obj.ux_mode = module._facetFilterTypes.CHOICE;
+                    obj.ux_mode = _facetFilterTypes.CHOICE;
                 }
-                return module._facetHeuristicIgnoredTypes.indexOf(baseCol.type.name) === -1 ? obj : null;
+                return _facetHeuristicIgnoredTypes.indexOf(baseCol.type.name) === -1 ? obj : null;
             }
 
             // if the pseudo-column table doesn't have simple key
@@ -775,7 +820,7 @@
                 var column = refCol.table.shortestKey[0];
 
                 if (refCol.sourceObjectWrapper) {
-                    res = module._simpleDeepCopy(refCol.sourceObjectWrapper.source);
+                    res = simpleDeepCopy(refCol.sourceObjectWrapper.source);
                 } else {
                     res.push({"inbound": origFkR.constraint_names[0]});
                     if (association) {
@@ -794,10 +839,10 @@
             // integer and serial key columns should show choice picker
             if (refCol._baseCols[0].isUniqueNotNull &&
                (refCol.type.name.indexOf("int") === 0 || refCol.type.name.indexOf("serial") === 0)) {
-                obj.ux_mode = module._facetFilterTypes.CHOICE;
+                obj.ux_mode = _facetFilterTypes.CHOICE;
             }
 
-            return module._facetHeuristicIgnoredTypes.indexOf(refCol._baseCols[0].type.name) === -1 ? obj : null;
+            return _facetHeuristicIgnoredTypes.indexOf(refCol._baseCols[0].type.name) === -1 ? obj : null;
         },
 
         /**
@@ -818,7 +863,7 @@
             }
 
             // check the column type
-            return module._facetUnsupportedTypes.indexOf(col.type.name) === -1;
+            return _facetUnsupportedTypes.indexOf(col.type.name) === -1;
         },
 
         /**
@@ -839,7 +884,7 @@
 
             if (col.isPathColumn) {
                 if (col.hasAggregate) return false;
-                return module._simpleDeepCopy(col.sourceObjectWrapper.sourceObject);
+                return simpleDeepCopy(col.sourceObjectWrapper.sourceObject);
             }
 
             // we're not supporting facet for asset or composite keys (composite foreignKeys is supported).
@@ -912,9 +957,9 @@
          * it's something that should be in client.
          * @ignore
          */
-        checkForAlternative: function (facetObjectWrapper, usedAnnotation, table, consNames) {
+        checkForAlternative: function (facetObjectWrapper, usedAnnotation, table) {
             var currTable = facetObjectWrapper.column.table;
-            var compactSelectTable = currTable._baseTable._getAlternativeTable(module._contexts.COMPACT_SELECT);
+            var compactSelectTable = currTable._baseTable._getAlternativeTable(_contexts.COMPACT_SELECT);
 
             // there's no alternative table
             if (currTable === compactSelectTable) {
@@ -951,7 +996,7 @@
 
                 // update the object and all its properties.
                 // TODO can this be improved?
-                facetObjectWrapper = new SourceObjectWrapper(sourceObject, table, consNames, true);
+                facetObjectWrapper = new SourceObjectWrapper(sourceObject, table, true);
             }
 
             return true;
@@ -969,7 +1014,7 @@
          * @param {Object} contextHeaderParams  - the object that should be logged with read request
          */
         getEntityChoiceRows: function (andFilterObject, contextHeaderParams) {
-            var defer = module._q.defer(), sourceObject = andFilterObject.sourceObject;
+            var defer = ConfigService.q.defer(), sourceObject = andFilterObject.sourceObject;
 
             var res = {
                 andFilterObject: andFilterObject,
@@ -1014,9 +1059,9 @@
                 };
             }
             var table = andFilterObject.column.table;
-            var basePath = module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name);
+            var basePath = fixedEncodeURIComponent(table.schema.name) + ":" + fixedEncodeURIComponent(table.name);
 
-            var keyValueRes = module.generateKeyValueFilters(
+            var keyValueRes = generateKeyValueFilters(
                 [{name: filterColumnName}],
                 filterValues,
                 table.schema.catalog,
@@ -1028,7 +1073,7 @@
                 res.invalidChoices = Object.keys(filterTerms);
                 res.andFilterObject.sourceObject.choices = [];
 
-                module._log.error("Error while trying to fetch entity facet rows: ", keyValueRes.message);
+                $log.error("Error while trying to fetch entity facet rows: ", keyValueRes.message);
                 defer.resolve(res);
                 return defer.promise;
             }
@@ -1077,7 +1122,7 @@
                     "entity", basePath, req.path
                 ].join("/");
 
-                var ref = new Reference(module.parse(uri), table.schema.catalog).contextualize.compactSelect;
+                var ref = new Reference(parse(uri), table.schema.catalog).contextualize.compactSelect;
 
                 // sorting to ensure a deterministic order of results
                 ref = ref.sort([{"column": filterColumnName, "descending": false}]);
@@ -1095,7 +1140,7 @@
                         res.invalidChoices = Object.keys(filterTerms);
                         res.andFilterObject.sourceObject.choices = [];
 
-                        module._log.error("Error while trying to fetch entity facet rows: ", err);
+                        $log.error("Error while trying to fetch entity facet rows: ", err);
 
                         defer.resolve(res);
                     });
@@ -1193,16 +1238,15 @@
      *
      * @param {Object} sourceObject the column directive object
      * @param {ERMrest.Table} table the root (starting) table
-     * @param {Object} consNames the constraint names
      * @param {boolean} isFacet whether this is a facet or not
      * @param {Object} [sources] already generated source (only useful for source-def generation)
      */
-    function SourceObjectWrapper (sourceObject, table, consNames, isFacet, sources) {
+    export function SourceObjectWrapper (sourceObject, table, isFacet, sources) {
         this.sourceObject = sourceObject;
 
         // if the extra objects are not passed, we cannot process
-        if (isObjectAndNotNull(table) && isObjectAndNotNull(consNames)) {
-            var res = this._process(table, consNames, isFacet, sources);
+        if (isObjectAndNotNull(table)) {
+            var res = this._process(table, isFacet, sources);
             if (res.error) {
                 throw new Error(res.message);
             }
@@ -1220,7 +1264,7 @@
          * const myCol = {"sourcekey": "some_key"};
          * const sd = table.sourceDefinitions.sources[myCol.sourcekey];
          * if (sd) {
-         *   const wrapper = sd.clone(myCol, table, consNames);
+         *   const wrapper = sd.clone(myCol, table);
          * }
          *
          * - attributes in sourceObject will override the similar ones in the current object.
@@ -1228,38 +1272,36 @@
          *
          * @param {Object} sourceObject the source object
          * @param {ERMrest.Table} table the table that these sources belong to.
-         * @param {Object} consNames the constraint names
          * @param {boolean} isFacet whether this is for a facet or not
          */
-        clone: function (sourceObject, table, consNames, isFacet) {
+        clone: function (sourceObject, table, isFacet) {
             var key, res, self = this;
 
             // remove the definition attributes
-            module._sourceDefinitionAttributes.forEach(function (attr) {
+            _sourceDefinitionAttributes.forEach(function (attr) {
                 delete sourceObject[attr];
             });
 
             for (key in self.sourceObject) {
-                if (!self.sourceObject.hasOwnProperty(key)) continue;
+                if (!Object.prototype.hasOwnProperty.call(self.sourceObject, key)) continue;
 
                 // only add the attributes that are not defined again
-                if (!sourceObject.hasOwnProperty(key)) {
+                if (!Object.prototype.hasOwnProperty.call(sourceObject, key)) {
                     sourceObject[key] = self.sourceObject[key];
                 }
             }
 
-            return new SourceObjectWrapper(sourceObject, table, consNames, isFacet);
+            return new SourceObjectWrapper(sourceObject, table, isFacet);
         },
 
         /**
          * Parse the given sourceobject and create the attributes
          * @param {ERMrest.Table} table
-         * @param {Object} consNames
          * @param {boolean} isFacet  -- validation is differrent if it's a facet
          * @returns  {Object}
          */
-        _process: function (table, consNames, isFacet, sources) {
-            var self = this, sourceObject = this.sourceObject, wm = module._warningMessages;
+        _process: function (table, isFacet, sources) {
+            var self = this, sourceObject = this.sourceObject, wm = _warningMessages;
 
             var returnError = function (message) {
                 return {error: true, message: message};
@@ -1282,7 +1324,7 @@
                 colName = source[0];
             }
             else if (Array.isArray(source) && source.length > 1) {
-                var res = _sourceColumnHelpers.processDataSourcePath(source, table, table.name, table.schema.catalog.id, consNames, sources);
+                var res = _sourceColumnHelpers.processDataSourcePath(source, table, table.name, table.schema.catalog.id, sources);
                 if (res.error) {
                     return res;
                 }
@@ -1314,7 +1356,7 @@
             var isEntity = hasPath && (sourceObject.entity !== false) && col.isUniqueNotNull;
 
             // validate aggregate fn
-            if (isFacet !== true && sourceObject.aggregate && module._pseudoColAggregateFns.indexOf(sourceObject.aggregate) === -1) {
+            if (isFacet !== true && sourceObject.aggregate && _pseudoColAggregateFns.indexOf(sourceObject.aggregate) === -1) {
                 return returnError(wm.INVALID_AGG);
             }
 
@@ -1362,7 +1404,7 @@
                 self.isHash = true;
 
                 if (table.columns.has(self.name)) {
-                    return returnError("Generated Hash `" + hashname.name + "` for pseudo-column exists in table `" + table.name +"`.");
+                    return returnError("Generated Hash `" + self.name + "` for pseudo-column exists in table `" + table.name +"`.");
                 }
             }else {
                 self.name = col.name;
@@ -1462,7 +1504,7 @@
 
             var i = reverse ? (len-1) : 0;
             while (isLast(i)) {
-                sn = self.sourceObjectNodes[i];
+                let sn = self.sourceObjectNodes[i];
                 if (sn.isPathPrefix) {
                     // if this is the last element, we have to add the alias to this
                     path = path.concat(sn.nodeObject.getRawSourcePath(reverse, self.foreignKeyPathLength == sn.nodeObject.foreignKeyPathLength ? outAlias : null));
@@ -1512,10 +1554,10 @@
                 if (!tuple.data || !tuple.data[col.name]) {
                     return null;
                 }
-                filter = {
+                const filter = {
                     source: filterSource.concat(col.name)
                 };
-                filter[module._facetFilterTypes.CHOICE] = [tuple.data[col.name]];
+                filter[_facetFilterTypes.CHOICE] = [tuple.data[col.name]];
                 filters.push(filter);
             }
 
@@ -1563,7 +1605,7 @@
 
             var emptyFieldConfirmMessage = '';
             if (isStringAndNotEmpty(annot.empty_field_confirm_message_markdown)) {
-                emptyFieldConfirmMessage = module.renderMarkdown(annot.empty_field_confirm_message_markdown);
+                emptyFieldConfirmMessage = renderMarkdown(annot.empty_field_confirm_message_markdown);
             }
 
             var columns = [], fieldMapping = {};
@@ -1580,18 +1622,18 @@
                     var isSerial = (c.type.name.indexOf('serial') === 0);
 
                     // we cannot use getInputDisabled since we just want to do this based on ACLs
-                    if (context === module._contexts.CREATE && (c.isSystemColumn || c.isGeneratedPerACLs || isSerial)) {
+                    if (context === _contexts.CREATE && (c.isSystemColumn || c.isGeneratedPerACLs || isSerial)) {
                         if (colName in optionalFieldNames) continue;
                         return { error: true, message: 'column `' + colName + '` cannot be modified by this user.'};
                     }
-                    if ((context == module._contexts.EDIT || context == module._contexts.ENTRY) && (c.isSystemColumn || c.isImmutablePerACLs || isSerial)) {
+                    if ((context == _contexts.EDIT || context == _contexts.ENTRY) && (c.isSystemColumn || c.isImmutablePerACLs || isSerial)) {
                         if (colName in optionalFieldNames) continue;
                         return { error: true, message: 'column `' + colName + '` cannot be modified by this user.'};
                     }
 
                     // create a pseudo-column will make sure we're also handling assets
-                    var wrapper = new SourceObjectWrapper({'source': colName}, reference.table, module._constraintNames);
-                    var refCol = module._createPseudoColumn(reference, wrapper, tuple);
+                    var wrapper = new SourceObjectWrapper({'source': colName}, reference.table);
+                    var refCol = _createPseudoColumn(reference, wrapper, tuple);
 
                     fieldMapping[f] = refCol;
                     columns.push(refCol);
@@ -1634,19 +1676,11 @@
      * Helper functions related to source syntax
      * @ignore
      */
-    _sourceColumnHelpers = {
-        processDataSourcePath: function (source, rootTable, tableName, catalogId, consNames, sources) {
-            var wm = module._warningMessages, srcProps = module._sourceProperties;
+    export const _sourceColumnHelpers = {
+        processDataSourcePath: function (source, rootTable, tableName, catalogId, sources) {
+            var wm = _warningMessages, srcProps = _sourceProperties;
             var returnError = function (message) {
                 return {error: true, message: message};
-            };
-
-            var findConsName = function (schemaName, constraintName) {
-                var result;
-                if ((catalogId in consNames) && (schemaName in consNames[catalogId])){
-                    result = consNames[catalogId][schemaName][constraintName];
-            }
-                return (result === undefined) ? null : result;
             };
 
             // if it has any of the fk related properties
@@ -1741,10 +1775,10 @@
                         isInbound = ("inbound" in source[i]);
                         constraint = isInbound ? source[i].inbound : source[i].outbound;
 
-                        fkObj = findConsName(constraint[0], constraint[1]);
+                        fkObj = CatalogService.getConstraintObject(catalogId, constraint[0], constraint[1]);
 
                         // constraint name was not valid
-                        if (fkObj === null || fkObj.subject !== module._constraintTypes.FOREIGN_KEY) {
+                        if (fkObj === null || fkObj.subject !== _constraintTypes.FOREIGN_KEY) {
                             return returnError("Invalid data source. fk with the following constraint is not available on catalog: " + constraint.toString());
                         }
 
@@ -1810,9 +1844,10 @@
                 }
             }
 
+            let col;
             try {
                 col = colTable.columns.get(source[source.length-1]);
-            } catch (exp) {
+            } catch {
                 return returnError(wm.INVALID_COLUMN_IN_SOURCE_PATH);
             }
 
@@ -2113,8 +2148,8 @@
         // TODO FILTER_IN_SOURCE test this
         parseSourceObjectNodeFilter: function (nodeObject, table) {
             var logOp, ermrestOp, i, operator, res = "", innerRes, colName, operand = "";
-            var encode = module._fixedEncodeURIComponent;
-            var nullOperator = module._ERMrestFilterPredicates.NULL;
+            var encode = fixedEncodeURIComponent;
+            var nullOperator = _ERMrestFilterPredicates.NULL;
             var returnError = function (message) {
                 throw new Error(message);
             };
@@ -2156,11 +2191,11 @@
                 // ------- add the operator ---------
                 if ("operator" in nodeObject) {
                     operator = nodeObject.operator;
-                    if (Object.values(module._ERMrestFilterPredicates).indexOf(operator) === -1) {
+                    if (Object.values(_ERMrestFilterPredicates).indexOf(operator) === -1) {
                         return returnError("invalid operator used: `" + operator + "`");
                     }
                 } else {
-                    operator = module._ERMrestFilterPredicates.EQUAL;
+                    operator = _ERMrestFilterPredicates.EQUAL;
                 }
                 res += operator;
 
@@ -2171,7 +2206,7 @@
                     returnError(nodeObject.operand_pattern == nullOperator ? "null operator cannot have any operand_pattern" : "operand_pattern must be defined");
                 }
                 if ("operand_pattern" in nodeObject) {
-                    operand = module._renderTemplate(
+                    operand = _renderTemplate(
                         nodeObject.operand_pattern,
                         {},
                         table.schema.catalog,
@@ -2188,10 +2223,10 @@
             else {
                 if ("and" in nodeObject) {
                     logOp = "and";
-                    ermrestOp = module._ERMrestLogicalOperators.AND;
+                    ermrestOp = _ERMrestLogicalOperators.AND;
                 } else {
                     logOp = "or";
-                    ermrestOp = module._ERMrestLogicalOperators.OR;
+                    ermrestOp = _ERMrestLogicalOperators.OR;
                 }
 
                 if (!Array.isArray(nodeObject[logOp]) || nodeObject[logOp].length === 0) {
@@ -2265,7 +2300,7 @@
          * @param {*} b
          */
         _sortFilterInSource: function (a, b) {
-            var srcProps = module._sourceProperties,
+            var srcProps = _sourceProperties,
                 helpers = _sourceColumnHelpers;
 
             var aHasNegate = srcProps.NEGATE in a,
@@ -2316,8 +2351,8 @@
             // ------- both have and -------- //
             if (aHasAnd && bHasAnd) {
                 // the shorter comes first
-                if (a[AND_PROP].length != b[AND_PROP].length) {
-                    return a[AND_PROP].length - b[AND_PROP].length;
+                if (a[srcProps.AND].length != b[srcProps.AND].length) {
+                    return a[srcProps.AND].length - b[srcProps.AND].length;
                 }
                 // sort based on str
                 return sortBasedOnStr();
@@ -2325,8 +2360,8 @@
 
             // ------- both have or -------- //
             // the shorter comes first
-            if (a[OR_PROP].length != b[OR_PROP].length) {
-                return a[OR_PROP].length - b[OR_PROP].length;
+            if (a[srcProps.OR].length != b[srcProps.OR].length) {
+                return a[srcProps.OR].length - b[srcProps.OR].length;
             }
 
             // sort based on str
@@ -2334,7 +2369,7 @@
         },
 
         _stringifyFilterInSource: function (node) {
-            var srcProps = module._sourceProperties,
+            var srcProps = _sourceProperties,
                 helpers = _sourceColumnHelpers;
 
             var stringifyAndOr = function (arr) {
@@ -2379,7 +2414,7 @@
          * @private
          */
         _stringifySource: function (source, sourceObjectNodes) {
-            var srcProps = module._sourceProperties,
+            var srcProps = _sourceProperties,
                 helpers = _sourceColumnHelpers;
 
             if (helpers._sourceHasNodes(source)) {
@@ -2469,13 +2504,13 @@
             }
 
             // md5
-            str = ERMrest._SparkMD5.hash(str);
+            str = sparkMD5Hash(str);
 
             // base64
-            str = _hexToBase64(str);
+            str = hexToBase64(str);
 
             // url safe
-            return _urlEncodeBase64(str);
+            return urlEncodeBase64(str);
         },
 
         generateForeignKeyName: function (fk, isInbound) {
@@ -2492,7 +2527,7 @@
             var source = [{inbound: fk.constraint_names[0]}];
             if (eTable.isPureBinaryAssociation) {
                 var otherFK, pureBinaryFKs = eTable.pureBinaryForeignKeys;
-                for (j = 0; j < pureBinaryFKs.length; j++) {
+                for (let j = 0; j < pureBinaryFKs.length; j++) {
                     if(pureBinaryFKs[j] !== fk) {
                         otherFK = pureBinaryFKs[j];
                         break;
@@ -2509,7 +2544,7 @@
         }
     };
 
-    function SourceObjectNode (nodeObject, isFilter, isForeignKey, isInbound, isPathPrefix, pathPrefixSourcekey, alias, table, isAlternativeJoin) {
+    export function SourceObjectNode (nodeObject, isFilter, isForeignKey, isInbound, isPathPrefix, pathPrefixSourcekey, alias, table, isAlternativeJoin) {
         this.nodeObject = nodeObject;
 
         this.isFilter = isFilter;
@@ -2584,7 +2619,7 @@
      *                                      (used for populating usedSourceKeys)
      * @ignore
      */
-    function PathPrefixAliasMapping (forcedAliases, usedSourceObjects, rootTable) {
+    export function PathPrefixAliasMapping (forcedAliases, usedSourceObjects, rootTable) {
         /**
          * Aliases that already mapped to a join statement
          * <sourcekey> -> <alias>
@@ -2662,7 +2697,7 @@
                 if (!isObjectAndNotNull(srcObj)) return;
 
                 if (typeof srcObj.sourcekey === "string") {
-                    if (srcObj.sourcekey === module._specialSourceDefinitions.SEARCH_BOX) {
+                    if (srcObj.sourcekey === _specialSourceDefinitions.SEARCH_BOX) {
                         // add the search columns as well
                         if (rootTable.searchSourceDefinition && Array.isArray(rootTable.searchSourceDefinition.columns)) {
                             rootTable.searchSourceDefinition.columns.forEach(function (col, index) {
@@ -2687,7 +2722,7 @@
                     return;
                 }
                 // if this is the case, then it's an invalid url that will throw error later
-                if (srcObj.source[0].sourcekey === module._specialSourceDefinitions.SEARCH_BOX) {
+                if (srcObj.source[0].sourcekey === _specialSourceDefinitions.SEARCH_BOX) {
                     return;
                 }
                 addToSourceKey(srcObj.source[0].sourcekey);

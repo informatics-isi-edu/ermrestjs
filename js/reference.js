@@ -1,84 +1,109 @@
+/* eslint-disable prettier/prettier */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-this-alias */
+import moment from 'moment-timezone';
 
+// models
+// import DeferredPromise from '@isrd-isi-edu/ermrestjs/src/models/deferred-promise';
+import {
+  ForbiddenError,
+  NotFoundError,
+  InvalidSortCriteria,
+  InvalidPageCriteria,
+  InvalidInputError,
+  InvalidServerResponse,
+  NoDataChangedError,
+  BatchUnlinkResponse,
+  BatchDeleteResponse,
+  UnsupportedFilters,
+} from '@isrd-isi-edu/ermrestjs/src/models/errors';
 
-    /**
-     * set callback function that converts app tag to app URL
-     * @param {appLinkFn} fn callback function
-     */
-    module.appLinkFn = function(fn) {
-        module._appLinkFn = fn;
-    };
+// services
+import CatalogSerivce from '@isrd-isi-edu/ermrestjs/src/services/catalog';
+import ConfigService from '@isrd-isi-edu/ermrestjs/src/services/config';
+// import HTTPService from '@isrd-isi-edu/ermrestjs/src/services/http';
+import ErrorService from '@isrd-isi-edu/ermrestjs/src/services/error';
+import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
 
-    /**
-     * set callback function that triggers when a request returns with success
-     * @param {onHTTPSuccess} fn callback function
-     */
-    module.onHTTPSuccess = function(fn) {
-        module._onHTTPSuccess = fn;
-    };
+// utils
+import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils';
+import { isInteger, isObject, isObjectAndNotNull, isStringAndNotEmpty, verify } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
+import { fixedEncodeURIComponent, simpleDeepCopy, shallowCopy, shallowCopyExtras } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
+import {
+  _annotations,
+  _compactFacetingContexts,
+  contextHeaderName,
+  _constraintTypes,
+  _contexts,
+  _displayTypes,
+  _ERMrestACLs,
+  _ERMrestFeatures,
+  _facetFilterTypes,
+  _FacetsLogicalOperators,
+  FILTER_TYPES,
+  _nonSortableTypes,
+  _operationsFlag,
+  _parserAliases,
+  _permissionMessages,
+  _serialTypes,
+  _specialSourceDefinitions,
+  _sourceDefinitionAttributes,
+  _systemColumns,
+  _tableKinds,
+  URL_PATH_LENGTH_LIMIT,
+  _warningMessages,
+} from '@isrd-isi-edu/ermrestjs/src/utils/constants';
 
-    /**
-     * set callback function that returns the property defined in chaise config for system column order
-     * @param {systemColumnsHeuristicsMode} fn callback function
-     */
-    module.systemColumnsHeuristicsMode = function(fn) {
-        module._systemColumnsHeuristicsMode = fn;
-    };
-
-    /**
-     * This function will be called to set the config object
-     * @param {object}
-     */
-    module.setClientConfig = function (clientConfig) {
-        var defer = module._q.defer();
-
-        var inp = isObjectAndNotNull(clientConfig) ? clientConfig : {};
-        var res = {};
-
-        // defaults used when `clientConfig` wasn't properly initialized in chaise or other webapps
-        var defaultConfig = {
-            internalHosts: {"type": "array", "value": []},
-            disableExternalLinkModal: {"type": "boolean", "value": false},
-            facetPanelDisplay: {"type": "object", "value": {}},
-            templating: {"type": "object", "value": {}}
-        };
-
-        // make sure the value is correct and has the valid type
-        for (var key in defaultConfig) {
-            if (!defaultConfig.hasOwnProperty(key)) continue;
-            var def = defaultConfig[key];
-
-            if (def.type === "array") {
-                res[key] = Array.isArray(inp[key]) ? inp[key] : def.value;
-            } else if (typeof inp[key] === def.type) {
-                res[key] = inp[key];
-            } else {
-                res[key] = def.value;
-            }
-        }
-
-        module._clientConfig = res;
-
-        // now that the client-config is done, call the functions that are using it:
-        module.onload().then(function () {
-            module._markdownItLinkOpenAddExternalLink();
-            return defer.resolve(), defer.promise;
-        }).catch(function (err) {
-            // fail silently
-            module._log.error("couldn't apply the client-config changes");
-            return defer.resolve(), defer.promise;
-        });
-
-        return defer.promise;
-    };
-
-    /**
-     * This function will be called to set the session object
-     * @param {object}
-     */
-    module.setClientSession = function (session) {
-        module._session = module._simpleDeepCopy(session);
-    };
-
+// legacy
+import validateJSONLD from '@isrd-isi-edu/ermrestjs/js/json_ld_validator.js';
+import { parse, _getSearchTerm } from '@isrd-isi-edu/ermrestjs/js/parser';
+import {
+  AssetPseudoColumn,
+  _createPseudoColumn,
+  FacetColumn,
+  ForeignKeyPseudoColumn,
+  InboundForeignKeyPseudoColumn,
+  ReferenceColumn,
+  KeyPseudoColumn,
+  VirtualColumn,
+} from '@isrd-isi-edu/ermrestjs/js/column';
+import { ermrestFactory } from '@isrd-isi-edu/ermrestjs/js/core';
+import {
+  _exportHelpers,
+  validateExportTemplate,
+  _referenceExportOutput,
+  _getAssetExportOutput,
+  _getExportReference,
+} from '@isrd-isi-edu/ermrestjs/js/export';
+import { onload } from '@isrd-isi-edu/ermrestjs/js/setup/node';
+import {
+  compareColumnPositions,
+  _getAnnotationValueByContext,
+  _getHierarchicalDisplayAnnotationValue,
+  _getRecursiveAnnotationValue,
+  _generateRowName,
+  _generateTupleUniqueId,
+  _getRowTemplateVariables,
+  generateKeyValueFilters,
+  _getFormattedKeyValues,
+  _getPagingValues,
+  _isEntryContext,
+  _isValidSortElement,
+  _isValidForeignKeyName,
+  _isValidModelCommentDisplay,
+  _renderTemplate,
+  _processColumnOrderList,
+  _processSourceObjectComment,
+} from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
+import {
+  _facetColumnHelpers,
+  _compressFacetObject,
+  _compressSource,
+  _sourceColumnHelpers,
+  SourceObjectWrapper,
+  _processWaitForList,
+} from '@isrd-isi-edu/ermrestjs/js/utils/pseudocolumn_helpers';
+import { getResponseHeader } from '@isrd-isi-edu/ermrestjs/js/http';
 
     /**
      * This function resolves a URI reference to a {@link ERMrest.Reference}
@@ -124,22 +149,22 @@
      * {@link ERMrest.NotFoundError},
      * {@link ERMrest.InvalidSortCriteria},
      */
-    module.resolve = function (uri, contextHeaderParams) {
-        var defer = module._q.defer();
+    export const resolve = function (uri, contextHeaderParams) {
+        var defer = ConfigService.q.defer();
         try {
             verify(uri, "'uri' must be specified");
             var location;
             // make sure all the dependencies are loaded
-            module.onload().then(function () {
+            onload().then(function () {
                 //added try block to make sure it rejects all parse() related error
                 // It should have been taken care by outer try but did not work
                 try{
-                    location = module.parse(uri);
+                    location = parse(uri);
                 } catch (error){
                     return defer.reject(error);
                 }
 
-                var server = module.ermrestFactory.getServer(location.service, contextHeaderParams);
+                var server = ermrestFactory.getServer(location.service, contextHeaderParams);
 
                 // find the catalog
                 return server.catalogs.get(location.catalog);
@@ -166,42 +191,13 @@
      * Creates a new Reference based on the given parameters. Other parts of API can access this function and it should only be used internally.
      * @private
      */
-    module._createReference = function (location, catalog) {
+    export const _createReference = function (location, catalog) {
         return new Reference(location, catalog);
     };
 
     // NOTE: This function is only being used in unit tests.
-    module._createPage = function (reference, etag, data, hasPrevious, hasNext) {
+    export const _createPage = function (reference, etag, data, hasPrevious, hasNext) {
         return new Page(reference, etag, data, hasPrevious, hasNext);
-    };
-
-    /**
-     * Throws a 'not implemented' error.
-     *
-     * A simple helper method.
-     * @memberof ERMrest
-     * @function notimplemented
-     * @throws {Error} 'not implemented' error
-     * @private
-     */
-    function notimplemented() {
-        throw new Error('not implemented');
-    }
-
-    /**
-     * Throws an {@link ERMrest.InvalidInputError} if test is
-     * not `True`.
-     * @memberof ERMrest
-     * @function verify
-     * @param {boolean} test The test
-     * @param {string} message The message
-     * @throws {ERMrest.InvalidInputError} If test is not true.
-     * @private
-     */
-    verify = function(test, message) {
-        if (! test) {
-            throw new module.InvalidInputError(message);
-        }
     };
 
     /**
@@ -221,7 +217,7 @@
      * @param {ERMrest.Location} location - The location object generated from parsing the URI
      * @param {ERMrest.Catalog} catalog - The catalog object. Since location.catalog is just an id, we need the actual catalog object too.
      */
-    function Reference(location, catalog) {
+    export function Reference(location, catalog) {
         /**
          * The members of this object are _contextualized references_.
          *
@@ -457,11 +453,10 @@
          */
         _generateFacetColumns: function (skipMappingEntityChoices) {
             var self = this;
-            var consNames = module._constraintNames;
 
-            var defer = module._q.defer();
+            var defer = ConfigService.q.defer();
 
-            var andOperator = module._FacetsLogicalOperators.AND;
+            var andOperator = _FacetsLogicalOperators.AND;
             var searchTerm =  self.location.searchTerm;
             var helpers = _facetColumnHelpers;
 
@@ -479,9 +474,9 @@
             var facetObjectWrappers = [];
 
             // get column orders from annotation
-            if (self._table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
-                annotationCols = module._getAnnotationValueByContext(module._contexts.FILTER, self._table.annotations.get(module._annotations.VISIBLE_COLUMNS).content);
-                if (annotationCols.hasOwnProperty(andOperator) && Array.isArray(annotationCols[andOperator])) {
+            if (self._table.annotations.contains(_annotations.VISIBLE_COLUMNS)) {
+                annotationCols = _getAnnotationValueByContext(_contexts.FILTER, self._table.annotations.get(_annotations.VISIBLE_COLUMNS).content);
+                if (Object.prototype.hasOwnProperty.call(annotationCols, andOperator) && Array.isArray(annotationCols[andOperator])) {
                     annotationCols = annotationCols[andOperator];
                 } else {
                     annotationCols = -1;
@@ -493,7 +488,7 @@
                 //NOTE We're allowing duplicates in annotation.
                 annotationCols.forEach(function (obj) {
                     // if we have filters in the url, we will get the filters only from url
-                    if (obj.sourcekey === module._specialSourceDefinitions.SEARCH_BOX && andFilters.length === 0) {
+                    if (obj.sourcekey === _specialSourceDefinitions.SEARCH_BOX && andFilters.length === 0) {
                         if (!searchTerm) {
                             searchTerm = _getSearchTerm({"and": [obj]});
                         }
@@ -501,7 +496,7 @@
                     }
 
                     // make sure it's not referring to the annotation object.
-                    obj = module._simpleDeepCopy(obj);
+                    obj = simpleDeepCopy(obj);
 
                     var sd, wrapper;
                     // if both source and sourcekey are defined, ignore the source and use sourcekey
@@ -509,10 +504,10 @@
                         sd = self.table.sourceDefinitions.sources[obj.sourcekey];
                         if (!sd) return;
 
-                        wrapper = sd.clone(obj, self._table, consNames, true);
+                        wrapper = sd.clone(obj, self._table, true);
                     } else {
                         try {
-                            wrapper = new SourceObjectWrapper(obj, self._table, consNames, true);
+                            wrapper = new SourceObjectWrapper(obj, self._table, true);
                         } catch(exp) {
                             console.log("facet definition: " + exp);
                             // invalid definition or not unsupported
@@ -539,8 +534,8 @@
             // visible columns in detailed and related entities in detailed
             else {
                 // this reference should be only used for getting the list,
-                var detailedRef = (self._context === module._contexts.DETAILED) ? self : self.contextualize.detailed;
-                var compactRef = (self._context === module._contexts.COMPACT) ? self : self.contextualize.compact;
+                var detailedRef = (self._context === _contexts.DETAILED) ? self : self.contextualize.detailed;
+                var compactRef = (self._context === _contexts.COMPACT) ? self : self.contextualize.compact;
 
 
                 // all the visible columns in compact context
@@ -548,14 +543,14 @@
                     var fcObj = helpers.checkRefColumn(col);
                     if (!fcObj) return;
 
-                    facetObjectWrappers.push(new SourceObjectWrapper(fcObj, self._table, consNames, true));
+                    facetObjectWrappers.push(new SourceObjectWrapper(fcObj, self._table, true));
                 });
 
                 // all the realted in detailed context
                 detailedRef.related.forEach(function (relRef) {
                     var fcObj;
                     if (relRef.pseudoColumn && !relRef.pseudoColumn.isInboundForeignKey) {
-                        fcObj = module._simpleDeepCopy(relRef.pseudoColumn.sourceObject);
+                        fcObj = simpleDeepCopy(relRef.pseudoColumn.sourceObject);
                     } else {
                         fcObj = helpers.checkRefColumn(new InboundForeignKeyPseudoColumn(self, relRef));
                     }
@@ -577,7 +572,7 @@
                         !detailedRef.table._isAlternativeTable() && compactRef.table._isAlternativeTable()) {
                         fcObj.source.unshift({"outbound": compactRef.table._altForeignKey.constraint_names[0]});
                     }
-                    facetObjectWrappers.push(new SourceObjectWrapper(fcObj, self._table, consNames, true));
+                    facetObjectWrappers.push(new SourceObjectWrapper(fcObj, self._table, true));
                 });
             }
 
@@ -591,7 +586,7 @@
                     // if the function returns false, it couldn't handle that case,
                     // and therefore we are ignoring it.
                     // it might change the fo
-                    if (!helpers.checkForAlternative(fo, usedAnnotation, self._table, consNames)) return;
+                    if (!helpers.checkForAlternative(fo, usedAnnotation, self._table)) return;
                     facetColumns.push(new FacetColumn(self, index, fo));
                 });
 
@@ -651,7 +646,7 @@
          * @param {Boolean?} changeLocation - (optional) whether we should change reference.location or not
          */
         validateFacetsFilters: function (facetAndFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices, changeLocation) {
-            var defer = module._q.defer(),
+            var defer = ConfigService.q.defer(),
                 self = this,
                 helpers = _facetColumnHelpers,
                 promises = [],
@@ -678,7 +673,7 @@
                 if (!name && obj.sourcekey) {
                     name = obj.sourcekey;
                 }
-                module._log.warn("invalid facet " + (name ? name : "") + ": " + message);
+                $log.warn("invalid facet " + (name ? name : "") + ": " + message);
                 if (Array.isArray(discardedChoices) && discardedChoices.length > 0) {
                     partialyDiscardedFacets.push({
                         markdown_name: name,
@@ -698,7 +693,7 @@
             searchTerm =  searchTerm || self.location.searchTerm;
             // add the search term
             if (typeof searchTerm === "string") {
-                res.newFilters.push({"sourcekey": module._specialSourceDefinitions.SEARCH_BOX, "search": [searchTerm]});
+                res.newFilters.push({"sourcekey": _specialSourceDefinitions.SEARCH_BOX, "search": [searchTerm]});
             }
 
             if (facetAndFilters == null || !Array.isArray(facetAndFilters)) {
@@ -716,7 +711,7 @@
 
             // go over the list of facets in the url and process them if needed
             facetAndFilters.forEach(function (facetAndFilter, i) {
-                if (facetAndFilter.sourcekey === module._specialSourceDefinitions.SEARCH_BOX) {
+                if (facetAndFilter.sourcekey === _specialSourceDefinitions.SEARCH_BOX) {
                     return;
                 }
 
@@ -739,7 +734,7 @@
                     }
 
                     // copy the elements that are defined in the source def but not the one already defined
-                    module._shallowCopyExtras(facetAndFilter, urlSourceDef.sourceObject, module._sourceDefinitionAttributes);
+                    shallowCopyExtras(facetAndFilter, urlSourceDef.sourceObject, _sourceDefinitionAttributes);
                 }
 
                 if (facetAndFilter.hidden) {
@@ -750,7 +745,7 @@
 
                 // validate the source definition
                 try {
-                    andFilterObject = new SourceObjectWrapper(facetAndFilter, self.table, module._constraintNames, true);
+                    andFilterObject = new SourceObjectWrapper(facetAndFilter, self.table, true);
                 } catch (exp) {
                     addToIssues(facetAndFilter, exp.message);
                     return;
@@ -788,7 +783,7 @@
                             facetAndFilter.source = facetAndFilter.source_domain.column;
                         }
                         facetAndFilter.entity = false;
-                        andFilterObject = new SourceObjectWrapper(facetAndFilter, self.table, module._constraintNames, true);
+                        andFilterObject = new SourceObjectWrapper(facetAndFilter, self.table, true);
                     }
                 }
 
@@ -862,7 +857,7 @@
                 }
 
                 if (discardedFacets.length > 0 || partialyDiscardedFacets.length > 0) {
-                    res.issues = new module.UnsupportedFilters(discardedFacets, partialyDiscardedFacets);
+                    res.issues = new UnsupportedFilters(discardedFacets, partialyDiscardedFacets);
                 }
             };
 
@@ -896,7 +891,7 @@
                 this._searchColumns = false;
                 if (this.table.searchSourceDefinition && Array.isArray(this.table.searchSourceDefinition.columns)) {
                     this._searchColumns = this.table.searchSourceDefinition.columns.map(function (sd) {
-                        return module._createPseudoColumn(self, sd, null);
+                        return _createPseudoColumn(self, sd, null);
                     });
                 }
             }
@@ -971,7 +966,7 @@
             var loc = this.location;
 
             // keep a copy of existing facets
-            var existingFilters = loc.facets ? module._simpleDeepCopy(loc.facets.andFilters) : [];
+            var existingFilters = loc.facets ? simpleDeepCopy(loc.facets.andFilters) : [];
 
             // create a new copy
             var newReference = _referenceCopy(this);
@@ -1011,7 +1006,7 @@
 
             // make all the facets as hidden
             andFilters.forEach(function (f) {
-                newFilter = module._simpleDeepCopy(f);
+                newFilter = simpleDeepCopy(f);
                 newFilter.hidden = true;
                 newFilters.push(newFilter);
             });
@@ -1030,38 +1025,6 @@
         },
 
         /**
-         * A Boolean value that indicates whether this Reference is _inherently_
-         * unique. Meaning, that it can only refere to a single data element,
-         * like a single row. This is determined based on whether the reference
-         * filters on a unique key.
-         *
-         * As a simple example, the following would make a unique reference:
-         *
-         * ```
-         * https://example.org/ermrest/catalog/42/entity/s:t/key=123
-         * ```
-         *
-         * Assuming that table `s:t` has a `UNIQUE NOT NULL` constraint on
-         * column `key`. A unique reference may be used to access at most one
-         * tuple.
-         *
-         * _Note_: we intend to support other semantic checks on references like
-         * `isUnconstrained`, `isFiltered`, etc.
-         *
-         * Usage:
-         * ```
-         * console.log("This reference is unique?", (reference.isUnique ? 'yes' : 'no'));
-         * ```
-         * @type {boolean}
-         */
-        get isUnique() {
-            /* This getter should determine whether the reference is unique
-             * on-demand.
-             */
-            notimplemented();
-        },
-
-        /**
          * Indicates whether the client has the permission to _create_
          * the referenced resource(s). Reporting a `true` value DOES NOT
          * guarantee the user right since some policies may be undecidable until
@@ -1075,16 +1038,16 @@
                 // 1) user has write permission
                 // 2) table is not generated
                 // 3) not all visible columns in the table are generated
-                var pm = module._permissionMessages;
-                var ref = (this._context === module._contexts.CREATE) ? this : this.contextualize.entryCreate;
+                var pm = _permissionMessages;
+                var ref = (this._context === _contexts.CREATE) ? this : this.contextualize.entryCreate;
 
-                if (ref._table.kind === module._tableKinds.VIEW) {
+                if (ref._table.kind === _tableKinds.VIEW) {
                     this._canCreate = false;
                     this._canCreateReason = pm.TABLE_VIEW;
                 } else if (ref._table._isGenerated) {
                     this._canCreate = false;
                     this._canCreateReason = pm.TABLE_GENERATED;
-                } else if (!ref.checkPermissions(module._ERMrestACLs.INSERT)) {
+                } else if (!ref.checkPermissions(_ERMrestACLs.INSERT)) {
                     this._canCreate = false;
                     this._canCreateReason = pm.NO_CREATE;
                 } else {
@@ -1127,7 +1090,7 @@
          */
         get canRead() {
             if (this._canRead === undefined) {
-                this._canRead = this.checkPermissions(module._ERMrestACLs.SELECT);
+                this._canRead = this.checkPermissions(_ERMrestACLs.SELECT);
             }
             return this._canRead;
         },
@@ -1147,10 +1110,10 @@
             // 3) table is not immutable
             // 4) not all visible columns in the table are generated/immutable
             if (this._canUpdate === undefined) {
-                var pm = module._permissionMessages;
-                var ref = (this._context === module._contexts.EDIT) ? this : this.contextualize.entryEdit;
+                var pm = _permissionMessages;
+                var ref = (this._context === _contexts.EDIT) ? this : this.contextualize.entryEdit;
 
-                if (ref._table.kind === module._tableKinds.VIEW) {
+                if (ref._table.kind === _tableKinds.VIEW) {
                     this._canUpdate = false;
                     this._canUpdateReason = pm.TABLE_VIEW;
 
@@ -1161,7 +1124,7 @@
                 } else if (ref._table._isImmutable) {
                     this._canUpdate = false;
                     this._canUpdateReason = pm.TABLE_IMMUTABLE;
-                } else if (!ref.checkPermissions(module._ERMrestACLs.UPDATE)) {
+                } else if (!ref.checkPermissions(_ERMrestACLs.UPDATE)) {
                     this._canUpdate = false;
                     this._canUpdateReason = pm.NO_UPDATE;
                 } else {
@@ -1208,7 +1171,7 @@
             // 1) table is not non-deletable
             // 2) user has write permission
             if (this._canDelete === undefined) {
-                this._canDelete = this._table.kind !== module._tableKinds.VIEW && !this._table._isNonDeletable && this.checkPermissions(module._ERMrestACLs.DELETE);
+                this._canDelete = this._table.kind !== _tableKinds.VIEW && !this._table._isNonDeletable && this.checkPermissions(_ERMrestACLs.DELETE);
             }
             return this._canDelete;
         },
@@ -1224,9 +1187,9 @@
          */
         get canUseTRS() {
             if (this._canUseTRS === undefined) {
-                var rightKey = module._ERMrestFeatures.TABLE_RIGHTS_SUMMARY;
+                var rightKey = _ERMrestFeatures.TABLE_RIGHTS_SUMMARY;
                 this._canUseTRS = (this.table.schema.catalog.features[rightKey] === true) &&
-                                  (this.table.rights[module._ERMrestACLs.UPDATE] == null || this.table.rights[module._ERMrestACLs.DELETE] == null) &&
+                                  (this.table.rights[_ERMrestACLs.UPDATE] == null || this.table.rights[_ERMrestACLs.DELETE] == null) &&
                                   this.table.columns.has("RID") &&
                                   (this.canUpdate || this.canDelete);
             }
@@ -1243,9 +1206,9 @@
          */
         get canUseTCRS() {
             if (this._canUseTCRS === undefined) {
-                var rightKey = module._ERMrestFeatures.TABLE_COL_RIGHTS_SUMMARY;
+                var rightKey = _ERMrestFeatures.TABLE_COL_RIGHTS_SUMMARY;
                 this._canUseTCRS = (this.table.schema.catalog.features[rightKey] === true) &&
-                                  this.table.rights[module._ERMrestACLs.UPDATE] == null &&
+                                  this.table.rights[_ERMrestACLs.UPDATE] == null &&
                                   this.table.columns.has("RID") &&
                                   this.canUpdate;
             }
@@ -1285,9 +1248,9 @@
                 //  verify: data is not null, data has non empty tuple set
                 verify(data, "'data' must be specified");
                 verify(data.length > 0, "'data' must have at least one row to create");
-                verify(self._context === module._contexts.CREATE, "reference must be in 'entry/create' context.");
+                verify(self._context === _contexts.CREATE, "reference must be in 'entry/create' context.");
 
-                var defer = module._q.defer();
+                var defer = ConfigService.q.defer();
 
                 //  get the defaults list for the referenced relation's table
                 var defaults = getDefaults();
@@ -1295,7 +1258,7 @@
                 // construct the uri
                 var uri = this._location.ermrestCompactUri;
                 for (var i = 0; i < defaults.length; i++) {
-                    uri += (i === 0 ? "?defaults=" : ',') + module._fixedEncodeURIComponent(defaults[i]);
+                    uri += (i === 0 ? "?defaults=" : ',') + fixedEncodeURIComponent(defaults[i]);
                 }
                 if (skipOnConflict) {
                     var qCharaceter = defaults.length > 0 ? "&" : "?";
@@ -1316,7 +1279,7 @@
 
                 //  do the 'post' call
                 this._server.http.post(uri, data, config).then(function(response) {
-                    var etag = module.getResponseHeader(response).etag;
+                    var etag = getResponseHeader(response).etag;
                     //  new page will have a new reference (uri that filters on a disjunction of ids of these tuples)
                     var uri = self._location.compactUri + '/',
                         keyName;
@@ -1328,20 +1291,20 @@
                         // shortest key is made up from one column
                         if (self._shortestKey.length == 1) {
                             keyName = self._shortestKey[0].name;
-                            uri += module._fixedEncodeURIComponent(keyName) + '=' + module._fixedEncodeURIComponent(response.data[j][keyName]);
+                            uri += fixedEncodeURIComponent(keyName) + '=' + fixedEncodeURIComponent(response.data[j][keyName]);
                         } else {
                             uri += '(';
                             for (var k = 0; k < self._shortestKey.length; k++) {
                                 if (k !== 0)
                                     uri += '&';
                                 keyName = self._shortestKey[k].name;
-                                uri += module._fixedEncodeURIComponent(keyName) + '=' + module._fixedEncodeURIComponent(response.data[j][keyName]);
+                                uri += fixedEncodeURIComponent(keyName) + '=' + fixedEncodeURIComponent(response.data[j][keyName]);
                             }
                             uri += ')';
                         }
                     }
 
-                    var ref = new Reference(module.parse(uri), self._table.schema.catalog);
+                    var ref = new Reference(parse(uri), self._table.schema.catalog);
                     ref = (response.data.length > 1 ? ref.contextualize.compactEntry : ref.contextualize.compact);
                     //  make a page of tuples of the results (unless error)
                     var page = new Page(ref, etag, response.data, false, false);
@@ -1353,13 +1316,13 @@
                       "disabled": null
                     });
                 }).catch(function (error) {
-                    return defer.reject(module.responseToError(error, self));
+                    return defer.reject(ErrorService.responseToError(error, self));
                 });
 
                 return defer.promise;
             }
             catch (e) {
-                return module._q.reject(e);
+                return ConfigService.q.reject(e);
             }
 
             // return the columns that we should add to the defaults list
@@ -1467,7 +1430,7 @@
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
         read: function(limit, contextHeaderParams, useEntity, dontCorrectPage, getTRS, getTCRS, getUnlinkTRS) {
-            var defer = module._q.defer(), self = this;
+            var defer = ConfigService.q.defer(), self = this;
 
             try {
 
@@ -1483,7 +1446,7 @@
                 verify(limit > 0, "'limit' must be greater than 0");
 
                 if (!isStringAndNotEmpty(self._context)) {
-                    module._log.warn('Uncontextualized Reference usage detected. For more consistent behavior always contextualize Reference objects.');
+                    $log.warn('Uncontextualized Reference usage detected. For more consistent behavior always contextualize Reference objects.');
                 }
 
                 var uri = [this._location.service, "catalog", this._location.catalog].join("/");
@@ -1512,7 +1475,7 @@
                         throw new InvalidServerResponse(uri, response.data, action);
                     }
 
-                    var etag = module.getResponseHeader(response).etag;
+                    var etag = getResponseHeader(response).etag;
 
                     var hasPrevious, hasNext = false;
                     if (!ownReference._location.paging) { // first page
@@ -1563,7 +1526,7 @@
                 }).then(function (resPage) {
                     defer.resolve(resPage);
                 }).catch(function (e) {
-                    defer.reject(module.responseToError(e));
+                    defer.reject(ErrorService.responseToError(e));
                 });
             } catch (e) {
                 defer.reject(e);
@@ -1588,7 +1551,7 @@
         sort: function(sort) {
             if (sort) {
                 verify((sort instanceof Array), "input should be an array");
-                verify(sort.every(module._isValidSortElement), "invalid arguments in array");
+                verify(sort.every(_isValidSortElement), "invalid arguments in array");
 
             }
 
@@ -1645,11 +1608,11 @@
                 });
 
                 verify(tuples.length > 0, "'tuples' must have at least one row to update");
-                verify(this._context === module._contexts.EDIT, "reference must be in 'entry/edit' context.");
+                verify(this._context === _contexts.EDIT, "reference must be in 'entry/edit' context.");
 
-                var defer = module._q.defer();
+                var defer = ConfigService.q.defer();
 
-                var urlEncode = module._fixedEncodeURIComponent;
+                var urlEncode = fixedEncodeURIComponent;
 
                 var self = this,
                     oldAlias = "_o",
@@ -1683,7 +1646,6 @@
                     // test with moment if datetime column type and one of the 2 values are defined
                     // NOTE: moment will test 2 null values as different even though they are both null
                     if (compareWithMoment && (oldVal || newVal)) {
-                        var moment = module._moment;
 
                         var oldMoment = moment(oldData[colName]);
                         var newMoment = moment(newData[colName]);
@@ -1727,9 +1689,7 @@
                             }
 
                             for (n = 0; n < keyColumns.length; n++) {
-                                keyColumnName = keyColumns[n].name;
-
-                                addProjection(keyColumnName, keyColumns[n].type);
+                                addProjection(keyColumns[n].name, keyColumns[n].type);
                             }
                         }
                     } else {
@@ -1770,9 +1730,7 @@
                             }
 
                             for (n = 0; n < keyColumns.length; n++) {
-                                keyColumnName = keyColumns[n].name;
-
-                                addSubmissionData(i, keyColumnName);
+                                addSubmissionData(i, keyColumns[n].name);
                             }
                         }
                     } else {
@@ -1831,7 +1789,7 @@
                 }
 
                 if (columnProjections.length < 1) {
-                    throw new module.NoDataChangedError("No data was changed in the update request. Please check the form content and resubmit the data.");
+                    throw new NoDataChangedError("No data was changed in the update request. Please check the form content and resubmit the data.");
                 }
 
                 /* This loop manages adding the values based on the columnProjections set and setting columns associated with asset columns properly */
@@ -1881,7 +1839,7 @@
                 for (j = 0; j < shortestKeyNames.length; j++) {
                     if (j !== 0) uri += ',';
                     // alias all the columns for the key set
-                    uri += module._fixedEncodeURIComponent(shortestKeyNames[j]) + oldAlias + ":=" + module._fixedEncodeURIComponent(shortestKeyNames[j]);
+                    uri += fixedEncodeURIComponent(shortestKeyNames[j]) + oldAlias + ":=" + fixedEncodeURIComponent(shortestKeyNames[j]);
                 }
 
                 // the keyset is always aliased with the old alias, so make sure to include the new alias in the column projections
@@ -1889,7 +1847,7 @@
                     // Important NOTE: separator for denoting where the keyset ends and the update column set begins. The shortest key is used as the keyset
                     uri += (k === 0 ? ';' : ',');
                     // alias all the columns for the key set
-                    uri += module._fixedEncodeURIComponent(columnProjections[k]) + newAlias + ":=" + module._fixedEncodeURIComponent(columnProjections[k]);
+                    uri += fixedEncodeURIComponent(columnProjections[k]) + newAlias + ":=" + fixedEncodeURIComponent(columnProjections[k]);
                 }
 
                 /**
@@ -1924,11 +1882,11 @@
                         var updatedRows = response.data;
                         // no data updated
                         if (updatedRows.length === 0) {
-                            throw new module.ForbiddenError(403, "Editing records for table: " + self.table.name + " is not allowed.");
+                            throw new ForbiddenError(403, "Editing records for table: " + self.table.name + " is not allowed.");
                         }
                     }
 
-                    var etag = module.getResponseHeader(response).etag;
+                    var etag = getResponseHeader(response).etag;
                     var pageData = [];
 
                     // loop through each returned Row and get the key value
@@ -1979,7 +1937,7 @@
                     // make sure that pageData has all the submitted and updated data
                     for (i = 0; i < tuples.length; i++) {
                         for (j in tuples[i]._oldData) {
-                            if (!tuples[i]._oldData.hasOwnProperty(j)) continue;
+                            if (!Object.prototype.hasOwnProperty.call(tuples[i]._oldData, j)) continue;
                             if (j in pageData[i]) continue; // pageData already has this data
                             pageData[i][j] =tuples[i]._oldData[j]; // add the missing data
                         }
@@ -1988,7 +1946,7 @@
                     // build the url using the helper function
                     var schemaTable = urlEncode(self.table.schema.name) + ':' + urlEncode(self.table.name);
                     var uri = self._location.service + "/catalog/" + self.table.schema.catalog.id + "/entity/" + schemaTable;
-                    var keyValueRes = module.generateKeyValueFilters(
+                    var keyValueRes = generateKeyValueFilters(
                         self.table.shortestKey,
                         pageData,
                         self.table.schema.catalog,
@@ -1997,12 +1955,12 @@
                     // NOTE this will not happen since ermrest only accepts not-null keys,
                     // but added here for completeness
                     if (!keyValueRes.successful) {
-                        var err = new module.InvalidInputError(keyValueRes.message);
+                        var err = new InvalidInputError(keyValueRes.message);
                         return defer.reject(err), defer.promise;
                     }
                     uri += '/' + keyValueRes.filters.map(function (f) { return f.path; }).join('/');
 
-                    var ref = new Reference(module.parse(uri), self._table.schema.catalog).contextualize.compactEntry;
+                    var ref = new Reference(parse(uri), self._table.schema.catalog).contextualize.compactEntry;
                     ref = (response.data.length > 1 ? ref.contextualize.compactEntry : ref.contextualize.compact);
                     var successfulPage = new Page(ref, etag, pageData, false, false);
                     var failedPage = null, disabledPage = null;
@@ -2053,13 +2011,13 @@
                         "disabled": disabledPage
                     });
                 }).catch(function (error) {
-                    return defer.reject(module.responseToError(error, self));
+                    return defer.reject(ErrorService.responseToError(error, self));
                 });
 
                 return defer.promise;
             }
             catch (e) {
-                return module._q.reject(e);
+                return ConfigService.q.reject(e);
             }
         },
 
@@ -2074,7 +2032,7 @@
          * - ERMrestjs corresponding http errors, if ERMrest returns http error.
          */
         delete: function(tuples, contextHeaderParams) {
-            var defer = module._q.defer(), self = this, delFlag = module._operationsFlag.DELETE;
+            var defer = ConfigService.q.defer(), self = this, delFlag = _operationsFlag.DELETE;
 
             /**
              * NOTE: previous implemenation of delete with 412 logic is here:
@@ -2123,13 +2081,13 @@
                     this._server.http.delete(self.location.ermrestCompactUri, config).then(function () {
                         defer.resolve();
                     }).catch(function (catchError) {
-                        defer.reject(module.responseToError(catchError, self, delFlag));
+                        defer.reject(ErrorService.responseToError(catchError, self, delFlag));
                     });
                 } else {
                     // construct the url based on the given tuples
                     var successTupleData = [], failedTupleData = [], deleteSubmessage = [];
 
-                    var encode = module._fixedEncodeURIComponent;
+                    var encode = fixedEncodeURIComponent;
                     var schemaTable = encode(self.table.schema.name) + ':' + encode(self.table.name);
 
                     var deletableData = [], nonDeletableTuples = [];
@@ -2148,12 +2106,12 @@
 
                     // if none of the rows could be deleted, just return now.
                     if (deletableData.length === 0) {
-                        defer.resolve(new module.BatchDeleteResponse(successTupleData, failedTupleData, deleteSubmessage.join("\n")));
+                        defer.resolve(new BatchDeleteResponse(successTupleData, failedTupleData, deleteSubmessage.join("\n")));
                         return defer.promise;
                     }
 
                     // might throw an error
-                    var keyValueRes = module.generateKeyValueFilters(
+                    var keyValueRes = generateKeyValueFilters(
                         self.table.shortestKey,
                         deletableData,
                         self.table.schema.catalog,
@@ -2161,7 +2119,7 @@
                         self.displayname.value
                     );
                     if (!keyValueRes.successful) {
-                        var err = new module.InvalidInputError(keyValueRes.message);
+                        var err = new InvalidInputError(keyValueRes.message);
                         return defer.reject(err), defer.promise;
                     }
 
@@ -2173,12 +2131,12 @@
                             successTupleData =  successTupleData.concat(currFilter.keyData);
                         }).catch(function (err) {
                             failedTupleData = failedTupleData.concat(currFilter.keyData);
-                            deleteSubmessage.push(module.responseToError(err, self, delFlag).message);
+                            deleteSubmessage.push(ErrorService.responseToError(err, self, delFlag).message);
                         }).finally(function () {
                             if (index < keyValueRes.filters.length-1) {
                                 recursiveDelete(index+1);
                             } else {
-                                defer.resolve(new module.BatchDeleteResponse(successTupleData, failedTupleData, deleteSubmessage.join("\n")));
+                                defer.resolve(new BatchDeleteResponse(successTupleData, failedTupleData, deleteSubmessage.join("\n")));
                             }
                         });
                     };
@@ -2221,7 +2179,7 @@
          * @returns {Object} an ERMrest.BatchUnlinkResponse "error" object
          **/
         deleteBatchAssociationTuples: function (parentTuple, tuples, contextHeaderParams) {
-            var self = this, defer = module._q.defer();
+            var self = this, defer = ConfigService.q.defer();
             try {
                 verify(parentTuple, "'parentTuple' must be specified");
                 verify(tuples, "'tuples' must be specified");
@@ -2229,7 +2187,7 @@
                 // Can occur using an unfiltered reference
                 verify(self.derivedAssociationReference, "The current reference ('self') must have a derived association reference defined");
 
-                var encode = module._fixedEncodeURIComponent;
+                var encode = fixedEncodeURIComponent;
                 if (!contextHeaderParams || !isObject(contextHeaderParams)) {
                     contextHeaderParams = {"action": "delete"};
                 }
@@ -2259,7 +2217,7 @@
                     });
                     return res;
                 });
-                var keyValueRes = module.generateKeyValueFilters(
+                var keyValueRes = generateKeyValueFilters(
                     keyColumns,
                     keyFromAssocToRelatedData,
                     associationRef.table.schema.catalog,
@@ -2267,7 +2225,7 @@
                     associationRef.displayname.value
                 );
                 if (!keyValueRes.successful) {
-                    var err = new module.InvalidInputError(keyValueRes.message);
+                    var err = new InvalidInputError(keyValueRes.message);
                     return defer.reject(err), defer.promise;
                 }
 
@@ -2288,7 +2246,7 @@
                         if (index < keyValueRes.filters.length-1) {
                             recursiveDelete(index+1);
                         } else {
-                            defer.resolve(new module.BatchUnlinkResponse(successTupleData, failedTupleData, deleteSubmessage.join("\n")));
+                            defer.resolve(new BatchUnlinkResponse(successTupleData, failedTupleData, deleteSubmessage.join("\n")));
                         }
                     });
                 };
@@ -2353,7 +2311,7 @@
                 var self = this;
 
                 // displaytype default value for compact/breif/inline should be markdown. otherwise table
-                var displayType =  (this._context === module._contexts.COMPACT_BRIEF_INLINE) ? module._displayTypes.MARKDOWN :  module._displayTypes.TABLE;
+                var displayType =  (this._context === _contexts.COMPACT_BRIEF_INLINE) ? _displayTypes.MARKDOWN :  _displayTypes.TABLE;
 
                 this._display = {
                      type: displayType,
@@ -2364,12 +2322,12 @@
 
                 var annotation;
                 // If table has table-display annotation then set it in annotation variable
-                if (this._table.annotations.contains(module._annotations.TABLE_DISPLAY)) {
-                    annotation = module._getRecursiveAnnotationValue(this._context, this._table.annotations.get(module._annotations.TABLE_DISPLAY).content);
+                if (this._table.annotations.contains(_annotations.TABLE_DISPLAY)) {
+                    annotation = _getRecursiveAnnotationValue(this._context, this._table.annotations.get(_annotations.TABLE_DISPLAY).content);
                 }
 
                 // get the hide_row_count from display annotation
-                var hideRowCount = module._getHierarchicalDisplayAnnotationValue(this._table, this._context, "hide_row_count", true);
+                var hideRowCount = _getHierarchicalDisplayAnnotationValue(this._table, this._context, "hide_row_count", true);
                 this._display.hideRowCount = (typeof hideRowCount == "boolean") ? hideRowCount : false;
 
                 // If annotation is defined then parse it
@@ -2404,11 +2362,11 @@
 
                         // TODO: write code for module handling
 
-                        this._display.type = module._displayTypes.MODULE;
+                        this._display.type = _displayTypes.MODULE;
 
                     } else if (typeof annotation.row_markdown_pattern === 'string' || typeof annotation.page_markdown_pattern === 'string') {
 
-                        this._display.type = module._displayTypes.MARKDOWN;
+                        this._display.type = _displayTypes.MARKDOWN;
 
                         this._display.templateEngine = annotation.template_engine;
 
@@ -2438,7 +2396,7 @@
                     this._display.sourceHasWaitFor = this.pseudoColumn.hasWaitFor;
 
                     if (displ.sourceMarkdownPattern) {
-                        this._display.type = module._displayTypes.MARKDOWN;
+                        this._display.type = _displayTypes.MARKDOWN;
                         this._display.sourceMarkdownPattern = displ.sourceMarkdownPattern;
                         this._display.sourceTemplateEngine = displ.sourceTemplateEngine;
                     }
@@ -2447,19 +2405,19 @@
                     this._display.sourceHasWaitFor = false;
                 }
 
-                // if facetpanel won't be used or the _clientConfig.facetPanelDisplay doesn't include the current context or a parent context, set to null
+                // if facetpanel won't be used or the ConfigService.clientConfig.facetPanelDisplay doesn't include the current context or a parent context, set to null
                 var fpo = null, maxFacetDepth = null;
                 // NOTE: clientConfig should always be defined if used by a client, some ermrestJS tests don't always set it, so don't calculate this for those tests
-                if (this._context && module._clientConfig) {
-                    // _clientConfig.facetPanelDisplay will be defined from configuration or based on chaise defaults
-                    var ccFacetDisplay = module._clientConfig.facetPanelDisplay,
+                if (this._context && ConfigService.verifyClientConfig(true)) {
+                    // ConfigService.clientConfig.facetPanelDisplay will be defined from configuration or based on chaise defaults
+                    var ccFacetDisplay = ConfigService.clientConfig.facetPanelDisplay,
                         context = this._context;
 
                     // facet panel is not available in COMPACT_BRIEF and it's subcontexts, and other non-compact contexts
-                    if (context.startsWith(module._contexts.COMPACT) && !context.startsWith(module._contexts.COMPACT_BRIEF)) {
+                    if (context.startsWith(_contexts.COMPACT) && !context.startsWith(_contexts.COMPACT_BRIEF)) {
 
                         // get it from the display annotation
-                        maxFacetDepth = module._getHierarchicalDisplayAnnotationValue(this.table, context, "max_facet_depth", true);
+                        maxFacetDepth = _getHierarchicalDisplayAnnotationValue(this.table, context, "max_facet_depth", true);
                         // missing from the annotation, so get it from the chaise-config
                         if (maxFacetDepth === -1 && typeof ccFacetDisplay.maxFacetDepth === 'number') {
                             maxFacetDepth = ccFacetDisplay.maxFacetDepth;
@@ -2475,8 +2433,8 @@
                         if (ccFacetDisplay.open && ccFacetDisplay.open.includes("*")) fpo = true;
                         // check inheritence
                         // array is in order from parent context to more specific sub contexts
-                        for (var i=0; i < module._compactFacetingContexts.length; i++) {
-                            var ctx = module._compactFacetingContexts[i];
+                        for (var i=0; i < _compactFacetingContexts.length; i++) {
+                            var ctx = _compactFacetingContexts[i];
                             // only check contexts that match
                             // "compact/select/*"" where * can be association (or subcontexts), foreign_key, saved_queries, or show_more
                             if (context.startsWith(ctx)) {
@@ -2603,7 +2561,7 @@
                 if (fkr.isPath) {
                     // since we're sure that the pseudoColumn either going to be
                     // general pseudoColumn or InboundForeignKeyPseudoColumn then it will have reference
-                    relatedRef = module._createPseudoColumn(this, fkr.sourceObjectWrapper, tuple).reference;
+                    relatedRef = _createPseudoColumn(this, fkr.sourceObjectWrapper, tuple).reference;
                     fkName = relatedRef.pseudoColumn.name;
                 } else {
                     fkr = fkr.foreignKey;
@@ -2657,9 +2615,9 @@
             var refURI = [
                 table.schema.catalog.server.uri ,"catalog" ,
                 table.schema.catalog.id, this.location.api,
-                [module._fixedEncodeURIComponent(table.schema.name),module._fixedEncodeURIComponent(table.name)].join(":"),
+                [fixedEncodeURIComponent(table.schema.name),fixedEncodeURIComponent(table.name)].join(":"),
             ].join("/");
-            return new Reference(module.parse(refURI), table.schema.catalog);
+            return new Reference(parse(refURI), table.schema.catalog);
         },
 
         /**
@@ -2669,11 +2627,11 @@
         * @throws {Error} if `_appLinkFn` is not defined.
         */
         get appLink() {
-            if (typeof module._appLinkFn !== 'function') {
+            if (typeof ConfigService.appLinkFn !== 'function') {
                 throw new Error("`appLinkFn` function is not defined.");
             }
             var tag = this._context ? this._table._getAppLink(this._context) : this._table._getAppLink();
-            return module._appLinkFn(tag, this._location, this._context);
+            return ConfigService.appLinkFn(tag, this._location, this._context);
         },
 
         /**
@@ -2687,10 +2645,10 @@
                 var cid = this.table.schema.catalog.server.cid;
                 var qParam = "?limit=none&accept=csv&uinit=1";
                 qParam += cid ? ("&cid=" + cid) : "";
-                qParam += "&download=" + module._fixedEncodeURIComponent(this.displayname.unformatted);
+                qParam += "&download=" + fixedEncodeURIComponent(this.displayname.unformatted);
 
-                var isCompact = this._context === module._contexts.COMPACT;
-                var defaultExportOutput = module._referenceExportOutput(this, this.location.mainTableAlias, null, false, null, isCompact);
+                var isCompact = this._context === _contexts.COMPACT;
+                var defaultExportOutput = _referenceExportOutput(this, this.location.mainTableAlias, null, false, null, isCompact);
 
                 if (defaultExportOutput == null) {
                     this._csvDownloadLink = null;
@@ -2786,7 +2744,7 @@
             // annotation is missing
             if (!Array.isArray(templates)) {
                 var canUseDefault = useDefault &&
-                                    self._context === module._contexts.DETAILED &&
+                                    self._context === _contexts.DETAILED &&
                                     self.defaultExportTemplate != null;
 
                 return canUseDefault ? [self.defaultExportTemplate]: [];
@@ -2799,7 +2757,7 @@
 
             // validate the templates
             return finalRes.filter(function (temp) {
-                return module.validateExportTemplate(temp);
+                return validateExportTemplate(temp);
             });
         },
 
@@ -2820,8 +2778,8 @@
                      outputs = [],
                      relatedTableAlias = "R";
 
-                 var getTableOutput = module._referenceExportOutput,
-                     getAssetOutput = module._getAssetExportOutput;
+                 var getTableOutput = _referenceExportOutput,
+                     getAssetOutput = _getAssetExportOutput;
 
                  var addOutput = function (output) {
                     if (output != null) {
@@ -2856,7 +2814,7 @@
                      }
 
                      // add asset of the related table
-                     var expRef = module._getExportReference(rel);
+                     var expRef = _getExportReference(rel);
 
                      // alternative table, don't add asset
                      if (expRef.table !== rel.table) return;
@@ -2870,7 +2828,7 @@
                  // main entity
                  addOutput(getTableOutput(self, self.location.mainTableAlias));
 
-                 var exportRef = module._getExportReference(self);
+                 var exportRef = _getExportReference(self);
 
                  // we're not supporting alternative tables
                  if (exportRef.table.name === self.table.name) {
@@ -2890,13 +2848,13 @@
 
                  // related entities (use the export context otherwise detailed)
                  var hasRelatedExport = false;
-                 if (self.table.annotations.contains(module._annotations.VISIBLE_FOREIGN_KEYS)) {
-                     var exportRelated = module._getRecursiveAnnotationValue(module._contexts.EXPORT, self.table.annotations.get(module._annotations.VISIBLE_FOREIGN_KEYS).content, true);
+                 if (self.table.annotations.contains(_annotations.VISIBLE_FOREIGN_KEYS)) {
+                     var exportRelated = _getRecursiveAnnotationValue(_contexts.EXPORT, self.table.annotations.get(_annotations.VISIBLE_FOREIGN_KEYS).content, true);
                      hasRelatedExport = exportRelated !== -1 && Array.isArray(exportRelated);
                  }
 
                  // if export context is defined in visible-foreign-keys, use it, otherwise fallback to detailed
-                 var exportRefForRelated = hasRelatedExport ? self.contextualize.export : (self._context === module._contexts.DETAILED ? self : self.contextualize.detailed);
+                 var exportRefForRelated = hasRelatedExport ? self.contextualize.export : (self._context === _contexts.DETAILED ? self : self.contextualize.detailed);
                  if (exportRefForRelated.table.name === self.table.name) {
                      exportRefForRelated.related.forEach(processRelatedReference);
                  }
@@ -2932,7 +2890,7 @@
                 if (typeof term === "string")
                     term = term.trim();
                 else
-                    throw new module.InvalidInputError("Invalid input. Seach expects a string.");
+                    throw new InvalidInputError("Invalid input. Seach expects a string.");
             }
 
 
@@ -2965,7 +2923,7 @@
          * @return {Promise} - Promise contains an array of the aggregate values in the same order as the supplied aggregate list
          */
         getAggregates: function(aggregateList, contextHeaderParams) {
-            var defer = module._q.defer();
+            var defer = ConfigService.q.defer();
             var url;
 
             // create the context header params for log
@@ -2991,10 +2949,10 @@
                 }
 
                 // if adding the next aggregate to the url will push it past url length limit, push url onto the urlSet and reset the working url
-                if ((url + i + ":=" + agg).length > module.URL_PATH_LENGTH_LIMIT) {
+                if ((url + i + ":=" + agg).length > URL_PATH_LENGTH_LIMIT) {
                     // if cannot even add the first one
                     if (i === 0) {
-                        defer.reject(new module.InvalidInputError("Cannot send the request because of URL length limit."));
+                        defer.reject(new InvalidInputError("Cannot send the request because of URL length limit."));
                         return defer.promise;
                     }
 
@@ -3024,7 +2982,7 @@
                 );
             }
 
-            module._q.all(aggregatePromises).then(function getAggregates(response) {
+            ConfigService.q.all(aggregatePromises).then(function getAggregates(response) {
                 // all response rows merged into one object
                 var singleResponse = {};
 
@@ -3040,7 +2998,7 @@
 
                 defer.resolve(responseArray);
             }, function error(response) {
-                var error = module.responseToError(response);
+                var error = ErrorService.responseToError(response);
                 return defer.reject(error);
             }).catch(function (error) {
                 return defer.reject(error);
@@ -3067,7 +3025,7 @@
             * It only works when page's table and current table are the same.
             */
             if (pageRef.table !== this.table) {
-                throw new module.InvalidInputError("Given page is not from the same table.");
+                throw new InvalidInputError("Given page is not from the same table.");
             }
 
 
@@ -3092,11 +3050,11 @@
             }
 
             // same sort
-            newRef._location.sortObject =  module._simpleDeepCopy(pageRef._location.sortObject);
+            newRef._location.sortObject =  simpleDeepCopy(pageRef._location.sortObject);
 
             // same pagination
-            newRef._location.afterObject =  pageRef._location.afterObject ? module._simpleDeepCopy(pageRef._location.afterObject) : null;
-            newRef._location.beforeObject =  pageRef._location.beforeObject ? module._simpleDeepCopy(pageRef._location.beforeObject) : null;
+            newRef._location.afterObject =  pageRef._location.afterObject ? simpleDeepCopy(pageRef._location.afterObject) : null;
+            newRef._location.beforeObject =  pageRef._location.beforeObject ? simpleDeepCopy(pageRef._location.beforeObject) : null;
 
             // if we have extra data, and one of before/after is not available
             if (page._extraData && (!pageRef._location.beforeObject || !pageRef._location.afterObject)) {
@@ -3175,7 +3133,7 @@
                 }
             }
 
-            throw new module.NotFoundError("", "Column " + name + " not found in table " + this.table.name + ".");
+            throw new NotFoundError("", "Column " + name + " not found in table " + this.table.name + ".");
         },
 
         /**
@@ -3244,18 +3202,19 @@
                 usedIframeInputMappings = {}, // column names that are used in iframe column mappings.
                 hiddenFKR = this.origFKR,
                 hasOrigFKR,
+                colFKs,
                 refTable = this._table,
                 fkName, refCol, pseudoName,
                 ignore, cols, col, fk, i, j;
 
             var context = this._context;
-            var isEntry = module._isEntryContext(context),
-                isCompact = (typeof context === "string" && context.startsWith(module._contexts.COMPACT)),
-                isCompactEntry = (typeof context === "string" && context.startsWith(module._contexts.COMPACT_ENTRY));
+            var isEntry = _isEntryContext(context),
+                isCompact = (typeof context === "string" && context.startsWith(_contexts.COMPACT)),
+                isCompactEntry = (typeof context === "string" && context.startsWith(_contexts.COMPACT_ENTRY));
 
             // check if we should hide some columns or not.
             // NOTE: if the reference is actually an inbound related reference, we should hide the foreign key that created this link.
-            hasOrigFKR = typeof context === "string" && context.startsWith(module._contexts.COMPACT_BRIEF) && isObjectAndNotNull(hiddenFKR);
+            hasOrigFKR = typeof context === "string" && context.startsWith(_contexts.COMPACT_BRIEF) && isObjectAndNotNull(hiddenFKR);
 
             // should hide the origFKR in case of inbound foreignKey (only in compact/brief)
             var hideFKR = function (fkr) {
@@ -3318,20 +3277,19 @@
             var nameExistsInTable = function (name, obj) {
                 if (name in tableColumns) {
                     if (!skipLog) {
-                        module._log.info("Generated Hash `" + name + "` for pseudo-column exists in table `" + self.table.name +"`.");
-                        module._log.info("Ignoring the following in visible-columns: ", obj);
+                        $log.info("Generated Hash `" + name + "` for pseudo-column exists in table `" + self.table.name +"`.");
+                        $log.info("Ignoring the following in visible-columns: ", obj);
                     }
                     return true;
                 }
                 return false;
             };
 
-            var pf = module._printf;
-            var wm = module._warningMessages;
+            var wm = _warningMessages;
             var logCol = function (bool, message, i) {
                 if (bool && !skipLog) {
-                    module._log.info("columns list for table: " + self.table.name + ", context: " + context + ", column index:" + i);
-                    module._log.info(message);
+                    $log.info("columns list for table: " + self.table.name + ", context: " + context + ", column index:" + i);
+                    $log.info(message);
                 }
                 return bool;
             };
@@ -3346,8 +3304,8 @@
                 columns = columnsList;
             }
             // get column orders from annotation
-            else if (this._table.annotations.contains(module._annotations.VISIBLE_COLUMNS)) {
-                columns = module._getRecursiveAnnotationValue(this._context, this._table.annotations.get(module._annotations.VISIBLE_COLUMNS).content);
+            else if (this._table.annotations.contains(_annotations.VISIBLE_COLUMNS)) {
+                columns = _getRecursiveAnnotationValue(this._context, this._table.annotations.get(_annotations.VISIBLE_COLUMNS).content);
             }
 
              // annotation
@@ -3360,7 +3318,7 @@
                         if (fk !== null) {
                             fkName = fk.object.name;
                             switch(fk.subject) {
-                                case module._constraintTypes.FOREIGN_KEY:
+                                case _constraintTypes.FOREIGN_KEY:
                                     fk = fk.object;
                                     // fk is in this table, avoid duplicate and it's not hidden.
                                     if (!hideFKR(fk)) {
@@ -3376,7 +3334,7 @@
                                         else if (fk.key.table == this._table && !isEntry) {
                                             // this is inbound foreignkey, so the name must change.
                                             fkName = _sourceColumnHelpers.generateForeignKeyName(fk, true);
-                                            if (!logCol(fkName in consideredColumns, wm.DUPLICATE_FK, i) && !logCol(context !== module._contexts.DETAILED && context.indexOf(module._contexts.EXPORT) == -1, wm.NO_INBOUND_IN_NON_DETAILED, i) && !nameExistsInTable(fkName, col)) {
+                                            if (!logCol(fkName in consideredColumns, wm.DUPLICATE_FK, i) && !logCol(context !== _contexts.DETAILED && context.indexOf(_contexts.EXPORT) == -1, wm.NO_INBOUND_IN_NON_DETAILED, i) && !nameExistsInTable(fkName, col)) {
                                                 consideredColumns[fkName] = true;
                                                 resultColumns.push(new InboundForeignKeyPseudoColumn(this, this._generateRelatedReference(fk, tuple, true), null, fkName));
                                             }
@@ -3385,7 +3343,7 @@
                                         }
                                     }
                                     break;
-                                case module._constraintTypes.KEY:
+                                case _constraintTypes.KEY:
                                     fk = fk.object;
                                     // key is in this table, and avoid duplicate
                                     if (!logCol((fkName in consideredColumns), wm.DUPLICATE_KEY, i) && !nameExistsInTable(fkName, col) && fk.table == this._table) {
@@ -3442,10 +3400,10 @@
                                 continue;
                             }
                             // merge the two together
-                            wrapper = sd.clone(col, this._table, module._constraintNames);
+                            wrapper = sd.clone(col, this._table);
                         } else {
                             try {
-                                wrapper = new SourceObjectWrapper(col, this._table, module._constraintNames);
+                                wrapper = new SourceObjectWrapper(col, this._table);
                             } catch(exp) {
                                 logCol(true, wm.INVALID_SOURCE + ": " + exp.message, i);
                                 continue;
@@ -3467,7 +3425,7 @@
                                  (!wrapper.hasPath && hideColumn(wrapper.column)) ||
                                  logCol(wrapper.sourceObject.self_link === true && !wrapper.column.isUniqueNotNull, wm.INVALID_SELF_LINK, i) ||
                                  logCol((!wrapper.hasAggregate && wrapper.hasInbound && !wrapper.isEntityMode), wm.MULTI_SCALAR_NEED_AGG, i) ||
-                                 logCol((!wrapper.hasAggregate && wrapper.hasInbound && wrapper.isEntityMode && context !== module._contexts.DETAILED && context.indexOf(module._contexts.EXPORT) == -1), wm.MULTI_ENT_NEED_AGG, i) ||
+                                 logCol((!wrapper.hasAggregate && wrapper.hasInbound && wrapper.isEntityMode && context !== _contexts.DETAILED && context.indexOf(_contexts.EXPORT) == -1), wm.MULTI_ENT_NEED_AGG, i) ||
                                  logCol(wrapper.hasAggregate && wrapper.isEntryMode, wm.NO_AGG_IN_ENTRY, i) ||
                                  logCol(wrapper.isUniqueFiltered, wm.FILTER_NO_PATH_NOT_ALLOWED) ||
                                  logCol(isEntry && wrapper.hasPath && (wrapper.hasInbound || wrapper.isFiltered || wrapper.foreignKeyPathLength > 1), wm.NO_PATH_IN_ENTRY, i);
@@ -3491,7 +3449,7 @@
                         // avoid duplciates and hide the column
                         if (!ignore) {
                             consideredColumns[wrapper.name] = true;
-                            refCol = module._createPseudoColumn(this, wrapper, tuple);
+                            refCol = _createPseudoColumn(this, wrapper, tuple);
 
                             // we want yo call the addColumn for asset and local columns since it will take care of other things as well.
                             if (refCol.isAsset || !refCol.isPseudo) {
@@ -3530,7 +3488,9 @@
                     else if (typeof col === "string") {
                         try {
                             col = this._table.columns.get(col);
-                        } catch (exception) {}
+                        } catch {
+                            // fail silently (this means that the table doesn't have the column)
+                        }
 
                         // if column is not defined, processed before, or should be hidden
                         ignore = logCol(typeof col != "object" || col === null, wm.INVALID_COLUMN, i) ||
@@ -3559,7 +3519,10 @@
                 // the rest will always be at the end in this order ('RCB', 'RMB', 'RCT', 'RMT')
                 //
                 // if compact or detailed, check for system column config option
-                var systemColumnsMode = module._systemColumnsHeuristicsMode(this._context);
+                let systemColumnsMode;
+                if (ConfigService.systemColumnsHeuristicsMode) {
+                    systemColumnsMode = ConfigService.systemColumnsHeuristicsMode(this._context);
+                }
 
 
                 // if (array and RID exists) or true, add RID to the list of columns
@@ -3576,7 +3539,7 @@
                 }
 
                 //add the key
-                if (!isEntry && this._context != module._contexts.DETAILED ) {
+                if (!isEntry && this._context != _contexts.DETAILED ) {
                     var key = this._table._getRowDisplayKey(this._context);
                     if (key !== undefined && !nameExistsInTable(key.name, "display key")) {
 
@@ -3612,11 +3575,11 @@
                 if (systemColumnsMode == true || Array.isArray(systemColumnsMode)) {
 
                     // if it's true: add all the system columns
-                    var addedSystemColumnNames = module._systemColumns, addedSystemColumns = [];
+                    var addedSystemColumnNames = _systemColumns, addedSystemColumns = [];
 
                     // if array: add the ones defined in array of config property (preserves order defined in `_systemColumns`)
                     if (Array.isArray(systemColumnsMode)) {
-                        addedSystemColumnNames = module._systemColumns.filter(function (col) {
+                        addedSystemColumnNames = _systemColumns.filter(function (col) {
                             return systemColumnsMode.indexOf(col) !== -1;
                         });
                     }
@@ -3634,7 +3597,7 @@
 
                     // add system columns to the end of the list
                     columns = this._table.columns.all().filter(function (col) {
-                        return module._systemColumns.indexOf(col.name) === -1;
+                        return _systemColumns.indexOf(col.name) === -1;
                     }).concat(addedSystemColumns);
 
                 }
@@ -3774,7 +3737,7 @@
             var sds = self.table.sourceDefinitions;
 
             // in detailed, we want related and citation
-            var isDetailed = self._context === module._contexts.DETAILED;
+            var isDetailed = self._context === _contexts.DETAILED;
 
             var COLUMN_TYPE = "column", RELATED_TYPE = "related", CITATION_TYPE = "citation", INLINE_TYPE = "inline";
 
@@ -3947,10 +3910,10 @@
         get citation() {
             if (this._citation === undefined) {
                 var table = this.table;
-                if (!table.annotations.contains(module._annotations.CITATION)) {
+                if (!table.annotations.contains(_annotations.CITATION)) {
                     this._citation = null;
                 } else {
-                    var citationAnno = table.annotations.get(module._annotations.CITATION).content;
+                    var citationAnno = table.annotations.get(_annotations.CITATION).content;
                     if (!citationAnno.journal_pattern || !citationAnno.year_pattern || !citationAnno.url_pattern) {
                         this._citation = null;
                     } else {
@@ -3969,10 +3932,10 @@
         get googleDatasetMetadata() {
             if (this._googleDatasetMetadata === undefined) {
                 var table = this.table;
-                if (!table.annotations.contains(module._annotations.GOOGLE_DATASET_METADATA)) {
+                if (!table.annotations.contains(_annotations.GOOGLE_DATASET_METADATA)) {
                     this._googleDatasetMetadata = null;
                 } else {
-                    var metadataAnnotation = module._getRecursiveAnnotationValue(this._context, this._table.annotations.get(module._annotations.GOOGLE_DATASET_METADATA).content);
+                    var metadataAnnotation = _getRecursiveAnnotationValue(this._context, this._table.annotations.get(_annotations.GOOGLE_DATASET_METADATA).content);
                     if (!isObjectAndNotNull(metadataAnnotation) || !isObjectAndNotNull(metadataAnnotation.dataset)) {
                         this._googleDatasetMetadata = null;
                     } else {
@@ -3990,7 +3953,7 @@
         get cascadingDeletedItems () {
             if (this._cascadingDeletedItems === undefined) {
                 var self = this, res = [], consideredFKs = {};
-                var detailedRef = (self._context === module._contexts.DETAILED) ? self : self.contextualize.detailed;
+                var detailedRef = (self._context === _contexts.DETAILED) ? self : self.contextualize.detailed;
 
                 // inline tables
                 detailedRef.columns.forEach(function (col) {
@@ -4072,7 +4035,7 @@
                 } else {
                     // ignore the fks that are simple and their constituent column is system col
                     var nonSystemColumnFks = this.table.foreignKeys.all().filter(function(fk) {
-                        return !(fk.simple && module._systemColumns.indexOf(fk.colset.columns[0]) !== -1);
+                        return !(fk.simple && _systemColumns.indexOf(fk.colset.columns[0]) !== -1);
                     });
 
                     // set of foreignkey columns (they might be overlapping so we're not using array)
@@ -4137,7 +4100,7 @@
 
                         var leafCol = null;
                         // use for loop so we can break if we find the leaf column
-                        for (i = 0; i < self.columns.length; i++) {
+                        for (let i = 0; i < self.columns.length; i++) {
                             var column = self.columns[i];
 
                             // column should be a simple foreignkey pseudo column
@@ -4147,7 +4110,7 @@
                             // if constraintNameProp is string[][], it's from bulk_create_foreign_key_candidates
                             // we need to iterate over the set to find the first matching column
                             if (Array.isArray(constraintNameProp) && Array.isArray(constraintNameProp[0])) {
-                                for (j = 0; j < constraintNameProp.length; j++) {
+                                for (let j = 0; j < constraintNameProp.length; j++) {
                                     var name = constraintNameProp[j];
                                     if (_isValidForeignKeyName(name)) leafCol = findLeafColumn(column, name.join("_"));
 
@@ -4329,7 +4292,7 @@
 
                 // uri and location
                 if (!useFaceting) {
-                    newRef._location = module.parse(this._location.compactUri + "/" + fkr.toString() + "/" + otherFK.toString(true), catalog);
+                    newRef._location = parse(this._location.compactUri + "/" + fkr.toString() + "/" + otherFK.toString(true), catalog);
                     newRef._location.referenceObject = newRef;
                 }
 
@@ -4339,12 +4302,12 @@
                 newRef._related_fk_column_positions = otherFK.colset._getColumnPositions();
 
                 // will be used to determine whether this related reference is derived from association relation or not
-                newRef.derivedAssociationReference = new Reference(module.parse(this._location.compactUri + "/" + fkr.toString()), catalog);
+                newRef.derivedAssociationReference = new Reference(parse(this._location.compactUri + "/" + fkr.toString()), catalog);
                 newRef.derivedAssociationReference.origFKR = newRef.origFKR;
                 newRef.derivedAssociationReference.associationToRelatedFKR = otherFK;
 
                 // build the filter source (the alias is used in the read function to get the proper acls)
-                filterSource.push({"inbound": otherFK.constraint_names[0], "alias": module._parserAliases.ASSOCIATION_TABLE});
+                filterSource.push({"inbound": otherFK.constraint_names[0], "alias": _parserAliases.ASSOCIATION_TABLE});
 
                 // buld the data source
                 dataSource.push({"outbound": otherFK.constraint_names[0]});
@@ -4381,7 +4344,7 @@
 
                 // uri and location
                 if (!useFaceting) {
-                    newRef._location = module.parse(this._location.compactUri + "/" + fkr.toString(), catalog);
+                    newRef._location = parse(this._location.compactUri + "/" + fkr.toString(), catalog);
                     newRef._location.referenceObject = newRef;
                 }
 
@@ -4393,7 +4356,7 @@
             // if markdown_name in source object is defined
             if (sourceObject && sourceObject.markdown_name) {
                 newRef._displayname = {
-                    "value": module.renderMarkdown(sourceObject.markdown_name, true),
+                    "value": renderMarkdown(sourceObject.markdown_name, true),
                     "unformatted": sourceObject.markdown_name,
                     "isHTML": true
                 };
@@ -4415,10 +4378,10 @@
 
             if (useFaceting) {
                 var table = newRef._table, facets;
-                newRef._location = module.parse([
+                newRef._location = parse([
                     catalog.server.uri ,"catalog" ,
                     catalog.id, "entity",
-                    module._fixedEncodeURIComponent(table.schema.name) + ":" + module._fixedEncodeURIComponent(table.name)
+                    fixedEncodeURIComponent(table.schema.name) + ":" + fixedEncodeURIComponent(table.name)
                 ].join("/"), catalog);
                 newRef._location.referenceObject = newRef;
 
@@ -4427,7 +4390,7 @@
                 // just rely on the structure
                 if (isObjectAndNotNull(sourceObjectWrapper)) {
                     var addAlias = checkForAssociation && fkrTable.isPureBinaryAssociation;
-                    facets = sourceObjectWrapper.getReverseAsFacet(tuple, fkr.key.table, addAlias ? module._parserAliases.ASSOCIATION_TABLE : "");
+                    facets = sourceObjectWrapper.getReverseAsFacet(tuple, fkr.key.table, addAlias ? _parserAliases.ASSOCIATION_TABLE : "");
                 } else {
                     //filters
                     var filters = [], filter;
@@ -4435,7 +4398,7 @@
                         filter = {
                             source: filterSource.concat(col.name)
                         };
-                        filter[module._facetFilterTypes.CHOICE] = [tuple.data[col.name]];
+                        filter[_facetFilterTypes.CHOICE] = [tuple.data[col.name]];
                         filters.push(filter);
                     });
 
@@ -4462,7 +4425,7 @@
             }
 
             var headers = {};
-            headers[module.contextHeaderName] = contextHeaderParams;
+            headers[contextHeaderName] = contextHeaderParams;
             return headers;
         },
 
@@ -4491,7 +4454,7 @@
             };
             var hasSort = Array.isArray(this._location.sortObject) && (this._location.sortObject.length !== 0),
                 locationPath = this.location.path,
-                fkAliasPreix = module._parserAliases.FOREIGN_KEY_PREFIX,
+                fkAliasPreix = _parserAliases.FOREIGN_KEY_PREFIX,
                 allOutBoundUsedAliases = [],
                 _modifiedSortObject = [], // the sort object that is used for url creation (if location has sort).
                 allOutBoundSortMap = {}, // maps an alias to PseudoColumn, used for sorting
@@ -4507,11 +4470,11 @@
             var checkPageObject = function (loc, sortObject) {
                 sortObject = sortObject || loc.sortObject;
                 if (loc.afterObject && loc.afterObject.length !== sortObject.length) {
-                    throw new module.InvalidPageCriteria("sort and after should have the same number of columns.", locationPath);
+                    throw new InvalidPageCriteria("sort and after should have the same number of columns.", locationPath);
                 }
 
                 if (loc.beforeObject && loc.beforeObject.length !== sortObject.length) {
-                    throw new module.InvalidPageCriteria("sort and before should have the same number of columns.", locationPath);
+                    throw new InvalidPageCriteria("sort and before should have the same number of columns.", locationPath);
                 }
 
                 return true;
@@ -4533,13 +4496,13 @@
                     try {
                         col = self.getColumnByName(sortObject[i].column);
                     } catch (e) {
-                        throw new module.InvalidSortCriteria("Given column name `" + sortObject[i].column + "` in sort is not valid.",  locationPath);
+                        throw new InvalidSortCriteria("Given column name `" + sortObject[i].column + "` in sort is not valid.",  locationPath);
                     }
                     // sortObject[i].column = col.name;
 
                     // column is not sortable
                     if (!col.sortable) {
-                        throw new module.InvalidSortCriteria("Column " + sortObject[i].column + " is not sortable.",  locationPath);
+                        throw new InvalidSortCriteria("Column " + sortObject[i].column + " is not sortable.",  locationPath);
                     }
 
                     // avoid computing columns twice
@@ -4561,7 +4524,7 @@
 
                             // the column must be part of outbounds, so we don't need to check for it
                             // NOTE what about the backward compatibility code?
-                            fkIndex = findAllOutBoundIndex(col.name);
+                            const fkIndex = findAllOutBoundIndex(col.name);
                             // create a new projection alias to be used for this sort column
                             colName = fkAliasPreix + (allOutBounds.length + k++);
                             // store the actual column name and foreignkey info for later
@@ -4569,7 +4532,7 @@
                             // (because of the shared prefix code)
                             allOutBoundSortMap[colName] = {
                                 fkIndex: fkIndex,
-                                colName: module._fixedEncodeURIComponent(sortCols[j].column.name)
+                                colName: fixedEncodeURIComponent(sortCols[j].column.name)
                             };
                         } else {
                             colName = sortCols[j].column.name;
@@ -4632,7 +4595,7 @@
                 for (var sk = 0; sk < this._shortestKey.length; sk++) {
                     col = this._shortestKey[sk];
                     // make sure the column is sortable based on model
-                    if (module._nonSortableTypes.indexOf(col.type.name) === -1) {
+                    if (_nonSortableTypes.indexOf(col.type.name) === -1) {
                         sortObject.push({"column":col.name, "descending":false});
                     }
                 }
@@ -4644,7 +4607,7 @@
             var uri = this._location.ermrestCompactPath; // used for the http request
 
             var associatonRef = this.derivedAssociationReference;
-            var associationTableAlias = module._parserAliases.ASSOCIATION_TABLE;
+            var associationTableAlias = _parserAliases.ASSOCIATION_TABLE;
 
             var isAttributeGroup = hasFKSort || !useEntity;
             if (isAttributeGroup) {
@@ -4726,7 +4689,7 @@
                     // entity mode: F2:array_d(F2:*),F1:array_d(F1:*)
                     // scalar mode: F2:=F2:col,F1:=F1:col
                     if (allOutBound.isPathColumn && allOutBound.canUseScalarProjection) {
-                        aggList.push(fkAliasPreix + (k+1) + ":=" + pseudoPathRes.usedOutAlias + ":" + module._fixedEncodeURIComponent(allOutBound.baseColumn.name));
+                        aggList.push(fkAliasPreix + (k+1) + ":=" + pseudoPathRes.usedOutAlias + ":" + fixedEncodeURIComponent(allOutBound.baseColumn.name));
                     } else {
                         aggList.push(fkAliasPreix + (k+1) + ":=" + aggFn + "(" + pseudoPathRes.usedOutAlias + ":*)");
                     }
@@ -4734,18 +4697,18 @@
 
                 // add trs or tcrs for main table
                 if (getTCRS && this.canUseTCRS) {
-                    rightSummFn = module._ERMrestFeatures.TABLE_COL_RIGHTS_SUMMARY;
+                    rightSummFn = _ERMrestFeatures.TABLE_COL_RIGHTS_SUMMARY;
                     aggList.push(rightSummFn + ":=" + rightSummFn + "(" + mainTableAlias + ":RID" + ")");
                 }
                 else if ((getTCRS || getTRS) && this.canUseTRS) {
-                    rightSummFn = module._ERMrestFeatures.TABLE_RIGHTS_SUMMARY;
+                    rightSummFn = _ERMrestFeatures.TABLE_RIGHTS_SUMMARY;
                     aggList.push(rightSummFn + ":=" + rightSummFn + "(" + mainTableAlias + ":RID" + ")");
                 }
 
                 // add trs for the association table
                 // TODO feels hacky! this is assuming that the alias exists
                 if (getUnlinkTRS && associatonRef && associatonRef.canUseTRS) {
-                    rightSummFn = module._ERMrestFeatures.TABLE_RIGHTS_SUMMARY;
+                    rightSummFn = _ERMrestFeatures.TABLE_RIGHTS_SUMMARY;
                     aggList.push(associationTableAlias + "_" + rightSummFn + ":=" + rightSummFn + "(" + associationTableAlias + ":RID" + ")");
                 }
 
@@ -4766,7 +4729,7 @@
                         sortColumn = sortCols[k] + ":=" +
                                      allOutBoundUsedAliases[allOutBoundSortMapInfo.fkIndex] + ":" + allOutBoundSortMapInfo.colName;
                     } else {
-                        sortColumn = module._fixedEncodeURIComponent(sortCols[k]);
+                        sortColumn = fixedEncodeURIComponent(sortCols[k]);
                     }
 
                     // don't add duplicate columns
@@ -4810,10 +4773,10 @@
      * @returns {ERMrest.Reference} The copy of the reference object.
      * @private
      */
-    function _referenceCopy(source) {
+    export function _referenceCopy(source) {
         var referenceCopy = Object.create(Reference.prototype);
         // referenceCopy must be defined before _clone can copy values from source to referenceCopy
-        module._shallowCopy(referenceCopy, source);
+        shallowCopy(referenceCopy, source);
 
         /*
          * NOTE In the following whenever I say "reference" I mean ERMrest.Reference. other references
@@ -4867,7 +4830,7 @@
          * @type {ERMrest.Reference}
          */
         get detailed() {
-            return this._contextualize(module._contexts.DETAILED);
+            return this._contextualize(_contexts.DETAILED);
         },
 
         /**
@@ -4875,7 +4838,7 @@
          * @type {ERMrest.Reference}
          */
         get compact() {
-            return this._contextualize(module._contexts.COMPACT);
+            return this._contextualize(_contexts.COMPACT);
         },
 
         /**
@@ -4883,7 +4846,7 @@
          * @type {ERMrest.Reference}
          */
         get compactBrief() {
-            return this._contextualize(module._contexts.COMPACT_BRIEF);
+            return this._contextualize(_contexts.COMPACT_BRIEF);
         },
 
         /**
@@ -4891,7 +4854,7 @@
          * @type {ERMrest.Reference}
          */
         get compactSelect() {
-            return this._contextualize(module._contexts.COMPACT_SELECT);
+            return this._contextualize(_contexts.COMPACT_SELECT);
         },
 
         /**
@@ -4899,7 +4862,7 @@
          * @type {ERMrest.Reference}
          */
         get compactSelectAssociation() {
-            return this._contextualize(module._contexts.COMPACT_SELECT_ASSOCIATION);
+            return this._contextualize(_contexts.COMPACT_SELECT_ASSOCIATION);
         },
 
         /**
@@ -4907,7 +4870,7 @@
          * @type {ERMrest.Reference}
          */
         get compactSelectAssociationLink() {
-            return this._contextualize(module._contexts.COMPACT_SELECT_ASSOCIATION_LINK);
+            return this._contextualize(_contexts.COMPACT_SELECT_ASSOCIATION_LINK);
         },
 
         /**
@@ -4915,7 +4878,7 @@
          * @type {ERMrest.Reference}
          */
         get compactSelectAssociationUnlink() {
-            return this._contextualize(module._contexts.COMPACT_SELECT_ASSOCIATION_UNLINK);
+            return this._contextualize(_contexts.COMPACT_SELECT_ASSOCIATION_UNLINK);
         },
 
         /**
@@ -4923,7 +4886,7 @@
          * @type {ERMrest.Reference}
          */
         get compactSelectForeignKey() {
-            return this._contextualize(module._contexts.COMPACT_SELECT_FOREIGN_KEY);
+            return this._contextualize(_contexts.COMPACT_SELECT_FOREIGN_KEY);
         },
 
         /**
@@ -4931,7 +4894,7 @@
          * @type {ERMrest.Reference}
          */
         get compactSelectBulkForeignKey() {
-            return this._contextualize(module._contexts.COMPACT_SELECT_BULK_FOREIGN_KEY);
+            return this._contextualize(_contexts.COMPACT_SELECT_BULK_FOREIGN_KEY);
         },
 
         /**
@@ -4939,7 +4902,7 @@
          * @type {ERMrest.Reference}
          */
         get compactSelectSavedQueries() {
-            return this._contextualize(module._contexts.COMPACT_SELECT_SAVED_QUERIES);
+            return this._contextualize(_contexts.COMPACT_SELECT_SAVED_QUERIES);
         },
 
         /**
@@ -4947,7 +4910,7 @@
          * @type {ERMrest.Reference}
          */
         get compactSelectShowMore() {
-            return this._contextualize(module._contexts.COMPACT_SELECT_SHOW_MORE);
+            return this._contextualize(_contexts.COMPACT_SELECT_SHOW_MORE);
         },
 
         /**
@@ -4955,7 +4918,7 @@
          * @type {ERMrest.Reference}
          */
         get entry() {
-            return this._contextualize(module._contexts.ENTRY);
+            return this._contextualize(_contexts.ENTRY);
         },
 
         /**
@@ -4963,7 +4926,7 @@
          * @type {ERMrest.Reference}
          */
         get entryCreate() {
-            return this._contextualize(module._contexts.CREATE);
+            return this._contextualize(_contexts.CREATE);
         },
 
         /**
@@ -4971,7 +4934,7 @@
          * @type {ERMrest.Reference}
          */
         get entryEdit() {
-            return this._contextualize(module._contexts.EDIT);
+            return this._contextualize(_contexts.EDIT);
         },
 
         /**
@@ -4979,7 +4942,7 @@
          * @type {ERMrest.Reference}
          */
         get compactEntry() {
-            return this._contextualize(module._contexts.COMPACT_ENTRY);
+            return this._contextualize(_contexts.COMPACT_ENTRY);
         },
 
         /**
@@ -4987,7 +4950,7 @@
          * @return {ERMrest.Reference}
          */
         get compactBriefInline() {
-            return this._contextualize(module._contexts.COMPACT_BRIEF_INLINE);
+            return this._contextualize(_contexts.COMPACT_BRIEF_INLINE);
         },
 
         /**
@@ -4995,7 +4958,7 @@
          * @return {ERMrest.Reference}
          */
         get export() {
-            return this._contextualize(module._contexts.EXPORT);
+            return this._contextualize(_contexts.EXPORT);
         },
 
         /**
@@ -5003,7 +4966,7 @@
          * @return {ERMrest.Reference}
          */
          get exportCompact() {
-            return this._contextualize(module._contexts.EXPORT_COMPACT);
+            return this._contextualize(_contexts.EXPORT_COMPACT);
         },
 
         /**
@@ -5011,7 +4974,7 @@
          * @return {ERMrest.Reference}
          */
          get exportDetailed() {
-            return this._contextualize(module._contexts.EXPORT_DETAILED);
+            return this._contextualize(_contexts.EXPORT_DETAILED);
         },
 
         _contextualize: function(context) {
@@ -5109,7 +5072,7 @@
                             col = newTable._altForeignKey.mapping.getFromColumn(col);
 
                             // the first column must have schema and table name
-                            newRightCols.push((i === 0) ? col.toString() : module._fixedEncodeURIComponent(col.name));
+                            newRightCols.push((i === 0) ? col.toString() : fixedEncodeURIComponent(col.name));
                         }
 
                         return "(" + currJoin.fromColsStr + ")=(" + newRightCols.join(",") + ")";
@@ -5130,7 +5093,7 @@
                 }
                 else if (source._location.facets) {
                     //TODO needs refactoring
-                    var currentFacets = JSON.parse(JSON.stringify(source._location.facets.decoded[module._FacetsLogicalOperators.AND]));
+                    var currentFacets = JSON.parse(JSON.stringify(source._location.facets.decoded[_FacetsLogicalOperators.AND]));
 
                     // facetColumns is applying extra logic for alternative, and it only
                     // makes sense in the context of facetColumns list. not here.
@@ -5155,8 +5118,8 @@
                                     return;
                                 }
 
-                                fkObj = module._getConstraintObject(catalog.id, cons[0], cons[1]);
-                                if (fkObj == null || fkObj.subject !== module._constraintTypes.FOREIGN_KEY) {
+                                fkObj = CatalogSerivce.getConstraintObject(catalog.id, cons[0], cons[1]);
+                                if (fkObj == null || fkObj.subject !== _constraintTypes.FOREIGN_KEY) {
                                     return;
                                 }
 
@@ -5218,13 +5181,13 @@
                     }
 
                     newLocationString = source._location.service + "/catalog/" + catalog.id + "/" +
-                                        source._location.api + "/" + module._fixedEncodeURIComponent(newTable.schema.name) + ":" + module._fixedEncodeURIComponent(newTable.name);
+                                        source._location.api + "/" + fixedEncodeURIComponent(newTable.schema.name) + ":" + fixedEncodeURIComponent(newTable.name);
                 }
                 else {
                     if (source._location.filter === undefined) {
                         // 4.1 no filter
                         newLocationString = source._location.service + "/catalog/" + catalog.id + "/" +
-                                            source._location.api + "/" + module._fixedEncodeURIComponent(newTable.schema.name) + ":" + module._fixedEncodeURIComponent(newTable.name);
+                                            source._location.api + "/" + fixedEncodeURIComponent(newTable.schema.name) + ":" + fixedEncodeURIComponent(newTable.name);
                     } else {
                         // 4.2.1 single entity key filter (without any join), swap table and switch to mapping key
                         // filter is single entity if it is binary filters using the shared key of the alternative tables
@@ -5236,25 +5199,25 @@
                         var filterString, j;
 
                         // binary filters using shared key
-                        if (filter.type === module.filterTypes.BINARYPREDICATE && filter.operator === "=" && sharedKey.colset.length() === 1) {
+                        if (filter.type === FILTER_TYPES.BINARYPREDICATE && filter.operator === "=" && sharedKey.colset.length() === 1) {
 
                             // filter using shared key
                             if ((source._table._isAlternativeTable() && filter.column === source._table._altForeignKey.colset.columns[0].name) ||
                                 (!source._table._isAlternativeTable() && filter.column === sharedKey.colset.columns[0].name)) {
 
                                 if (newTable._isAlternativeTable()) { // to alternative table
-                                    filterString = module._fixedEncodeURIComponent(newTable._altForeignKey.colset.columns[0].name) +
+                                    filterString = fixedEncodeURIComponent(newTable._altForeignKey.colset.columns[0].name) +
                                         "=" + filter.value;
                                 } else { // to base table
-                                    filterString = module._fixedEncodeURIComponent(sharedKey.colset.columns[0].name) + "=" + filter.value;
+                                    filterString = fixedEncodeURIComponent(sharedKey.colset.columns[0].name) + "=" + filter.value;
                                 }
 
                                 newLocationString = source._location.service + "/catalog/" + catalog.id + "/" +
-                                                    source._location.api + "/" + module._fixedEncodeURIComponent(newTable.schema.name) + ":" + module._fixedEncodeURIComponent(newTable.name) + "/" +
+                                                    source._location.api + "/" + fixedEncodeURIComponent(newTable.schema.name) + ":" + fixedEncodeURIComponent(newTable.name) + "/" +
                                                     filterString;
                             }
 
-                        } else if (filter.type === module.filterTypes.CONJUNCTION && filter.filters.length === sharedKey.colset.length()) {
+                        } else if (filter.type === FILTER_TYPES.CONJUNCTION && filter.filters.length === sharedKey.colset.length()) {
 
                             // check that filter is shared key
                             var keyColNames;
@@ -5279,7 +5242,7 @@
                             ) {
                                 // every filter is binary predicate of "="
                                 if (filter.filters.every(function (f) {
-                                        return (f.type === module.filterTypes.BINARYPREDICATE &&
+                                        return (f.type === FILTER_TYPES.BINARYPREDICATE &&
                                                 f.operator === "=");
                                     })
                                 ) {
@@ -5314,11 +5277,11 @@
                                     for (j = 0; j < filter.filters.length; j++) {
                                         var f = filter.filters[j];
                                         // map column
-                                        filterString += (j === 0? "" : "&") + module._fixedEncodeURIComponent(mapping[f.column]) + "=" + module._fixedEncodeURIComponent(f.value);
+                                        filterString += (j === 0? "" : "&") + fixedEncodeURIComponent(mapping[f.column]) + "=" + fixedEncodeURIComponent(f.value);
                                     }
 
                                     newLocationString = source._location.service + "/catalog/" + catalog.id + "/" +
-                                        source._location.api + "/" + module._fixedEncodeURIComponent(newTable.schema.name) + ":" + module._fixedEncodeURIComponent(newTable.name) + "/" +
+                                        source._location.api + "/" + fixedEncodeURIComponent(newTable.schema.name) + ":" + fixedEncodeURIComponent(newTable.name) + "/" +
                                         filterString;
                                 }
                             }
@@ -5346,7 +5309,7 @@
                     newLocationString += "?" + source._location.queryParamsString;
                 }
 
-                newRef._location = module.parse(newLocationString, catalog);
+                newRef._location = parse(newLocationString, catalog);
                 newRef._location.referenceObject = newRef;
 
                 // change the face filters
@@ -5381,7 +5344,7 @@
      * @param {!Object} extraData based on pagination, the extra data after/before current page
      *
      */
-    function Page(reference, etag, data, hasPrevious, hasNext, extraData) {
+    export function Page(reference, etag, data, hasPrevious, hasNext, extraData) {
 
         var hasExtraData = typeof extraData === "object" && Object.keys(extraData).length !== 0;
 
@@ -5404,10 +5367,10 @@
         var self = this,
             allOutBounds = reference.activeList.allOutBounds;
 
-        var trs = module._ERMrestFeatures.TABLE_RIGHTS_SUMMARY,
-            tcrs = module._ERMrestFeatures.TABLE_COL_RIGHTS_SUMMARY,
-            associationTableAlias = module._parserAliases.ASSOCIATION_TABLE,
-            fkAliasPreix = module._parserAliases.FOREIGN_KEY_PREFIX;
+        var trs = _ERMrestFeatures.TABLE_RIGHTS_SUMMARY,
+            tcrs = _ERMrestFeatures.TABLE_COL_RIGHTS_SUMMARY,
+            associationTableAlias = _parserAliases.ASSOCIATION_TABLE,
+            fkAliasPreix = _parserAliases.FOREIGN_KEY_PREFIX;
 
         // for the association rights summary
         var associatonRef = reference.derivedAssociationReference;
@@ -5508,7 +5471,7 @@
             }
             // could not find the expected aliases
             catch(exception) {
-                var fkName, col, tempData, k;
+                var fkName, col, tempData, linkedDataMap, k;
 
                 this._data = data;
 
@@ -5728,7 +5691,7 @@
                 });
                 keyValues = Object.assign({$self: $self}, templateVariables);
 
-                pattern = module._renderTemplate(
+                pattern = _renderTemplate(
                     display.sourceMarkdownPattern,
                     keyValues, ref.table.schema.catalog,
                     { templateEngine: display.sourceTemplateEngine}
@@ -5738,7 +5701,7 @@
                     pattern = ref.table._getNullValue(ref._context);
                 }
 
-                return module.renderMarkdown(pattern, false);
+                return renderMarkdown(pattern, false);
             }
 
             // page_markdown_pattern
@@ -5769,25 +5732,25 @@
                 };
 
                 if (ref.mainTable) {
-                    parent = {
+                    const parent = {
                         schema: ref.mainTable.schema.name,
                         table: ref.mainTable.name,
                     };
 
                     if (ref.mainTuple) {
-                        parent.values = module._getFormattedKeyValues(ref.mainTable, ref._context, ref.mainTuple._data, ref.mainTuple._linkedData);
+                        parent.values = _getFormattedKeyValues(ref.mainTable, ref._context, ref.mainTuple._data, ref.mainTuple._linkedData);
                     }
 
                     $page.parent = parent;
                 }
 
-                pattern = module._renderTemplate(ref.display._pageMarkdownPattern, {$page: $page}, ref.table.schema.catalog, { templateEngine: ref.display.templateEngine});
+                pattern = _renderTemplate(ref.display._pageMarkdownPattern, {$page: $page}, ref.table.schema.catalog, { templateEngine: ref.display.templateEngine});
 
                 if (pattern === null || pattern.trim() === '') {
                     pattern = ref.table._getNullValue(ref._context);
                 }
 
-                return module.renderMarkdown(pattern, false);
+                return renderMarkdown(pattern, false);
             }
 
             // row_markdown_pattern
@@ -5801,7 +5764,7 @@
                     keyValues = Object.assign({$self: tuple.selfTemplateVariable}, tuple.templateVariables.values);
 
                     // render template
-                    value = module._renderTemplate(ref.display._rowMarkdownPattern, keyValues, ref.table.schema.catalog, { templateEngine: ref.display.templateEngine});
+                    value = _renderTemplate(ref.display._rowMarkdownPattern, keyValues, ref.table.schema.catalog, { templateEngine: ref.display.templateEngine});
 
                     // If value is null or empty, return value on basis of `show_null`
                     if (value === null || value.trim() === '') {
@@ -5814,14 +5777,14 @@
                 }
                 // Join the values array using the separator and prepend it with the prefix and append suffix to it.
                 pattern = ref.display._prefix + values.join(ref.display._separator) + ref.display._suffix;
-                return module.renderMarkdown(pattern, false);
+                return renderMarkdown(pattern, false);
             }
 
             // no markdown_pattern, just return the list of row-names in this context (row_name/<context>)
             for ( i = 0; i < self.tuples.length; i++) {
                 tuple = self.tuples[i];
                 var url = tuple.reference.contextualize.detailed.appLink;
-                var rowName = module._generateRowName(ref.table, ref._context, tuple._data, tuple._linkedData);
+                var rowName = _generateRowName(ref.table, ref._context, tuple._data, tuple._linkedData);
 
                 // don't add link if the rowname already has link
                 if (rowName.value.match(/<a\b.+href=/)) {
@@ -5831,7 +5794,7 @@
                 }
             }
             pattern = ref.display._prefix + values.join(" ") + ref.display._suffix;
-            return module.renderMarkdown(pattern, false);
+            return renderMarkdown(pattern, false);
         },
 
         /**
@@ -5892,7 +5855,7 @@
      * @param {!Object} linkedData extra foreign key data that is fetched during read
      * @param {!Object} linkedDataRIDs map of column name keys with column RID as values
      */
-    function Tuple(pageReference, page, data, linkedData, linkedDataRIDs, rightsSummary, associationRightsSummary) {
+    export function Tuple(pageReference, page, data, linkedData, linkedDataRIDs, rightsSummary, associationRightsSummary) {
         this._pageRef = pageReference;
         this._page = page;
         this._data = data || {};
@@ -5922,7 +5885,7 @@
                 if (this._pageRef._table._isAlternativeTable()) {
                     var baseTable = this._pageRef._table._baseTable;
                     this._ref.setNewTable(baseTable);
-                    uri = uri + module._fixedEncodeURIComponent(baseTable.schema.name) + ":" + module._fixedEncodeURIComponent(baseTable.name) + "/";
+                    uri = uri + fixedEncodeURIComponent(baseTable.schema.name) + ":" + fixedEncodeURIComponent(baseTable.name) + "/";
 
                     // convert filter columns to base table columns using shared key
                     var fkey = this._pageRef._table._altForeignKey;
@@ -5930,26 +5893,26 @@
                     fkey.mapping.domain().forEach(function(altColumn, index, array) {
                         var baseCol = fkey.mapping.get(altColumn);
                         if (index === 0) {
-                            uri = uri + module._fixedEncodeURIComponent(baseCol.name) + "=" + module._fixedEncodeURIComponent(self._data[altColumn.name]);
+                            uri = uri + fixedEncodeURIComponent(baseCol.name) + "=" + fixedEncodeURIComponent(self._data[altColumn.name]);
                         } else {
-                            uri = uri + "&" + module._fixedEncodeURIComponent(baseCol.name) + "=" + module._fixedEncodeURIComponent(self._data[altColumn.name]);
+                            uri = uri + "&" + fixedEncodeURIComponent(baseCol.name) + "=" + fixedEncodeURIComponent(self._data[altColumn.name]);
                         }
                     });
                 } else {
                     // update its location by adding the tuple’s key filter to the URI
                     // don't keep any modifiers
-                    uri = uri + module._fixedEncodeURIComponent(this._ref._table.schema.name) + ":" + module._fixedEncodeURIComponent(this._ref._table.name) + "/";
+                    uri = uri + fixedEncodeURIComponent(this._ref._table.schema.name) + ":" + fixedEncodeURIComponent(this._ref._table.name) + "/";
                     for (var k = 0; k < this._ref._shortestKey.length; k++) {
                         var col = this._pageRef._shortestKey[k].name;
                         if (k === 0) {
-                            uri = uri + module._fixedEncodeURIComponent(col) + "=" + module._fixedEncodeURIComponent(this._data[col]);
+                            uri = uri + fixedEncodeURIComponent(col) + "=" + fixedEncodeURIComponent(this._data[col]);
                         } else {
-                            uri = uri + "&" + module._fixedEncodeURIComponent(col) + "=" + module._fixedEncodeURIComponent(this._data[col]);
+                            uri = uri + "&" + fixedEncodeURIComponent(col) + "=" + fixedEncodeURIComponent(this._data[col]);
                         }
                     }
                 }
 
-                this._ref._location = module.parse(uri, this._ref.table.schema.catalog);
+                this._ref._location = parse(uri, this._ref.table.schema.catalog);
                 this._ref._location.referenceObject = this._ref;
 
                 // add the tuple to reference so that when calling read() we don't need to fetch the data again.
@@ -6016,22 +5979,13 @@
             return this._data;
         },
 
-        /**
-         *
-         * @param {Object} data - the data to be updated
-         */
-        set data(data) {
-            // TODO needs to be implemented rather than modifying the values directly from UI
-            notimplemented();
-        },
-
         checkPermissions: function (permission, colName, isAssoc) {
             var sum = this._rightsSummary[permission];
             if (isAssoc) {
                 sum = this._associationRightsSummary[permission];
             }
 
-            if (permission === module._ERMrestACLs.COLUMN_UPDATE) {
+            if (permission === _ERMrestACLs.COLUMN_UPDATE) {
                 if (!isObjectAndNotNull(sum) || typeof sum[colName] !== 'boolean') return true;
                 return sum[colName];
             }
@@ -6058,7 +6012,7 @@
          */
         get canUpdate() {
             if (this._canUpdate === undefined) {
-                var pm = module._permissionMessages, self = this, canUpdateOneCol;
+                var pm = _permissionMessages, self = this, canUpdateOneCol;
 
                 this._canUpdate = true;
 
@@ -6068,14 +6022,14 @@
                     this._canUpdateReason = this._pageRef.canUpdateReason;
                 }
                 // check row level permission
-                else if (!this.checkPermissions(module._ERMrestACLs.UPDATE)) {
+                else if (!this.checkPermissions(_ERMrestACLs.UPDATE)) {
                     this._canUpdate = false;
                     this._canUpdateReason = pm.NO_UPDATE_ROW;
                 } else {
                     // make sure at least one column can be updated
                     // (dynamic acl allows it and also it's not disabled)
                     canUpdateOneCol = true;
-                    if (this._pageRef._context === module._contexts.EDIT) {
+                    if (this._pageRef._context === _contexts.EDIT) {
                         canUpdateOneCol = this.canUpdateValues.some(function (canUpdateValue, i) {
                             return canUpdateValue && !self._pageRef.columns[i].inputDisabled;
                         });
@@ -6086,7 +6040,7 @@
                             canUpdateOneCol = ref.columns.some(function (col) {
                                 return !col.inputDisabled && !col._baseCols.some(function (bcol) {
                                     return !self.checkPermissions(
-                                        module._ERMrestACLs.COLUMN_UPDATE,
+                                        _ERMrestACLs.COLUMN_UPDATE,
                                         bcol.name
                                     );
                                 });
@@ -6135,7 +6089,7 @@
         get canDelete() {
             if (this._canDelete === undefined) {
                 // make sure table and row can be deleted
-                this._canDelete = this._pageRef.canDelete && this.checkPermissions(module._ERMrestACLs.DELETE);
+                this._canDelete = this._pageRef.canDelete && this.checkPermissions(_ERMrestACLs.DELETE);
             }
             return this._canDelete;
         },
@@ -6151,46 +6105,6 @@
                 }
             }
             return this._canUnlink;
-        },
-
-        /**
-         * Attempts to update this tuple. This is a server side transaction,
-         * and therefore an asynchronous operation that returns a promise.
-         * @returns {Promise} a promise (TBD the result object)
-         */
-        update: function() {
-            try {
-                // TODO
-                // - since we only support updates on "simple paths" that are just
-                //   entity references with no joins, we can first validate that
-                //   this tuple represents a row from a single table, and then
-                //   we may need to create a reference to that table
-                // - then, we can go back and call that reference
-                //   `return reference.update(...);`
-                notimplemented();
-            }
-            catch (e) {
-                return module._q.reject(e);
-            }
-        },
-
-        /**
-         * Attempts to delete this tuple. This is a server side transaction,
-         * and therefore an asynchronous operation that returns a promise.
-         * @returns {Promise} a promise (TBD the result object)
-         */
-        delete: function() {
-            try {
-                // TODO
-                // - create a new reference by taking this._ref and adding filters
-                //   based on keys for this tuple
-                // - then call the delete on that reference
-                //   `return tuple_ref.delete();`
-                notimplemented();
-            }
-            catch (e) {
-                return module._q.reject(e);
-            }
         },
 
         /**
@@ -6257,7 +6171,7 @@
 
                 var checkUpdateColPermission = function (col) {
                     return !self.checkPermissions(
-                        module._ERMrestACLs.COLUMN_UPDATE,
+                        _ERMrestACLs.COLUMN_UPDATE,
                         col.name
                     );
                 };
@@ -6266,10 +6180,10 @@
                 var keyValues = this.templateVariables.values;
 
                 // If context is entry
-                if (module._isEntryContext(this._pageRef._context)) {
+                if (_isEntryContext(this._pageRef._context)) {
 
                     // Return raw values according to the visibility and sequence of columns
-                    for (i = 0; i < this._pageRef.columns.length; i++) {
+                    for (let i = 0; i < this._pageRef.columns.length; i++) {
                         column = this._pageRef.columns[i];
 
                         // if user cannot update any of the base_columns then the column should be disabled
@@ -6302,7 +6216,7 @@
                     var values = [];
 
                     // format values according to column display annotation
-                    for (i = 0; i < this._pageRef.columns.length; i++) {
+                    for (let i = 0; i < this._pageRef.columns.length; i++) {
                         column = this._pageRef.columns[i];
                         if (column.isPseudo) {
                             if (column.isForeignKey || (column.isPathColumn && column.hasPath)) {
@@ -6376,7 +6290,7 @@
          */
         get displayname() {
             if (this._displayname === undefined) {
-                this._displayname = module._generateRowName(this._pageRef._table, this._pageRef._context, this._data, this._linkedData, true);
+                this._displayname = _generateRowName(this._pageRef._table, this._pageRef._context, this._data, this._linkedData, true);
             }
             return this._displayname;
         },
@@ -6395,7 +6309,7 @@
          */
         get rowName() {
             if (this._rowName === undefined) {
-                this._rowName = module._generateRowName(this._pageRef._table, this._pageRef._context, this._data, this._linkedData);
+                this._rowName = _generateRowName(this._pageRef._table, this._pageRef._context, this._data, this._linkedData);
             }
             return this._rowName;
         },
@@ -6408,7 +6322,7 @@
          */
         get uniqueId() {
             if (this._uniqueId === undefined) {
-                this._uniqueId = module._generateTupleUniqueId(this._pageRef.table.shortestKey, this.data);
+                this._uniqueId = _generateTupleUniqueId(this._pageRef.table.shortestKey, this.data);
             }
             return this._uniqueId;
         },
@@ -6421,10 +6335,10 @@
         get citation() {
             if (this._citation === undefined) {
                 var table = this._pageRef.table;
-                if (!table.annotations.contains(module._annotations.CITATION)) {
+                if (!table.annotations.contains(_annotations.CITATION)) {
                     this._citation = null;
                 } else {
-                    var citationAnno = table.annotations.get(module._annotations.CITATION).content;
+                    var citationAnno = table.annotations.get(_annotations.CITATION).content;
                     if (!citationAnno.journal_pattern || !citationAnno.year_pattern || !citationAnno.url_pattern) {
                         this._citation = null;
                     } else {
@@ -6447,7 +6361,7 @@
             if (this._templateVariables === undefined) {
                 var self = this;
                 var context = self._pageRef._context;
-                var keyValues = module._getRowTemplateVariables(
+                var keyValues = _getRowTemplateVariables(
                     self._pageRef._table,
                     context,
                     self._data,
@@ -6466,7 +6380,7 @@
                     if (Array.isArray(sm[col.name])) {
                         if (col.isForeignKey || col.isEntityMode) {
                             // alloutbound entity
-                            var fkTempVal = module._getRowTemplateVariables(col.table, context, self._linkedData[col.name]);
+                            var fkTempVal = _getRowTemplateVariables(col.table, context, self._linkedData[col.name]);
 
                             sm[col.name].forEach(function (key) {
                                 keyValues.values[key] = fkTempVal;
@@ -6488,7 +6402,7 @@
                     if (Array.isArray(sm[col.name])) {
                         // compute it once and use it for all the self-links.
                         if (!selfLinkValue) {
-                            selfLinkValue = module._getRowTemplateVariables(col.table, context, self._data, null, col.key);
+                            selfLinkValue = _getRowTemplateVariables(col.table, context, self._data, null, col.key);
                         }
 
                         sm[col.name].forEach(function (key) {
@@ -6513,7 +6427,7 @@
             if (this._selfTemplateVariable === undefined) {
                 var $self = {};
                 for (var j in this.templateVariables) {
-                    if (this.templateVariables.hasOwnProperty(j) && j != "values") {
+                    if (Object.prototype.hasOwnProperty.call(this.templateVariables, j) && j != "values") {
                         $self[j] = this.templateVariables[j];
                     }
                 }
@@ -6541,7 +6455,7 @@
             }
 
             var associationRef = this._pageRef.derivedAssociationReference,
-                encoder = module._fixedEncodeURIComponent,
+                encoder = fixedEncodeURIComponent,
                 newFilter = [],
                 missingData = false;
 
@@ -6576,7 +6490,7 @@
                 newFilter.join("&")
             ].join("/");
 
-            var reference = new Reference(module.parse(uri), this._pageRef._table.schema.catalog);
+            var reference = new Reference(parse(uri), this._pageRef._table.schema.catalog);
             return reference;
 
         },
@@ -6589,7 +6503,7 @@
          */
          copy: function() {
              var newTuple = Object.create(Tuple.prototype);
-             module._shallowCopy(newTuple, this);
+             shallowCopy(newTuple, this);
              newTuple._data = {};
 
              //change _data though
@@ -6631,7 +6545,7 @@
                 throw new Error("Table `" + this._ref.table.name + "`" + "doesn't have any simple keys. For getting count simple key is required.");
             }
 
-            return "cnt_d(" + module._fixedEncodeURIComponent(this._ref.table.shortestKey[0].name) + ")";
+            return "cnt_d(" + fixedEncodeURIComponent(this._ref.table.shortestKey[0].name) + ")";
         }
     };
 
@@ -6658,7 +6572,7 @@
          */
         this._citationAnnotation = citationAnnotation;
 
-        var waitForRes = module._processWaitForList(citationAnnotation.wait_for, reference, reference.table, null, null, "citation");
+        var waitForRes = _processWaitForList(citationAnnotation.wait_for, reference, reference.table, null, null, "citation");
 
         this.waitFor = waitForRes.waitForList;
         this.hasWaitFor = waitForRes.hasWaitFor;
@@ -6689,7 +6603,7 @@
             var citation = {};
             // author, title, id set to null if not defined
             ["author", "title", "journal", "year", "url", "id"].forEach(function (key) {
-                citation[key] = module._renderTemplate(
+                citation[key] = _renderTemplate(
                     citationAnno[key+"_pattern"],
                     keyValues,
                     table.schema.catalog,
@@ -6735,10 +6649,10 @@
             var metadata = {};
             setMetadataFromTemplate(metadata, metadataAnnotation.dataset, metadataAnnotation.template_engine, keyValues, table);
 
-            var result = module.validateJSONLD(metadata);
+            var result = validateJSONLD(metadata);
 
             if (!result.isValid) {
-                module._log.error("JSON-LD not appended to <head> as validation errors found.");
+                $log.error("JSON-LD not appended to <head> as validation errors found.");
                 return null;
             }
 
@@ -6755,7 +6669,7 @@
             else if (Array.isArray(metadataAnnotation[key])) {
                 metadata[key] = [];
                 metadataAnnotation[key].forEach(function (element) {
-                    metadata[key].push(module._renderTemplate(
+                    metadata[key].push(_renderTemplate(
                         element,
                         templateVariables,
                         table.schema.catalog,
@@ -6764,7 +6678,7 @@
                 });
             }
             else {
-                metadata[key] = module._renderTemplate(
+                metadata[key] = _renderTemplate(
                     metadataAnnotation[key],
                     templateVariables,
                     table.schema.catalog,
@@ -6801,7 +6715,7 @@
 
         var tempKeys = reference.table.keys.all().filter(function(key) {
             var keyCols = key.colset.columns;
-            return !(keyCols.length == 1 && (module._serialTypes.indexOf(keyCols[0].type.name) != -1 ||  module._systemColumns.indexOf(keyCols[0].name) != -1) && !(keyCols[0] in fkCols));
+            return !(keyCols.length == 1 && (_serialTypes.indexOf(keyCols[0].type.name) != -1 ||  _systemColumns.indexOf(keyCols[0].name) != -1) && !(keyCols[0] in fkCols));
         });
 
         // to calculate isUnique
