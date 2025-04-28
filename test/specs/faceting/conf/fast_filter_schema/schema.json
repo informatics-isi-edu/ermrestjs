@@ -37,6 +37,10 @@
         {
           "name": "main_o1_fast_col",
           "type": {"typename": "int4"}
+        },
+        {
+          "name": "jsonb_col",
+          "type": {"typename": "jsonb"}
         }
       ],
       "annotations": {
@@ -111,7 +115,11 @@
                 ]
               },
               {"sourcekey": "facet_with_fast_filter_shared_prefix"},
-              {"sourcekey": "facet_with_fast_filter_and_filter_in_source"}
+              {"sourcekey": "facet_with_fast_filter_and_filter_in_source"},
+              {
+                "source": [{"outbound": ["fast_filter_schema", "main_fk1"]}, "main_o1_jsonb_col"],
+                "fast_filter_source": ["jsonb_col"]
+              }
             ]
           }
         }
@@ -217,6 +225,10 @@
         {
           "name": "fk_to_main_o1_o1",
           "type": {"typename": "int4"}
+        },
+        {
+          "name": "main_o1_jsonb_col",
+          "type": {"typename": "jsonb"}
         }
       ]
     },

@@ -1881,6 +1881,17 @@ exports.execute = function (options) {
                             });
                         });
 
+                        it ("should properly parse not-null filters.", function () {
+                            newRef = refMain.facetColumns[9].addNotNullFilter();
+
+                            expect(newRef).not.toBe(refMain, "reference didn't change.");
+                            expect(newRef.location.ermrestCompactPath).toBe(
+                                "M:=faceting_schema:main/id=1/$M/int_col::geq::-2/$M/!(jsonb_col::null::;jsonb_col=null)/$M",
+                                "path missmatch."
+                            );
+                            expect(newRef.facetColumns[9].filters.length).toBe(1, "filters length missmatch.");
+                        });
+
                     });
                 });
             });
@@ -2647,6 +2658,7 @@ exports.execute = function (options) {
                     });
 
                     // prefix with different end column
+                    // also checking that not-null json is properly handled
                     describe("case 3", function () {
                         testReadAndReadPath(
                             {
@@ -2665,6 +2677,13 @@ exports.execute = function (options) {
                                             "path_prefix_o1_o1_i1_col"
                                         ],
                                         "choices": ["one_o1_o1_i1"]
+                                    },
+                                    {
+                                        "source": [
+                                            { "sourcekey": "path_to_path_prefix_o1_o1" },
+                                            "jsonb_col"
+                                        ],
+                                        "not_null": true
                                     }
                                 ]
                             },
@@ -2672,6 +2691,7 @@ exports.execute = function (options) {
                                 "M:=faceting_schema:main",
                                 "M_P2:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/M_P1:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/id=2/$M",
                                 "$M_P1/(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)/path_prefix_o1_o1_i1_col=one_o1_o1_i1/$M",
+                                "$M_P1/!(jsonb_col::null::;jsonb_col=null)/$M",
                                 "$M_P1/F3:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M",
                                 "RID;M:=array_d(M:*),F3:=F3:path_prefix_o1_o1_o1_col,F2:=M_P1:path_prefix_o1_o1_col,F1:=M_P2:path_prefix_o1_col@sort(RID)"
                             ].join("/"),
@@ -2683,6 +2703,7 @@ exports.execute = function (options) {
                                         "T:=faceting_schema:main",
                                         "T_P1:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/M:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)",
                                         "(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)/path_prefix_o1_o1_i1_col=one_o1_o1_i1/$T/$M/id=2/$T",
+                                        "$M/!(jsonb_col::null::;jsonb_col=null)/$T",
                                         "$M/F1:=left(fk_to_path_prefix_o1_o1_o1)=(faceting_schema:path_prefix_o1_o1_o1:id)/$M/RID;M:=array_d(M:*),F1:=array_d(F1:*)@sort(RID)"
                                     ].join("/"),
                                     read: {
@@ -2696,6 +2717,7 @@ exports.execute = function (options) {
                                         "T:=faceting_schema:main",
                                         // NOTE T_P2 is not needed but code doesn't handle it
                                         "T_P2:=(fk_to_path_prefix_o1)=(faceting_schema:path_prefix_o1:id)/T_P1:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/id=2/$T",
+                                        "$T_P1/!(jsonb_col::null::;jsonb_col=null)/$T",
                                         "$T_P1/M:=(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)",
                                         "F1:=left(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/$M/RID;M:=array_d(M:*),F1:=array_d(F1:*)@sort(RID)"
                                     ].join("/"),
@@ -3004,6 +3026,7 @@ exports.execute = function (options) {
                 });
 
                 // prefix with different end column
+                // also checking that not-null json is properly handled
                 describe("case 3", function () {
                     testReadAndReadPath(
                         {
@@ -3022,6 +3045,13 @@ exports.execute = function (options) {
                                         "path_prefix_o1_o1_i1_col"
                                     ],
                                     "choices": ["one_o1_o1_i1"]
+                                },
+                                {
+                                    "source": [
+                                        { "sourcekey": "path_to_path_prefix_o1_o1_w_filter" },
+                                        "jsonb_col"
+                                    ],
+                                    "not_null": true
                                 }
                             ]
                         },
@@ -3032,6 +3062,7 @@ exports.execute = function (options) {
                             "!(date_col::gt::" + currentDateString + "&path_prefix_o1_col=some_non_used_value)",
                             "M_P1:=(fk_to_path_prefix_o1_o1)=(faceting_schema:path_prefix_o1_o1:id)/id=2/$M",
                             "$M_P1/(id)=(faceting_schema:path_prefix_o1_o1_i1:fk_to_path_prefix_o1_o1)/path_prefix_o1_o1_i1_col=one_o1_o1_i1/$M",
+                            "$M_P1/!(jsonb_col::null::;jsonb_col=null)/$M",
                             "F1:=left(fk_to_f1)=(faceting_schema:f1:id)/$M",
                             "RID;M:=array_d(M:*),F1:=array_d(F1:*)@sort(RID)"
                         ].join("/")
