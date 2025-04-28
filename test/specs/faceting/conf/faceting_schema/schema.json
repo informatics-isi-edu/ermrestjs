@@ -1739,6 +1739,10 @@
                 {
                     "name": "path_prefix_o1_o1_col",
                     "type": {"typename": "text"}
+                },
+                {
+                    "name": "jsonb_col",
+                    "type": {"typename": "jsonb"}
                 }
             ],
             "annotations": {

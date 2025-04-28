@@ -307,7 +307,7 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
 
             return {
                 path: parsedRes.path,
-                columnName: col.name, // we might optimize the path, so the column could be different
+                column: col, // we might optimize the path, so the column could be different
                 tableName: tableName,
                 schemaName: schemaName,
                 reversed: reverse,
@@ -405,7 +405,7 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
             rightJoins = [], // if we have null in the filter, we have to use join
             innerJoins = [], // all the other facets that have been parsed
             encode = fixedEncodeURIComponent, sourcekey,
-            i, term, col, path, constraints, parsed, hasNullChoice,
+            i, term, colName, colObject, path, constraints, parsed, hasNullChoice,
             useRightJoin, rightJoinSchemaTable,
             mappedFacet, currObj, temp;
 
@@ -464,8 +464,8 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
             }
 
             // get the column name
-            col = _sourceColumnHelpers._getSourceColumnStr(term.source);
-            if (typeof col !== "string") {
+            colName = _sourceColumnHelpers._getSourceColumnStr(term.source);
+            if (typeof colName !== "string") {
                 return _renderFacetHelpers.getErrorOutput(facetErrors.invalidSource, i);
             }
 
@@ -498,7 +498,8 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
                     false
                 );
                 path = temp.path;
-                col = currObj.column.name;
+                colName = currObj.column.name;
+                colObject = currObj.column;
             }
             else if (_sourceColumnHelpers._sourceHasNodes(term.source)) {
 
@@ -523,35 +524,51 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
                     return _renderFacetHelpers.getErrorOutput(facetErrors.onlyOneNullFilter, i);
                 }
 
-                col = temp.columnName;
+                colName = temp.column.name;
+                colObject = temp.column;
+            }
+            else {
+                try {
+                    colObject = rootTable.columns.get(colName);
+                } catch (exp) {
+                    /* empty */
+                }
             }
 
             // ---------------- parse the constraints ---------------- //
             constraints = []; // the current constraints for this source
 
             if (Array.isArray(term[_facetFilterTypes.CHOICE])) {
-                parsed = _renderFacetHelpers.parseChoices(term[_facetFilterTypes.CHOICE], col, catalogObject);
+                parsed = _renderFacetHelpers.parseChoices(term[_facetFilterTypes.CHOICE], colName, catalogObject);
                 if (!parsed) {
                     return _renderFacetHelpers.getErrorOutput(facetErrors.invalidChoice, i);
                 }
                 constraints.push(parsed);
             }
             if (Array.isArray(term[_facetFilterTypes.RANGE])) {
-                parsed = _renderFacetHelpers.parseRanges(term[_facetFilterTypes.RANGE], col);
+                parsed = _renderFacetHelpers.parseRanges(term[_facetFilterTypes.RANGE], colName);
                 if (!parsed) {
                     return _renderFacetHelpers.getErrorOutput(facetErrors.invalidRange, i);
                 }
                 constraints.push(parsed);
             }
             if (Array.isArray(term[_facetFilterTypes.SEARCH])) {
-                parsed = _renderFacetHelpers.parseSearch(term[_facetFilterTypes.SEARCH], col, null, catalogObject);
+                parsed = _renderFacetHelpers.parseSearch(term[_facetFilterTypes.SEARCH], colName, null, catalogObject);
                 if (!parsed) {
                     return _renderFacetHelpers.getErrorOutput(facetErrors.invalidSearch, i);
                 }
                 constraints.push(parsed);
             }
             if (term.not_null === true) {
-                constraints.push("!(" + encode(col) + "::null::)");
+                let notNull = [`${encode(colName)}::null::`];
+                /**
+                 * We cannot distinguish between json `null` in sql and actual `null`,
+                 * so we should add both of them.
+                 */
+                if (colObject && (colObject.type.name === 'json' || colObject.type.name === 'jsonb')) {
+                    notNull.push(`${encode(colName)}=null`);
+                }
+                constraints.push(`!(${notNull.join(';')})`);
             }
 
             if (constraints.length == 0) {

@@ -197,6 +197,10 @@ exports.execute = (options) => {
               source: [{ sourcekey: 'path_to_main_o1_RID' }, { inbound: ['fast_filter_schema', 'main_o1_i2_fk1'] }, 'RID'],
               choices: ['1'],
             },
+            {
+              source: [{ outbound: ['fast_filter_schema', 'main_fk1'] }, 'main_o1_jsonb_col'],
+              not_null: true,
+            },
           ],
         };
 
@@ -207,6 +211,7 @@ exports.execute = (options) => {
           '(fk_to_main_o1)=(fast_filter_schema:main_o1:id)/(fk_to_main_o1_o1)=(fast_filter_schema:main_o1_o1:id)/other_col=any(1,2,3)/$M',
           'M_P1:=(fk_to_main_o1)=(fast_filter_schema:main_o1:id)/(id)=(fast_filter_schema:main_o1_i2:fk_to_main_o1)/id=any(1,2,3)/$M',
           '$M_P1/id::gt::2/(id)=(fast_filter_schema:main_o1_i2:fk_to_main_o1)/id=1/$M',
+          '!(jsonb_col::null::;jsonb_col=null)/$M'
         ].join('/');
 
         const testReadAndReadPath = (context) => {
@@ -258,6 +263,7 @@ exports.execute = (options) => {
                   '(fk_to_main_o1_o1)=(fast_filter_schema:main_o1_o1:id)/other_col=any(1,2,3)/$T',
                   'T_P1:=(fk_to_main_o1)=(fast_filter_schema:main_o1:id)/id::gt::2',
                   '(id)=(fast_filter_schema:main_o1_i2:fk_to_main_o1)/id=1/$T',
+                  '!(jsonb_col::null::;jsonb_col=null)/$T',
                   '$T_P1/M:=(id)=(fast_filter_schema:main_o1_i1:fk_to_main_o1)',
                   'F1:=left(fk_to_main_o1)=(fast_filter_schema:main_o1:id)/$M/RID;M:=array_d(M:*),F1:=array_d(F1:*)@sort(RID)',
                 ].join('/'),
