@@ -112,7 +112,7 @@ we removed this from documentation because we didn't want to confuse users.
   <source.api>/<current root path>/<source.path>
   ```
 
-   And if `current_root_path` is set to `true`, the query would look like the following:
+   And if `skip_root_path` is set to `true`, the query would look like the following:
 
   ```
   <source.api>/<source.path>
