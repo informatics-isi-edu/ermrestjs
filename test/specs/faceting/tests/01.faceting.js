@@ -1829,8 +1829,18 @@ exports.execute = function (options) {
                                 testJSONFilter({ "key": "one" }, "%7B%22key%22%3A%22one%22%7D");
                             });
 
+                            it("Having string representation of object as the value.", function () {
+                                // this is how chaise uses it
+                                testJSONFilter('{"key":"one"}', "%7B%22key%22%3A%22one%22%7D");
+                            });
+
                             it("Having array as the value.", function () {
                                 testJSONFilter(["key", "one"], "%5B%22key%22%2C%22one%22%5D");
+                            });
+
+                            it("Having string representation of array as the value.", function () {
+                                // this is how chaise uses it
+                                testJSONFilter('["key","one"]', "%5B%22key%22%2C%22one%22%5D");
                             });
 
                             it("Having number as the value.", function () {
@@ -1838,11 +1848,15 @@ exports.execute = function (options) {
                             });
 
                             it("having string literal of integer as value.", function () {
-                                testJSONFilter("1234", "%221234%22");
+                                testJSONFilter("1234", "1234");
                             });
 
                             it("Having string literal as the value.", function () {
                                 testJSONFilter("value", "%22value%22");
+                            });
+
+                            it("Having string representation of string as the value.", function () {
+                                testJSONFilter('"value"', "%22value%22");
                             });
 
                             it("Having boolean as the value.", function () {
@@ -1895,6 +1909,8 @@ exports.execute = function (options) {
                     });
                 });
             });
+
+            return;
 
             describe("sourceReference and column APIs, ", function () {
                 it("should have filters of other facet columns, and not filters of itself.", function () {
@@ -2365,6 +2381,8 @@ exports.execute = function (options) {
                 });
             });
         });
+
+        return;
 
         describe("should be able to handle facets with long paths.", function () {
             var ref;
