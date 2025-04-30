@@ -1910,8 +1910,6 @@ exports.execute = function (options) {
                 });
             });
 
-            return;
-
             describe("sourceReference and column APIs, ", function () {
                 it("should have filters of other facet columns, and not filters of itself.", function () {
                     checkSourceReference(
@@ -2381,8 +2379,6 @@ exports.execute = function (options) {
                 });
             });
         });
-
-        return;
 
         describe("should be able to handle facets with long paths.", function () {
             var ref;
