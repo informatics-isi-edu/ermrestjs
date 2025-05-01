@@ -825,7 +825,10 @@ AttributeGroupTuple.prototype = {
             var data = this._data, hasNull, self = this;
             this._uniqueId = self._page.reference.shortestKey.reduce(function (res, c, index) {
                 hasNull = hasNull || data[c.name] == null;
-                return res + (index > 0 ? "_" : "") + data[c.name];
+                const isJSON = c.type.name === 'json' || c.type.name === 'jsonb';
+                // if the column is JSON, we need to stringify it otherwise it will print [object Object]
+                const value = isJSON ? JSON.stringify(data[c.name]) : data[c.name];
+                return res + (index > 0 ? "_" : "") + value;
             }, "");
 
             //TODO should be evaluated for composite keys
