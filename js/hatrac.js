@@ -13,7 +13,7 @@ import ConfigService from '@isrd-isi-edu/ermrestjs/src/services/config';
 
 // utils
 import { hexToBase64 } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
-import { isObject } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
+import { isObject, isObjectAndNotNull } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
 import { contextHeaderName, ENV_IS_NODE } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
 
 // legacy
@@ -263,7 +263,7 @@ export function Upload(file, otherInfo) {
  *
  * @returns {boolean}
  */
-Upload.prototype.validateURL = function (row, linkedData) {
+Upload.prototype.validateURL = function (row, linkedData, templateVariables) {
   if (this.column.urlPattern) {
     var template = this.column.urlPattern;
 
@@ -287,9 +287,18 @@ Upload.prototype.validateURL = function (row, linkedData) {
     ignoredColumns.push(this.column.name + '.size');
     ignoredColumns.push(this.column.name + '.mimetype');
     ignoredColumns.push(this.column.name + '.filename_ext');
+    // TODO is this needed?
+    // make sure to add raw columns too.
+    ignoredColumns.forEach(function (col) {
+      ignoredColumns.push("_" + col);
+    });
 
-    // TODO we can improve this (should not rely on _validateTemplate to format them)
-    return _validateTemplate(template, row, linkedData, this.reference.table, this.reference._context, {
+    var keyValues = _getFormattedKeyValues(this.reference.table, this.reference._context, row, linkedData);
+    if (isObjectAndNotNull(templateVariables)) {
+      Object.assign(keyValues, templateVariables);
+    }
+
+    return _validateTemplate(template, keyValues, this.reference.table.schema.catalog, {
       ignoredColumns: ignoredColumns,
       templateEngine: this.column.templateEngine,
     });
@@ -308,14 +317,14 @@ Upload.prototype.validateURL = function (row, linkedData) {
  * or rejected with error if unable to calculate checkum
  * and notified with a progress handler, sending number in bytes done
  */
-Upload.prototype.calculateChecksum = function (row, linkedData, onProgress) {
+Upload.prototype.calculateChecksum = function (row, linkedData, templateVariables, onProgress) {
   this.erred = false;
   var deferred = ConfigService.q.defer();
 
   // If the hash is calculated then simply generate the url
   // and notify and reoslve the promise
   if (this.hash && (this.hash.md5_base64 || this.hash.sha256)) {
-    this._generateURL(row, linkedData);
+    this._generateURL(row, linkedData, templateVariables);
     if (onProgress) onProgress(this.file.size);
     deferred.resolve(this.url);
     return deferred.promise;
@@ -330,7 +339,7 @@ Upload.prototype.calculateChecksum = function (row, linkedData, onProgress) {
       if (onProgress) onProgress(uploaded);
     },
     function () {
-      self._generateURL(row, linkedData);
+      self._generateURL(row, linkedData, templateVariables);
       deferred.resolve(self.url);
     },
     function (err) {
@@ -778,7 +787,7 @@ Upload.prototype._getAbsoluteUrl = function (uri) {
  *
  * @returns {string}
  */
-Upload.prototype._generateURL = function (row, linkedData) {
+Upload.prototype._generateURL = function (row, linkedData, templateVariables) {
   var template = this.column.urlPattern;
 
   // Populate all values in row depending on column from current
@@ -803,9 +812,11 @@ Upload.prototype._generateURL = function (row, linkedData) {
 
   // Generate url
 
-  // TODO should use the tuple.templateVariables
   // the hatrac value in row is an object, which can be improved
-  var keyValues = _getFormattedKeyValues(this.reference.table, this.reference._context, row, linkedData);
+  const keyValues = _getFormattedKeyValues(this.reference.table, this.reference._context, row, linkedData);
+  if (isObjectAndNotNull(templateVariables)) {
+    Object.assign(keyValues, templateVariables);
+  }
 
   var url = _renderTemplate(template, keyValues, this.reference.table.schema.catalog, {
     avoidValidation: true,

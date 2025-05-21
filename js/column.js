@@ -16,6 +16,7 @@ import ConfigService from '@isrd-isi-edu/ermrestjs/src/services/config';
 import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils';
 import { isDefinedAndNotNull, isObject, isObjectAndNotNull, isStringAndNotEmpty, verify } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
 import { fixedEncodeURIComponent, simpleDeepCopy } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
+import { processAggregateValue } from '@isrd-isi-edu/ermrestjs/src/utils/column-utils';
 import {
   _annotations,
   _contexts,
@@ -39,7 +40,7 @@ import {
 // legacy
 import { parse } from '@isrd-isi-edu/ermrestjs/js/parser';
 import { Type } from '@isrd-isi-edu/ermrestjs/js/core';
-import { Page, Reference, _referenceCopy } from '@isrd-isi-edu/ermrestjs/js/reference';
+import { Page, Reference, Tuple, _referenceCopy } from '@isrd-isi-edu/ermrestjs/js/reference';
 import {
   AttributeGroupColumn,
   AttributeGroupReference,
@@ -731,7 +732,8 @@ ReferenceColumn.prototype = {
         if (this._waitFor === undefined) {
             var self = this;
             var wfDef = [];
-            if (self.sourceObject && self.sourceObject.display) {
+            // in entry context, wait_for is not honored for non-asset columns.
+            if (!_isEntryContext(this._context) && self.sourceObject && self.sourceObject.display) {
                 wfDef = self.sourceObject.display.wait_for;
             }
 
@@ -1033,7 +1035,7 @@ PseudoColumn.prototype.formatPresentation = function(data, context, templateVari
  * Each returned value has the following attributes:
  *  - value
  *  - isHTML
- *  - templateVariables (TODO)
+ *  - templateVariables: the template variables that the client uses to eventually pass to sourceFormatPresentation
  *
  * implementation Notes:
  * 1. This function will take care of url limitation. It might generate multiple
@@ -1066,16 +1068,11 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
         http = this._baseReference._server.http,
         column = this._baseCols[0],
         keyColName, keyColNameEncoded,
-        baseUri, basePath, pathToCol, tempUri, i, filterStr, projection;
-
-    var sourceMarkdownPattern = this.display.sourceMarkdownPattern;
-    var sourceTemplateEngine = this.display.sourceTemplateEngine;
+        baseUri, basePath, pathToCol, projection;
 
     // this will dictates whether we should show rowname or not
-    var isRow = self.isEntityMode && _pseudoColEntityAggregateFns.indexOf(self.sourceObject.aggregate) != -1;
-
-    // use `compact` context for entity array aggregates
-    var context = isRow ? _contexts.COMPACT : self._context;
+    const aggFn = this.sourceObject.aggregate;
+    const isRow = self.isEntityMode && _pseudoColEntityAggregateFns.indexOf(aggFn) != -1;
 
     // verify the input
     try {
@@ -1087,150 +1084,12 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
         return defer.promise;
     }
 
-    // array_options
-    var columnOrder, maxLength;
-    if (self.sourceObject.aggregate.indexOf("array") != -1 && typeof self.sourceObject.array_options === "object") {
-
-        // order
-        if (self.sourceObject.array_options.order) {
-            columnOrder = _processColumnOrderList(
-                self.sourceObject.array_options.order,
-                column.table
-            );
-        }
-
-        // max_length
-        if (Number.isInteger(self.sourceObject.array_options.max_length)) {
-            maxLength = self.sourceObject.array_options.max_length;
-        }
-    }
-
     // create the header
     if (!contextHeaderParams || !isObject(contextHeaderParams)) {
         contextHeaderParams = {"action": "read/aggregate"};
     }
     var config = {
         headers: self.reference._generateContextHeader(contextHeaderParams, page.tuples.length)
-    };
-
-    // will format a single value
-    var getFormattedValue = function (val) {
-        if (isRow) {
-            var pres = _generateRowPresentation(self.key, val, context, self._getShowForeignKeyLink(context));
-
-            return pres ? pres.unformatted : null;
-        }
-        if (val == null || val === "") {
-            return val;
-        }
-        return column.formatvalue(val, context);
-    };
-
-    // it will sort the array values and then format them.
-    var getArrayValue = function (val) {
-        // try to sort the values
-        try {
-            val.sort(function (a, b) {
-                // order is not defined, just sort based on the column value
-                if (!columnOrder || columnOrder.length === 0) {
-                    // if isRow, a and b will be objects
-                    if (isRow) {
-                        return column.compare(a[column.name], b[column.name]);
-                    }
-                    return column.compare(a, b);
-                }
-
-                // sort the values based on the defined `order`
-                for (var j = 0; j < columnOrder.length; j++) {
-                    var col = columnOrder[j].column, comp;
-
-                    // if it's not row, it will be just array of results
-                    if (!isRow) {
-                        // ignore invalid order options
-                        if (col.name !== column.name) continue;
-                        comp = col.compare(a, b);
-                    } else {
-                        comp = col.compare(a[col.name], b[col.name]);
-                    }
-
-                    // if they are equal go to the next column in `order`
-                    if (comp !== 0) {
-                        return (columnOrder[j].descending ? -1 : 1) * comp;
-                    }
-                }
-
-                // they are equal
-                return 0;
-            });
-        } catch(e) {
-            // if sort threw any erros, we just leave it as is
-        }
-
-        // limit the values
-        if (maxLength) {
-            val = val.slice(0, maxLength);
-        }
-
-        // formatted array result
-        var arrayRes = _formatUtils.printArray(
-            val.map(getFormattedValue),
-            {
-                isMarkdown: (column.type.name === "markdown") || isRow,
-                returnArray: true
-            }
-        );
-
-        var res = "";
-        // find array display
-        var array_display = self.sourceObject.array_display;
-        if (self.sourceObject.display && typeof self.sourceObject.display.array_ux_mode === "string") {
-            array_display = self.sourceObject.display.array_ux_mode;
-        }
-
-        // print the array in a comma seperated value (list) or bullets
-        switch (array_display) {
-            case "ulist":
-                arrayRes.forEach(function (arrayVal) {
-                    res += "* " + arrayVal + " \n";
-                });
-                break;
-            case "olist":
-                arrayRes.forEach(function (arrayVal, i) {
-                    res += (i+1) + ". " + arrayVal + " \n";
-                });
-                break;
-            case "raw":
-                res = arrayRes.join(" ");
-                break;
-            default: //csv
-                res = arrayRes.join(", ");
-        }
-
-        // populate templateVariables
-        var templateVariables = {};
-        if (!isRow) {
-            templateVariables = {"$self": res, "$_self": val};
-        } else {
-            templateVariables = {
-                "$self": val.map(function (v) {
-                    return _getRowTemplateVariables(column.table, context, v);
-                })
-            };
-        }
-
-        if (sourceMarkdownPattern) {
-            res = _renderTemplate(
-                sourceMarkdownPattern,
-                templateVariables,
-                column.table.schema.catalog,
-                {templateEngine: sourceTemplateEngine}
-            );
-
-            if (res === null || res.trim() === '') {
-                res = column.table._getNullValue(context);
-            }
-        }
-        return {value: renderMarkdown(res, false), templateVariables: templateVariables};
     };
 
     // return empty list if page is empty
@@ -1252,7 +1111,7 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
     keyColName = mainTable.shortestKey[0].name;
     keyColNameEncoded = fixedEncodeURIComponent(mainTable.shortestKey[0].name);
     projection = "/c:=:" + baseTable + ":" + keyColNameEncoded +
-                 ";v:=" + self.sourceObject.aggregate +
+                 ";v:=" + aggFn +
                  "(" + currTable + ":" + (isRow ? "*" : fixedEncodeURIComponent(column.name)) + ")";
 
     // generate the base path in the following format:
@@ -1289,7 +1148,7 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
     }
 
     // turn the paths into requests
-    promises = keyValueRes.filters.map(function (f) {
+    promises = keyValueRes.filters.map((f) => {
         return http.get(baseUri + basePath + f.path + pathToCol + projection, config);
     });
 
@@ -1300,72 +1159,22 @@ PseudoColumn.prototype.getAggregatedValue = function (page, contextHeaderParams)
         return defer.promise;
     }
 
-    ConfigService.q.all(promises).then(function (response) {
-        var values = [],
-            result = [],
-            value, res, isHTML, arrayValues;
+    ConfigService.q.all(promises).then((response) => {
+        const result = [];
+        let values = [], value;
 
-        response.forEach(function (r) {
+        response.forEach((r) => {
             values = values.concat(r.data);
         });
 
         // make sure we're returning the result in the same order as input
-        page.tuples.forEach(function (t, index) {
+        page.tuples.forEach((t) => {
             // find the corresponding value in result
             value = values.find(function (v) {
                 return v.c == t.data[keyColName];
             });
 
-            // if given page is not valid (the key doesn't exist), or it returned empty result
-            if (!value || !value.v){
-                if (["cnt", "cnt_d"].indexOf(self.sourceObject.aggregate) !== -1) {
-                    result.push({isHTML: false, value: "0", templateVariables: { "$self": "0", "$_self": 0 }});
-                } else {
-                    result.push({isHTML: false, value: "", templateVariables: {}});
-                }
-                return;
-            }
-
-            // array formatting is different
-            if (self.sourceObject.aggregate.indexOf("array") === 0){
-                var arrValue = getArrayValue(value.v);
-                result.push({value: arrValue.value, isHTML: true, templateVariables: arrValue.templateVariables});
-                return;
-            }
-
-            var formatted, isHTML;
-
-            // cnt and cnt_d are special since they will generate integer always
-            if (["cnt", "cnt_d"].indexOf(self.sourceObject.aggregate) !== -1) {
-                isHTML = false;
-                formatted = _formatUtils.printInteger(value.v);
-            } else {
-                isHTML = (column.type.name === "markdown");
-                formatted = getFormattedValue(value.v);
-            }
-
-            var res = formatted;
-            var templateVariables = { "$self": formatted, "$_self": value.v };
-            if (sourceMarkdownPattern) {
-                isHTML = true;
-                res = _renderTemplate(
-                    sourceMarkdownPattern,
-                    templateVariables,
-                    column.table.schema.catalog,
-                    {templateEngine: sourceTemplateEngine}
-                );
-
-                if (res === null || res.trim() === '') {
-                    res = column.table._getNullValue(context);
-                    isHTML = false;
-                }
-            }
-
-            if (isHTML) {
-                res = renderMarkdown(res, false);
-            }
-
-            result.push({isHTML: isHTML, value: res, templateVariables: templateVariables});
+            result.push(processAggregateValue(value && value.v ? value.v : null, this, aggFn, isRow));
         });
 
         defer.resolve(result);
@@ -1420,6 +1229,147 @@ PseudoColumn.prototype._determineSortable = function () {
 };
 PseudoColumn.prototype._determineInputDisabled = function () {
     throw new Error("can not use this type of column in entry mode.");
+};
+/**
+ * If the first foreign key is outbound, this function will return the value that this pseudo-column represents.
+ *
+ * The first fk must be outbound because the path is generated from the table that the first fk refers to. This is
+ * useful for fetching the values of wait-fors in the entry contexts. Since the main record might not be available yet,
+ * we're starting from the fk table.
+ *
+ * @param {any} data the submission data
+ * @param {Record<string, any>} contextHeaderParams
+ */
+PseudoColumn.prototype.getFirstOutboundValue = function (data, contextHeaderParams) {
+    return new Promise((resolve, reject) => {
+        const encode = fixedEncodeURIComponent;
+        const location = this._baseReference.location;
+        const http = this._baseReference._server.http;
+        const firstFk = this.firstForeignKeyNode ? this.firstForeignKeyNode.nodeObject : null;
+        if (firstFk === undefined || firstFk.isInbound) {
+            $log.warn("This function should only be used when the first foreign key is outbound.");
+            resolve([]);
+            return;
+        }
+
+         // create the header
+        if (!contextHeaderParams || !isObject(contextHeaderParams)) {
+            contextHeaderParams = {"action": 'read/outbound'};
+        }
+        const config = {
+            headers: this.reference._generateContextHeader(contextHeaderParams, data.length)
+        };
+        // if agg is missing, we're getting the rows
+        let aggFn = this.sourceObject.aggregate ? this.sourceObject.aggregate : 'array_d';
+        const isRow = this.isEntityMode && _pseudoColEntityAggregateFns.indexOf(aggFn) !== -1;
+        const isAllOutbound = this.isPathColumn && this.hasPath && this.isUnique && !this.hasAggregate;
+
+        // the table that the path starts with
+        const baseTable = firstFk.key.table;
+        const baseTableKeyColumns = firstFk.key.colset.columns;
+
+        const currTableAlias = 'T';
+        const baseTableAlias = 'M';
+        let aliasUsedForProjectedValue = 'v', num = 1;
+        while (baseTableKeyColumns.some((c) => c.name === aliasUsedForProjectedValue)) {
+            aliasUsedForProjectedValue = 'v' + num++;
+        }
+
+        const column = this._baseCols[0];
+        let projection = '/' + baseTableKeyColumns.map((c) => {
+            return `${baseTableAlias}:${encode(c.name)}`;
+        }).join('');
+        projection += `;${aliasUsedForProjectedValue}:=${aggFn}(${currTableAlias}:${isRow ? '*' : encode(column.name)})`;
+
+        const lastFk = this.lastForeignKeyNode;
+        const baseUri = `${location.service}/catalog/${location.catalog}/attributegroup/`;
+        const basePath = `${baseTableAlias}:=${encode(baseTable.schema.name)}:${encode(baseTable.name)}/`;
+
+        // NOTE we're not allowing first hop filter or path filter for this case, so the following is assuming that
+        const pathToCol = this.sourceObjectWrapper.sourceObjectNodes.reduce((acc, sn, index) => {
+            // ignoring the first hop
+            if (index === 0) return '/';
+            // add alias to the last hop
+            const addAlias = sn === lastFk;
+            return acc + (index > 1 ? '/': '') + (addAlias ? `${currTableAlias}:=` : '') + sn.toString();
+        }, '');
+
+        // make sure just projection and base uri doesn't go over limit.
+        if ((basePath + pathToCol + projection).length >= URL_PATH_LENGTH_LIMIT) {
+            $log.warn("couldn't generate the requests because of url limitation");
+            resolve([]);
+            return;
+        }
+
+        // get the computed filters
+        const keyValueRes = generateKeyValueFilters(
+            baseTableKeyColumns,
+            data.map((d) => {
+                const res = {};
+                firstFk.colset.columns.forEach((c) => {
+                    res[firstFk.mapping.get(c).name] = d[c.name];
+                });
+                return res;
+            }),
+            baseTable.schema.catalog,
+            (basePath + pathToCol + projection).length,
+            baseTable.displayname.value
+        );
+
+        if (!keyValueRes.successful) {
+            $log.warn(keyValueRes.message);
+            resolve([]);
+            return;
+        }
+
+        // turn the paths into request
+        const promises = keyValueRes.filters.map((f) => {
+            return http.get(baseUri + basePath + f.path + pathToCol + projection, config);
+        });
+
+        // if adding any of the filters would go over url limit
+        if (promises.length === 0) {
+            $log.warn("couldn't generate the requests because of url limitation");
+            resolve([]);
+            return;
+        }
+
+        Promise.all(promises).then((response) => {
+            const result = [];
+            let values = [];
+            response.forEach((r) => {
+                values = values.concat(r.data);
+            });
+
+            data.forEach((d) => {
+                // find the value corresponding to the current tuple
+                const value = values.find((v) => {
+                   return baseTableKeyColumns.every((c) => {
+                       return v[c.name] === d[firstFk.mapping.getFromColumn(c).name];
+                   });
+                });
+
+                let presValue = processAggregateValue(value ? value[aliasUsedForProjectedValue] : null, this, aggFn, isRow);
+                // if it's alloutbound and agg fn was missing, we added array_d so we can send the request,
+                // so make sure the returned value is not actually array
+                if (isAllOutbound && !this.sourceObject.aggregate) {
+                    if (Array.isArray(presValue.templateVariables.$self)) {
+                        presValue.templateVariables.$self = presValue.templateVariables.$self[0];
+                    }
+                    if (Array.isArray(presValue.templateVariables.$_self)) {
+                        presValue.templateVariables.$_self = presValue.templateVariables.$_self[0];
+                    }
+                }
+
+                result.push(presValue);
+            });
+
+            resolve(result);
+
+        }).catch((err) => {
+            reject(ErrorService.responseToError(err));
+        });
+    });
 };
 
 /**
@@ -2906,6 +2856,28 @@ Object.defineProperty(AssetPseudoColumn.prototype, "displayImagePreview", {
             this._displayImagePreview = isObjectAndNotNull(currDisplay) &&  currDisplay.image_preview === true;
         }
         return this._displayImagePreview;
+    }
+});
+
+/**
+ * Returns the wait for list for this column.
+ * @member {ERMrest.Refernece} waitFor
+ * @memberof ERMrest.AssetPseudoColumn#
+ */
+Object.defineProperty(AssetPseudoColumn.prototype, "waitFor", {
+    get: function () {
+        if (this._waitFor === undefined) {
+            if (!_isEntryContext(this._context)) {
+                // calling the parent logic, which will get it from the source object
+                Object.getOwnPropertyDescriptor(AssetPseudoColumn.super, 'waitFor').get.call(this);
+            } else {
+                // in entry context, get it from the asset annotation.
+                const wfDef = this._annotation.wait_for;
+                var res = _processWaitForList(wfDef, this._baseReference, this._currentTable, this, this._mainTuple, `asset=\`${this.displayname.value}}\``);
+                this._waitFor = res.waitForList;
+            }
+        }
+        return this._waitFor;
     }
 });
 

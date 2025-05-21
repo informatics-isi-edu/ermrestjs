@@ -728,6 +728,7 @@ A new asset location may be specified via a pattern to induce a prospective asse
 Supported JSON payload patterns:
 
 - `{`... `"url_pattern": ` _pattern_ ...`}`: A desired upload location can be derived by [Pattern Expansion](#pattern-expansion) on _pattern_. This attribute is required for browser upload and if it is not specified the client will not provide the browser upload feature. See implementation notes below.
+- `{`... `"wait_for":` _waitForList_ ... `}`: List of column directive [`sourcekey`](#tag-2019-source-definitions)s that are used in `url_pattern`. Currently only paths that start with an outbound foreign-key are supported.
 - `{`... `"browser_upload": ` `false` ... `}`: If `url_pattern` is available and valid browser upload feature will be enabled. If you want to force disabling this feature set it to `false`.
 - `{`... `"filename_column": ` _column_ ...`}`: The _column_ stores the filename of the asset.
 - `{`... `"byte_count_column": ` _column_ ...`}`: The _column_ stores the file size in bytes of the asset. It SHOULD be an integer typed column.
@@ -737,6 +738,10 @@ Supported JSON payload patterns:
 - `{`... `"filename_ext_regexp": [` { _filename extension regexp_ [`,` _filename extension regexp_ ]\* } `]` ...`}`: This property specifies a set of _filename extension regexp_ for use by upload while populating the value of `filename_ext` property that will be available under the annotationed column object while writing the `url_pattern` value.
 - `{`... `"stored_filename_pattern": ` _pattern_ ...`}`: A preferred filename can be derived by [Pattern Expansion](#pattern-expansion) on _pattern_. This attribute allows for changing the `content-disposition` of the file uploaded to hatrac and the value stored in the filename column. See implementation notes below.
 - `{` ... `"display": {` _context_`:` _displayoption_ ...`}` ... `}`: Apply each _displayoption_ to the asset for any number of _context_ names. See [Context Names](#context-names) section for the list of supported _context_ names.
+
+Supported _waitForList_ pattern:
+
+- `[` ... _sourcekey_ `,` ... `]`: _sourcekey_ is the string literal that refers to the sources defined in the [`source-definitions` annotation](#tag-2019-source-definitions) of the table. Currently only paths that start with an outbound foreign-key are supported.
 
 Supported display _displayoption_ JSON payload patterns:
 

@@ -86,6 +86,7 @@ export default class HandlebarsService {
    *
    * @param  template       mustache template
    * @param  keyValues      key-value pairs
+   * @param  catalog        the catalog object
    * @param  ignoredColumns the columns that should be ignored (optional)
    * @return true if all the used keys have values
    */

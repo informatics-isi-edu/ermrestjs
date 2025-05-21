@@ -582,7 +582,7 @@ import HandlebarsService from '@isrd-isi-edu/ermrestjs/src/services/handlebars';
      *
      * @param  {string} columnOrder The object that defines the column/row order
      * @param  {ERMrest.Table} table
-     * @param  {Object} the extra options:
+     * @param  {Object=} options the extra options:
      *                  - allowNumOccurrences: to allow the specific frequency column_order
      * @return {Array=} If it's undefined, the column_order that is defined is not valid
      * @private
@@ -840,8 +840,8 @@ import HandlebarsService from '@isrd-isi-edu/ermrestjs/src/services/handlebars';
      * @param  {ERMrest.Table} table  the table object
      * @param  {string} context    current context
      * @param  {Object} data       the raw data
-     * @param  {Object} linkedData the raw data of foreignkeys
-     * @param  {ERMrest.Reference=} ref to avoid creating a new reference
+     * @param  {Object=} linkedData the raw data of foreignkeys
+     * @param  {ERMrest.Reference=} key the alternate key to use
      * @return {Object}
      */
     export function _getRowTemplateVariables(table, context, data, linkedData, key) {
@@ -1077,7 +1077,7 @@ import HandlebarsService from '@isrd-isi-edu/ermrestjs/src/services/handlebars';
      * @param  {String} context    Current context
      * @param  {object} data       Data for the table that this key is referring to.
      * @param  {boolean} addLink   whether the function should attach link or just the rowname.
-     * @return {Object}            an object with `caption`, and `reference` object which can be used for getting uri.
+     * @return an object with `caption`, and `reference` object which can be used for getting uri.
      */
     export function _generateRowPresentation(key, data, context, addLink) {
         var presentation = _generateRowLinkProperties(key, data, context);
@@ -1634,7 +1634,7 @@ import HandlebarsService from '@isrd-isi-edu/ermrestjs/src/services/handlebars';
          * @param  {Object} options Configuration options. Accepted parameters:
          * - `isMarkdown`: if this is true, we will not esacpe markdown characters
          * - `returnArray`: if this is true, it will return an array of strings.
-         * @return {string} A string represntation of array.
+         * @return {string|string[]} A string represntation of array.
          * @desc
          * Will generate a comma seperated value for an array. It will also change `null` and `""`
          * to their special presentation.
@@ -2161,7 +2161,7 @@ import HandlebarsService from '@isrd-isi-edu/ermrestjs/src/services/handlebars';
      * @param  {string} template - template to be rendered
      * @param  {object} keyValues - formatted key value pairs needed for the template
      * @param  {ERMrest.Catalog} catalog - the catalog that this value is for
-     * @param  {Array.<Object>=} options optioanl parameters
+     * @param  {any=} options optioanl parameters
      * @return {string} Returns a string produced as a result of templating using options.templateEngine or `Mustache` by default.
      */
     export function _renderTemplate(template, keyValues, catalog, options) {
@@ -2197,44 +2197,30 @@ import HandlebarsService from '@isrd-isi-edu/ermrestjs/src/services/handlebars';
     /**
      * A wrapper for {ERMrest._validateMustacheTemplate}
      * it will take care of adding formmatted and unformatted values.
-     * options.formmatted=true: to avoid formatting key values
      * options.ignoredColumns: list of columns that you want validator to ignore
      * options.templateEngine: "mustache" or "handlbars"
      *
      * @param  {ERMrest.Table} table
      * @param  {object} data
      * @param  {string} template
-     * @param  {string} context
+     * @param  {Catalog} catalog
      * @param  {Array.<string>=} ignoredColumns the columns that should be ignored (optional)
      * @return {boolean} True if the template is valid.
      */
-    export function _validateTemplate(template, data, linkedData, table, context, options) {
+    export function _validateTemplate(template, data, catalog, options) {
 
         var ignoredColumns;
         if (options !== undefined && Array.isArray(options.ignoredColumns)) {
             ignoredColumns = options.ignoredColumns;
         }
 
-        // to avoid computing data multiple times, or if we don't want the formatted values
-        // TODO: remove this from render template, change `data` to `keyValues` for consistency with _renderTemplate, and enforce keyValues be formatted, also remove context param
-        if (options === undefined || !options.formatted) {
-            // make sure to add formatted columns too.
-            if (ignoredColumns !== undefined) {
-                ignoredColumns.forEach(function (col) {
-                    ignoredColumns.push("_" + col);
-                });
-            }
-
-            data = _getFormattedKeyValues(table, context, data, linkedData);
-        }
-
-        if (_getTemplateEngine(options.templateEngine) === TEMPLATE_ENGINES.HANDLEBARS) {
+        if (_getTemplateEngine(options ? options.templateEngine : '') === TEMPLATE_ENGINES.HANDLEBARS) {
             // call the actual Handlebar validator
-            return HandlebarsService.validate(template, data, table.schema.catalog, ignoredColumns)
+            return HandlebarsService.validate(template, data, catalog, ignoredColumns)
         }
 
         // call the actual mustache validator
-        return _validateMustacheTemplate(template, data, table.schema.catalog, ignoredColumns);
+        return _validateMustacheTemplate(template, data, catalog, ignoredColumns);
     };
 
     /**

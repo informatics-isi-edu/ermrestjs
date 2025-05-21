@@ -3707,7 +3707,7 @@ import { getResponseHeader } from '@isrd-isi-edu/ermrestjs/js/http';
          * this should include
          * - requests: An array of the secondary request objects which inlcudes aggregates, entitysets, inline tables, and related tables.
          *   Depending on the type of request it can have different attibutes.
-         *   - for aggregate, entitysets, and uniquefilterd:
+         *   - for aggregate, entitysets, uniquefilterd, and outboundFirst (in entry):
          *     {column: ERMrest.ReferenceColumn, <type>: true, objects: [{index: integer, column: boolean, related: boolean, inline: boolean, citation: boolean}]
          *     where the type is aggregate`, `entity`, or `entityset`. Each object is capturing where in the page needs this pseudo-column.
          *   - for related and inline tables:
@@ -3731,15 +3731,18 @@ import { getResponseHeader } from '@isrd-isi-edu/ermrestjs/js/http';
 
             // VARIABLES:
             var columns = [], allOutBounds = [], requests = [], selfLinks = [];
-            var consideredUniqueFiltered = {}, consideredSets = {}, consideredOutbounds = {}, consideredAggregates = {}, consideredSelfLinks = {};
+            const consideredUniqueFiltered = {}, consideredSets = {}, consideredOutbounds = {}, consideredAggregates = {}, consideredSelfLinks = {};
+            const consideredEntryWaitFors = {};
 
-            var self = this;
-            var sds = self.table.sourceDefinitions;
+            const sds = this.table.sourceDefinitions;
 
             // in detailed, we want related and citation
-            var isDetailed = self._context === _contexts.DETAILED;
+            const isDetailed = this._context === _contexts.DETAILED;
+            // in entry, don't include waitfors in the activelist used for loading the page.
+            // the waitfors will be used in chaise instead prior to submission.
+            const isEntry = _isEntryContext(this._context);
 
-            var COLUMN_TYPE = "column", RELATED_TYPE = "related", CITATION_TYPE = "citation", INLINE_TYPE = "inline";
+            const COLUMN_TYPE = "column", RELATED_TYPE = "related",  CITATION_TYPE = "citation", INLINE_TYPE = "inline";
 
             // FUNCTIONS:
             var isInline = function (col) {
@@ -3763,6 +3766,16 @@ import { getResponseHeader } from '@isrd-isi-edu/ermrestjs/js/http';
                 // add index if available (not available in citation)
                 if (Number.isInteger(index)) {
                     obj.index = index;
+                }
+
+                if (isWaitFor && isEntry) {
+                    if (col.name in consideredEntryWaitFors) {
+                        requests[consideredEntryWaitFors[col.name]].objects.push(obj);
+                        return;
+                    }
+                    consideredEntryWaitFors[col.name] = requests.length;
+                    requests.push({firstOutbound: true, column: col, objects: [obj]});
+                    return;
                 }
 
                 // unique filtered
@@ -3837,27 +3850,25 @@ import { getResponseHeader } from '@isrd-isi-edu/ermrestjs/js/http';
                 });
             };
 
-
             // THE CODE STARTS HERE:
-
-            columns = self.generateColumnsList(tuple);
+            columns = this.generateColumnsList(tuple);
 
             // citation
-            if (isDetailed && self.citation) {
-                self.citation.waitFor.forEach(function (col) {
+            if (isDetailed && this.citation) {
+                this.citation.waitFor.forEach((col) => {
                     addColToActiveList(col, true, CITATION_TYPE);
                 });
             }
 
             // columns without aggregate
-            columns.forEach(function (col, i) {
+            columns.forEach((col, i) => {
                 if (!hasAggregate(col)) {
                     addInlineColumn(col, i);
                 }
             });
 
             // columns with aggregate
-            columns.forEach(function (col,i ) {
+            columns.forEach((col, i) => {
                 if (hasAggregate(col)) {
                     addInlineColumn(col, i);
                 }
@@ -3865,11 +3876,11 @@ import { getResponseHeader } from '@isrd-isi-edu/ermrestjs/js/http';
 
             // related tables
             if (isDetailed) {
-                self.generateRelatedList(tuple).forEach(function (rel, i) {
+                this.generateRelatedList(tuple).forEach((rel, i) => {
                     requests.push({related: true, index: i});
 
                     if (rel.pseudoColumn) {
-                        rel.pseudoColumn.waitFor.forEach(function (wf) {
+                        rel.pseudoColumn.waitFor.forEach((wf) => {
                             addColToActiveList(wf, true, RELATED_TYPE, i);
                         });
                     }
@@ -3877,10 +3888,10 @@ import { getResponseHeader } from '@isrd-isi-edu/ermrestjs/js/http';
             }
 
             //fkeys
-            sds.fkeys.forEach(function (fk) {
+            sds.fkeys.forEach((fk) => {
                 if (fk.name in consideredOutbounds) return;
                 consideredOutbounds[fk.name] = true;
-                allOutBounds.push(new ForeignKeyPseudoColumn(self, fk));
+                allOutBounds.push(new ForeignKeyPseudoColumn(this, fk));
             });
 
             this._activeList = {
