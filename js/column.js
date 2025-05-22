@@ -1284,7 +1284,7 @@ PseudoColumn.prototype.getFirstOutboundValue = function (data, contextHeaderPara
         const column = this._baseCols[0];
         let projection = '/' + baseTableKeyColumns.map((c) => {
             return `${baseTableAlias}:${encode(c.name)}`;
-        }).join('');
+        }).join(',');
         projection += `;${aliasUsedForProjectedValue}:=${aggFn}(${currTableAlias}:${isRow ? '*' : encode(column.name)})`;
 
         const lastFk = this.lastForeignKeyNode;
@@ -1321,6 +1321,7 @@ PseudoColumn.prototype.getFirstOutboundValue = function (data, contextHeaderPara
                     break;
                 }
             }
+            // ignore the row if any of the key values is null
             if (!hasNull) {
                 keyData.push(temp);
             }

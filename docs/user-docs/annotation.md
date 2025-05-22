@@ -751,7 +751,7 @@ Default heuristics:
 - The `2017 Asset` annotation explicitly indicates that the associated column is the asset location.
 - `url_pattern` MUST be specified for browser upload. If it is not specified or if it produces a null value, the browser upload will be disabled.
 - Column MUST be `text` typed. Otherwise the asset annotation will be ignored.
-- In addition to native columns, the following properties are also available under the annotated column object and can be referred in the _pattern_ defined in `url_pattern` e.g. `{{{_URI.md5_hex}}}` where `URI` is the annotated column (notice the [underscore before the column name](mustache-templating.md#raw-values)).
+- In addition to native columns and single-hop outbound foreign keys, the following properties are also available under the annotated column object and can be referred in the _pattern_ defined in `url_pattern` e.g. `{{{_URI.md5_hex}}}` where `URI` is the annotated column (notice the [underscore before the column name](mustache-templating.md#raw-values)).
   - `md5_hex` for hex
   - `md5_base64` for base64
   - `size` for size in bytes
@@ -760,6 +760,7 @@ Default heuristics:
   - `filename_basename` for the filename without the extension. Note: the following will be true `filename_basename + filename_ext = filename`
   - `filename_ext` for the file extension based on the filename. This value is derived based on the optionally defined `filename_ext_filter` and `filename_ext_regexp`. If these annotations are missing, the last part of the filename after the last dot will be returned (also includes the `.` e.g. `.png`).
     - If we cannot find matches, this property will return `null`. So make sure you're doing null checking while using this property (otherwise, the whole `url_pattern` might result in an empty string).
+- You may use `wait_for` to have access to data from other tables. Currently only paths that start with an outbound foreign-key are supported. For more information on how to access the `wait_for` values while writing the `url_pattern`, please refer to [this document](column-directive-template.md#column-directive-templating-variable-data-structure). For example if you define an all-outbound path called `all_outbound_fk_path`, you maye use `{{{all_outbound_fk_path.values.RID}}}` to access the RID value.
 - Nothing may be inferred without additional payload patterns present.
 
 Protocol-specific metadata retrieval MAY be applied once an asset location is known. How to present or reconcile contradictions in metadata found in multiple sources is beyond the scope of this specification.
