@@ -1237,6 +1237,12 @@ PseudoColumn.prototype._determineInputDisabled = function () {
  * useful for fetching the values of wait-fors in the entry contexts. Since the main record might not be available yet,
  * we're starting from the fk table.
  *
+ * Ideally this and getAggregatedValue should be merged, these are the differences:
+ * - for this function agg fn is not required.
+ * - this function requires the first fk to be outbound, while getAggregatedValue doesn't.
+ * - the generated path here ignores the first hop.
+ * - if the key value for any of the rows is null, this will only ignore that row (getAggregatedValue will just give up and return empty).
+ *
  * @param {any} data the submission data
  * @param {Record<string, any>} contextHeaderParams
  */
@@ -1302,15 +1308,26 @@ PseudoColumn.prototype.getFirstOutboundValue = function (data, contextHeaderPara
         }
 
         // get the computed filters
+        const keyData = [];
+        for (let rowIndex = 0; rowIndex < data.length; rowIndex++) {
+            const temp = {};
+            let hasNull = false;
+            for (let colIndex = 0; colIndex < firstFk.colset.columns.length; colIndex++) {
+                const c = firstFk.colset.columns[colIndex];
+                if (isDefinedAndNotNull(data[rowIndex][c.name])) {
+                    temp[firstFk.mapping.get(c).name] = data[rowIndex][c.name];
+                } else {
+                    hasNull = true;
+                    break;
+                }
+            }
+            if (!hasNull) {
+                keyData.push(temp);
+            }
+        }
         const keyValueRes = generateKeyValueFilters(
             baseTableKeyColumns,
-            data.map((d) => {
-                const res = {};
-                firstFk.colset.columns.forEach((c) => {
-                    res[firstFk.mapping.get(c).name] = d[c.name];
-                });
-                return res;
-            }),
+            keyData,
             baseTable.schema.catalog,
             (basePath + pathToCol + projection).length,
             baseTable.displayname.value
