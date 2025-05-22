@@ -1251,9 +1251,17 @@ PseudoColumn.prototype.getFirstOutboundValue = function (data, contextHeaderPara
         const encode = fixedEncodeURIComponent;
         const location = this._baseReference.location;
         const http = this._baseReference._server.http;
+
+        // these are the same checks as the processWaitFor in the entry context. since that's the only usecase of this for now.
+        const sw = this.sourceObjectWrapper;
         const firstFk = this.firstForeignKeyNode ? this.firstForeignKeyNode.nodeObject : null;
-        if (firstFk === undefined || firstFk.isInbound) {
+        if (firstFk === undefined || this.firstForeignKeyNode.isInbound) {
             $log.warn("This function should only be used when the first foreign key is outbound.");
+            resolve([]);
+            return;
+        }
+        if (sw.foreignKeyPathLength < 2 || sw.hasPrefix || (sw.isFiltered && sw.filterProps && sw.filterProps.hasRootFilter)) {
+            $log.warn("This function only support paths that start with outbound, have no filter or prefix, and at least 2 fk hops.");
             resolve([]);
             return;
         }
