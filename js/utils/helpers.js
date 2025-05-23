@@ -861,20 +861,23 @@ import HandlebarsService from '@isrd-isi-edu/ermrestjs/src/services/handlebars';
      * Given the available linked data, generate the uniqueId for the row this data represents given the shortest key of the table
      *
      * @param {ERMrest.Key[]} tableShortestKey shortest key from the table the linkedData is for
-     * @param {Object} linkedData data to use to generate the unique id
+     * @param {Object} data data to use to generate the unique id
      * @returns string | null - unique id for the row the linkedData represents
      */
-    export function _generateTupleUniqueId(tableShortestKey, linkedData) {
-        var keyName, hasNull = false, _uniqueId = "";
+    export function _generateTupleUniqueId(tableShortestKey, data) {
+        let hasNull = false, _uniqueId = "";
 
         for (var i = 0; i < tableShortestKey.length; i++) {
-            keyName = tableShortestKey[i].name;
-            if (linkedData[keyName] == null) {
+            const col = tableShortestKey[i];
+            const keyName = col.name;
+            if (data[keyName] == null) {
                 hasNull = true;
                 break;
             }
             if (i !== 0) _uniqueId += "_";
-            _uniqueId += linkedData[keyName];
+            const isJSON = col.type.name === 'json' || col.type.name === 'jsonb';
+            // if the column is JSON, we need to stringify it otherwise it will print [object Object]
+            _uniqueId += isJSON ? JSON.stringify(data[keyName], undefined, 0) : data[keyName];
         }
 
         if (hasNull) {

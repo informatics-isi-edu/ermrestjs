@@ -3698,7 +3698,7 @@ FacetColumn.prototype = {
      */
     getChoiceDisplaynames: function (contextHeaderParams) {
         var defer = ConfigService.q.defer(), filters =  [], self = this;
-        var table = this._column.table, columnName = this._column.name;
+        var table = this._column.table, column = this._column, columnName = this._column.name;
         // whether the output must be displayed as markdown or not
         var isHTML = (_HTMLColumnType.indexOf(this._column.type.name) != -1);
 
@@ -3716,10 +3716,23 @@ FacetColumn.prototype = {
         };
 
         var convertChoiceFilter = function (f) {
+            let displayedValue = f.toString();
+            if (column.type.name === 'json' || column.type.name === 'jsonb') {
+                /**
+                 * If the value is already a valid string representation of a JSON object,
+                 * return it as is. otherwise use the toString which will turn the object into a string.
+                 */
+                try {
+                    void JSON.parse(f.term);
+                    displayedValue = f.term;
+                } catch {
+                    /* empty */
+                }
+            }
             return {
                 uniqueId: f.term,
                 displayname: {
-                    value: isHTML ? renderMarkdown(f.toString(), true) : f.toString(),
+                    value: isHTML ? renderMarkdown(displayedValue, true) : displayedValue,
                     isHTML: isHTML
                 },
                 tuple: null
@@ -3856,28 +3869,16 @@ FacetColumn.prototype = {
                     }
                     hasJSONNull[f.facetFilterKey] = true;
                 } else {
-
-                    /*
-                     * We should make sure the JSON value that we are passing
-                     * is valid, if we cannot parse it therefore it should be
-                     * treated as string literal. For example if the term is
-                     * just "test" then the JSON.parse will throw an error and
-                     * stringifying it will turn it into "\"test\"" which is
-                     * the valid JSON value.
+                    let value = f.term;
+                    /**
+                     * If the value is already a valid string representation of a JSON object,
+                     * return it as is. otherwise turn it into a string.
                      */
-                    let value;
-                     if (typeof f.term === "string") {
-                         value = JSON.stringify(f.term);
-                     } else {
-                         try {
-                             var json = JSON.parse(f.term);
-                             value = f.term;
-                         } catch(exp) {
-                             // if throws an error, then it should be treated as
-                             // string and not JSON object.
-                             value = JSON.stringify(f.term);
-                         }
-                     }
+                    try {
+                        void JSON.parse(f.term);
+                    } catch(exp) {
+                        value = JSON.stringify(f.term);
+                    }
 
                     res[f.facetFilterKey].push(value);
                 }
@@ -4109,7 +4110,7 @@ FacetColumn.prototype = {
 
     /**
      * Given a term, it will remove any choice filter with that term (if any).
-     * @param  {String[]|int[]} terms array of terms
+     * @param  {Array<any>} terms array of terms
      * @return {ERMrest.Reference} the reference with the new filter
      */
     removeChoiceFilters: function (terms) {
