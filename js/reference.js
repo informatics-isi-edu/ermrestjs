@@ -3709,7 +3709,7 @@ import { getResponseHeader } from '@isrd-isi-edu/ermrestjs/js/http';
          *   Depending on the type of request it can have different attibutes.
          *   - for aggregate, entitysets, uniquefilterd, and outboundFirst (in entry):
          *     {column: ERMrest.ReferenceColumn, <type>: true, objects: [{index: integer, column: boolean, related: boolean, inline: boolean, citation: boolean}]
-         *     where the type is aggregate`, `entity`, or `entityset`. Each object is capturing where in the page needs this pseudo-column.
+         *     where the type is aggregate`, `entity`, `entityset`, or `firstOutbound`. Each object is capturing where in the page needs this pseudo-column.
          *   - for related and inline tables:
          *     {<type>: true, index: integer}
          *     where the type is `inline` or `related`.

@@ -2901,6 +2901,8 @@ Object.defineProperty(AssetPseudoColumn.prototype, "waitFor", {
                 const wfDef = this._annotation.wait_for;
                 var res = _processWaitForList(wfDef, this._baseReference, this._currentTable, this, this._mainTuple, `asset=\`${this.displayname.value}}\``);
                 this._waitFor = res.waitForList;
+                this._hasWaitFor = res.hasWaitFor;
+                this._hasWaitForAggregate = res.hasWaitForAggregate;
             }
         }
         return this._waitFor;

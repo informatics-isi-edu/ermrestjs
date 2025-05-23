@@ -17,7 +17,7 @@ exports.execute = function (options) {
     var searchURL = chaiseURL + "/search";
     var recordsetURL = chaiseURL + "/recordset";
 
-    var appLinkFn = function (tag, location) {
+    const appLinkFn = function (tag, location) {
         var url;
         switch (tag) {
             case "tag:isrd.isi.edu,2016:chaise:record":
@@ -45,17 +45,18 @@ exports.execute = function (options) {
         return url;
     };
 
-    var catchError = function (done) {
+    const catchError = function (done) {
         return function (err) {
             done.fail(err);
         };
     };
 
-    var getRecordURL = function (table, keyCol, keyValue) {
+    const getRecordURL = function (table, keyCol, keyValue) {
         return recordURL + "/" + schemaName + ":" + table + "/" + "RID=" + utils.findEntityRID(options, schemaName, table, keyCol, keyValue);
     };
 
-    var mainRef, mainRefCompactPage, mainRefCompact, mainRefDetailed, compactColumns, detailedColumns, compactActiveList, detailedActiveList;
+    let mainRef, mainRefCompactPage, mainRefCompact, mainRefDetailed, mainRefCreate;
+    let compactColumns, detailedColumns, createColumns, compactActiveList, detailedActiveList, createActiveList;
     var mainEmptFkRefCompact, mainEmptyFkPage;
     var columnMapping = {
         "self_link_rowname": "6LvAfWRWZJUaupAC4ebm4A",
@@ -100,14 +101,16 @@ exports.execute = function (options) {
         "entity_set_i5": "F9KkhBV_Qkaw20GzvIMAjQ",
         "entity_set_i6": "FZPDS1yFBJ1mdyr_Q",
         "entity_set_i7": "VEu1Crxy0bkExWQzrm6vvA",
-        "all_outbound_entity_o1_o1_o1": "nTVhVgmnwDAdAScCUP5qwA"
+        "all_outbound_entity_o1_o1_o1": "nTVhVgmnwDAdAScCUP5qwA",
+        "path_to_outbound1_inbound1_array_d": "foYSV-qV86Kqb62X9sZlbQ",
     };
     var reverseColumnMapping = Object.keys(columnMapping).reduce(function (ret, key) {
         ret[columnMapping[key]] = key;
         return ret;
     }, {});
 
-    var expectedCompactColumns, expectedDetailedColumns, expectedCompactActiveList, expectedDetaledActiveList;
+    let expectedCompactColumns, expectedDetailedColumns;
+    let expectedCompactActiveList, expectedDetailedActiveList, expectedCreateActiveList;
 
     describe("active list related APIs, ", function () {
         beforeAll(function (done) {
@@ -122,6 +125,9 @@ exports.execute = function (options) {
 
                 mainRefDetailed = response.contextualize.detailed;
                 detailedColumns = mainRefDetailed.columns;
+
+                mainRefCreate = response.contextualize.entryCreate;
+                createColumns = mainRefCreate.columns;
 
                 return options.ermRest.resolve(mainEmptyFkEntityUri, {cid: "test"});
             }).then(function (response2) {
@@ -147,6 +153,30 @@ exports.execute = function (options) {
 
             it ("should return the proper wait_fors (detailed).", function () {
                 testColumnList(detailedColumns, expectedDetailedColumns);
+            });
+
+            // TODO add a test case for this too
+            it ("should return the proper wait_fors (entry).", function () {
+                const expectedCreateColumns = Array.from({length: 9}, (_, i) => {
+                    let waitFor = [];
+
+                    if (i === 7) { // asset_col_1
+                        waitFor = ["all_outbound_entity_o1_o1"];
+                    } else if (i === 8) { // asset_col_2
+                        waitFor = [
+                            "all_outbound_entity_o1_o1", "all_outbound_entity_o3_o1_o1",
+                            "path_to_outbound1_inbound1_array_d"
+                        ];
+                    }
+
+                    return {
+                        title: `index=${i}`,
+                        waitFor,
+                        hasWaitFor: waitFor.length > 0,
+                    };
+                });
+
+                testColumnList(createColumns, expectedCreateColumns);
             });
         });
 
@@ -197,6 +227,7 @@ exports.execute = function (options) {
             beforeAll(function () {
                 compactActiveList = mainRefCompact.activeList;
                 detailedActiveList = mainRefDetailed.activeList;
+                createActiveList = mainRefCreate.activeList;
             });
 
             describe("for compact, ", function () {
@@ -224,6 +255,20 @@ exports.execute = function (options) {
 
                 it ("should return the selfLinks properly.", function () {
                     testNameList(detailedActiveList.selfLinks, expectedDetailedActiveList.selfLinks);
+                });
+            });
+
+            describe("for entry/create, ", function () {
+                it ("should return the requests list properly.", function () {
+                    testRequestList(createActiveList.requests, expectedCreateActiveList.requests);
+                });
+
+                it ("should return the allOutBounds properly.", function () {
+                    testNameList(createActiveList.allOutBounds, expectedCreateActiveList.allOutBounds);
+                });
+
+                it ("should return the selfLinks properly.", function () {
+                    testNameList(createActiveList.selfLinks, expectedCreateActiveList.selfLinks);
                 });
             });
         });
@@ -368,11 +413,12 @@ exports.execute = function (options) {
             } else if (req.related) {
                 expect(req.related).toBe(expReq.related, "related missmatch for index=" + reqIndex);
             } else {
-                // entityset/aggregate
+                // entityset/aggregate/firstOutbound
                 var message = " for index= " + reqIndex + "(expected column= `"+ reverseColumnMapping[req.column.name] +"`)";
                 expect(req.column.name).toBe(columnMapping[expReq.column], "column missmatch" + message);
                 expect(req.entityset).toBe(expReq.entityset, "entityset missmatch" + message);
                 expect(req.aggregate).toBe(expReq.aggregate, "aggregate missmatch" + message);
+                expect(req.firstOutbound).toBe(expReq.firstOutbound, "firstOutbound missmatch" + message);
                 expect(req.objects.length).toBe(expReq.objects.length, "objects length missmatch" + message);
 
 
@@ -559,6 +605,18 @@ exports.execute = function (options) {
                 "waitFor": ["max_i2"],
                 "hasWaitFor": true,
                 "value": ""
+            },
+            {
+                "title": "asset_col_1",
+                "waitFor": ["max_i2"],
+                "hasWaitFor": true,
+                "value": ""
+            },
+            {
+                "title": "asset_col_2",
+                "waitFor": ["max_i2", "array_d_entity_i1"],
+                "hasWaitFor": true,
+                "value": ""
             }
         ];
 
@@ -736,6 +794,18 @@ exports.execute = function (options) {
                 "waitFor": ["max_i2", "entity_set_i3"],
                 "hasWaitFor": true,
                 "value": ""
+            },
+            {
+                "title": "asset_col_1",
+                "waitFor": ["max_i2", "entity_set_i3"],
+                "hasWaitFor": true,
+                "value": ""
+            },
+            {
+                "title": "asset_col_2",
+                "waitFor": ["max_i2", "array_d_entity_i1"],
+                "hasWaitFor": true,
+                "value": ""
             }
         ];
 
@@ -774,7 +844,8 @@ exports.execute = function (options) {
                     "objects": [
                         {"index": 8, "isWaitFor": true, "column": true},
                         {"index": 13, "isWaitFor": false, "column": true},
-                        {"index": 24, "isWaitFor": true, "column": true}
+                        {"index": 24, "isWaitFor": true, "column": true},
+                        {"index": 27, "isWaitFor": true, "column": true}
                     ]
                 },
                 {
@@ -814,7 +885,9 @@ exports.execute = function (options) {
                     "objects": [
                         {"index": 16, "isWaitFor": true, "column": true},
                         {"index": 24, "isWaitFor": false, "column": true},
-                        {"index": 25, "isWaitFor": true, "column": true}
+                        {"index": 25, "isWaitFor": true, "column": true},
+                        {"index": 26, "isWaitFor": true, "column": true},
+                        {"index": 27, "isWaitFor": true, "column": true}
                     ]
                 },
                 {
@@ -945,7 +1018,8 @@ exports.execute = function (options) {
                     "objects": [
                         {"index": 10, "isWaitFor": true, "column": true},
                         {"index": 16, "isWaitFor": false, "column": true},
-                        {"index": 27, "isWaitFor": true, "column": true}
+                        {"index": 27, "isWaitFor": true, "column": true},
+                        {"index": 30, "isWaitFor": true, "column": true},
                     ]
                 },
                 {
@@ -985,7 +1059,9 @@ exports.execute = function (options) {
                     "objects": [
                         {"index": 19, "isWaitFor": true, "column": true},
                         {"index": 27, "isWaitFor": false, "column": true},
-                        {"index": 28, "isWaitFor": true, "column": true}
+                        {"index": 28, "isWaitFor": true, "column": true},
+                        {"index": 29, "isWaitFor": true, "column": true},
+                        {"index": 30, "isWaitFor": true, "column": true}
                     ]
                 },
                 {
@@ -1037,7 +1113,8 @@ exports.execute = function (options) {
                     "column": "entity_set_i3",
                     "entityset": true,
                     "objects": [
-                        {"column": true, "isWaitFor": true, "index": 28}
+                        {"column": true, "isWaitFor": true, "index": 28},
+                        {"column": true, "isWaitFor": true, "index": 29}
                     ]
                 },
                 {
@@ -1071,6 +1148,40 @@ exports.execute = function (options) {
             selfLinks: [
                 "self_link_rowname", "self_link_id"
             ]
+        };
+
+
+        expectedCreateActiveList = {
+            requests: [
+                {
+                    "column": "all_outbound_entity_o1_o1",
+                    "firstOutbound": true,
+                    "objects": [
+                        { "index": 7, "isWaitFor": true, "column": true},
+                        { "index": 8, "isWaitFor": true, "column": true},
+                    ]
+                },
+                {
+                    "column": "all_outbound_entity_o3_o1_o1",
+                    "firstOutbound": true,
+                    "objects": [
+                        { "index": 8, "isWaitFor": true, "column": true},
+                    ]
+                },
+                {
+                    "column": "path_to_outbound1_inbound1_array_d",
+                    "firstOutbound": true,
+                    "objects": [
+                        { "index": 8, "isWaitFor": true, "column": true},
+                    ]
+                }
+            ],
+            allOutBounds: [
+                "outbound_entity_o1", "outbound_entity_o2",
+                "tLQ8i6ghoS6sodD7G8V7kQ", // not defined, so it's the fk.name (main_fk3)
+                "outbound_entity_o3"
+            ],
+            selfLinks: []
         };
     }
 };
