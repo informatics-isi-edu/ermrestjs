@@ -10,6 +10,8 @@ This document summarizes the key concepts of Handlebars that are relevant to Der
   - [Restriction in the adjacency of opening and closing tags](#restriction-in-the-adjacency-of-opening-and-closing-tags)
 - [Usage](#usage)
   - [Handlebars Paths](#handlebars-paths)
+  - [Raw values](#raw-values)
+  - [Foreign Key Values](#foreign-key-values)
   - [Automatic null detection](#automatic-null-detection)
   - [Accessing current context](#accessing-current-context)
   - [HTML-escaping](#html-escaping)
@@ -158,12 +160,33 @@ This makes it possible to use Handlebars templates with more raw JSON objects.
 
 Nested handlebars paths can also include `../` segments, which evaluate their paths against a parent context.
 
+For example, with the following context:
+```json
+{
+  "permalink": "https://example.com/post/1",
+  "comments": [
+    {
+      "id": "c1",
+      "title": "comment 1",
+      "body": "I liked it."
+    },
+    {
+      "id": "c2",
+      "title": "comment 2",
+      "body": "Meh."
+    }
+  ]
+}
+```
+
+You could do:
 ```
 {{#each comments}}
   [{{title}}](/posts/{{../permalink}}#{{id}})
   {{body}}
 {{/each}}
 ```
+
 
 Even though the link is printed while in the context of a comment, it can still go back to the main context (the post) to retrieve its permalink.
 The exact value that `../` will resolve to varies based on the helper that is calling the block. Using `../` is only necessary when context changes, so children of helpers such as `each` would require the use of `../` while children of helpers such as `if` do not.
@@ -186,6 +209,47 @@ In this example, all of the above reference the same `permalink` value even thou
 <p>{{./name}} or {{this/name}} or {{this.name}}</p> or {{this.[name with a space]}}
 ```
 Any of the above would cause the name field in the current context to be used rather than a helper of the same name.
+
+### Raw values
+
+By default ERMrestJS returns formatted values for a column by using `{{{COLUMN_NAME}}}`. If you need to access the raw values returned by ERMrest you should prepend the column name with an underscore **"_"** in the template.
+
+```sh
+# {{{_COUMN_NAME}}}
+
+{{{_user}}}
+```
+
+In case of `jsonb` columns, `{{{col}}}` will return the string representation of the value, while `{{{_col}}}` can be used to access the raw value of the column. This will allow you to access the fields in the jsonb value. For instance if the jsonb value is `{"name": 1234}`, then you can use `{{{_col.name}}}` to access the `name` field. While accessing the raw jsonb column, we don't allow you to access the "formatted" values and the returned value is the raw field value. In the example above, `{{{_col.name}}}` will return "1234" and not "1,234".
+
+### Foreign Key Values
+
+You can access table's outbound foreign key data using `$fkeys` variable. To do so, you can use the constraint name of the foreign key. For instance having `["schema", "constraint"]` as schema-constraint pair for the foreign key, you can use `$fkey_schema_constraint` (`$fkeys.schema.constraint` syntax is still supported but it's deprecated) to access its attributes. The following are available attributes for foreign keys:
+
+1. `values`: An object containing values of the table that the foreign key refers to. Both formatted and unformatted column values will be available here. For instance `$fkey_schema_const.values.col1` will give you the formatted value for the `col1` and `$fkey_schema_const.values._col1` the unformatted.
+2. `rowName`: Row-name of the foreign key.
+3. `uri.detailed`: a uri to the foreign key in `detailed` context (record app).
+
+```
+# Create a link to Foreign key:
+
+{{#with $fkey_schema_constraint}}
+  [{{rowName}}]({{{uri.detailed}}})
+{{/with}}
+
+# Access column values of a foreign key:
+
+{{{$fkey_schema_constraint.values.col1}}} - {{{$fkey_schema_constraint.values.col2}}}
+```
+The current implementation of `$fkeys` has the following limitations:
+
+- Using $fkeys you can only access data from tables that are one level away from the current table. This can cause problem when you are using $fkeys in your `row_markdown_pattern` annotation. Let's say the following is the ERD of your database.
+
+  ![fkey example](https://github.com/informatics-isi-edu/ermrestjs/raw/master/docs/resources/fkeys-example-erd.png)
+
+  And you have defined the `row_markdown_pattern` of table A as `{{{$fkey_schema_fk1.values.term}}}`. If you navigate to record app for any records of A, the rowname will be displayed as you expect it. But if you go to the table C, the rowname of A won't be as you expected since we don't have access to the table B's data.
+   Therefore it's advised to use `$fkey` only for the `column-display` annotation (or any other annotation that is controlling data for the same table).
+
 
 ### Automatic null detection
 

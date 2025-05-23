@@ -319,32 +319,40 @@
                                 "id"
                             ],
                             "aggregate": "array"
+                        },
+                        {
+                            "source": [
+                                {"outbound": ["pseudo_column_schema", "main_fk2"]},
+                                {"inbound": ["pseudo_column_schema", "outbound_2_inbound_1_fk1"]},
+                                "id"
+                            ],
+                            "aggregate": "min"
                         }
                     ],
                     "entry/create": "detailed",
                     "entry/edit": [
                         "main_table_id_col",
                         {
-                            "source": [{"outbound": ["pseudo_column_schema", "main_fk2"]}, "id"], 
-                            "markdown_name": "main fk2 dropdown", 
+                            "source": [{"outbound": ["pseudo_column_schema", "main_fk2"]}, "id"],
+                            "markdown_name": "main fk2 dropdown",
                             "comment": "main fk2 cm dropdown display"
                         },
                         {
-                            "source": [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "id"], 
-                            "markdown_name": "main fk dropdown", 
+                            "source": [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "id"],
+                            "markdown_name": "main fk dropdown",
                             "comment": "main fk cm dropdown display"
                         },
                         {
-                            "source": [{"outbound": ["pseudo_column_schema", "main_fk3"]}, "id"], 
-                            "markdown_name": "main fk3 popup", 
+                            "source": [{"outbound": ["pseudo_column_schema", "main_fk3"]}, "id"],
+                            "markdown_name": "main fk3 popup",
                             "comment": "main fk3 cm override popup display",
                             "display": {
                                 "selector_ux_mode": "facet-search-popup"
                             }
                         },
                         {
-                            "source": [{"outbound": ["pseudo_column_schema", "main_fk4"]}, "id"], 
-                            "markdown_name": "main fk4 popup", 
+                            "source": [{"outbound": ["pseudo_column_schema", "main_fk4"]}, "id"],
+                            "markdown_name": "main fk4 popup",
                             "comment": "main fk4 cm default popup display"
                         }
                     ],
@@ -633,7 +641,7 @@
                     },
                     "entry/edit": {
                         "selector_ux_mode": "simple-search-dropdown"
-                    }       
+                    }
                 }
             }
         },

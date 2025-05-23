@@ -42,7 +42,7 @@ import {
 } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
 
 // legacy
-import { generateKeyValueFilters, renameKey, _renderTemplate } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
+import { generateKeyValueFilters, renameKey, _renderTemplate, _isEntryContext } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
 import { _createPseudoColumn } from '@isrd-isi-edu/ermrestjs/js/column';
 import { Reference } from '@isrd-isi-edu/ermrestjs/js/reference';
 import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/parser';
@@ -769,6 +769,28 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
 
                 if (pc.isPathColumn && pc.hasAggregate) {
                     hasWaitForAggregate = true;
+                }
+
+                // in entry context, only paths that start with outbound are allowed
+                if (_isEntryContext(baseReference._context)) {
+                    // TODO I'm assuming that this is called for the assets
+                    if (sd.foreignKeyPathLength < 2) {
+                        // there's no need for warning in this case.
+                        return;
+                    }
+
+                    if (sd.hasPrefix) {
+                        $log.warn(errorMessage + 'path prefix is not allowed in entry context');
+                        return;
+                    }
+                    if (sd.isFiltered && sd.filterProps && sd.filterProps.hasRootFilter) {
+                        $log.warn(errorMessage + 'filter on root is not allowed in entry context');
+                        return;
+                    }
+                    if (sd.firstForeignKeyNode.isInbound) {
+                        $log.warn(errorMessage + 'first hop must be outbound in entry context');
+                        return;
+                    }
                 }
 
                 wfList.push(pc);

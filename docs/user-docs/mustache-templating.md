@@ -11,8 +11,8 @@ The Mustache template format can be understood [here](https://github.com/janl/mu
     - [Usage](#usage)
     - [Raw Values](#raw-values)
     - [Foreign Key Values](#foreign-key-values)
-      - [JSON](#json)
-      - [Array](#array)
+    - [JSON](#json)
+    - [Array](#array)
     - [Encoding variables for URL manipulation](#encoding-variables-for-url-manipulation)
     - [Escaping Content](#escaping-content)
   - [Examples](#examples)
@@ -76,7 +76,7 @@ The current implementation of `$fkeys` has the following limitations:
    Therefore it's advised to use `$fkey` only for the `column-display` annotation (or any other annotation that is controlling data for the same table).
 
 
-#### JSON
+### JSON
 To access inner properties of a JSON column just use Mustache block scope.
 
 ```
@@ -88,7 +88,7 @@ To access inner properties of a JSON column just use Mustache block scope.
 
 **NOTE**: Internal properties of a JSON column don't require underscore to be prepended.
 
-#### Array
+### Array
 
 To access an array column, use the Mustache block scope for the column and access the value with a `.`. The scope works as an iterator if the value is an array.
 

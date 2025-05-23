@@ -52,8 +52,9 @@ const utils = require('./../../../utils/utilities.js');
  * 20 (same as 8 ending with timestamp_col, agg array_d, scalar)
  * 21 (has lots of rows)
  * 24 (main -> outbound_2, outbound_2_inbound_1, entity)
- * 28 (main -> inbound_1 -> inbound_1_outbound_1 -> inbound_1_outbound_1_outbound_1, col, agg array)
+ * 28 (main <- inbound_1 -> inbound_1_outbound_1 -> inbound_1_outbound_1_outbound_1, col, agg array)
  * 29 (aggregate with filter)
+ * 30 (same as 24, agg min)
  *
  * For entry:
  * 0: main_table_id_col
@@ -97,6 +98,12 @@ exports.execute = function (options) {
     var viewerURL = chaiseURL + '/viewer';
     var searchURL = chaiseURL + '/search';
     var recordsetURL = chaiseURL + '/recordset';
+
+    const catchError = function (done) {
+      return function (err) {
+        done.fail(err);
+      };
+    };
 
     var appLinkFn = function (tag, location) {
       var url;
@@ -160,9 +167,10 @@ exports.execute = function (options) {
       '$virtual-column-1-1',
       'rxU1VoEIaH0rnNoNVr0fwA',
       'up2zcsXMZsWvCSiWNXt2Kg',
+      'u2ZKnWX7hWq_KuPYF53ZhQ',
     ];
 
-    var detailedPseudoColumnIndices = [4, 5, 6, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 24, 25, 28, 29];
+    var detailedPseudoColumnIndices = [4, 5, 6, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 24, 25, 28, 29, 30];
 
     var detailedColumnTypes = [
       '',
@@ -364,7 +372,7 @@ exports.execute = function (options) {
       });
 
       it('should create the correct columns for valid list of sources.', function () {
-        expect(mainRefDetailed.columns.length).toBe(30, 'length missmatch');
+        expect(mainRefDetailed.columns.length).toBe(31, 'length missmatch');
         checkReferenceColumns([
           {
             ref: mainRefDetailed,
@@ -447,6 +455,7 @@ exports.execute = function (options) {
                 },
                 'id',
               ],
+              [{ outbound: ['pseudo_column_schema', 'main_fk2'] }, { inbound: ['pseudo_column_schema', 'outbound_2_inbound_1_fk1'] }, 'id'],
             ],
           },
         ]);
@@ -951,6 +960,7 @@ exports.execute = function (options) {
             'main',
             'inbound_1_outbound_1_outbound_1',
             'inbound_2',
+            'outbound_2_inbound_1'
           ]);
         });
       });
@@ -1039,6 +1049,7 @@ exports.execute = function (options) {
             },
             'id',
           ], // 29
+          [{ o: ['pseudo_column_schema', 'main_fk2'] }, { i: ['pseudo_column_schema', 'outbound_2_inbound_1_fk1'] }, 'id'] // 30
         ];
         it('should return the data source of the pseudo-column.', function () {
           detailedColsWTuple.forEach(function (col, index) {
@@ -1320,6 +1331,105 @@ exports.execute = function (options) {
               console.log(e);
               done.fail();
             });
+        });
+      });
+
+      describe('getFirstOutboundValue', function () {
+
+        it ('should return an empty array if the first fk is not outbound.', (done) => {
+          detailedColsWTuple[15].getFirstOutboundValue([{'main_table_id_col': '01'}]).then((res) => {
+            expect(res).toEqual([]);
+            done()
+          }).catch(catchError(done));
+        });
+
+        it ('should handle all-outbound paths without aggregates.', (done) => {
+          const data = [{'main_table_id_col': '1', 'fk1': '01'}, {'main_table_id_col': '2', 'fk1': '10'}]
+          detailedColsWTuple[5].getFirstOutboundValue(data).then((res) => {
+            expect(res.length).toBe(2);
+
+            expect(res[0].templateVariables.$self).toBeDefined();
+            let val = res[0].templateVariables.$self;
+            expect(val.rowName).toBe('01');
+            expect(val.values.col).toBe('01');
+
+            expect(res[1].templateVariables.$self).toBeDefined();
+            val = res[1].templateVariables.$self;
+            expect(val.rowName).toBe('10');
+            expect(val.values.col).toBe('10');
+
+            done();
+          }).catch(catchError(done));
+        });
+
+        it ('should handle any path that starts with outbound and use array_d as default.', (done) => {
+          const data = [{'main_table_id_col': '1', 'fk2': '01'}, {'main_table_id_col': '2', 'fk2': '02'}]
+          detailedColsWTuple[24].getFirstOutboundValue(data).then((res) => {
+            expect(res.length).toBe(2);
+
+            expect(res[0].templateVariables.$self).toBeDefined();
+            let val = res[0].templateVariables.$self[0];
+            expect(val.rowName).toBe('1');
+            expect(val.values.id).toBe('1');
+
+            expect(res[1].templateVariables.$self).toBeDefined();
+            val = res[1].templateVariables.$self[0];
+            expect(val.rowName).toBe('2');
+            expect(val.values.id).toBe('2');
+
+            done();
+          }).catch(catchError(done));
+        });
+
+        it ('should handle aggregates.', (done) => {
+          const data = [{'main_table_id_col': '1', 'fk2': '01'}, {'main_table_id_col': '2', 'fk2': '02'}]
+          detailedColsWTuple[30].getFirstOutboundValue(data).then((res) => {
+            expect(res.length).toBe(2);
+
+            expect(res[0].templateVariables.$self).toBeDefined();
+            let val = res[0].templateVariables.$self;
+            expect(val).toBe('1');
+
+            expect(res[1].templateVariables.$self).toBeDefined();
+            val = res[1].templateVariables.$self;
+            expect(val).toBe('2');
+
+            done();
+          }).catch(catchError(done));
+        });
+
+        it ('should ignore rows with empty key values.', (done) => {
+          const data = [{'main_table_id_col': '1', 'fk1': '10'}, {'main_table_id_col': '2'}, {'main_table_id_col': '2', 'fk1': null}];
+          detailedColsWTuple[5].getFirstOutboundValue(data).then((res) => {
+            expect(res.length).toBe(3);
+            expect(res[0].templateVariables.$self).toBeDefined();
+            const val = res[0].templateVariables.$self;
+            expect(val.rowName).toBe('10');
+            expect(val.values.col).toBe('10');
+
+            expect(res[1].templateVariables).toEqual({});
+            expect(res[2].templateVariables).toEqual({});
+            done();
+          }).catch(catchError(done));
+        });
+
+        it ('should handle empty result.', (done) => {
+          const data = [{'main_table_id_col': '1', 'fk1': '1000000'}];
+          detailedColsWTuple[5].getFirstOutboundValue(data).then((res) => {
+            expect(res.length).toBe(1);
+            expect(res[0].templateVariables).toEqual({});
+            done();
+          }).catch(catchError(done));
+        });
+
+        it ('should handle big page of data.', (done) => {
+          const data = new Array(200).fill(null).map((_, i) => {
+            return {'main_table_id_col': '1', 'fk1': `${i}`.repeat(20)};
+          });
+          detailedColsWTuple[5].getFirstOutboundValue(data).then((res) => {
+            expect(res.length).toBe(200);
+            done();
+          }).catch(catchError(done));
         });
       });
 
