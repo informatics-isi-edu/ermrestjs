@@ -37,6 +37,7 @@ import { parse } from '@isrd-isi-edu/ermrestjs/js/parser';
 import { Reference } from '@isrd-isi-edu/ermrestjs/js/reference';
 import { Column } from '@isrd-isi-edu/ermrestjs/js/core';
 import HandlebarsService from '@isrd-isi-edu/ermrestjs/src/services/handlebars';
+import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
 
     /**
      * Given a string represting a JSON document returns the compressed version of it.
@@ -1977,8 +1978,8 @@ import HandlebarsService from '@isrd-isi-edu/ermrestjs/src/services/handlebars';
             if (catalogSnapshot.length === 2) obj.$catalog.version = catalogSnapshot[1];
         }
 
-        if (ConfigService.session) {
-            var session = ConfigService.session;
+        if (AuthnService.session) {
+            var session = AuthnService.session;
 
             obj.$session = {};
             Object.keys(session).forEach(function (key) {

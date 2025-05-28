@@ -12,6 +12,13 @@ export function isObjectAndNotNull(obj: unknown): boolean {
 }
 
 /**
+ * Verifies that the object is defined and the containing key/value pair is a non-empty string
+ */
+export function isObjectAndKeyDefined(obj: any, keyName: string): boolean {
+  return obj && typeof obj[keyName] === 'string' && obj[keyName] !== '';
+}
+
+/**
  * Returns true if given parameter is object and doesn't have any items.
  */
 export function isEmptyArray(value: unknown) {

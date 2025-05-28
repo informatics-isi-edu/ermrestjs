@@ -896,6 +896,22 @@ exports.execute = function (options) {
         expect(module.renderHandlebarsTemplate(pattern, { val: 'abc' })).toBe('[abc](https://example.com){ .short-str }', 'test 04');
       });
 
+      it('isUserInAcl helper', function () {
+        expect(module.renderHandlebarsTemplate('{{#if (isUserInAcl "*")}}in{{else}}out{{/if}}', {})).toBe('in', 'test 01');
+        expect(module.renderHandlebarsTemplate('{{#if (isUserInAcl val)}}in{{else}}out{{/if}}', { val: 'invalid-id' })).toBe('out', 'test 02');
+        expect(module.renderHandlebarsTemplate('{{#if (isUserInAcl val "*")}}in{{else}}out{{/if}}', { val: 'invalid-id' })).toBe('in', 'test 03');
+        expect(module.renderHandlebarsTemplate('{{#if (isUserInAcl val )}}in{{else}}out{{/if}}', { val: ['invalid-id', "*"] })).toBe('in', 'test 04');
+
+        if (!process.env.CI) {
+          const testersGroupID = 'https://auth.globus.org/9d596ac6-22b9-11e6-b519-22000aef184d';
+          expect(module.renderHandlebarsTemplate('{{#if (isUserInAcl acl)}}in{{else}}out{{/if}}', { acl: testersGroupID })).toBe('in', 'test 05');
+          expect(module.renderHandlebarsTemplate('{{#if (isUserInAcl acl)}}in{{else}}out{{/if}}', { acl: [testersGroupID, "another"] })).toBe('in', 'test 06');
+          expect(module.renderHandlebarsTemplate(`{{#if (isUserInAcl "${testersGroupID}" )}}in{{else}}out{{/if}}`, {})).toBe('in', 'test 07');
+          expect(module.renderHandlebarsTemplate(`{{#if (isUserInAcl "group-1" "${testersGroupID}" )}}in{{else}}out{{/if}}`, {})).toBe('in', 'test 08');
+          expect(module.renderHandlebarsTemplate(`{{#if (isUserInAcl "group-1" "${testersGroupID}-2" )}}in{{else}}out{{/if}}`, {})).toBe('out', 'test 09');
+        }
+      });
+
       it('encodeFacet helper', function () {
         const facet = { and: [{ source: 'id', choices: ['1'] }] };
         const facetStr = JSON.stringify(facet);

@@ -5,6 +5,7 @@ import { isObjectAndNotNull } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils
 
 import printf from '@isrd-isi-edu/ermrestjs/js/format';
 import { _formatUtils, _escapeMarkdownCharacters, encodeFacetString, encodeFacet } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
+import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
 
 // allows recursive support of the given reducer function to be applied to args
 const reduceOp = function (args, reducer) {
@@ -229,6 +230,26 @@ export default function _injectCustomHandlebarHelpers(Handlebars) {
      */
     stringLength: function (value) {
       return value.length;
+    },
+
+    /**
+     * {{isUserInAcl group1 group2 }}}
+     * {{isUserInAcl groupArray }}
+     * {{isUserInAcl "https:/some-group" "https://another-group" }}
+     *
+     * @returns a boolean indicating if the user is in any of the given groups
+     */
+    isUserInAcl: function (...args) {
+      const groups = args.reduce((acc, arg) => {
+        if (Array.isArray(arg)) {
+          return acc.concat(arg);
+        } else if (typeof arg === 'string') {
+          return acc.concat([arg]);
+        }
+        return acc;
+      }, []);
+
+      return AuthnService.isUserInAcl(groups);
     },
   });
 
