@@ -39,6 +39,7 @@ import {
 import CatalogService from '@isrd-isi-edu/ermrestjs/src/services/catalog';
 import ConfigService from '@isrd-isi-edu/ermrestjs/src/services/config';
 import ErrorService from '@isrd-isi-edu/ermrestjs/src/services/error';
+import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
 // import HTTPService from '@isrd-isi-edu/ermrestjs/src/services/http';
 
 // utils
@@ -83,10 +84,11 @@ const responseToError = ErrorService.responseToError;
 const configure = ConfigService.configure;
 const appLinkFn = ConfigService.setAppLinkFn;
 const setClientConfig = ConfigService.setClientConfig;
-const setClientSession = ConfigService.setClientSession;
 const systemColumnsHeuristicsMode = ConfigService.setSystemColumnsHeuristicsMode;
 const resetUserCookie = ConfigService.resetUserCookie;
 const setUserCookie = ConfigService.setUserCookie;
+
+const setClientSession = AuthnService.setClientSession;
 
 // const _certifyContextHeader = HTTPService.certifyContextHeader;
 // const setHTTP401Handler = HTTPService.setHTTP401Handler;
@@ -106,6 +108,7 @@ export {
   // ConfigService,
   // ErrorService,
   // HTTPService,
+  AuthnService,
   Exporter,
 
   // constants
@@ -122,6 +125,10 @@ export {
   encodeFacet,
   versionDecodeBase32,
   setClientConfig,
+  /**
+   * @deprecated
+   * use `AuthnService.setClientSession` instead
+   */
   setClientSession,
   systemColumnsHeuristicsMode,
   onHTTPSuccess,

@@ -50,6 +50,7 @@ This document summarizes the key concepts of Handlebars that are relevant to Der
 - [Boolean Helpers](#boolean-helpers)
   - [Comparison Helpers](#comparison-helpers)
   - [Regular Expression Match](#regular-expression-match)
+  - [Access Control (ACL) check](#access-control-acl-check)
   - [Logical Helpers](#logical-helpers)
 
 
@@ -1223,6 +1224,29 @@ You can also use the `flags` named optional argument to pass [regular expression
 ```
 
 > If `flags` argument is not used, by default we are using the `g` (global search) flag for the regular expression search.
+
+### Access Control (ACL) check
+
+Using the `isUserInAcl` function you can check whether the current user is in a given ACL group or not. You may pass one or multiple groups, or a variable that represents an array. As long as the user is in one of the group ACL groups, this function will return true.
+
+```
+{{isUserInAcl "https:/group-id" }}
+{{isUserInAcl "https:/group-id1" "https://group-id2" }}
+{{isUserInAcl groupArray }}
+
+{{#if (isUserInAcl "https:/group-id")}}
+  has access
+{{/if}}
+
+{{#if (isUserInAcl "https:/group-id1" "https://group-id2")}}
+  has access
+{{/if}}
+
+{{#if (isUserInAcl groupArray)}}
+  has access
+{{/if}}
+```
+
 
 ### Logical Helpers
 

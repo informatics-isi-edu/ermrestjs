@@ -39,7 +39,7 @@ exports.runTests = function (options) {
                 done.fail(err);
             }).then(function sessionSuccess(response) {
                 testOptions.session = response.data;
-                testOptions.ermRest.setClientSession(response.data);
+                testOptions.ermRest.AuthnService.setClientSession(response.data);
 
                 done()
             }, function sessionError(err) {

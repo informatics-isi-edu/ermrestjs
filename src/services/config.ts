@@ -6,7 +6,6 @@ import { InvalidInputError } from '@isrd-isi-edu/ermrestjs/src/models/errors';
 import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
 
 import { isObjectAndNotNull } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
-import { simpleDeepCopy } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
 import { MarkdownIt } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils';
 import { _classNames } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
 
@@ -19,7 +18,6 @@ export default class ConfigService {
   private static _http = axios;
   private static _q = Q;
   private static _clientConfig: any;
-  private static _session: any;
   private static _appLinkFn: AppLinkFnType;
   private static _systemColumnsHeuristicsMode: (context: string) => any | undefined;
 
@@ -106,14 +104,6 @@ export default class ConfigService {
       throw new InvalidInputError('this function requires cliet-config which is not set properly.');
     }
     return true;
-  }
-
-  static setClientSession(session: object) {
-    ConfigService._session = simpleDeepCopy(session);
-  }
-
-  static get session() {
-    return ConfigService._session;
   }
 
   static setAppLinkFn(fn: AppLinkFnType) {

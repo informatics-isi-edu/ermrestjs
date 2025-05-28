@@ -284,6 +284,7 @@ export const _handlebarsHelpersList = [
   'humanizeBytes',
   'printf',
   'stringLength',
+  'isUserInAcl',
   // math helpers
   'add',
   'subtract',
