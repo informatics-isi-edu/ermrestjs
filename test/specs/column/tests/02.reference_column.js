@@ -8,8 +8,8 @@ exports.execute = function (options) {
 
         var catalog_id = process.env.DEFAULT_CATALOG,
             schemaName = "columns_schema",
-            tableName = "columns_table", // the structure of this table is explained in 14.pseudo_columns.js
-            tableWithAsset = "table_w_asset", // the structure of this table is exlpained in 14.pseudo_columns.js
+            tableName = "columns_table", // the structure of this table is explained in 01.columns_list.js
+            tableWithAsset = "table_w_asset", // the structure of this table is exlpained in 01.columns_list.js
             tableWithDiffColTypes = "table_w_diff_col_types",
             tableWSimpleKey = "table_w_simple_key",
             entityId = 1;
@@ -382,28 +382,44 @@ exports.execute = function (options) {
                     }).toThrow("can not use this type of column in entry mode.");
                 });
 
-                it("if any of its columns have nullok=false, should return false.", function () {
+                // display.required column-directive property tests are in 03.pseudo_column.js
+
+                it ('otherwise, if required annotation is present, should honor it.', () => {
+                    // normal column
+                    expect(compactColumns[6].nullok).toBe(false);
+
+                    // outbound fk
+                    expect(compactColumns[1].nullok).toBe(false);
+                });
+
+                it ('otherwise, if any of its columns have nullok=true, should return true.', () => {
+                    // simple fk
+                    expect(compactColumns[2].nullok).toBe(true, 'index=2');
+                    // composite fk, all true
+                    expect(compactColumns[19].nullok).toBe(true, 'index=15');
+                    // composite fk, one true
+                    expect(compactColumns[16].nullok).toBe(true, 'index=16');
+                });
+
+                it ('otherwise should return false.', () => {
                     // simple fk
                     expect(compactColumns[3].nullok).toBe(false);
-                    // composite fk, one false
-                    expect(compactColumns[12].nullok).toBe(false);
                     // composite fk, all false
-                    expect(compactColumns[13].nullok).toBe(false);
+                    expect(compactColumns[17].nullok).toBe(false);
                     // simple key
                     expect(compactColumns[0].nullok).toBe(false);
                 });
-
-                it('otherwise should return true.', function () {
-                    // simple fk
-                    expect(compactColumns[2].nullok).toBe(true);
-                    // composite fk, all true
-                    expect(compactColumns[15].nullok).toBe(true);
-                });
             });
 
-            it('for other columns should return the base column\'s nullok.', function () {
-                expect(compactColumns[4].nullok).toBe(false);
-                expect(compactColumns[8].nullok).toBe(true);
+            describe('for other columns, ', () => {
+                // display.required column-directive property tests are in 03.pseudo_column.js
+
+                it('otherwise should return the base column\'s nullok.', function () {
+                    // nullok is false
+                    expect(compactColumns[7].nullok).toBe(false);
+                    // nullok is true
+                    expect(compactColumns[8].nullok).toBe(true);
+                });
             });
         });
 

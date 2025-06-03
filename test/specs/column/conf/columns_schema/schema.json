@@ -73,6 +73,7 @@
                         }
                     ],
                     "annotations": {
+                        "tag:isrd.isi.edu,2018:required": true,
                         "tag:isrd.isi.edu,2016:foreign-key": {
                             "to_name": "to_name_value",
                             "display": {
@@ -391,6 +392,7 @@
                     "comment": "is in multiple composite FKRs",
                     "annotations": {
                         "tag:isrd.isi.edu,2016:generated": {},
+                        "tag:isrd.isi.edu,2018:required": true,
                         "tag:isrd.isi.edu,2016:column-display": {
                             "*": {
                                 "column_order": ["columns_schema_outbound_fk_7"]

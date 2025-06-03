@@ -164,7 +164,7 @@ exports.execute = function (options) {
      *  columns_schema_outbound_fk_7 -> not part of any fk | has immutable
      *
      * FKRs:
-     *  outbound_fk_1: col_1 -> ref_table (to_name) (column_order: false)
+     *  outbound_fk_1: col_1 -> ref_table (to_name) (column_order: false) (required annot)
      *  outbound_fk_2: col_2 -> ref_table
      *  outbound_fk_3: col_3 -> ref_table
      *  outbound_fk_4: col_3 -> table_w_simple_key_2 | (column_order: [name])
@@ -176,14 +176,14 @@ exports.execute = function (options) {
      *
      * expected output for ref.columns in compact (default heuristics) contexts:
      * 0:   id
-     * 1:   outbound_fk_1 (check to_name)
+     * 1:   outbound_fk_1 (check to_name, nullok has required annotation)
      * 2:   outbound_fk_2  -> is null
      * 3:   outbound_fk_3 (check disambiguation) (check nullok)
      * 4:   outbound_fk_4 (check disambiguation)
      * 5:   col_4
      * 6:   col 5
      * 7:   col_6
-     * 8:   col_7
+     * 8:   col_7 (check nullok has required annotation)
      * 9:   columns_schema_outbound_fk_7
      * 10:  columns_schema_handlebars_col
      * ...: system columns

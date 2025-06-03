@@ -34,6 +34,7 @@
                         "column_name": "id"
                     }],
                     "annotations": {
+                        "tag:isrd.isi.edu,2018:required": true,
                         "tag:isrd.isi.edu,2016:foreign-key": {
                             "display": {
                                 "entry/edit": {
@@ -53,7 +54,10 @@
                         "schema_name": "pseudo_column_schema",
                         "table_name": "outbound_2",
                         "column_name": "id"
-                    }]
+                    }],
+                    "annotations": {
+                        "tag:isrd.isi.edu,2018:required": true
+                    }
                 }, {
                     "names": [["pseudo_column_schema", "main_fk3"]],
                     "foreign_key_columns": [{
@@ -331,23 +335,35 @@
                     ],
                     "entry/create": "detailed",
                     "entry/edit": [
-                        "main_table_id_col",
+                        {
+                            "source": "main_table_id_col",
+                            "display": {
+                                "required": false
+                            }
+                        },
                         {
                             "source": [{"outbound": ["pseudo_column_schema", "main_fk2"]}, "id"],
                             "markdown_name": "main fk2 dropdown",
-                            "comment": "main fk2 cm dropdown display"
+                            "comment": "main fk2 cm dropdown display",
+                            "display": {
+                                "required": false
+                            }
                         },
                         {
                             "source": [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "id"],
                             "markdown_name": "main fk dropdown",
-                            "comment": "main fk cm dropdown display"
+                            "comment": "main fk cm dropdown display",
+                            "display": {
+                                "required": "invalid-value"
+                            }
                         },
                         {
                             "source": [{"outbound": ["pseudo_column_schema", "main_fk3"]}, "id"],
                             "markdown_name": "main fk3 popup",
                             "comment": "main fk3 cm override popup display",
                             "display": {
-                                "selector_ux_mode": "facet-search-popup"
+                                "selector_ux_mode": "facet-search-popup",
+                                "required": true
                             }
                         },
                         {

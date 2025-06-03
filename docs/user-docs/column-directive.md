@@ -32,6 +32,7 @@ Column directive allows instruction of a data source and modification of its pre
       - [wait\_for](#wait_for)
       - [show\_foreign\_key\_link](#show_foreign_key_link)
       - [selector\_ux\_mode](#selector_ux_mode)
+      - [required](#required)
       - [bulk\_create\_foreign\_key](#bulk_create_foreign_key)
       - [show\_key\_link](#show_key_link)
       - [array\_ux\_mode](#array_ux_mode)
@@ -69,7 +70,8 @@ In this category, you use the [`source`](#source) property to define the data so
       "show_foreign_key_link": <boolean>,
       "show_key_link": <boolean>,
       "array_ux_mode": <csv|ulist|olist|raw>,
-      "selector_ux_mode": <facet-search-popup|simple-search-dropdown>
+      "selector_ux_mode": <facet-search-popup|simple-search-dropdown>,
+      "required": <boolean>
   },
   "array_options": {
     "order": <change the default order>,
@@ -105,7 +107,8 @@ In this category, the [`sourcekey`](#sourcekey) proprety is used to refer to one
       "show_foreign_key_link": <boolean>,
       "show_key_link": <boolean>,
       "array_ux_mode": <csv|ulist|olist|raw>,
-      "selector_ux_mode": <facet-search-popup|simple-search-dropdown>
+      "selector_ux_mode": <facet-search-popup|simple-search-dropdown>,
+      "required": <boolean>
   },
   "array_options":{
     "order": <change the default order>,
@@ -426,6 +429,10 @@ While generating a default presentation for all outbound foreign key paths, ERMr
 ##### selector_ux_mode
 
 While generating a default presentation in `entry` mode for single outbound foreign key paths, Chaise will show a modal popup dialog for selecting rows. Using this attribute, you can modify this behavior. If this attribute is missing, we are going to use the inherited behavior from the [foreign key](annotation.md#tag-2016-foreign-key) annotation defined on the foreign key relationship. If that one is missing too, [table display](annotation.md#tag-2016-table-display) annotation will be applied. Supported values are `"facet-search-popup"` and `"simple-search-dropdown"`, with `"facet-search-popup"` being the default.
+
+##### required
+
+Use this property to force the required (nullok) check for this visible column. This property is only used in the `entry` contexts. If set to `true`, users cannot leave the input empty. And if set to `false`, the input becomes optional.
 
 ##### bulk_create_foreign_key
 

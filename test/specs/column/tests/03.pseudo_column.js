@@ -206,6 +206,7 @@ exports.execute = function (options) {
     ];
 
     var mainRef, mainRefDetailed, invalidRef, mainRefEntry, mainRefCompactEntry, detailedCols, detailedColsWTuple, mainTuple, mainPage;
+    let mainRefEntryEdit, entryEditCols;
 
     beforeAll(function (done) {
       options.ermRest.appLinkFn(appLinkFn);
@@ -217,6 +218,7 @@ exports.execute = function (options) {
           detailedCols = mainRefDetailed.columns;
           mainRefEntry = response.contextualize.entryCreate;
           mainRefEntryEdit = response.contextualize.entryEdit;
+          entryEditCols = mainRefEntryEdit.columns;
           mainRefCompactEntry = response.contextualize.compactEntry;
           return options.ermRest.resolve(invalidEntityUri, { cid: 'test' });
         })
@@ -884,6 +886,26 @@ exports.execute = function (options) {
         });
       });
 
+      describe('nullok', () => {
+        it ('should honor display.required defined on the source', () => {
+          // it's a key column, but has required: false
+          expect(entryEditCols[0].nullok).toBe(true, 'missmatch for index=0');
+
+          // main_fk2 has required annot, but display.required is false
+          expect(entryEditCols[1].nullok).toBe(true, 'missmatch for index=1');
+
+          // main_fk3 has display.required true
+          expect(entryEditCols[3].nullok).toBe(false, 'missmatch for index=3');
+        });
+
+        it ('otherwise for single outbound fk, should honor the required annotation', () => {
+          // main_fk1 has required annot
+          expect(entryEditCols[2].nullok).toBe(false);
+        });
+
+        // the rest of test cases are in 02.referenced_column.js
+      });
+
       describe('.hideColumnHeader', function () {
         it('should return the `hide_column_header` defined on the source and ignore the column-display', function () {
           // column-display says true, but source says false
@@ -897,29 +919,24 @@ exports.execute = function (options) {
       });
 
       describe('.inputDisplayMode', function () {
-        var entryCols;
-        beforeAll(function () {
-          entryCols = mainRefEntryEdit.columns;
-        });
-
         it('should return the `selector_ux_mode` defined on the table-display annotation', function () {
           // table-display on outbound_2 says 'simple-search-dropdown' that overrides default ('facet-search-popup')
-          expect(entryCols[1].display.inputDisplayMode).toBe('simple-search-dropdown', 'missmatch for index=2');
+          expect(entryEditCols[1].display.inputDisplayMode).toBe('simple-search-dropdown', 'missmatch for index=2');
         });
 
         it('should return the `selector_ux_mode` defined on the foreign-key annotation', function () {
           // foreign-key on ["pseudo_column_schema", "main_fk1"] says 'facet-search-popup' that overrides table-display 'simple-search-dropdown'
-          expect(entryCols[2].display.inputDisplayMode).toBe('facet-search-popup', 'missmatch for index=2');
+          expect(entryEditCols[2].display.inputDisplayMode).toBe('facet-search-popup', 'missmatch for index=2');
         });
 
         it('should return the `selector_ux_mode` defined on the source and ignore the foreign-key', function () {
           // source says 'facet-search-popup'that overrides foreign-key on ["pseudo_column_schema", "main_fk3"] 'simple-search-dropdown'
-          expect(entryCols[3].display.inputDisplayMode).toBe('facet-search-popup', 'missmatch for index=1');
+          expect(entryEditCols[3].display.inputDisplayMode).toBe('facet-search-popup', 'missmatch for index=1');
         });
 
         it('should return the default value when no `selector_ux_mode` is defined', function () {
           // foreign-key ["pseudo_column_schema", "main_fk4"] uses default value
-          expect(entryCols[4].display.inputDisplayMode).toBe('facet-search-popup', 'missmatch for index=1');
+          expect(entryEditCols[4].display.inputDisplayMode).toBe('facet-search-popup', 'missmatch for index=1');
         });
       });
 

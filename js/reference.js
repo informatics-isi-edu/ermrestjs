@@ -669,6 +669,7 @@ import { getResponseHeader } from '@isrd-isi-edu/ermrestjs/js/http';
 
             var discardedFacets = [], partialyDiscardedFacets = [];
             var addToIssues = function (obj, message, discardedChoices) {
+                // TODO https://github.com/informatics-isi-edu/ermrestjs/issues/940
                 var name = obj.markdown_name;
                 if (!name && obj.sourcekey) {
                     name = obj.sourcekey;

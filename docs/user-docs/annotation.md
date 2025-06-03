@@ -63,7 +63,7 @@ here is a quick matrix to locate them.
 | [2016 Visible Foreign Keys](#tag-2016-visible-foreign-keys)              | -       | -      | X     | -      | -   | -   | Foreign key visibility and presentation order                  |
 | [2017 Asset](#tag-2017-asset)                                            | -       | -      | -     | X      | -   | -   | Describes assets                                               |
 | [2018 Citation](#tag-2018-citation)                                      | -       | -      | X     | -      | -   | -   | Describes citation                                             |
-| [2018 Required](#tag-2018-required)                                      | -       | -      | -     | X      | -   | -   | Required model column                                          |
+| [2018 Required](#tag-2018-required)                                      | -       | -      | -     | X      | -   | X   | Required model element                                         |
 | [2018 Indexing Preferences](#tag-2018-indexing-preferences)              | -       | -      | X     | X      | -   | -   | Specify database indexing preferences                          |
 | [2019 Export](#tag-2019-export)                                          | X       | X      | X     | -      | -   | -   | Describes export templates                                     |
 | [2021 Export Fragment Definitions](#tag-2021-export-fragment-definitions)| X       | X      | X     | -      | -   | -   | Describe export fragments that may be used in export anotation |
@@ -809,7 +809,7 @@ At present, the Chaise implementation of the citation annotation has the followi
 `tag:isrd.isi.edu,2018:required`
 
 This key indicates that the values for a given model element will be required by
-the system. This key is allowed on any number of columns. There is no content for this key.
+the system. This key is allowed on any number of columns or foreign keys. There is no content for this key.
 
 ### Tag: 2018 Indexing Preferences
 
@@ -1351,6 +1351,7 @@ The following attributes can be used to manipulate the presentation settings of 
       - `csv` for comma-seperated values.
       - `raw` for space-seperated values.
   - `"selector_ux_mode"`: The display mode for the recordedit input field when this column directive is a foreign key relationship. Supported values are `"facet-search-popup"` and `"simple-search-dropdown"`, with `"facet-search-popup"` being the default. Currently only supported in `entry` contexts.
+  - `"required"`: Use this property to force the required (nullok) check for this visible column. This property is only used in the `entry` contexts. If set to `true`, users cannot leave the input empty. And if set to `false`, the input becomes optional.
   - `"bulk_create_foreign_key"`: Use this property to control the bulk selection of foreign key values in `entry/create` context when there is a prefill query parameter. Supported values are a foreign key `name` in the format of `['schema_name', 'foreign_key_name']` from the schema document, `false`, or `null`. Using a foreign key name will use that foreign key as the one being bulk selected if that foreign key is in the visible columns list. `false` turns off the heuristics that trigger this feature. `null` will override inheritance for this property and use the default heuristics. This will override the `bulk_create_foreign_key` property defined in the display property of the foreign-key annotation. Currently only supported in `entry/create` context.
 - `array_display`: This property is _deprecated_. It is the same as `array_ux_mode` that is defined above under `display` property.
 - `array_options`: Applicaple only to read-only non-filter context of `visible-columns` annotation. This property is meant to be an object of properties that control the display of `array` or `array_d` aggregate column. These options will only affect the display (and templating environment) and have no effect on the generated ERMrest query. The available options are:

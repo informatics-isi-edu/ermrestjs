@@ -14,7 +14,7 @@ import ConfigService from '@isrd-isi-edu/ermrestjs/src/services/config';
 
 // utils
 import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils';
-import { isDefinedAndNotNull, isObject, isObjectAndNotNull, isStringAndNotEmpty, verify } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
+import { isDefinedAndNotNull, isObject, isObjectAndKeyExists, isObjectAndNotNull, isStringAndNotEmpty, verify } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
 import { fixedEncodeURIComponent, simpleDeepCopy } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
 import { processAggregateValue } from '@isrd-isi-edu/ermrestjs/src/utils/column-utils';
 import {
@@ -323,13 +323,19 @@ ReferenceColumn.prototype = {
     },
 
     /**
+     * As long as any of the base columns are nullok, the ReferenceColumn is nullok.
      * @type {Boolean}
      */
     get nullok() {
         if (this._nullok === undefined) {
-            this._nullok = !this._baseCols.some(function (col) {
-                return !col.nullok;
-            });
+            const hasReq = this.sourceObject && isObjectAndKeyExists(this.sourceObject.display, 'required');
+            if (hasReq && typeof this.sourceObject.display.required === 'boolean') {
+                this._nullok = !this.sourceObject.display.required;
+            } else {
+                this._nullok = this._baseCols.some(function (col) {
+                    return col.nullok;
+                });
+            }
         }
         return this._nullok;
     },
@@ -2245,6 +2251,25 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "compressedDataSource", 
             this._compressedDataSource = _compressSource(ds);
         }
         return this._compressedDataSource;
+    }
+});
+Object.defineProperty(ForeignKeyPseudoColumn.prototype, "nullok", {
+    get: function () {
+        if (this._nullok === undefined) {
+            const hasReq = this.sourceObject && isObjectAndKeyExists(this.sourceObject.display, 'required');
+            if (hasReq && typeof this.sourceObject.display.required === 'boolean') {
+                this._nullok = !this.sourceObject.display.required;
+            } else {
+                // if there's required annotation on the foreignkey, then it's not nullok
+                const hasAnnot = this.foreignKey.annotations.contains(_annotations.REQUIRED);
+                if (hasAnnot) {
+                    this._nullok = false;
+                } else {
+                    Object.getOwnPropertyDescriptor(ForeignKeyPseudoColumn.super,"nullok").get.call(this);
+                }
+            }
+        }
+        return this._nullok;
     }
 });
 

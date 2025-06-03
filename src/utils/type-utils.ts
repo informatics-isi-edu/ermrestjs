@@ -13,9 +13,18 @@ export function isObjectAndNotNull(obj: unknown): boolean {
 
 /**
  * Verifies that the object is defined and the containing key/value pair is a non-empty string
+ * NOTE: this doesn't just check that the obj[keyname] is defined, it's also making sure it's a non-empty string.
  */
 export function isObjectAndKeyDefined(obj: any, keyName: string): boolean {
   return obj && typeof obj[keyName] === 'string' && obj[keyName] !== '';
+}
+
+/**
+ * Verifies that the object is defined and the keyName exists in the object.
+ * NOTE: this doesn't check the value of the key, it just checks if the key exists in the object.
+ */
+export function isObjectAndKeyExists(obj: any, keyName: string): boolean {
+  return isObjectAndNotNull(obj) && Object.prototype.hasOwnProperty.call(obj, keyName);
 }
 
 /**
