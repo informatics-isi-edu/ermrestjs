@@ -1,6 +1,8 @@
 const { templates } = require('handlebars');
 const moment = require('moment-timezone');
 
+const ISRD_TESTERS_GROUP_ID = 'https://auth.globus.org/9d596ac6-22b9-11e6-b519-22000aef184d';
+
 exports.execute = function (options) {
   var module = options.includes.ermRest;
   var formatUtils = module._formatUtils;
@@ -903,12 +905,11 @@ exports.execute = function (options) {
         expect(module.renderHandlebarsTemplate('{{#if (isUserInAcl val )}}in{{else}}out{{/if}}', { val: ['invalid-id', "*"] })).toBe('in', 'test 04');
 
         if (!process.env.CI) {
-          const testersGroupID = 'https://auth.globus.org/9d596ac6-22b9-11e6-b519-22000aef184d';
-          expect(module.renderHandlebarsTemplate('{{#if (isUserInAcl acl)}}in{{else}}out{{/if}}', { acl: testersGroupID })).toBe('in', 'test 05');
-          expect(module.renderHandlebarsTemplate('{{#if (isUserInAcl acl)}}in{{else}}out{{/if}}', { acl: [testersGroupID, "another"] })).toBe('in', 'test 06');
-          expect(module.renderHandlebarsTemplate(`{{#if (isUserInAcl "${testersGroupID}" )}}in{{else}}out{{/if}}`, {})).toBe('in', 'test 07');
-          expect(module.renderHandlebarsTemplate(`{{#if (isUserInAcl "group-1" "${testersGroupID}" )}}in{{else}}out{{/if}}`, {})).toBe('in', 'test 08');
-          expect(module.renderHandlebarsTemplate(`{{#if (isUserInAcl "group-1" "${testersGroupID}-2" )}}in{{else}}out{{/if}}`, {})).toBe('out', 'test 09');
+          expect(module.renderHandlebarsTemplate('{{#if (isUserInAcl acl)}}in{{else}}out{{/if}}', { acl: ISRD_TESTERS_GROUP_ID })).toBe('in', 'test 05');
+          expect(module.renderHandlebarsTemplate('{{#if (isUserInAcl acl)}}in{{else}}out{{/if}}', { acl: [ISRD_TESTERS_GROUP_ID, "another"] })).toBe('in', 'test 06');
+          expect(module.renderHandlebarsTemplate(`{{#if (isUserInAcl "${ISRD_TESTERS_GROUP_ID}" )}}in{{else}}out{{/if}}`, {})).toBe('in', 'test 07');
+          expect(module.renderHandlebarsTemplate(`{{#if (isUserInAcl "group-1" "${ISRD_TESTERS_GROUP_ID}" )}}in{{else}}out{{/if}}`, {})).toBe('in', 'test 08');
+          expect(module.renderHandlebarsTemplate(`{{#if (isUserInAcl "group-1" "${ISRD_TESTERS_GROUP_ID}-2" )}}in{{else}}out{{/if}}`, {})).toBe('out', 'test 09');
         }
       });
 
@@ -1305,6 +1306,52 @@ exports.execute = function (options) {
       it('NOT injecting $location obj', function () {
         // location isn't available in unit test environment
         expect(module.renderHandlebarsTemplate('{{$location.origin}}', {})).toBeNull();
+      });
+
+      it('injecting $site_var obj', (done) => {
+        options.ermRest.setClientConfig({
+          'templating': {
+            'site_var': {
+              'groups': {
+                'testers': ISRD_TESTERS_GROUP_ID,
+                'group2': 'some-other-group',
+              },
+              'site_name': 'ISRD',
+              'array': ['a', 'b', 'c'],
+              'array-w-objects': [
+                { 'name': 'name1' },
+                { 'name': 'name2' },
+              ],
+              'multi-level': {
+                'level1': {
+                  'level2': {
+                    'level3': 'deep-value',
+                  },
+                },
+              },
+            }
+          }
+        }).then(() => {
+          expect(module.renderHandlebarsTemplate('{{$site_var.site_name}}', {})).toBe('ISRD', 'test 01');
+          expect(module.renderHandlebarsTemplate('{{#each $site_var.array}}{{{this}}}{{/each}}', {})).toBe('abc', 'test 02');
+          expect(module.renderHandlebarsTemplate('{{#each $site_var.array-w-objects}}{{{this.name}}}{{/each}}', {})).toBe('name1name2', 'test 03');
+          expect(module.renderHandlebarsTemplate('{{{ $site_var.multi-level.level1.level2.level3 }}}', {})).toBe('deep-value', 'test 04');
+
+
+          expect(module.renderHandlebarsTemplate('{{{$site_var.groups.testers}}}', {})).toBe(ISRD_TESTERS_GROUP_ID, 'test 05');
+          if (!process.env.CI) {
+            expect(module.renderHandlebarsTemplate('{{#if (isUserInAcl $site_var.groups.testers)}}in{{else}}out{{/if}}', {})).toBe('in', 'test 06');
+            expect(module.renderHandlebarsTemplate('{{#if (isUserInAcl $site_var.groups.group2)}}in{{else}}out{{/if}}', {})).toBe('out', 'test 07');
+          }
+
+          // reset the client config
+          return options.ermRest.setClientConfig({});
+        }).then(() => {
+          done();
+        }).catch((err) => {
+          done.fail(err);
+        });
+
       });
 
       var handlebarTemplateCases = [

@@ -1998,6 +1998,17 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
                 obj.$session.client.extensions.ras_dbgap_phs_ids = map;
             }
         }
+
+        /**
+         * TODO if we want ot add dynamic variables to the template,
+         * we could add "site_var_queries" or "site_var_sources" (we have to decide which one to use).
+         * We didn't completely fleshed out what this property looks like, but it should be similar to "source object"
+         * where you can define a path and project list.
+         */
+        const cc = ConfigService.clientConfig;
+        if (isObjectAndNotNull(cc) && isObjectAndNotNull(cc.templating) && isObjectAndNotNull(cc.templating.site_var)) {
+            obj.$site_var = cc.templating.site_var;
+        }
     };
 
     /**
