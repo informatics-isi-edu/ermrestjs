@@ -72,12 +72,12 @@ function _bindCustomMarkdownTags(md: typeof MarkdownIt) {
      * String inside '{}' is Optional, specifies attributes to be applied to prev element
      */
     validate: function (params: any) {
-      return params.trim().match(/iframe\s+(.*)$/i);
+      return params.trim().match(/^iframe\s+(.*)$/i);
     },
 
     render: function (tokens: any, idx: any) {
       // Get token string after regexp matching to determine actual internal markdown
-      const m = tokens[idx].info.trim().match(/iframe\s+(.*)$/i);
+      const m = tokens[idx].info.trim().match(/^iframe\s+(.*)$/i);
 
       // If this is the opening tag i.e. starts with "::: iframe "
       if (tokens[idx].nesting === 1 && m.length > 0) {
@@ -331,13 +331,13 @@ function _bindCustomMarkdownTags(md: typeof MarkdownIt) {
      * String inside '{}' is Optional, specifies attributes to be applied to prev element
      */
     validate: function (params: any) {
-      return params.trim().match(/dropdown\s+(.*)$/i);
+      return params.trim().match(/^dropdown\s+(.*)$/i);
     },
 
     render: function (tokens: any, idx: any) {
       let html = '';
       // Get token string after regeexp matching to determine caption and other links
-      const m = tokens[idx].info.trim().match(/dropdown\s+(.*)$/i);
+      const m = tokens[idx].info.trim().match(/^dropdown\s+(.*)$/i);
 
       if (tokens[idx].nesting === 1 && m && m.length > 0) {
         // If content found after dropdown string
@@ -442,12 +442,12 @@ function _bindCustomMarkdownTags(md: typeof MarkdownIt) {
      * String inside '{}' is Optional, specifies attributes to be applied to prev element
      */
     validate: function (params: any) {
-      return params.trim().match(/image\s+(.*$)/i);
+      return params.trim().match(/^image\s+(.*$)/i);
     },
 
     render: function (tokens: any, idx: any) {
       // Get token string after regeexp matching to determine actual internal markdown
-      const m = tokens[idx].info.trim().match(/image\s+(.*)$/i);
+      const m = tokens[idx].info.trim().match(/^image\s+(.*)$/i);
 
       // If this is the opening tag i.e. starts with "::: image "
       if (tokens[idx].nesting === 1 && m.length > 0) {
@@ -550,12 +550,12 @@ function _bindCustomMarkdownTags(md: typeof MarkdownIt) {
      * String inside '{}' is Optional, specifies attributes to be applied to prev element
      */
     validate: function (params: any) {
-      return params.trim().match(/video\s+(.*$)/i);
+      return params.trim().match(/^video\s+(.*$)/i);
     },
 
     render: function (tokens: any, idx: any) {
       // Get token string after regeexp matching to determine actual internal markdown
-      const m = tokens[idx].info.trim().match(/video\s+(.*)$/i);
+      const m = tokens[idx].info.trim().match(/^video\s+(.*)$/i);
 
       // If this is the opening tag i.e. starts with "::: video "
       if (tokens[idx].nesting === 1 && m.length > 0) {
@@ -649,11 +649,11 @@ function _bindCustomMarkdownTags(md: typeof MarkdownIt) {
      * string inside `{}` is optional, specifies attributes to be applied to element
      */
     validate: function (params: any) {
-      return params.trim().match(/div(.*)$/i);
+      return params.trim().match(/^div\s+(.*)$/i);
     },
 
     render: function (tokens: any, idx: any) {
-      const m = tokens[idx].info.trim().match(/div(.*)$/i);
+      const m = tokens[idx].info.trim().match(/^div\s+(.*)$/i);
 
       // opening tag
       if (tokens[idx].nesting === 1) {
@@ -678,11 +678,11 @@ function _bindCustomMarkdownTags(md: typeof MarkdownIt) {
 
   md.use(MarkdownItContainer, 'geneSequence', {
     validate: function (params: any) {
-      return params.trim().match(/geneSequence\s+(.*)$/i);
+      return params.trim().match(/^geneSequence\s+(.*)$/i);
     },
 
     render: function (tokens: any, idx: any) {
-      const m = tokens[idx].info.trim().match(/geneSequence(.*)$/i);
+      const m = tokens[idx].info.trim().match(/^geneSequence\s+(.*)$/i);
       let html = '';
       // opening tag
       if (tokens[idx].nesting === 1 && m.length > 0) {
