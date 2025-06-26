@@ -14,7 +14,7 @@ import { InvalidInputError, MalformedURIError, NotFoundError } from '@isrd-isi-e
 import CatalogService from '@isrd-isi-edu/ermrestjs/src/services/catalog';
 import ConfigService from '@isrd-isi-edu/ermrestjs/src/services/config';
 import ErrorService from '@isrd-isi-edu/ermrestjs/src/services/error';
-// import HTTPService from '@isrd-isi-edu/ermrestjs/src/services/http';
+import HTTPService from '@isrd-isi-edu/ermrestjs/src/services/http';
 import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
 
 // utils
@@ -67,7 +67,6 @@ import {
   _processModelComment,
   compareColumnPositions,
 } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
-import { _wrap_http } from '@isrd-isi-edu/ermrestjs/js/http';
 
     export const ermrestFactory = {
         getServer: getServer
@@ -143,7 +142,7 @@ import { _wrap_http } from '@isrd-isi-edu/ermrestjs/js/http';
          * @private
          * @type {Object}
          */
-        this.http = _wrap_http(ConfigService.http);
+        this.http = HTTPService.wrapHTTP(ConfigService.http);
         this.http.contextHeaderParams = contextHeaderParams;
 
         /**
