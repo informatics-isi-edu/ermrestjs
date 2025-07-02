@@ -56,7 +56,7 @@
     "jasmine-spec-reporter": "2.5.0",
     "mime": "1.4.1",
     "nock": "13.5.4",
-    "prettier": "^3.5.3",
+    "prettier": "^3.6.2",
     "require-reload": "^0.2.2",
     "rollup-plugin-visualizer": "^5.14.0",
     "set-cookie-parser": "x",
