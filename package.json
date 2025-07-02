@@ -55,7 +55,7 @@
     "jasmine-expect": "3.7.1",
     "jasmine-spec-reporter": "2.5.0",
     "mime": "1.4.1",
-    "nock": "13.5.4",
+    "nock": "14.0.5",
     "prettier": "^3.5.3",
     "require-reload": "^0.2.2",
     "rollup-plugin-visualizer": "^5.14.0",
