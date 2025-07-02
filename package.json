@@ -54,7 +54,7 @@
     "jasmine": "2.5.3",
     "jasmine-expect": "3.7.1",
     "jasmine-spec-reporter": "2.5.0",
-    "mime": "1.4.1",
+    "mime": "4.0.7",
     "nock": "13.5.4",
     "prettier": "^3.5.3",
     "require-reload": "^0.2.2",
