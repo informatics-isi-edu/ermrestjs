@@ -43,7 +43,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.23.0",
-    "@isrd-isi-edu/ermrest-data-utils": "0.0.5",
+    "@isrd-isi-edu/ermrest-data-utils": "0.0.7",
     "@types/node": "^24.0.10",
     "buffer-slice": "0.0.1",
     "eslint": "^9.23.0",
