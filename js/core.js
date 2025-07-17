@@ -1633,10 +1633,12 @@ import {
                             return false;
                         }
                     }
-
-                    // NOTE we're passing the list of processed sources
-                    //      because some of them might have prefix and need that
-                    pSource = new SourceObjectWrapper(sourceDef, self, false, res.sources);
+                    // NOTE
+                    // - we're passing the list of processed sources
+                    //   because some of them might have prefix and need that
+                    // - skipping processing filters since they might be used in detailed context
+                    //   and have access to data. so we have to skip now and process later.
+                    pSource = new SourceObjectWrapper(sourceDef, self, false, res.sources, undefined, true);
                 } catch (exp) {
                     $log.info(message + ": " + exp.message);
                     return false;
@@ -4302,12 +4304,13 @@ import {
          * - name: the pseudo column name
          * @private
          * @param  {String} context
+         * @param  {ERMrest.Tuple} mainTuple the main table data
          * @return {Object}
          */
-        _contextualize: function (context) {
-            if(context in this._contextualize_cached) {
-                return this._contextualize_cached[context];
-            }
+        _contextualize: function (context, mainTuple) {
+            // if(context in this._contextualize_cached) {
+            //     return this._contextualize_cached[context];
+            // }
 
             var orders = -1, result = [];
             if (this._table.annotations.contains(_annotations.VISIBLE_FOREIGN_KEYS)) {
@@ -4356,20 +4359,20 @@ import {
                 else if (typeof orders[i] === "object") {
                     var wrapper;
                     if (orders[i].source || orders[i].sourcekey) {
-                        // if both source and sourcekey are defined, ignore the source and use sourcekey
-                        if (orders[i].sourcekey) {
-                            var def = definitions.sources[orders[i].sourcekey];
-                            if (def) {
-                                wrapper = def.clone(orders[i], this._table);
+                        try {
+                            // if both source and sourcekey are defined, ignore the source and use sourcekey
+                            if (orders[i].sourcekey) {
+                                var def = definitions.sources[orders[i].sourcekey];
+                                if (def) {
+                                    wrapper = def.clone(orders[i], this._table, false, mainTuple);
+                                }
+                            } else {
+                                wrapper = new SourceObjectWrapper(orders[i], this._table, false, undefined, mainTuple);
                             }
-                        } else {
-                            try {
-                                wrapper = new SourceObjectWrapper(orders[i], this._table);
-                            } catch (exp) {
-                                // we might want to show a better error message later.
-                                logErr(true, exp.message, i);
-                                invalid = true;
-                            }
+                        } catch (exp) {
+                            // we might want to show a better error message later.
+                            logErr(true, exp.message, i);
+                            invalid = true;
                         }
 
                         // invalid if:
@@ -4394,7 +4397,7 @@ import {
                     invalid = false;
                 }
             }
-            this._contextualize_cached[context] = result;
+            // this._contextualize_cached[context] = result;
             return result;
         }
     };
@@ -4491,7 +4494,7 @@ import {
      * @param {Object} jsonFKR
      * @constructor
      */
-    function ForeignKeyRef(table, jsonFKR) {
+    export function ForeignKeyRef(table, jsonFKR) {
 
         /*
          * @deprecated

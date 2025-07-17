@@ -39,7 +39,7 @@ import {
 
 // legacy
 import { parse } from '@isrd-isi-edu/ermrestjs/js/parser';
-import { Type } from '@isrd-isi-edu/ermrestjs/js/core';
+import { Column, Type, ForeignKeyRef } from '@isrd-isi-edu/ermrestjs/js/core';
 import { Page, Reference, Tuple, _referenceCopy } from '@isrd-isi-edu/ermrestjs/js/reference';
 import {
   AttributeGroupColumn,
@@ -91,8 +91,8 @@ import {
  * - Otherwise: PseudoColumn
  *
  * @private
- * @param  {ERMrest.Reference}  reference    the parent reference
- * @param  {ERMrest.Column}  column       the underlying column object
+ * @param  {Reference}  reference    the parent reference
+ * @param  {Column}  column       the underlying column object
  * @param  {ERMrest.SourceObjectWrapper}  sourceObjectWrapper the column definition
  * @param  {ERMrest.Tuple=}  mainTuple    the main tuple
  * @param  {String=}  name         the name to avoid computing it again.
@@ -159,13 +159,13 @@ export const _createPseudoColumn = function (reference, sourceObjectWrapper, mai
 /**
  * @memberof ERMrest
  * @constructor
- * @param {ERMrest.Reference} reference column's reference
- * @param {ERMrest.Column[]} baseCols List of columns that this reference-column will be created based on.
- * @param {ERMrest.SourceObjectWrapper} sourceObjectWrapper the sourceObjectWrapper object (might be undefined)
+ * @param {Reference} reference column's reference
+ * @param {Column[]} cols List of columns that this reference-column will be created based on.
+ * @param {SourceObjectWrapper} sourceObjectWrapper the sourceObjectWrapper object (might be undefined)
  * @param {string} name        to avoid processing the name again, this might be undefined.
- * @param {ERMrest.Tuple} mainTuple   if the reference is referring to just one tuple, this is defined.
+ * @param {Tuple} mainTuple   if the reference is referring to just one tuple, this is defined.
  * @desc
- * Constructor for ReferenceColumn. This class is a wrapper for {@link ERMrest.Column}.
+ * Constructor for ReferenceColumn. This class is a wrapper for {@link Column}.
  */
 export function ReferenceColumn(reference, cols, sourceObjectWrapper, name, mainTuple) {
     this._baseReference = reference;
@@ -1657,8 +1657,8 @@ Object.defineProperty(PseudoColumn.prototype, "canUseScalarProjection", {
  * @memberof ERMrest
  * @constructor
  * @class
- * @param {ERMrest.Reference} reference column's reference
- * @param {ERMrest.ForeignKeyRef} fk the foreignkey
+ * @param {Reference} reference column's reference
+ * @param {ForeignKeyRef} fk the foreignkey
  * @desc
  * Constructor for ForeignKeyPseudoColumn. This class is a wrapper for {@link ERMrest.ForeignKeyRef}.
  * This class extends the {@link ERMrest.ReferenceColumn}
@@ -1702,7 +1702,7 @@ export function ForeignKeyPseudoColumn (reference, fk, sourceObjectWrapper, name
     // NOTE added for compatibility
     // I cannot simply create a sourceObjectWrapper because it needs a shortestkey of length one.
     if (!isObjectAndNotNull(sourceObjectWrapper)) {
-        this.lastForeignKeyNode = new SourceObjectNode(fk, false, true);
+        this.lastForeignKeyNode = new SourceObjectNode(fk, false, true, false, false, undefined, undefined, fk.table);
         this.firstForeignKeyNode = this.lastForeignKeyNode;
         this.sourceObjectNodes = [this.lastForeignKeyNode];
         this.foreignKeyPathLength = 1;

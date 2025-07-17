@@ -42,9 +42,9 @@ import {
 } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
 
 // legacy
-import { generateKeyValueFilters, renameKey, _renderTemplate, _isEntryContext } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
+import { generateKeyValueFilters, renameKey, _renderTemplate, _isEntryContext, _getFormattedKeyValues } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
 import { _createPseudoColumn } from '@isrd-isi-edu/ermrestjs/js/column';
-import { Reference } from '@isrd-isi-edu/ermrestjs/js/reference';
+import { Reference, Tuple } from '@isrd-isi-edu/ermrestjs/js/reference';
 import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/parser';
 
 /**
@@ -454,7 +454,7 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
                     var sd = rootTable.sourceDefinitions.sources[term.sourcekey];
 
                     // the sourcekey is invalid
-                    if (!sd) {
+                    if (!sd || !sd.processFilterNodes(undefined, true).success) {
                         return _renderFacetHelpers.getErrorOutput(facetErrors.invalidSourcekey, i);
                     }
 
@@ -728,6 +728,7 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
             // sources
             if ((wf in currentTable.sourceDefinitions.sources)) {
                 var sd = currentTable.sourceDefinitions.sources[wf];
+                // TODO filter-in-source should I process filters??
 
                 // entitysets are only allowed in detailed
                 if (sd.hasInbound && !sd.sourceObject.aggregate && baseReference._context !== _contexts.DETAILED) {
@@ -756,10 +757,13 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
                      * - make sure the sourcekey is also part of the definition
                      *   so the mapping of sourcekey to definition is not lost.
                      *   this mapping is needed for the path prefix logic
+                     * - pass the mainTuple for filters
                      */
                     sd.clone(
                         {"sourcekey": wf},
-                        currentTable
+                        currentTable,
+                        false,
+                        mainTuple
                     ),
                     mainTuple
                 );
@@ -1276,16 +1280,19 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
     /**
      *
      * @param {Object} sourceObject the column directive object
-     * @param {ERMrest.Table} table the root (starting) table
+     * @param {Table} table the root (starting) table
      * @param {boolean} isFacet whether this is a facet or not
-     * @param {Object} [sources] already generated source (only useful for source-def generation)
+     * @param {Object=} sources already generated source (only useful for source-def generation)
+     * @param {Tuple=} mainTuple the main tuple that is used for filters
+     * @param {boolean=} skipProcessingFilters whether we should skip processing filters or not
+     * @desc Represents a column-directive
      */
-    export function SourceObjectWrapper (sourceObject, table, isFacet, sources) {
+    export function SourceObjectWrapper (sourceObject, table, isFacet, sources, mainTuple, skipProcessingFilters) {
         this.sourceObject = sourceObject;
 
         // if the extra objects are not passed, we cannot process
         if (isObjectAndNotNull(table)) {
-            var res = this._process(table, isFacet, sources);
+            var res = this._process(table, isFacet, sources, mainTuple, skipProcessingFilters);
             if (res.error) {
                 throw new Error(res.message);
             }
@@ -1308,13 +1315,15 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
          *
          * - attributes in sourceObject will override the similar ones in the current object.
          * - "source" of sourceObject will be ignored. so "sourcekey" always has priority over "source".
+         * - mainTuple should be passed in detailed context so we can use it for filters.
          *
          * @param {Object} sourceObject the source object
          * @param {ERMrest.Table} table the table that these sources belong to.
          * @param {boolean} isFacet whether this is for a facet or not
          */
-        clone: function (sourceObject, table, isFacet) {
-            var key, res, self = this;
+        clone: function (sourceObject, table, isFacet, mainTuple) {
+            let key;
+            const self = this;
 
             // remove the definition attributes
             _sourceDefinitionAttributes.forEach(function (attr) {
@@ -1330,16 +1339,19 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
                 }
             }
 
-            return new SourceObjectWrapper(sourceObject, table, isFacet);
+            return new SourceObjectWrapper(sourceObject, table, isFacet, undefined, mainTuple);
         },
 
         /**
          * Parse the given sourceobject and create the attributes
-         * @param {ERMrest.Table} table
+         * @param {Table} table
          * @param {boolean} isFacet  -- validation is differrent if it's a facet
+         * @param {Object=} sources already generated source (only useful for source-def generation)
+         * @param {Tuple=} mainTuple the main tuple that is used for filters
+         * @param {boolean=} skipProcessingFilters whether we should skip processing filters or not
          * @returns  {Object}
          */
-        _process: function (table, isFacet, sources) {
+        _process: function (table, isFacet, sources, mainTuple, skipProcessingFilters) {
             var self = this, sourceObject = this.sourceObject, wm = _warningMessages;
 
             var returnError = function (message) {
@@ -1351,8 +1363,9 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
             }
 
             var colName, col, colTable = table, source = sourceObject.source, sourceObjectNodes = [];
-            var hasPath = false, hasInbound = false, hasPrefix = false, isFiltered = false, filterProps = {}, isAllOutboundNotNull = false, isAllOutboundNotNullPerModel = false;
-            var lastForeignKeyNode, firstForeignKeyNode, foreignKeyPathLength = 0;
+            var hasPath = false, hasInbound = false, hasPrefix = false, isAllOutboundNotNull = false, isAllOutboundNotNullPerModel = false;
+            let lastForeignKeyNode, firstForeignKeyNode, foreignKeyPathLength = 0;
+            let isFiltered = false, filterProps = {};
 
             // just the column name
             if (isStringAndNotEmpty(source)){
@@ -1363,7 +1376,7 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
                 colName = source[0];
             }
             else if (Array.isArray(source) && source.length > 1) {
-                var res = _sourceColumnHelpers.processDataSourcePath(source, table, table.name, table.schema.catalog.id, sources);
+                var res = _sourceColumnHelpers.processDataSourcePath(source, table, table.name, table.schema.catalog.id, sources, mainTuple, skipProcessingFilters);
                 if (res.error) {
                     return res;
                 }
@@ -1438,7 +1451,7 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
 
             // generate name:
             // TODO maybe we shouldn't even allow aggregate in faceting (for now we're ignoring it)
-            if ((sourceObject.self_link === true) || self.isFiltered || self.hasPath || self.isEntityMode || (isFacet !== false && self.hasAggregate)) {
+            if ((sourceObject.self_link === true) || self.isFiltered || self.hasPath || self.isEntityMode || (isFacet !== true && self.hasAggregate)) {
                 self.name = _sourceColumnHelpers.generateSourceObjectHashName(sourceObject, isFacet, sourceObjectNodes);
                 self.isHash = true;
 
@@ -1708,6 +1721,37 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
             };
 
             return {success: true, columns: columns};
+        },
+
+        /**
+         * @param {Table} table
+         * @param {Tuple=} mainTuple
+         * @param {boolean=} dontThrowError if set to true, will not throw an error if the filters are not valid
+         */
+        processFilterNodes: function (mainTuple, dontThrowError) {
+            if (!this.filterProps || this.filterProps.isFilterProcessed) {
+                return { success: true };
+            }
+
+            try {
+                for (const sn of this.sourceObjectNodes) {
+                    if (sn.isPathPrefix) {
+                        sn.nodeObject.processFilterNodes(mainTuple);
+                    } else if (sn.isFilter) {
+                        sn.processFilter(mainTuple);
+                    }
+                }
+
+                this.filterProps.isFilterProcessed = true;
+
+                return { success: true };
+            } catch (exp) {
+                if (dontThrowError) {
+                    return { success: false, error: true, message: exp.message };
+                } else {
+                    throw exp;
+                }
+            }
         }
     };
 
@@ -1716,7 +1760,18 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
      * @ignore
      */
     export const _sourceColumnHelpers = {
-        processDataSourcePath: function (source, rootTable, tableName, catalogId, sources) {
+        /**
+         *
+         * @param {Objec} source the source object
+         * @param {Table} rootTable the table that this source is defined in
+         * @param {string} tableName the name of the table
+         * @param {string} catalogId the catalog id
+         * @param {Object=} sources the sources (useful when we're processsing source-definitions so we can use the already generated sources)
+         * @param {Tuple=} mainTuple the main tuple
+         * @param {boolean=} skipProcessingFilters whether to skip processing filters
+         * @returns {Object} the result of processing the data source path
+         */
+        processDataSourcePath: function (source, rootTable, tableName, catalogId, sources, mainTuple, skipProcessingFilters) {
             var wm = _warningMessages, srcProps = _sourceProperties;
             var returnError = function (message) {
                 return {error: true, message: message};
@@ -1734,13 +1789,13 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
             var i, fkAlias, constraint, isInbound, fkObj, fk, colTable = rootTable, hasInbound = false, firstForeignKeyNode, lastForeignKeyNode,
                 foreignKeyPathLength = 0, sourceObjectNodes = [], hasPrefix = false, hasOnlyPrefix = false, prefix, isAlternativeJoin = false,
                 isAllOutboundNotNull = true, isAllOutboundNotNullPerModel = true;
-            var isFiltered = false, filterProps = {
-                hasRootFilter: false, hasFilterInBetween: false, leafFilterString: ''
+            let isFiltered = false, filterProps = {
+                isFilterProcessed: true, hasRootFilter: false, hasFilterInBetween: false, leafFilterString: ''
             };
 
             for (i = 0; i < source.length - 1; i++) {
                 if ("sourcekey" in source[i]) {
-                    if (i != 0 || hasPrefix) {
+                    if (i !== 0 || hasPrefix) {
                         return returnError("`sourcekey` can only be used as prefix and only once");
                     }
                     hasPrefix = true;
@@ -1755,14 +1810,25 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
                         prefix = rootTable.sourceDefinitions.sources[source[i].sourcekey];
                     }
 
+                    // TODO filter-in-source should it process filters?
                     if (!prefix) {
                         return returnError("sourcekey is invalid.");
+                    }
+
+                    if (!skipProcessingFilters) {
+                        try {
+                            // might throw an error if the filters are not valid
+                            prefix.processFilterNodes(mainTuple);
+                        } catch (exp) {
+                            return returnError(`Couldn't process filters for sourcekey: ${source[i].sourcekey}.\n${exp.message}`);
+                        }
+
                     }
 
                     if (!prefix.hasPath) {
                         return returnError("referrred `sourcekey` must be a foreign key path.");
                     }
-                    sourceObjectNodes.push(new SourceObjectNode(prefix, false, false, false, true, source[i].sourcekey));
+                    sourceObjectNodes.push(new SourceObjectNode(prefix, false, false, false, true, source[i].sourcekey, undefined, colTable));
 
                     firstForeignKeyNode = prefix.firstForeignKeyNode;
                     lastForeignKeyNode = prefix.lastForeignKeyNode;
@@ -1771,9 +1837,11 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
                     tableName = prefix.column.table.name;
                     hasInbound = hasInbound || prefix.hasInbound;
                     isFiltered = isFiltered || prefix.isFiltered;
+                    // TODO filter-in-source these should get it from prefix.filterProps
                     filterProps.hasRootFilter = prefix.hasRootFilter;
                     filterProps.hasFilterInBetween = prefix.hasFilterInBetween;
                     filterProps.leafFilterString = prefix.leafFilterString;
+                    filterProps.isFilterProcessed = prefix.filterProps.isFilterProcessed;
                     isAllOutboundNotNull = prefix.isAllOutboundNotNull;
                     isAllOutboundNotNullPerModel = prefix.isAllOutboundNotNullPerModel;
                 }
@@ -1784,12 +1852,13 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
 
                     var snf;
                     try {
-                        snf = new SourceObjectNode(source[i], true, false, false, false, undefined, undefined, colTable);
+                        snf = new SourceObjectNode(source[i], true, false, false, false, undefined, undefined, colTable, undefined, mainTuple, skipProcessingFilters);
                     } catch (exp) {
                         return returnError(exp.message);
                     }
 
                     isFiltered = true;
+                    filterProps.isFilterProcessed = filterProps.isFilterProcessed && snf.isFilterProcessed;
 
                     // if this is the first element, then we have a root filter
                     if (i === 0) filterProps.hasRootFilter = true;
@@ -1797,6 +1866,7 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
                     // create the string filter string, if this is not the last, then it will be emptied out
                     // for now we just want the string, later we could improve this implementation
                     // (for recordedit the whole object would be needed and not just string)
+                    // TODO filter-in-source toString is problematic here
                     filterProps.leafFilterString = filterProps.leafFilterString ?  [filterProps.leafFilterString, snf.toString()].join('/') : snf.toString();
 
                     // add the node to the list
@@ -1869,7 +1939,7 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
 
                     tableName = colTable.name;
 
-                    var sn = new SourceObjectNode(fk, false, true, isInbound, false, null, fkAlias, null, isAlternativeJoin);
+                    var sn = new SourceObjectNode(fk, false, true, isInbound, false, null, fkAlias, colTable, isAlternativeJoin);
                     sourceObjectNodes.push(sn);
 
                     if (firstForeignKeyNode == null) {
@@ -2185,11 +2255,21 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
         },
 
         // TODO FILTER_IN_SOURCE test this
-        parseSourceObjectNodeFilter: function (nodeObject, table) {
-            var logOp, ermrestOp, i, operator, res = "", innerRes, colName, operand = "";
-            var encode = fixedEncodeURIComponent;
-            var nullOperator = _ERMrestFilterPredicates.NULL;
-            var returnError = function (message) {
+        /**
+         * parse the given source object node.
+         * - this will mutate the given nodeObject and replaces the `operand_pattern` with the processed value
+         *   and also set `operand_pattern_processed` to true
+         * @param {Object} nodeObject
+         * @param {Table} table
+         * @param {Tuple=} mainTuple
+         * @returns
+         */
+        parseSourceObjectNodeFilter: function (nodeObject, table, mainTuple) {
+            let logOp, ermrestOp, i, operator, res = "", innerRes, colName, operand = "";
+            const encode = fixedEncodeURIComponent;
+            const nullOperator = _ERMrestFilterPredicates.NULL;
+            const EMPTY_OPERAND = 'operand_pattern template resutls in empty string.';
+            const returnError = function (message) {
                 throw new Error(message);
             };
 
@@ -2240,20 +2320,34 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
 
                 // ------- add the operand ---------
                 // null cannot have any operand, the rest need operand
-                if ( (("operand_pattern" in nodeObject) && (operator == nullOperator)) ||
-                     (!("operand_pattern" in nodeObject) && (operator != nullOperator))) {
+                if ( (("operand_pattern" in nodeObject) && (operator === nullOperator)) ||
+                     (!("operand_pattern" in nodeObject) && (operator !== nullOperator))) {
                     returnError(nodeObject.operand_pattern == nullOperator ? "null operator cannot have any operand_pattern" : "operand_pattern must be defined");
                 }
                 if ("operand_pattern" in nodeObject) {
-                    operand = _renderTemplate(
-                        nodeObject.operand_pattern,
-                        {},
-                        table.schema.catalog,
-                        {templateEngine: nodeObject.template_engine}
-                    );
+                    let keyValues = {};
+                    if (mainTuple && table) {
+                        keyValues = _getFormattedKeyValues(table, mainTuple.reference.context, mainTuple.data, mainTuple.linkedData);
+                    }
+                    if (nodeObject.operand_pattern_processed === true) {
+                        operand = nodeObject.operand_pattern;
+                    } else {
+                        operand = _renderTemplate(
+                            nodeObject.operand_pattern,
+                            keyValues,
+                            table.schema.catalog,
+                            {templateEngine: nodeObject.template_engine}
+                        );
 
-                    if (operand == null || operand.trim() == "") {
-                        returnError("operand_pattern template resutls in empty string.");
+                        if (operand === null || operand === undefined || operand.trim() === "") {
+                            // if (!mainTuple) {
+                            //     return { successful: false, message: EMPTY_OPERAND };
+                            // } else {
+                                returnError(EMPTY_OPERAND);
+                            // }
+                        }
+                        nodeObject.operand_pattern_processed = true;
+                        nodeObject.operand_pattern = operand;
                     }
                 }
                 res += encode(operand);
@@ -2275,7 +2369,7 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
                 res = (nodeObject[logOp].length > 1 && !nodeObject.negate) ? "(" : "";
                 for (i = 0; i < nodeObject[logOp].length; i++) {
                     // it might throw an error which will be propagated to the original caller
-                    innerRes = _sourceColumnHelpers.parseSourceObjectNodeFilter(nodeObject[logOp][i], table);
+                    innerRes = _sourceColumnHelpers.parseSourceObjectNodeFilter(nodeObject[logOp][i], table, mainTuple);
                     res += (i > 0 ? ermrestOp : "") + innerRes;
                 }
                 res += (nodeObject[logOp].length > 1  && !nodeObject.negate) ? ")" : "";
@@ -2286,6 +2380,7 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
                 res = "!(" + res + ")";
             }
 
+            // return { successful: true, parsedFilter: res};
             return res;
         },
 
@@ -2583,13 +2678,43 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
         }
     };
 
-    export function SourceObjectNode (nodeObject, isFilter, isForeignKey, isInbound, isPathPrefix, pathPrefixSourcekey, alias, table, isAlternativeJoin) {
+    /**
+     *
+     * @param {Object} nodeObject
+     * @param {boolean} isFilter
+     * @param {boolean} isForeignKey
+     * @param {boolean} isInbound
+     * @param {boolean} isPathPrefix
+     * @param {string=} pathPrefixSourcekey
+     * @param {string=} alias
+     * @param {Table} table the table that this node belongs to
+     * @param {boolean=} isAlternativeJoin
+     * @param {Object=} mainTuple
+     * @param {boolean=} skipProcessingFilters while parsing the sources for the first time, we don't have access to data
+     * so we cannot parse the filters. This is used to skip the filter parsing
+     * @desc This is the source object node that is used to represent a source object.
+     * It can be a filter, foreign key, inbound, outbound, or path prefix.
+     * - If it's a filter, it will parse the filter and store the parsed version in
+     *   `parsedFilterNode` and `nodeObject` will be modified to ensure the
+     *   `operand_pattern` is processed.
+     */
+    export function SourceObjectNode (
+        nodeObject, isFilter, isForeignKey, isInbound, isPathPrefix, pathPrefixSourcekey,
+        alias, table, isAlternativeJoin, mainTuple, skipProcessingFilters
+    ) {
         this.nodeObject = nodeObject;
+        this.originalNodeObject = nodeObject;
+
+        this.table = table;
 
         this.isFilter = isFilter;
-        if (isFilter && table) {
-            // this will parse the filter and throw errors if it's invalid
-            this.parsedFilterNode = _sourceColumnHelpers.parseSourceObjectNodeFilter(nodeObject, table);
+        if (isFilter) {
+            if (!skipProcessingFilters) {
+                this.isFilterProcessed = true;
+                this.processFilter(mainTuple);
+            } else {
+                this.isFilterProcessed = false;
+            }
         }
 
         this.isForeignKey = isForeignKey;
@@ -2645,6 +2770,20 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
                 this._simpleConjunction = computeValue(this);
             }
             return this._simpleConjunction;
+        },
+
+        processFilter: function (mainTuple) {
+            if (!this.isFilter) return;
+
+            const modifiedObject = simpleDeepCopy(this.nodeObject);
+            // this will parse the filter and throw errors if it's invalid
+            this.parsedFilterNode = _sourceColumnHelpers.parseSourceObjectNodeFilter(modifiedObject, this.table, mainTuple);
+            // if (filterRes.successful) {
+            //     this.parsedFilterNode = filterRes.parsedFilter;
+            // } else {
+            //     throw new Error(filterRes.message);
+            // }
+            this.nodeObject = modifiedObject;
         }
     };
 

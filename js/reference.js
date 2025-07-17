@@ -485,7 +485,7 @@ import {
             if (annotationCols !== -1) {
                 usedAnnotation = true;
                 //NOTE We're allowing duplicates in annotation.
-                annotationCols.forEach(function (obj) {
+                annotationCols.forEach(function (obj, objIndex) {
                     // if we have filters in the url, we will get the filters only from url
                     if (obj.sourcekey === _specialSourceDefinitions.SEARCH_BOX && andFilters.length === 0) {
                         if (!searchTerm) {
@@ -497,22 +497,22 @@ import {
                     // make sure it's not referring to the annotation object.
                     obj = simpleDeepCopy(obj);
 
-                    var sd, wrapper;
-                    // if both source and sourcekey are defined, ignore the source and use sourcekey
-                    if (obj.sourcekey) {
-                        sd = self.table.sourceDefinitions.sources[obj.sourcekey];
-                        if (!sd) return;
+                    let sd, wrapper;
+                    try {
+                        // if both source and sourcekey are defined, ignore the source and use sourcekey
+                        if (obj.sourcekey) {
+                            sd = self.table.sourceDefinitions.sources[obj.sourcekey];
+                            if (!sd || !sd.processFilterNodes(undefined).success) return;
 
-                        wrapper = sd.clone(obj, self._table, true);
-                    } else {
-                        try {
+                            wrapper = sd.clone(obj, self._table, true);
+                        } else {
                             wrapper = new SourceObjectWrapper(obj, self._table, true);
-                        } catch(exp) {
-                            console.log("facet definition: " + exp);
-                            // invalid definition or not unsupported
-                            // TODO could show the error message
-                            return;
                         }
+                    } catch(exp) {
+                        $log.info(`facet definition index=${objIndex}: ` + exp);
+                        // invalid definition or not unsupported
+                        // TODO could show the error message
+                        return;
                     }
 
                     var supported = helpers.checkFacetObjectWrapper(wrapper);
@@ -719,7 +719,8 @@ import {
                     var urlSourceDef = self.table.sourceDefinitions.sources[facetAndFilter.sourcekey];
 
                     // invalid sourcekey
-                    if (!urlSourceDef) {
+                    // TODO add a getter for sources that does this automatically
+                    if (!urlSourceDef || urlSourceDef.processFilterNodes(undefined, true).success === false) {
                         addToIssues(facetAndFilter, "`" + facetAndFilter.sourcekey + "` is not a valid sourcekey.");
                         return;
                     }
@@ -2532,7 +2533,7 @@ import {
 
             this._related = [];
 
-            var visibleFKs = this._table.referredBy._contextualize(this._context),
+            var visibleFKs = this._table.referredBy._contextualize(this._context, tuple),
                 notSorted,
                 fkr, fkrName;
             if (visibleFKs === -1) {
@@ -3393,21 +3394,22 @@ import {
 
                         // pseudo-column
                         var sd, wrapper;
-                        // if both source and sourcekey are defined, ignore the source and use sourcekey
-                        if (col.sourcekey) {
-                            sd = self.table.sourceDefinitions.sources[col.sourcekey];
-                            if (logCol(!sd, wm.INVALID_SOURCEKEY, i)) {
-                                continue;
+                        try {
+                            // if both source and sourcekey are defined, ignore the source and use sourcekey
+                            if (col.sourcekey) {
+                                sd = self.table.sourceDefinitions.sources[col.sourcekey];
+                                if (logCol(!sd, wm.INVALID_SOURCEKEY, i)) {
+                                    continue;
+                                }
+                                // merge the two together
+                                // might throw an error if the filter in source operand_pattern returns empty
+                                wrapper = sd.clone(col, this._table, false, tuple);
+                            } else {
+                                wrapper = new SourceObjectWrapper(col, this._table, false, undefined, tuple);
                             }
-                            // merge the two together
-                            wrapper = sd.clone(col, this._table);
-                        } else {
-                            try {
-                                wrapper = new SourceObjectWrapper(col, this._table);
-                            } catch(exp) {
-                                logCol(true, wm.INVALID_SOURCE + ": " + exp.message, i);
-                                continue;
-                            }
+                        } catch(exp) {
+                            logCol(true, wm.INVALID_SOURCE + ": " + exp.message, i);
+                            continue;
                         }
 
                         // definitions that will be ignored:
