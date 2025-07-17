@@ -2734,23 +2734,21 @@ import {
          * @return {Array}
          */
         getExportTemplates: function (useDefault) {
-            var self = this,
-                helpers = _exportHelpers;
-
+            const self = this, helpers = _exportHelpers;
 
             // either null or array
-            var templates = helpers.getExportAnnotTemplates(self.table, self._context);
+            const templates = helpers.getExportAnnotTemplates(self.table, self._context);
 
             // annotation is missing
             if (!Array.isArray(templates)) {
-                var canUseDefault = useDefault &&
+                const canUseDefault = useDefault &&
                                     self._context === _contexts.DETAILED &&
                                     self.defaultExportTemplate != null;
 
                 return canUseDefault ? [self.defaultExportTemplate]: [];
             }
 
-            var finalRes = helpers.replaceFragments(
+            const finalRes = helpers.replaceFragments(
                 templates,
                 helpers.getExportFragmentObject(self.table, self.defaultExportTemplate)
             );

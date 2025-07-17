@@ -379,9 +379,13 @@ Exporter.prototype = {
           if (!source.skip_root_path) {
             queryFrags.push(predicate);
           }
-          if (typeof source.path === 'string') {
+          if (isStringAndNotEmpty(source.path)) {
             // remove the first and last slash if it has one
-            queryFrags.push(trimSlashes(source.path));
+            const addedPath = trimSlashes(source.path);
+            // make sure the path is not empty
+            if (addedPath.length > 0) {
+              queryFrags.push(addedPath);
+            }
           }
 
           var queryStr = queryFrags.join('/');
