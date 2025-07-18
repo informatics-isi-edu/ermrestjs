@@ -1,5 +1,7 @@
 const utils = require('./../../../utils/utilities.js');
 
+const moment = require('moment-timezone');
+
 /**
  * The structure of table and contexts used:
  * main -> f1 -> f2
@@ -166,7 +168,7 @@ exports.execute = function (options) {
       '$virtual-column-1',
       '$virtual-column-1-1',
       'rxU1VoEIaH0rnNoNVr0fwA',
-      'up2zcsXMZsWvCSiWNXt2Kg',
+      'DwJz2eQLrN4DpJfEbeYT6g',
       'u2ZKnWX7hWq_KuPYF53ZhQ',
     ];
 
@@ -451,7 +453,7 @@ exports.execute = function (options) {
                 { outbound: ['pseudo_column_schema', 'main_inbound_2_association_fk2'] },
                 {
                   or: [
-                    { filter: 'RCT', operand_pattern: '{{{$moment.year}}}-{{{$moment.month}}}-{{{$moment.date}}}', operator: '::gt::' },
+                    { filter: 'RCT', operand_pattern: moment().format('YYYY-M-DD'), operator: '::gt::', operand_pattern_processed: true },
                     { filter: 'RID', operator: '::null::', negate: true },
                   ],
                 },
@@ -1060,7 +1062,7 @@ exports.execute = function (options) {
             { o: ['pseudo_column_schema', 'main_inbound_2_association_fk2'] },
             {
               or: [
-                { f: 'RCT', opd: '{{{$moment.year}}}-{{{$moment.month}}}-{{{$moment.date}}}', opr: '::gt::' },
+                { f: 'RCT', opd: moment().format('YYYY-M-DD'), opr: '::gt::', opd_p: true },
                 { f: 'RID', opr: '::null::', n: true },
               ],
             },

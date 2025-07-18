@@ -384,7 +384,7 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
     /**
      * @function
      * @param {string} context the context that we want the value of.
-     * @param {ERMrest.Annotation} annotation the annotation object.
+     * @param {Annotation} annotation the annotation object.
      * @param {Boolean} dontUseDefaultContext Whether we should use the default (*) context
      * @desc This function returns the list that should be used for the given context.
      * Used for visible columns and visible foreign keys.
@@ -439,7 +439,7 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
     /**
      * retun the value that should be used for the display setting. If missing, it will return "-1".
      *
-    * @param {ERMrest.Table|ERMrest.Column|ERMrest.ForeignKeyRef} obj either table object, or an object that has `.table`
+    * @param {Table|ERMrest.Column|ERMrest.ForeignKeyRef} obj either table object, or an object that has `.table`
     * @param {String} context the context string
     * @param {String} annotKey the annotation key that you want the annotation value for
     * @param {Boolean} isTable if the first parameter is table, you should pass `true` for this parameter
@@ -505,7 +505,7 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
     };
 
     /**
-     * @param {ERMrest.Annotations} annotations - the defined annotation on the model
+     * @param {Annotations} annotations - the defined annotation on the model
      * @param {String} key - the annotation key
      * @param {Boolean|null} defaultValue - the value that should be used if annotation is missing.
      *                                      (parent value or null)
@@ -582,7 +582,7 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
      * - `descending`: The boolean that Indicates whether we should reverse sort order or not.
      *
      * @param  {string} columnOrder The object that defines the column/row order
-     * @param  {ERMrest.Table} table
+     * @param  {Table} table
      * @param  {Object=} options the extra options:
      *                  - allowNumOccurrences: to allow the specific frequency column_order
      * @return {Array=} If it's undefined, the column_order that is defined is not valid
@@ -727,7 +727,7 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
 
     /**
      * @function
-     * @param {ERMrest.Table} table The object that we want the formatted values for.
+     * @param {Table} table The object that we want the formatted values for.
      * @param {String} context the context that we want the formatted values for.
      * @param {object} data The object which contains key value pairs of data to be transformed
      * @param {object} linkedData The object which contains key value paris of foreign key data.
@@ -838,11 +838,11 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
      *  - rowName: a rowname object.
      *  - uri.detailed: applink to detailed for the row
      * @private
-     * @param  {ERMrest.Table} table  the table object
+     * @param  {Table} table  the table object
      * @param  {string} context    current context
      * @param  {Object} data       the raw data
      * @param  {Object=} linkedData the raw data of foreignkeys
-     * @param  {ERMrest.Reference=} key the alternate key to use
+     * @param  {Reference=} key the alternate key to use
      * @return {Object}
      */
     export function _getRowTemplateVariables(table, context, data, linkedData, key) {
@@ -861,7 +861,7 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
     /**
      * Given the available linked data, generate the uniqueId for the row this data represents given the shortest key of the table
      *
-     * @param {ERMrest.Key[]} tableShortestKey shortest key from the table the linkedData is for
+     * @param {Key[]} tableShortestKey shortest key from the table the linkedData is for
      * @param {Object} data data to use to generate the unique id
      * @returns string | null - unique id for the row the linkedData represents
      */
@@ -890,7 +890,7 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
 
     /**
      * @function
-     * @param {ERMrest.Table} table The table that we want the row name for.
+     * @param {Table} table The table that we want the row name for.
      * @param {String} context Current context.
      * @param {object} data The object which contains key value pairs of data.
      * @param {Object} linkedData The object which contains key value pairs of foreign key data.
@@ -995,7 +995,7 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
     /**
      * @function
      * @desc Given a key object, will return the presentation object that can bse used for it
-     * @param  {ERMrest.Key} key    the key object
+     * @param  {Key} key    the key object
      * @param  {object} data        the data for the table that key is from
      * @param  {string} context     the context string
      * @param  {object=} templateVariables
@@ -1077,7 +1077,7 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
      * @private
      * @desc Given the key of a table, and data for one row will return the
      * presentation object for the row.
-     * @param  {ERMrest.Key} key   the key of the table
+     * @param  {Key} key   the key of the table
      * @param  {String} context    Current context
      * @param  {object} data       Data for the table that this key is referring to.
      * @param  {boolean} addLink   whether the function should attach link or just the rowname.
@@ -1108,9 +1108,9 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
 
     /**
      * Given a table object and raw data for a row, return a uri to that row with fitlers.
-     * @param  {ERMrest.Table} table the table object
+     * @param  {Table} table the table object
      * @param  {Object} raw data for the row
-     * @param  {ERMrest.Key=} key if we want the link based on a specific key
+     * @param  {Key=} key if we want the link based on a specific key
      * @return {String|null} filter that represents the current row. If row data
      * is missing, it will return null.
      */
@@ -1133,7 +1133,7 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
     /**
      * @function
      * @private
-     * @param  {ERMrest.Key} key     key of the table
+     * @param  {Key} key     key of the table
      * @param  {string} context current context
      * @param  {object} data    data for the table that this key is referring to
      * @return {object} an object with the following attributes:
@@ -1206,9 +1206,9 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
      *  - filters: If successful, it will be an array of {path, keyData}
      *  - hasNull: If failed, it will signal that the issue was related to null value
      *             for a column. `column` property will return the column name that had null value.
-     * @param {ERMrest.Column[]} keyColumns
+     * @param {Column[]} keyColumns
      * @param {Object} data
-     * @param {ERMrest.Catalog} catalogObject
+     * @param {Catalog} catalogObject
      * @param {number} pathOffsetLength the length of offset that should be considered for length limitation logic.
      *                                  if the given value is negative, we will not check the url length limitation.
      * @param {string} displayname the displayname of reference, used for error message
@@ -1741,7 +1741,7 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
 
     /**
      * format the raw value based on the column definition type, heuristics, annotations, etc.
-     * @param {ERMrest.Type} type - the type object of the column
+     * @param {Type} type - the type object of the column
      * @param {Object} data - the 'raw' data value.
      * @returns {string} The formatted value.
      */
@@ -2166,7 +2166,7 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
     };
 
     /**
-     * A wrapper for {ERMrest.renderMustacheTemplate}
+     * A wrapper for {renderMustacheTemplate}
      * acceptable options:
      * - templateEngine: "mustache" or "handlbars"
      * - avoidValidation: to avoid validation of the template
@@ -2175,7 +2175,7 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
      *
      * @param  {string} template - template to be rendered
      * @param  {object} keyValues - formatted key value pairs needed for the template
-     * @param  {ERMrest.Catalog} catalog - the catalog that this value is for
+     * @param  {Catalog} catalog - the catalog that this value is for
      * @param  {any=} options optioanl parameters
      * @return {string} Returns a string produced as a result of templating using options.templateEngine or `Mustache` by default.
      */
@@ -2210,12 +2210,12 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
     };
 
     /**
-     * A wrapper for {ERMrest._validateMustacheTemplate}
+     * A wrapper for {_validateMustacheTemplate}
      * it will take care of adding formmatted and unformatted values.
      * options.ignoredColumns: list of columns that you want validator to ignore
      * options.templateEngine: "mustache" or "handlbars"
      *
-     * @param  {ERMrest.Table} table
+     * @param  {Table} table
      * @param  {object} data
      * @param  {string} template
      * @param  {Catalog} catalog
@@ -2244,7 +2244,7 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
      *
      * @param  {String} template the handlebars/mustache template
      * @param  {Object} data     the key-value pair of data
-     * @param  {ERMrest.Table} table    the table object
+     * @param  {Table} table    the table object
      * @param  {String} context  context string
      * @param  {Object} options
      * @return {Object}          An object with `isHTML` and `value` attributes.

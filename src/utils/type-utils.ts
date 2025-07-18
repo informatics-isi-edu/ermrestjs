@@ -79,7 +79,7 @@ export function isInteger(value: unknown) {
  * @function verify
  * @param {boolean} test The test
  * @param {string} message The message
- * @throws {ERMrest.InvalidInputError} If test is not true.
+ * @throws {InvalidInputError} If test is not true.
  * @private
  */
 export function verify(test: any, message: string) {

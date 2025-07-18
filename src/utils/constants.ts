@@ -484,6 +484,7 @@ export const _shorterVersion = Object.freeze({
   and: 'and',
   or: 'or',
   operand_pattern: 'opd',
+  operand_pattern_processed: 'opd_p',
   operator: 'opr',
   negate: 'n',
 });
