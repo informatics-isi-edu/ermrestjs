@@ -410,7 +410,7 @@ exports.execute = function(options) {
                                 {"f": "RID", "opr": "::null::"}
                             ]},
                             {"i": ["reference_schema", "fk_inbound_related_to_reference"]},
-                            {"f": "id", "opd": "-1", "n": true},
+                            {"f": "id", "opd": "-1", "n": true, "opd_p": true},
                             "id"
                         ], false, false
                     ];

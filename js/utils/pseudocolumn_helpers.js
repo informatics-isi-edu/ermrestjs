@@ -44,6 +44,7 @@ import {
 // legacy
 import { generateKeyValueFilters, renameKey, _renderTemplate, _isEntryContext, _getFormattedKeyValues } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
 import { _createPseudoColumn } from '@isrd-isi-edu/ermrestjs/js/column';
+import { Table, Catalog } from '@isrd-isi-edu/ermrestjs/js/core';
 import { Reference, Tuple } from '@isrd-isi-edu/ermrestjs/js/reference';
 import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/parser';
 
@@ -175,7 +176,7 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
          * @param {string} search the search term
          * @param {string} column the column name
          * @param {string} [alias] the alias name (could be undefined)
-         * @param {ERMrest.Catalog} catalogObject the catalog object (to check if alternative syntax is available)
+         * @param {Catalog} catalogObject the catalog object (to check if alternative syntax is available)
          */
         parseSearch: function (search, column, alias, catalogObject) {
             var res, invalid = false;
@@ -207,10 +208,10 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
          *   handle it.
          *
          * @param {string} search  the search term
-         * @param {ERMrest.Table} rootTable the root table
+         * @param {Table} rootTable the root table
          * @param {string} alias the alias for the root table
          * @param {Object} pathPrefixAliasMapping the path prefix alias mapping object (used for sharing prefix)
-         * @param {ERMrest.Catalog} catalogObject the catalog object (to check if alternative syntax is available)
+         * @param {Catalog} catalogObject the catalog object (to check if alternative syntax is available)
          * @returns the path that represents the search and join statments needed for search
          */
         parseSearchBox: function (search, rootTable, alias, pathPrefixAliasMapping, catalogObject) {
@@ -276,7 +277,7 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
          * @param {Object} source
          * @oaram {String=} sourcekey - the sourcekey name
          * @param {String} alias
-         * @param {ERMrest.Table=} rootTable - might be undefined
+         * @param {Table=} rootTable - might be undefined
          * @param {String} tableName
          * @param {String} catalogId
          * @param {Boolean} reverse - this will reverse the datasource and adds the root alias to the end
@@ -323,7 +324,7 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
          * Given a facet filter, find the mapping facet object
          * NOTE will return an error if the given filter is invalid
          * @param {Object} filter the facet filter
-         * @param {ERMrest.Reference} referenceObject  the reference object
+         * @param {Reference} referenceObject  the reference object
          */
         findMappingFacet: function (filter, referenceObject) {
             // turn this facet into a proper object so we can find its "name"
@@ -364,8 +365,8 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
      * @param       {string} schemaName the starting schema name
      * @param       {string} tableName the starting table name
      * @param       {string} catalogId the catalog id
-     * @param       {ERMrest.catalog} [catalogObject] the catalog object (could be undefined)
-     * @param       {ERMrest.Reference} [referenceObject] the reference object (could be undefined)
+     * @param       {Catalog} [catalogObject] the catalog object (could be undefined)
+     * @param       {Reference} [referenceObject] the reference object (could be undefined)
      * @param       {Array} usedSourceObjects (optional) the source objects that are used in other parts (outbound)
      * @constructor
      * @return      {object} An object that will have the following attributes:
@@ -379,7 +380,7 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
         var facetErrors = _facetingErrors;
         var rootSchemaName = schemaName, rootTableName = tableName;
 
-        var rootTable = null;
+        let rootTable = null;
         try {
             rootTable = catalogObject.schemas.findTable(rootTableName, rootSchemaName);
             /**
@@ -451,10 +452,10 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
                 }
                 // support sourcekey in the facets
                 else {
-                    var sd = rootTable.sourceDefinitions.sources[term.sourcekey];
+                    var sd = rootTable.sourceDefinitions.getSource(term.sourcekey);
 
                     // the sourcekey is invalid
-                    if (!sd || !sd.processFilterNodes(undefined, true).success) {
+                    if (!sd) {
                         return _renderFacetHelpers.getErrorOutput(facetErrors.invalidSourcekey, i);
                     }
 
@@ -620,7 +621,7 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
 
                 node[k].forEach(function (el) {
                     ["and", "or"].forEach(shortenAndOr(el));
-                    ["filter", "operand_pattern", "operator", "negate"].forEach(shorten(el));
+                    ["filter", "operand_pattern", 'operand_pattern_processed', "operator", "negate"].forEach(shorten(el));
                 });
             };
         };
@@ -690,10 +691,10 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
      * - hasWaitFor: whether any of the waitFor columns is seconadry
      * - hasWaitForAggregate: whether any of the waitfor columns are aggregate
      * @param {Array|String} waitFor - the waitfor definition
-     * @param {ERMrest.Reference} baseReference - the reference that this waitfor is based on
-     * @param {ERMrest.Table} currentTable - the current table.
-     * @param {ERMrest.ReferenceColumn=} currentColumn - if this is defined on a column.
-     * @param {ERMrest.Tuple=} mainTable - the main tuple data.
+     * @param {Reference} baseReference - the reference that this waitfor is based on
+     * @param {Table} currentTable - the current table.
+     * @param {ReferenceColumn=} currentColumn - if this is defined on a column.
+     * @param {Tuple=} mainTable - the main tuple data.
      * @param {String} message - the message that should be appended to warning messages.
      * @private
      */
@@ -727,8 +728,7 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
 
             // sources
             if ((wf in currentTable.sourceDefinitions.sources)) {
-                var sd = currentTable.sourceDefinitions.sources[wf];
-                // TODO filter-in-source should I process filters??
+                const sd = currentTable.sourceDefinitions.getSource(wf);
 
                 // entitysets are only allowed in detailed
                 if (sd.hasInbound && !sd.sourceObject.aggregate && baseReference._context !== _contexts.DETAILED) {
@@ -749,7 +749,7 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
 
                 // NOTE this could be in the table.sourceDefinitions
                 // the only issue is that in there we don't have the mainTuple...
-                var pc = _createPseudoColumn(
+                const pc = _createPseudoColumn(
                     baseReference,
                     /**
                      * cloning so,
@@ -1053,7 +1053,7 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
          * - andFilterObject: the given input but with the following modifications:
          *    - a new entityChoiceFilterTuples is added that stores the result tuples
          *    - choices are modified based on the result.
-         * @param {ERMrest.SourceObjectWrapper} andFilterObject - the facet object
+         * @param {SourceObjectWrapper} andFilterObject - the facet object
          * @param {Object} contextHeaderParams  - the object that should be logged with read request
          */
         getEntityChoiceRows: function (andFilterObject, contextHeaderParams) {
@@ -1308,7 +1308,7 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
          * clone on the source-def and pass the object.
          *
          * const myCol = {"sourcekey": "some_key"};
-         * const sd = table.sourceDefinitions.sources[myCol.sourcekey];
+         * const sd = table.sourceDefinitions.getSource(myCol.sourcekey);
          * if (sd) {
          *   const wrapper = sd.clone(myCol, table);
          * }
@@ -1318,7 +1318,7 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
          * - mainTuple should be passed in detailed context so we can use it for filters.
          *
          * @param {Object} sourceObject the source object
-         * @param {ERMrest.Table} table the table that these sources belong to.
+         * @param {Table} table the table that these sources belong to.
          * @param {boolean} isFacet whether this is for a facet or not
          */
         clone: function (sourceObject, table, isFacet, mainTuple) {
@@ -1589,8 +1589,8 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
          *   - column.refernece
          *   - reference.generateRelatedReference
          * both are for generating the reverse related entity path
-         * @param {ERMrest.Tuple} tuple
-         * @param {ERMrest.Table} rootTable
+         * @param {Tuple} tuple
+         * @param {Table} rootTable
          * @param {String=} outAlias
          */
         getReverseAsFacet: function (tuple, rootTable, outAlias) {
@@ -1807,7 +1807,7 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
                         if (!isObjectAndNotNull(rootTable)) {
                             return returnError("Couldn't parse the url since Location doesn't have acccess to the catalog object or main table is invalid.");
                         }
-                        prefix = rootTable.sourceDefinitions.sources[source[i].sourcekey];
+                        prefix = rootTable.sourceDefinitions.getSource(source[i].sourcekey);
                     }
 
                     // TODO filter-in-source should it process filters?
@@ -2254,17 +2254,16 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
             };
         },
 
-        // TODO FILTER_IN_SOURCE test this
         /**
          * parse the given source object node.
          * - this will mutate the given nodeObject and replaces the `operand_pattern` with the processed value
          *   and also set `operand_pattern_processed` to true
          * @param {Object} nodeObject
+         * @param {Object} keyValues
          * @param {Table} table
-         * @param {Tuple=} mainTuple
          * @returns
          */
-        parseSourceObjectNodeFilter: function (nodeObject, table, mainTuple) {
+        parseSourceObjectNodeFilter: function (nodeObject, keyValues, table) {
             let logOp, ermrestOp, i, operator, res = "", innerRes, colName, operand = "";
             const encode = fixedEncodeURIComponent;
             const nullOperator = _ERMrestFilterPredicates.NULL;
@@ -2322,13 +2321,9 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
                 // null cannot have any operand, the rest need operand
                 if ( (("operand_pattern" in nodeObject) && (operator === nullOperator)) ||
                      (!("operand_pattern" in nodeObject) && (operator !== nullOperator))) {
-                    returnError(nodeObject.operand_pattern == nullOperator ? "null operator cannot have any operand_pattern" : "operand_pattern must be defined");
+                    returnError(nodeObject.operand_pattern === nullOperator ? "null operator cannot have any operand_pattern" : "operand_pattern must be defined");
                 }
                 if ("operand_pattern" in nodeObject) {
-                    let keyValues = {};
-                    if (mainTuple && table) {
-                        keyValues = _getFormattedKeyValues(table, mainTuple.reference.context, mainTuple.data, mainTuple.linkedData);
-                    }
                     if (nodeObject.operand_pattern_processed === true) {
                         operand = nodeObject.operand_pattern;
                     } else {
@@ -2340,11 +2335,7 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
                         );
 
                         if (operand === null || operand === undefined || operand.trim() === "") {
-                            // if (!mainTuple) {
-                            //     return { successful: false, message: EMPTY_OPERAND };
-                            // } else {
-                                returnError(EMPTY_OPERAND);
-                            // }
+                            returnError(EMPTY_OPERAND);
                         }
                         nodeObject.operand_pattern_processed = true;
                         nodeObject.operand_pattern = operand;
@@ -2369,7 +2360,7 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
                 res = (nodeObject[logOp].length > 1 && !nodeObject.negate) ? "(" : "";
                 for (i = 0; i < nodeObject[logOp].length; i++) {
                     // it might throw an error which will be propagated to the original caller
-                    innerRes = _sourceColumnHelpers.parseSourceObjectNodeFilter(nodeObject[logOp][i], table, mainTuple);
+                    innerRes = _sourceColumnHelpers.parseSourceObjectNodeFilter(nodeObject[logOp][i], keyValues, table);
                     res += (i > 0 ? ermrestOp : "") + innerRes;
                 }
                 res += (nodeObject[logOp].length > 1  && !nodeObject.negate) ? ")" : "";
@@ -2380,7 +2371,6 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
                 res = "!(" + res + ")";
             }
 
-            // return { successful: true, parsedFilter: res};
             return res;
         },
 
@@ -2703,7 +2693,6 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
         alias, table, isAlternativeJoin, mainTuple, skipProcessingFilters
     ) {
         this.nodeObject = nodeObject;
-        this.originalNodeObject = nodeObject;
 
         this.table = table;
 
@@ -2775,15 +2764,15 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
         processFilter: function (mainTuple) {
             if (!this.isFilter) return;
 
-            const modifiedObject = simpleDeepCopy(this.nodeObject);
+            let keyValues = {};
+            if (mainTuple && this.table) {
+                // get the key values from the main tuple
+                // this will be used to process the operand_pattern
+                keyValues = _getFormattedKeyValues(this.table, mainTuple.reference.context, mainTuple.data, mainTuple.linkedData);
+            }
+
             // this will parse the filter and throw errors if it's invalid
-            this.parsedFilterNode = _sourceColumnHelpers.parseSourceObjectNodeFilter(modifiedObject, this.table, mainTuple);
-            // if (filterRes.successful) {
-            //     this.parsedFilterNode = filterRes.parsedFilter;
-            // } else {
-            //     throw new Error(filterRes.message);
-            // }
-            this.nodeObject = modifiedObject;
+            this.parsedFilterNode = _sourceColumnHelpers.parseSourceObjectNodeFilter(this.nodeObject, keyValues, this.table);
         }
     };
 
@@ -2793,7 +2782,7 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
      * @param {Object} forcedAliases        The aliases that must be used for the given sourcekeys
      * @param {Object[]?} usedSourceObjects The source objects that are used in the url
      *                                      (used for populating usedSourceKeys)
-     * @param {ERMrest.Table?} rootTable    The table that the source objects start from
+     * @param {Table?} rootTable    The table that the source objects start from
      *                                      (used for populating usedSourceKeys)
      * @ignore
      */
@@ -2854,7 +2843,7 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
          * we don't need any for "key1".
          *
          * @param {Object[]} sources the source objects that are used in the url
-         * @param {ERMrest.Table} rootTable the table that the source objects start from
+         * @param {Table} rootTable the table that the source objects start from
          * @private
          */
         _populateUsedSourceKeys: function (sources, rootTable) {

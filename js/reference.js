@@ -67,7 +67,7 @@ import {
   KeyPseudoColumn,
   VirtualColumn,
 } from '@isrd-isi-edu/ermrestjs/js/column';
-import { ermrestFactory } from '@isrd-isi-edu/ermrestjs/js/core';
+import { ermrestFactory, Column, Table } from '@isrd-isi-edu/ermrestjs/js/core';
 import {
   _exportHelpers,
   validateExportTemplate,
@@ -214,7 +214,7 @@ import {
      * @memberof ERMrest
      * @class
      * @param {ERMrest.Location} location - The location object generated from parsing the URI
-     * @param {ERMrest.Catalog} catalog - The catalog object. Since location.catalog is just an id, we need the actual catalog object too.
+     * @param {Catalog} catalog - The catalog object. Since location.catalog is just an id, we need the actual catalog object too.
      */
     export function Reference(location, catalog) {
         /**
@@ -257,7 +257,7 @@ import {
         this._shortestKey = this._table.shortestKey;
 
         /**
-         * @type {ERMrest.ReferenceAggregateFn}
+         * @type {ReferenceAggregateFn}
          */
         this.aggregate = new ReferenceAggregateFn(this);
     }
@@ -343,7 +343,7 @@ import {
 
         /**
          * The table object for this reference
-         * @type {ERMrest.Table}
+         * @type {Table}
          */
          get table() {
             return this._table;
@@ -352,7 +352,7 @@ import {
          /**
           * The base table object that is used for faceting,
           * if there's a join in path, this will return a different object from .table
-          * @type {ERMrest.Table}
+          * @type {Table}
           */
          get facetBaseTable() {
              return this._facetBaseTable;
@@ -365,8 +365,8 @@ import {
          * _Note_: in database jargon, technically everything returned from
          * ERMrest is a 'tuple' or a 'relation'. A tuple consists of attributes
          * and the definitions of those attributes are represented here as the
-         * array of {@link ERMrest.Column}s. The column definitions may be
-         * contextualized (see {@link ERMrest.Reference#contextualize}).
+         * array of {@link Column}s. The column definitions may be
+         * contextualized (see {@link Reference#contextualize}).
          *
          * Usage:
          * ```
@@ -375,7 +375,7 @@ import {
          *   console.log("Column name:", col.name, "has display name:", col.displayname);
          * }
          * ```
-         * @type {ERMrest.ReferenceColumn[]}
+         * @type {ReferenceColumn[]}
          */
         get columns() {
             if (this._referenceColumns === undefined) {
@@ -387,7 +387,7 @@ import {
         /**
          * NOTE this will not map the entity choice pickers, use "generateFacetColumns" instead.
          * so directly using this is not recommended.
-         * @return {ERMrest.FacetColumn[]}
+         * @return {FacetColumn[]}
          */
         get facetColumns() {
             if (this._facetColumns === undefined) {
@@ -446,7 +446,7 @@ import {
          *   issues: <if null it means that there wasn't any issues, otherwise will be a UnsupportedFilters object>
          * }
          *
-         * @param {ERMrest.reference} self
+         * @param {reference} self
          * @param {Boolean} skipMappingEntityChoices - whether we should map entity choices or not
          * @private
          */
@@ -501,7 +501,7 @@ import {
                     try {
                         // if both source and sourcekey are defined, ignore the source and use sourcekey
                         if (obj.sourcekey) {
-                            sd = self.table.sourceDefinitions.sources[obj.sourcekey];
+                            sd = self.table.sourceDefinitions.getSource(obj.sourcekey);
                             if (!sd || !sd.processFilterNodes(undefined).success) return;
 
                             wrapper = sd.clone(obj, self._table, true);
@@ -639,7 +639,7 @@ import {
          *
          * NOTE this should be called before doing read or as part of it
          * @param {Array?} facetAndFilters - (optional) the filters in the url
-         * @param {ERMrest.SourceObjectWrapper[]?} facetObjectWrappers - (optional) the generated facet objects
+         * @param {SourceObjectWrapper[]?} facetObjectWrappers - (optional) the generated facet objects
          * @param {String?} searchTerm - (optional) the search term that is used
          * @param {Boolean?} skipMappingEntityChoices  - (optional) if true, it will return a sync result
          * @param {Boolean?} changeLocation - (optional) whether we should change reference.location or not
@@ -716,11 +716,10 @@ import {
                 }
 
                 if (typeof facetAndFilter.sourcekey === "string") {
-                    var urlSourceDef = self.table.sourceDefinitions.sources[facetAndFilter.sourcekey];
+                    const urlSourceDef = self.table.sourceDefinitions.getSource(facetAndFilter.sourcekey);
 
                     // invalid sourcekey
-                    // TODO add a getter for sources that does this automatically
-                    if (!urlSourceDef || urlSourceDef.processFilterNodes(undefined, true).success === false) {
+                    if (!urlSourceDef) {
                         addToIssues(facetAndFilter, "`" + facetAndFilter.sourcekey + "` is not a valid sourcekey.");
                         return;
                     }
@@ -905,7 +904,7 @@ import {
          * @param {boolean} sameCustomFacet By default we're removing custom-facets, if this is true custom-facets won't be changed.
          * @param {boolean} sameFacet By default we're removing facets, if this is true facets won't be changed.
          *
-         * @return {ERMrest.reference} A reference without facet filters
+         * @return {reference} A reference without facet filters
          */
         removeAllFacetFilters: function (sameFilter, sameCustomFacet, sameFacet) {
             verify(!(sameFilter && sameCustomFacet && sameFacet), "at least one of the options must be false.");
@@ -959,7 +958,7 @@ import {
          *
          * @param {Object[]} facetAndFilters - an array of facets that will be added
          * @param {Object} customFacets - the custom facets object
-         * @return {ERMrest.Reference}
+         * @return {Reference}
          */
         addFacets: function (facetAndFilters, customFacets) {
             verify(Array.isArray(facetAndFilters) && facetAndFilters.length > 0, "given input must be an array");
@@ -990,7 +989,7 @@ import {
         /**
          * Will return a reference with the same facets but hidden.
          *
-         * @return {ERMrest.Reference}
+         * @return {Reference}
          */
         hideFacets: function () {
             var andFilters = this.location.facets ? this.location.facets.andFilters : [];
@@ -2480,7 +2479,7 @@ import {
 
         /**
          * The "related" references. Relationships are defined by foreign key
-         * references between {@link ERMrest.Table}s. Those references can be
+         * references between {@link Table}s. Those references can be
          * considered "outbound" where the table has FKRs to other entities or
          * "inbound" where other entities have FKRs to this entity. Finally,
          * entities can be "associated" by means of associative entities. Those
@@ -2496,7 +2495,7 @@ import {
          *       since we need the main tuple data for generating related references.
          *       Please use `generateRelatedList` or `generateActiveList` before
          *       calling this API.
-         * @type {ERMrest.Reference[]}
+         * @type {Reference[]}
          */
         get related() {
             if (this._related === undefined) {
@@ -2526,8 +2525,8 @@ import {
          *       By passing "tuple", we can create the related references by creaing a facet blob
          *       which can be integrated with other parts of the code.
          *
-         * @returns {ERMrest.Reference[]}
-         * @param {ERMrest.Tuple=} tuple the current tuple
+         * @returns {Reference[]}
+         * @param {Tuple=} tuple the current tuple
          */
         generateRelatedList: function (tuple) {
 
@@ -2609,7 +2608,7 @@ import {
          * This will generate a new unfiltered reference each time.
          * Returns a reference that points to all entities of current table
          *
-         * @type {ERMrest.Reference}
+         * @type {Reference}
          */
         get unfilteredReference() {
             var table = this._table;
@@ -2920,7 +2919,7 @@ import {
 
         /**
          *
-         * @param {ERMrest.ColumnAggregateFn[]} aggregateList - list of aggregate functions to apply to GET uri
+         * @param {ColumnAggregateFn[]} aggregateList - list of aggregate functions to apply to GET uri
          * @return {Promise} - Promise contains an array of the aggregate values in the same order as the supplied aggregate list
          */
         getAggregates: function(aggregateList, contextHeaderParams) {
@@ -3015,8 +3014,8 @@ import {
          * - the merged facets of the based reference and given page's facet.
          * to match the page.
          * NOTE: The given page must be based on the same table that this current table is based on.
-         * @param  {ERMrest.Page} page
-         * @return {ERMrest.Reference} reference with new page settings.
+         * @param  {Page} page
+         * @return {Reference} reference with new page settings.
          */
         setSamePaging: function (page) {
 
@@ -3099,7 +3098,7 @@ import {
          * 3. search by constraint name in visible foreignkey and keys (backward compatibility)
          * Will throw an error if
          * @param  {string} name name of column
-         * @return {ERMrest.ReferenceColumn}
+         * @return {ReferenceColumn}
          */
         getColumnByName: function (name) {
             var i;
@@ -3184,11 +3183,11 @@ import {
          *  + If this reference is actually an inbound related reference,
          *      we should hide the foreign key (and all of its columns) that created the link.
          *
-         * @param  {ERMrest.Tuple} tuple the data for the current refe
+         * @param  {Tuple} tuple the data for the current refe
          * @param  {Object[]} columnsList if passed, we will skip the annotation and heuristics and use this list instead.
          * @param  {boolean?} dontChangeReference whether we should mutate the reference or just return the generated list.
          * @param  {boolean?} skipLog whether we should skip logging the warning messages
-         * @return {ERMrest.ReferenceColumn[]}  Array of {@link ERMrest.ReferenceColumn}.
+         * @return {ReferenceColumn[]}  Array of {@link ERMrest.ReferenceColumn}.
          */
         generateColumnsList: function(tuple, columnsList, dontChangeReference, skipLog) {
             var resultColumns = [];
@@ -3397,7 +3396,7 @@ import {
                         try {
                             // if both source and sourcekey are defined, ignore the source and use sourcekey
                             if (col.sourcekey) {
-                                sd = self.table.sourceDefinitions.sources[col.sourcekey];
+                                sd = self.table.sourceDefinitions.getSource(col.sourcekey);
                                 if (logCol(!sd, wm.INVALID_SOURCEKEY, i)) {
                                     continue;
                                 }
@@ -3726,7 +3725,7 @@ import {
          * the old code was kinda handling this by just adding the multi ones,
          * so if the fk definition is based on fkcolum and and not the RID, it would handle it.
          *
-         * @param  {ERMrest.Tuple=} tuple
+         * @param  {Tuple=} tuple
          * @return {Object}
          */
         generateActiveList: function (tuple) {
@@ -3918,7 +3917,7 @@ import {
          * NOTE I had to move this here because activeList is using this before read,
          * to get the all-outbound foreignkeys which might be in the waitfor of citation annotation
          * In the future we might also want to generate citation based on page and not necessarily tuple.
-         * @type {ERMrest.Citation}
+         * @type {Citation}
          */
         get citation() {
             if (this._citation === undefined) {
@@ -3940,7 +3939,7 @@ import {
         /**
          * If annotation is defined and has the required attributes, will return
          * a Metadata object
-         * @type {ERMrest.GoogleDatasetMetadata}
+         * @type {GoogleDatasetMetadata}
          */
         get googleDatasetMetadata() {
             if (this._googleDatasetMetadata === undefined) {
@@ -4021,7 +4020,7 @@ import {
          * If prefill object is defined and has the required attributes, will return
          * a BulkCreateForeignKeyObject object with the necessary objects used for a association modal picker
          *
-         * @type {ERMrest.BulkCreateForeignKeyObject}
+         * @type {BulkCreateForeignKeyObject}
          */
         get bulkCreateForeignKeyObject() {
             if (this._bulkCreateForeignKeyObject === undefined) {
@@ -4202,11 +4201,11 @@ import {
          *          2.3.2 if tuple was given, it will use the value of shortestKey to create the facet
          *
          *
-         * @param  {ERMrest.ForeignKeyRef} fkr the relationship between these two reference (this fkr must be from another table to the current table)
-         * @param  {ERMrest.Tuple=} tuple the current tuple
+         * @param  {ForeignKeyRef} fkr the relationship between these two reference (this fkr must be from another table to the current table)
+         * @param  {Tuple=} tuple the current tuple
          * @param  {boolean} checkForAlternative if it's true, checks p&b association too.
          * @param  {Object=} sourceObject The object that defines the fkr
-         * @return {ERMrest.Reference}  a reference which is related to current reference with the given fkr
+         * @return {Reference}  a reference which is related to current reference with the given fkr
          * @private
          */
         _generateRelatedReference: function (fkr, tuple, checkForAssociation, sourceObjectWrapper) {
@@ -4783,7 +4782,7 @@ import {
      * This is a private function that makes a copy of a reference object.
      * @memberof ERMrest
      * @param {!ERMrest.Reference} source The source reference to be copied.
-     * @returns {ERMrest.Reference} The copy of the reference object.
+     * @returns {Reference} The copy of the reference object.
      * @private
      */
     export function _referenceCopy(source) {
@@ -4840,7 +4839,7 @@ import {
 
         /**
          * The _record_ context of this reference.
-         * @type {ERMrest.Reference}
+         * @type {Reference}
          */
         get detailed() {
             return this._contextualize(_contexts.DETAILED);
@@ -4848,7 +4847,7 @@ import {
 
         /**
          * The _compact_ context of this reference.
-         * @type {ERMrest.Reference}
+         * @type {Reference}
          */
         get compact() {
             return this._contextualize(_contexts.COMPACT);
@@ -4856,7 +4855,7 @@ import {
 
         /**
          * The _compact/brief_ context of this reference.
-         * @type {ERMrest.Reference}
+         * @type {Reference}
          */
         get compactBrief() {
             return this._contextualize(_contexts.COMPACT_BRIEF);
@@ -4864,7 +4863,7 @@ import {
 
         /**
          * The _compact/select_ context of this reference.
-         * @type {ERMrest.Reference}
+         * @type {Reference}
          */
         get compactSelect() {
             return this._contextualize(_contexts.COMPACT_SELECT);
@@ -4872,7 +4871,7 @@ import {
 
         /**
          * The _compact/select/association_ context of this reference.
-         * @type {ERMrest.Reference}
+         * @type {Reference}
          */
         get compactSelectAssociation() {
             return this._contextualize(_contexts.COMPACT_SELECT_ASSOCIATION);
@@ -4880,7 +4879,7 @@ import {
 
         /**
          * The _compact/select/association/link_ context of this reference.
-         * @type {ERMrest.Reference}
+         * @type {Reference}
          */
         get compactSelectAssociationLink() {
             return this._contextualize(_contexts.COMPACT_SELECT_ASSOCIATION_LINK);
@@ -4888,7 +4887,7 @@ import {
 
         /**
          * The _compact/select/association/unlink_ context of this reference.
-         * @type {ERMrest.Reference}
+         * @type {Reference}
          */
         get compactSelectAssociationUnlink() {
             return this._contextualize(_contexts.COMPACT_SELECT_ASSOCIATION_UNLINK);
@@ -4896,7 +4895,7 @@ import {
 
         /**
          * The _compact/select/foreign_key_ context of this reference.
-         * @type {ERMrest.Reference}
+         * @type {Reference}
          */
         get compactSelectForeignKey() {
             return this._contextualize(_contexts.COMPACT_SELECT_FOREIGN_KEY);
@@ -4904,7 +4903,7 @@ import {
 
         /**
          * The _compact/select/foreign_key/bulk_ context of this reference.
-         * @type {ERMrest.Reference}
+         * @type {Reference}
          */
         get compactSelectBulkForeignKey() {
             return this._contextualize(_contexts.COMPACT_SELECT_BULK_FOREIGN_KEY);
@@ -4912,7 +4911,7 @@ import {
 
         /**
          * The _compact/select/saved_queries_ context of this reference.
-         * @type {ERMrest.Reference}
+         * @type {Reference}
          */
         get compactSelectSavedQueries() {
             return this._contextualize(_contexts.COMPACT_SELECT_SAVED_QUERIES);
@@ -4920,7 +4919,7 @@ import {
 
         /**
          * The _compact/select/show_more_ context of this reference.
-         * @type {ERMrest.Reference}
+         * @type {Reference}
          */
         get compactSelectShowMore() {
             return this._contextualize(_contexts.COMPACT_SELECT_SHOW_MORE);
@@ -4928,7 +4927,7 @@ import {
 
         /**
          * The _entry_ context of this reference.
-         * @type {ERMrest.Reference}
+         * @type {Reference}
          */
         get entry() {
             return this._contextualize(_contexts.ENTRY);
@@ -4936,7 +4935,7 @@ import {
 
         /**
          * The _entry/create_ context of this reference.
-         * @type {ERMrest.Reference}
+         * @type {Reference}
          */
         get entryCreate() {
             return this._contextualize(_contexts.CREATE);
@@ -4944,7 +4943,7 @@ import {
 
         /**
          * The _entry/edit_ context of this reference.
-         * @type {ERMrest.Reference}
+         * @type {Reference}
          */
         get entryEdit() {
             return this._contextualize(_contexts.EDIT);
@@ -4952,7 +4951,7 @@ import {
 
         /**
          * The _entry/compact_ context of this reference.
-         * @type {ERMrest.Reference}
+         * @type {Reference}
          */
         get compactEntry() {
             return this._contextualize(_contexts.COMPACT_ENTRY);
@@ -4960,7 +4959,7 @@ import {
 
         /**
          * get compactBriefInline - The compact brief inline context of the reference
-         * @return {ERMrest.Reference}
+         * @return {Reference}
          */
         get compactBriefInline() {
             return this._contextualize(_contexts.COMPACT_BRIEF_INLINE);
@@ -4968,7 +4967,7 @@ import {
 
         /**
          * get Export - export context
-         * @return {ERMrest.Reference}
+         * @return {Reference}
          */
         get export() {
             return this._contextualize(_contexts.EXPORT);
@@ -4976,7 +4975,7 @@ import {
 
         /**
          * get exportCompact - export context for compact view
-         * @return {ERMrest.Reference}
+         * @return {Reference}
          */
          get exportCompact() {
             return this._contextualize(_contexts.EXPORT_COMPACT);
@@ -4984,7 +4983,7 @@ import {
 
         /**
          * get exportDetailed - export context for detailed view
-         * @return {ERMrest.Reference}
+         * @return {Reference}
          */
          get exportDetailed() {
             return this._contextualize(_contexts.EXPORT_DETAILED);
@@ -5544,7 +5543,7 @@ import {
 
         /**
          * The page's associated reference.
-         * @type {ERMrest.Reference}
+         * @type {Reference}
          */
         get reference() {
             return this._ref;
@@ -5561,7 +5560,7 @@ import {
          *   console.log("Tuple:", tuple.displayname.value, "has values:", tuple.values);
          * }
          * ```
-         * @type {ERMrest.Tuple[]}
+         * @type {Tuple[]}
          */
         get tuples() {
             if (this._tuples === undefined) {
@@ -5605,7 +5604,7 @@ import {
          *   );
          * }
          * ```
-         * @type {ERMrest.Reference|undefined}
+         * @type {Reference|undefined}
          */
         get previous() {
             if (this._hasPrevious) {
@@ -5635,7 +5634,7 @@ import {
          *   );
          * }
          * ```
-         * @type {ERMrest.Reference|undefined}
+         * @type {Reference|undefined}
          */
         get next() {
             if (this._hasNext) {
@@ -5648,7 +5647,7 @@ import {
          * Returns previous or next page
          * Clients should not directly use this. This is used in next and previous getters.
          * @param  {Boolean} next whether we want the next page or previous
-         * @return {ERMrest.Reference}
+         * @return {Reference}
          * @private
          */
         _getSiblingReference: function(next) {
@@ -5883,7 +5882,7 @@ import {
 
         /**
          * This is the reference of the Tuple
-         * @returns {ERMrest.Reference|*} reference of the Tuple
+         * @returns {Reference|*} reference of the Tuple
          */
         get reference() {
 
@@ -5937,7 +5936,7 @@ import {
 
         /**
          * This is the page of the Tuple
-         * @returns {ERMrest.Page|*} page of the Tuple
+         * @returns {Page|*} page of the Tuple
          */
          get page() {
             if (this._page === undefined) {
@@ -6343,7 +6342,7 @@ import {
         /**
          * If annotation is defined and has the required attributes, will return
          * a Citation object that can be used to generate the citation for this tuple.
-         * @type {ERMrest.Citation}
+         * @type {Citation}
          */
         get citation() {
             if (this._citation === undefined) {
@@ -6460,7 +6459,7 @@ import {
          * With origFKRData = {"k1": "1"} this function will return a reference
          * to AssocitaitonTable with FK1 = "1"" and FK2 = "2".
          *
-         * @type {ERMrest.Reference}
+         * @type {Reference}
          */
         getAssociationRef: function(origTableData){
             if (!this._pageRef.derivedAssociationReference) {
@@ -6512,7 +6511,7 @@ import {
          * @desc
          * This function takes the current Tuple (this) and creates a shallow copy of it while de-referencing
          * the _data attribute. This way _data can be modified in chaise without changing the originating Tuple
-         * @returns {ERMrest.Tuple} a shallow copy of _this_ tuple with it's _data de-referenced
+         * @returns {Tuple} a shallow copy of _this_ tuple with it's _data de-referenced
          */
          copy: function() {
              var newTuple = Object.create(Tuple.prototype);
@@ -6595,7 +6594,7 @@ import {
     Citation.prototype = {
         /**
          * Given the templateVariables variables, will generate the citaiton.
-         * @param {ERMrest.Tuple} tuple - the tuple object that this citaiton is based on
+         * @param {Tuple} tuple - the tuple object that this citaiton is based on
          * @param {Object=} templateVariables - if it's not an obect, we will use the tuple templateVariables
          * @return {String|null} if the returned template for required attributes are empty, it will return null.
          */
@@ -6646,7 +6645,7 @@ import {
     GoogleDatasetMetadata.prototype = {
         /**
          * Given the templateVariables variables, will generate the metadata.
-         * @param {ERMrest.Tuple} tuple - the tuple object that this metadata is based on
+         * @param {Tuple} tuple - the tuple object that this metadata is based on
          * @param {Object=} templateVariables - if it's not an object, we will use the tuple templateVariables
          * @return {Json-ld|null} if the returned template for required attributes are empty or invalid, it will return null.
          */
@@ -6711,7 +6710,7 @@ import {
      *     - that key includes the _mainColumn mentioned in prefillObject
      *   should we assume that's the main/leaf columns for the association?
      *
-     * @param {ERMrest.Reference} reference reference for the association table
+     * @param {Reference} reference reference for the association table
      * @param {Object} prefillObject generated prefill object from chaise after extracting the query param and fetching the data from cookie storage
      * @param {Object} fkCols set of foreignkey columns that are not system columns (they might be overlapping so we're not using array)
      * @param {ForeignKeyPseudoColumn} mainColumn the column from the assocation table that points to the main table in the association

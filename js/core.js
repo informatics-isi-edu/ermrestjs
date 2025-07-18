@@ -8,6 +8,8 @@ import { contextHeaderName, _ERMrestFeatures } from '@isrd-isi-edu/ermrestjs/src
 
 // models
 import { InvalidInputError, MalformedURIError, NotFoundError } from '@isrd-isi-edu/ermrestjs/src/models/errors';
+import TableSourceDefinitions from '@isrd-isi-edu/ermrestjs/src/models/table-source-definitions';
+
 // import DeferredPromise from '@isrd-isi-edu/ermrestjs/src/models/deferred-promise';
 
 // services
@@ -80,8 +82,8 @@ import {
      * @param {string} uri URI of the ERMrest service.
      * @param {Object} [contextHeaderParams={cid:'null'}] An optional server header parameters for context logging
      * appended to the end of any request to the server.
-     * @return {ERMrest.Server} Returns a server instance.
-     * @throws {ERMrest.InvalidInputError} URI is missing
+     * @return {Server} Returns a server instance.
+     * @throws {InvalidInputError} URI is missing
      * @desc
      * ERMrest server factory creates or reuses ERMrest.Server instances. The
      * URI should be to the ERMrest _service_. For example,
@@ -139,8 +141,6 @@ import {
 
         /**
          * The wrapped http service for this server instance.
-         * @private
-         * @type {Object}
          */
         this.http = HTTPService.wrapHTTP(ConfigService.http);
         this.http.contextHeaderParams = contextHeaderParams;
@@ -159,7 +159,7 @@ import {
 
         /**
          *
-         * @type {ERMrest.Catalogs}
+         * @type {Catalogs}
          */
         this.catalogs = null;
 
@@ -198,7 +198,7 @@ import {
     /**
      * @memberof ERMrest
      * @constructor
-     * @param {ERMrest.Server} server the server object.
+     * @param {Server} server the server object.
      * @desc
      * Constructor for the Catalogs.
      */
@@ -268,16 +268,16 @@ import {
     /**
      * @memberof ERMrest
      * @constructor
-     * @param {ERMrest.Server} server the server object.
+     * @param {Server} server the server object.
      * @param {string} id the catalog id.
      * @desc
      * Constructor for the Catalog.
      */
-    function Catalog(server, id) {
+    export function Catalog(server, id) {
 
         /**
          * For internal use only. A reference to the server instance.
-         * @type {ERMrest.Server}
+         * @type {Server}
          * @private
          */
         this.server = server;
@@ -297,7 +297,7 @@ import {
 
         /**
          *
-         * @type {ERMrest.Schemas}
+         * @type {Schemas}
          */
         this.schemas = new Schemas();
 
@@ -530,7 +530,7 @@ import {
          * @desc returns the constraint object for the pair.
          * @param {Array.<string>} pair constraint name array. Its length must be two.
          * @param {?string} subject the retuned must have the same object, otherwise return null.
-         * @throws {ERMrest.NotFoundError} constraint not found
+         * @throws {NotFoundError} constraint not found
          * @returns {Object|null} the constraint object. Null means the constraint name is not valid.
          */
         constraintByNamePair: function (pair, subject) {
@@ -547,7 +547,7 @@ import {
          * Given tableName, and schemaName find the table
          * @param  {string} tableName  name of the table
          * @param  {string} schemaName name of the schema. Can be undefined.
-         * @return {ERMrest.Table}
+         * @return {Table}
          */
         getTable: function (tableName, schemaName) {
             var schema;
@@ -642,8 +642,8 @@ import {
 
         /**
          * @param {string} name schema name
-         * @returns {ERMrest.Schema} schema object
-         * @throws {ERMrest.NotFoundError} schema not found
+         * @returns {Schema} schema object
+         * @throws {NotFoundError} schema not found
          * @desc get schema by schema name
          */
         get: function (name) {
@@ -666,9 +666,9 @@ import {
         /**
          * @param  {string} tableName  the name of table
          * @param  {string=} schemaName the name of schema (optional)
-         * @return {ERMrest.Table}
-         * @throws {ERMrest.MalformedURIError}
-         * @throws  {ERMrest.NotFoundError}
+         * @return {Table}
+         * @throws {MalformedURIError}
+         * @throws  {NotFoundError}
          * Given table name and schema will find the table object.
          * If schema name is not given, it will still try to find the table.
          * If the table name exists in multiple schemas or it doesn't exist,
@@ -701,7 +701,7 @@ import {
     /**
      * @memberof ERMrest
      * @constructor
-     * @param {ERMrest.Catalog} catalog the catalog object.
+     * @param {Catalog} catalog the catalog object.
      * @param {string} jsonSchema json of the schema.
      * @desc
      * Constructor for the Catalog.
@@ -710,7 +710,7 @@ import {
 
         /**
          *
-         * @type {ERMrest.Catalog}
+         * @type {Catalog}
          */
         this.catalog = catalog;
 
@@ -736,7 +736,7 @@ import {
 
         /**
          *
-         * @type {ERMrest.Annotations}
+         * @type {Annotations}
          */
         this.annotations = new Annotations();
         for (var uri in jsonSchema.annotations) {
@@ -795,7 +795,7 @@ import {
 
         /**
          *
-         * @type {ERMrest.Tables}
+         * @type {Tables}
          */
         this.tables = new Tables();
         for (var key in jsonSchema.tables) {
@@ -903,8 +903,8 @@ import {
         /**
          *
          * @param {string} name name of table
-         * @returns {ERMrest.Table} table
-         * @throws {ERMrest.NotFoundError} table not found
+         * @returns {Table} table
+         * @throws {NotFoundError} table not found
          * @desc get table by table name
          */
         get: function (name) {
@@ -930,16 +930,16 @@ import {
     /**
      * @memberof ERMrest
      * @constructor
-     * @param {ERMrest.Schema} schema the schema object.
+     * @param {Schema} schema the schema object.
      * @param {string} jsonTable the json of the table.
      * @desc
      * Constructor for Table.
      */
-    function Table(schema, jsonTable) {
+    export function Table(schema, jsonTable) {
 
         /**
          *
-         * @type {ERMrest.Schema}
+         * @type {Schema}
          */
         this.schema = schema;
 
@@ -963,7 +963,7 @@ import {
 
         /**
          *
-         * @type {ERMrest.Table.Entity}
+         * @type {Table.Entity}
          */
         this.entity = new Entity(this.schema.catalog.server, this);
 
@@ -976,13 +976,13 @@ import {
         /**
          * this defaults to itself on the first pass of introspection
          * then might be changed on the second pass if this is an alternative table
-         * @type {ERMrest.Table}
+         * @type {Table}
          */
         this._baseTable = this;
 
         /**
          *
-         * @type {ERMrest.Annotations}
+         * @type {Annotations}
          */
         this.annotations = new Annotations();
         for (var uri in jsonTable.annotations) {
@@ -1037,7 +1037,7 @@ import {
 
         /**
          *
-         * @type {ERMrest.Columns}
+         * @type {Columns}
          */
         this.columns = new Columns(this);
 
@@ -1049,7 +1049,7 @@ import {
 
         /**
          *
-         * @type {ERMrest.Keys}
+         * @type {Keys}
          */
         this.keys = new Keys();
         for (i = 0; i < jsonTable.keys.length; i++) {
@@ -1065,13 +1065,13 @@ import {
 
         /**
          *
-         * @type {ERMrest.ForeignKeys}
+         * @type {ForeignKeys}
          */
         this.foreignKeys = new ForeignKeys(this);
 
         /**
          * All the FKRs to this table.
-         * @type {ERMrest.ForeignKeys}
+         * @type {ForeignKeys}
          */
         this.referredBy = new InboundForeignKeys(this);
 
@@ -1290,7 +1290,7 @@ import {
          * 4. has more text
          * 5. made of columns defined earlier (column position)
          *
-         * @type {ERMrest.Column[]}
+         * @type {Column[]}
          */
         get displayKey () {
             if (this._displayKey === undefined) {
@@ -1357,7 +1357,7 @@ import {
          * The columns that create the stable key
          * NOTE doesn't support composite keys for now
          *
-         * @type {ERMrest.Column[]}
+         * @type {Column[]}
          */
         get stableKey() {
             if (this._stabelKey === undefined) {
@@ -1510,7 +1510,7 @@ import {
          * - sourceMapping: hashname to all the names
          * - sourceDependencies: for each sourcekey, what are the other sourcekeys that it depends on (includes self as well)
          *                       this has been added because of path prefix where a sourcekey might rely on other sourcekeys
-         * @type {Object}
+         * @type {TableSourceDefinitions}
          */
         get sourceDefinitions() {
             if (this._sourceDefinitions === undefined) {
@@ -1667,7 +1667,7 @@ import {
             if (!hasAnnot) {
                 res.columns = allColumns;
                 res.fkeys = allForeignKeys;
-                self._sourceDefinitions = res;
+                self._sourceDefinitions = new TableSourceDefinitions(this, res.columns, res.fkeys, res.sources, res.sourceMapping, res.sourceDependencies);
                 return;
             }
 
@@ -1705,7 +1705,7 @@ import {
                 }
             }
 
-            self._sourceDefinitions = res;
+            self._sourceDefinitions = new TableSourceDefinitions(this, res.columns, res.fkeys, res.sources, res.sourceMapping, res.sourceDependencies);
         },
 
         /**
@@ -1773,7 +1773,7 @@ import {
 
                         // sourcekey has priority over source. if both used, ignore source and only honor source.
                         if (src.sourcekey) {
-                            sd = self.sourceDefinitions.sources[src.sourcekey];
+                            sd = self.sourceDefinitions.getSource(src.sourcekey);
                             if (!sd) {
                                 $log.info(message + ", index=" + index + ": given sourcekey `" + src.sourcekey + "` is not valid.");
                                 continue; // ignore the faulty ones
@@ -2098,7 +2098,7 @@ import {
 
         /**
          * if the table is pure and binary, will return the two foreignkeys that create it
-         * @type {ERMrest.ForeignKeyRef[]}
+         * @type {ForeignKeyRef[]}
          */
         get pureBinaryForeignKeys () {
             if(this._pureBinaryForeignKeys_cached === undefined) {
@@ -2392,8 +2392,8 @@ import {
     /**
      * @memberof ERMrest.Table
      * @constructor
-     * @param {ERMrest.Server} server
-     * @param {ERMrest.Table} table
+     * @param {Server} server
+     * @param {Table} table
      * @desc
      * Constructor for Entity. This is a container in Table
      */
@@ -2420,8 +2420,8 @@ import {
 
         /**
          *
-         * @param {ERMrest.Filters.Negation | ERMrest.Filters.Conjunction | ERMrest.Filters.Disjunction | ERMrest.Filters.UnaryPredicate | ERMrest.Filters.BinaryPredicate} [filter]
-         * @param {ERMrest.Column[] | String[]} [output] selected columns
+         * @param {Filters.Negation | ERMrest.Filters.Conjunction | ERMrest.Filters.Disjunction | ERMrest.Filters.UnaryPredicate | ERMrest.Filters.BinaryPredicate} [filter]
+         * @param {Column[] | String[]} [output] selected columns
          * @param {Object[]} [sortby] columns to sort in order, required is paging is specified.
          * The format of object is {"column": ERMREST.Column | String, "order": asc | desc}
          * This should be a list of columns in order of sort, followed by all the key columns
@@ -2511,7 +2511,7 @@ import {
 
         /**
          *
-         * @param {ERMrest.Filters.Negation | ERMrest.Filters.Conjunction | ERMrest.Filters.Disjunction | ERMrest.Filters.UnaryPredicate | ERMrest.Filters.BinaryPredicate} [filter]
+         * @param {Filters.Negation | ERMrest.Filters.Conjunction | ERMrest.Filters.Disjunction | ERMrest.Filters.UnaryPredicate | ERMrest.Filters.BinaryPredicate} [filter]
          * @returns {Promise} promise returning number of count if resolved or
          *     {@link ERMrest.TimedOutError}, {@link ERMrest.InternalServerError}, {@link ERMrest.ServiceUnavailableError},
          *     {@link ERMrest.ConflictError}, {@link ERMrest.ForbiddenError} or {@link ERMrest.UnauthorizedError} if rejected
@@ -2540,9 +2540,9 @@ import {
 
         /**
          *
-         * @param {ERMrest.Filters.Negation | ERMrest.Filters.Conjunction | ERMrest.Filters.Disjunction | ERMrest.Filters.UnaryPredicate | ERMrest.Filters.BinaryPredicate} [filter]
+         * @param {Filters.Negation | ERMrest.Filters.Conjunction | ERMrest.Filters.Disjunction | ERMrest.Filters.UnaryPredicate | ERMrest.Filters.BinaryPredicate} [filter]
          * @param {Number} [limit] Number of rows
-         * @param {ERMrest.Column[] | string[]} [columns] Array of column names or Column objects output
+         * @param {Column[] | string[]} [columns] Array of column names or Column objects output
          * @param {Object[]} [sortby] An ordered array of {column, order} where column is column name or Column object, order is null (default), 'asc' or 'desc'
          * @returns {Promise} promise returning rowset if resolved or
          *     {@link ERMrest.TimedOutError}, {@link ERMrest.InternalServerError}, {@link ERMrest.ServiceUnavailableError},
@@ -2567,9 +2567,9 @@ import {
 
         /**
          *
-         * @param {ERMrest.Filters.Negation | ERMrest.Filters.Conjunction | ERMrest.Filters.Disjunction | ERMrest.Filters.UnaryPredicate | ERMrest.Filters.BinaryPredicate | null} filter null if not being used
+         * @param {Filters.Negation | ERMrest.Filters.Conjunction | ERMrest.Filters.Disjunction | ERMrest.Filters.UnaryPredicate | ERMrest.Filters.BinaryPredicate | null} filter null if not being used
          * @param {Number} limit Required. Number of rows
-         * @param {ERMrest.Column[] | String[]} [columns] Array of column names or Column objects output
+         * @param {Column[] | String[]} [columns] Array of column names or Column objects output
          * @param {Object[]} [sortby]An ordered array of {column, order} where column is column name or Column object, order is null (default), 'asc' or 'desc'
          * @param {Object} row json row data used to getBefore
          * @returns {Promise} promise returning rowset if resolved or
@@ -2596,9 +2596,9 @@ import {
 
         /**
          *
-         * @param {ERMrest.Filters.Negation | ERMrest.Filters.Conjunction | ERMrest.Filters.Disjunction | ERMrest.Filters.UnaryPredicate | ERMrest.Filters.BinaryPredicate | null} filter null is not being used
+         * @param {Filters.Negation | ERMrest.Filters.Conjunction | ERMrest.Filters.Disjunction | ERMrest.Filters.UnaryPredicate | ERMrest.Filters.BinaryPredicate | null} filter null is not being used
          * @param {Number} limit Required. Number of rows
-         * @param {ERMrest.Column[] | String[]} [columns] Array of column names or Column objects output
+         * @param {Column[] | String[]} [columns] Array of column names or Column objects output
          * @param {Object[]} [sortby]An ordered array of {column, order} where column is column name or Column object, order is null (default), 'asc' or 'desc'
          * @param {Object} row json row data used to getAfter
          * @returns {Promise} promise returning rowset if resolved or
@@ -2623,7 +2623,7 @@ import {
 
         /**
          *
-         * @param {ERMrest.Filters.Negation | ERMrest.Filters.Conjunction | ERMrest.Filters.Disjunction | ERMrest.Filters.UnaryPredicate | ERMrest.Filters.BinaryPredicate} filter
+         * @param {Filters.Negation | ERMrest.Filters.Conjunction | ERMrest.Filters.Disjunction | ERMrest.Filters.UnaryPredicate | ERMrest.Filters.BinaryPredicate} filter
          * @returns {Promise} Promise that returns the json row data deleted if resolved or
          *     {@link ERMrest.TimedOutError}, {@link ERMrest.InternalServerError}, {@link ERMrest.ServiceUnavailableError},
          *     {@link ERMrest.ConflictError}, {@link ERMrest.ForbiddenError} or {@link ERMrest.UnauthorizedError} if rejected
@@ -2700,11 +2700,11 @@ import {
     /**
      *
      * @memberof ERMrest
-     * @param {ERMrest.Table} table
+     * @param {Table} table
      * @param {Object} jsonRows
-     * @param {ERMrest.Filters.Negation | ERMrest.Filters.Conjunction | ERMrest.Filters.Disjunction | ERMrest.Filters.UnaryPredicate | ERMrest.Filters.BinaryPredicate | null} filter null if not being used
+     * @param {Filters.Negation | ERMrest.Filters.Conjunction | ERMrest.Filters.Disjunction | ERMrest.Filters.UnaryPredicate | ERMrest.Filters.BinaryPredicate | null} filter null if not being used
      * @param {Number} limit Number of rows
-     * @param {ERMrest.Column[] | String[]} columns Array of column names or Column objects output
+     * @param {Column[] | String[]} columns Array of column names or Column objects output
      * @param {Object[]} [sortby] An ordered array of {column, order} where column is column name or Column object, order is null/'' (default), 'asc' or 'desc'
      * @constructor
      */
@@ -2871,7 +2871,7 @@ import {
         /**
          *
          * @param {string} name name of column
-         * @returns {ERMrest.Column} column
+         * @returns {Column} column
          */
         get: function (name) {
             var result = this._columns.filter(function (column) {
@@ -2887,7 +2887,7 @@ import {
         /**
          *
          * @param {int} pos
-         * @returns {ERMrest.Column}
+         * @returns {Column}
          */
         getByPosition: function (pos) {
             return this._columns[pos];
@@ -2900,7 +2900,7 @@ import {
      *
      * @memberof ERMrest
      * @constructor
-     * @param {ERMrest.Table} table the table object.
+     * @param {Table} table the table object.
      * @param {string} jsonColumn the json column.
      * @param {Object?} assetCategoryInfo if the column is an asset, this must be an object with categroy and URLColumn properties
      */
@@ -3084,7 +3084,7 @@ import {
 
         /**
          *
-         * @type {ERMrest.Table}
+         * @type {Table}
          */
         this.table = table;
 
@@ -3133,7 +3133,7 @@ import {
 
         /**
          *
-         * @type {ERMrest.Type}
+         * @type {Type}
          */
         this.type = new Type(jsonColumn.type);
 
@@ -3200,7 +3200,7 @@ import {
 
         /**
          *
-         * @type {ERMrest.Annotations}
+         * @type {Annotations}
          */
         this.annotations = new Annotations();
 
@@ -3299,14 +3299,14 @@ import {
 
         /**
          * Member of Keys
-         * @type {ERMrest.Key[]}
+         * @type {Key[]}
          * @desc keys that this column is a member of
          */
         this.memberOfKeys = [];
 
         /**
          * Member of ForeignKeys
-         * @type {ERMrest.ForeignKeyRef[]}
+         * @type {ForeignKeyRef[]}
          * @desc foreign key that this column is a member of
          */
         this.memberOfForeignKeys = [];
@@ -3626,7 +3626,7 @@ import {
         /**
          * If the column is unique and not-null, will return the simple key
          * that is made of this column. Otherwise it will return `null`
-         * @type {ERMrest.Key}
+         * @type {Key}
          */
         get uniqueNotNullKey () {
             if (this._uniqueNotNullKey === undefined) {
@@ -3668,7 +3668,7 @@ import {
 
         /**
          *
-         * @returns {ERMrest.Annotation[]} list of all annotations
+         * @returns {Annotation[]} list of all annotations
          */
         all: function () {
             if (!this._all) {
@@ -3703,8 +3703,8 @@ import {
         /**
          *
          * @param {string} uri uri of annotation
-         * @returns {ERMrest.Annotation} annotation
-         * @throws {ERMrest.NotFoundError} annotation not found
+         * @returns {Annotation} annotation
+         * @throws {NotFoundError} annotation not found
          * @desc get annotation by URI
          */
         get: function (uri) {
@@ -3807,7 +3807,7 @@ import {
 
         /**
          *
-         * @returns {ERMrest.ColSet[]} array of colsets
+         * @returns {ColSet[]} array of colsets
          */
         colsets: function () {
             var sets = [];
@@ -3819,9 +3819,9 @@ import {
 
         /**
          *
-         * @param {ERMrest.ColSet} colset
-         * @returns {ERMrest.Key} key of the colset
-         * @throws {ERMrest.NotFoundError} Key not found
+         * @param {ColSet} colset
+         * @returns {Key} key of the colset
+         * @throws {NotFoundError} Key not found
          * @desc get the key by the column set
          */
         get: function (colset) {
@@ -3841,7 +3841,7 @@ import {
     /**
      * @memberof ERMrest
      * @constructor
-     * @param {ERMrest.Table} table the table object.
+     * @param {Table} table the table object.
      * @param {string} jsonKey json key.
      * @desc
      * Constructor for Key.
@@ -3879,12 +3879,12 @@ import {
         });
 
         /**
-         * @type {ERMrest.ColSet}
+         * @type {ColSet}
          */
         this.colset = new ColSet(uniqueColumns);
 
         /**
-         * @type {ERMrest.Annotations}
+         * @type {Annotations}
          */
         this.annotations = new Annotations();
         for (var uri in jsonKey.annotations) {
@@ -3983,7 +3983,7 @@ import {
 
         /**
          * whether key has a column
-         * @param {ERMrest.Column} column
+         * @param {Column} column
          * @returns {boolean}
          */
         containsColumn: function (column) {
@@ -4188,8 +4188,8 @@ import {
     /**
      *
      * @memberof ERMrest
-     * @param {ERMrest.Column[]} from array of from Columns
-     * @param {ERMrest.Column[]} to array of to Columns
+     * @param {Column[]} from array of from Columns
+     * @param {Column[]} to array of to Columns
      * @constructor
      */
     function Mapping(from, to) { // both array of 'Column' objects
@@ -4226,7 +4226,7 @@ import {
 
         /**
          *
-         * @returns {ERMrest.Column[]} the from columns
+         * @returns {Column[]} the from columns
          */
         domain: function () {
             return this._from;
@@ -4234,9 +4234,9 @@ import {
 
         /**
          *
-         * @param {ERMrest.Column} fromCol
-         * @returns {ERMrest.Column} mapping column
-         * @throws {ERMrest.NotFoundError} no mapping column found
+         * @param {Column} fromCol
+         * @returns {Column} mapping column
+         * @throws {NotFoundError} no mapping column found
          * @desc get the mapping column given the from column
          */
         get: function (fromCol) {
@@ -4251,9 +4251,9 @@ import {
 
         /**
          *
-         * @param {ERMrest.Column} toCol
-         * @returns {ERMrest.Column} mapping column
-         * @throws {ERMrest.NotFoundError} no mapping column found
+         * @param {Column} toCol
+         * @returns {Column} mapping column
+         * @throws {NotFoundError} no mapping column found
          * @desc get the mapping column given the to column
          */
         getFromColumn: function (toCol) {
@@ -4269,7 +4269,7 @@ import {
 
     /**
      * @desc holds inbound foreignkeys of a table.
-     * @param {ERMrest.Table} table the table that this object is for
+     * @param {Table} table the table that this object is for
      * @memberof ERMrest
      * @constructor
      */
@@ -4304,7 +4304,7 @@ import {
          * - name: the pseudo column name
          * @private
          * @param  {String} context
-         * @param  {ERMrest.Tuple} mainTuple the main table data
+         * @param  {Tuple} mainTuple the main table data
          * @return {Object}
          */
         _contextualize: function (context, mainTuple) {
@@ -4357,12 +4357,12 @@ import {
                 }
                 // path
                 else if (typeof orders[i] === "object") {
-                    var wrapper;
+                    let wrapper;
                     if (orders[i].source || orders[i].sourcekey) {
                         try {
                             // if both source and sourcekey are defined, ignore the source and use sourcekey
                             if (orders[i].sourcekey) {
-                                var def = definitions.sources[orders[i].sourcekey];
+                                const def = definitions.getSource(orders[i].sourcekey);
                                 if (def) {
                                     wrapper = def.clone(orders[i], this._table, false, mainTuple);
                                 }
@@ -4424,7 +4424,7 @@ import {
 
         /**
          *
-         * @returns {ERMrest.ForeignKeyRef[]} an array of all foreign key references
+         * @returns {ForeignKeyRef[]} an array of all foreign key references
          */
         all: function () {
             return this._foreignKeys;
@@ -4432,7 +4432,7 @@ import {
 
         /**
          *
-         * @returns {ERMrest.ColSet[]} an array of the foreign keys' colsets
+         * @returns {ColSet[]} an array of the foreign keys' colsets
          */
         colsets: function () {
             var sets = [];
@@ -4456,7 +4456,7 @@ import {
 
         /**
          *
-         * @returns {ERMrest.Mapping[]} mappings
+         * @returns {Mapping[]} mappings
          */
         mappings: function () {
             return this._mappings;
@@ -4464,9 +4464,9 @@ import {
 
         /**
          *
-         * @param {ERMrest.ColSet} colset
-         * @throws {ERMrest.NotFoundError} foreign key not found
-         * @returns {ERMrest.ForeignKeyRef[]} foreign key reference of the colset
+         * @param {ColSet} colset
+         * @throws {NotFoundError} foreign key not found
+         * @returns {ForeignKeyRef[]} foreign key reference of the colset
          * @desc get the foreign key of the given column set
          */
         get: function (colset) {
@@ -4490,7 +4490,7 @@ import {
     /**
      *
      * @memberof ERMrest
-     * @param {ERMrest.Table} table
+     * @param {Table} table
      * @param {Object} jsonFKR
      * @constructor
      */
@@ -4506,7 +4506,7 @@ import {
 
         /**
          * @desc The table that this foreignkey is defined on (from table)
-         * @type {ERMrest.Table}
+         * @type {Table}
          */
         this.table = table;
 
@@ -4528,7 +4528,7 @@ import {
         }
 
         /**
-         * @type {ERMrest.ColSet}
+         * @type {ColSet}
          */
         this.colset = new ColSet(foreignKeyCols);
 
@@ -4545,7 +4545,7 @@ import {
         /**
          * find key from referencedCols
          * use index 0 since all refCols should be of the same schema:table
-         * @type {ERMrest.Key}
+         * @type {Key}
          */
         this.key = refTable.keys.get(new ColSet(referencedCols));
 
@@ -4556,7 +4556,7 @@ import {
         this.rights = jsonFKR.rights;
 
         /**
-         * @type {ERMrest.Mapping}
+         * @type {Mapping}
          */
         this.mapping = new Mapping(foreignKeyCols, referencedCols);
 
@@ -4587,7 +4587,7 @@ import {
         this.ignore = false;
 
         /**
-         * @type {ERMrest.Annotations}
+         * @type {Annotations}
          */
         this.annotations = new Annotations();
         for (var uri in jsonFKR.annotations) {
@@ -4903,7 +4903,7 @@ import {
 
         if (jsonType.base_type !== undefined) {
             /**
-             * @type {ERMrest.Type}
+             * @type {Type}
              */
             this.baseType = new Type(jsonType.base_type);
         }
@@ -4927,8 +4927,3 @@ import {
             return this._rootName;
         }
     };
-
-    function SourceDefinition(key, obj) {
-        this.key = key;
-        this.sourceObject = obj;
-    }

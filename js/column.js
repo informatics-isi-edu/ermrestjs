@@ -93,10 +93,10 @@ import {
  * @private
  * @param  {Reference}  reference    the parent reference
  * @param  {Column}  column       the underlying column object
- * @param  {ERMrest.SourceObjectWrapper}  sourceObjectWrapper the column definition
- * @param  {ERMrest.Tuple=}  mainTuple    the main tuple
+ * @param  {SourceObjectWrapper}  sourceObjectWrapper the column definition
+ * @param  {Tuple=}  mainTuple    the main tuple
  * @param  {String=}  name         the name to avoid computing it again.
- * @return {ERMrest.ReferenceColumn}
+ * @return {ReferenceColumn}
  */
 export const _createPseudoColumn = function (reference, sourceObjectWrapper, mainTuple) {
     var sourceObject = sourceObjectWrapper.sourceObject,
@@ -222,7 +222,7 @@ export function ReferenceColumn(reference, cols, sourceObjectWrapper, name, main
     this.isPseudo = false;
 
     /**
-     * @type {ERMrest.Table}
+     * @type {Table}
      */
     this.table = this._baseCols.length > 0 ? this._baseCols[0].table : reference.table;
 
@@ -313,7 +313,7 @@ ReferenceColumn.prototype = {
     },
     /**
      *
-     * @type {ERMrest.Type}
+     * @type {Type}
      */
     get type() {
         if (this._type === undefined) {
@@ -353,7 +353,7 @@ ReferenceColumn.prototype = {
 
     /**
      * @desc Returns the aggregate function object
-     * @type {ERMrest.ColumnAggregateFn}
+     * @type {ColumnAggregateFn}
      */
     get aggregate() {
         if (this._aggregate === undefined) {
@@ -364,7 +364,7 @@ ReferenceColumn.prototype = {
 
     /**
      * @desc Returns the aggregate group object
-     * @type {ERMrest.ColumnGroupAggregateFn}
+     * @type {ColumnGroupAggregateFn}
      */
     get groupAggregate() {
         if (this._groupAggregate === undefined) {
@@ -732,7 +732,7 @@ ReferenceColumn.prototype = {
      * Array of columns that the current column value depends on. It will get the list from:
      * - source display.wait_for, or
      * - column-display.wait_for or key-display.wait_for (depending on the type of column)
-     * @type {ERMrest.ReferenceColumn[]}
+     * @type {ReferenceColumn[]}
      */
     get waitFor() {
         if (this._waitFor === undefined) {
@@ -757,7 +757,7 @@ ReferenceColumn.prototype = {
      * Should be called once every value is retrieved
      * @param  {Object} templateVariables     [description]
      * @param  {Object} columnValue the value of aggregate column (if it's aggregate)
-     * @param  {ERMrest.Tuple} mainTuple             [description]
+     * @param  {Tuple} mainTuple             [description]
      * @return {Object}                       [description]
      */
     sourceFormatPresentation: function (templateVariables, columnValue, mainTuple) {
@@ -876,11 +876,11 @@ ReferenceColumn.prototype = {
  * it will append "-<integer>" to it.
  *
  * @memberof ERMrest
- * @param {ERMrest.Reference} reference  column's reference
- * @param {ERMrest.Column} column      the column that this pseudo-column is representing
- * @param {ERMrest.SourceObjectWrapper} sourceObjectWrapper the sourceObjectWrapper object (might be undefined)
+ * @param {Reference} reference  column's reference
+ * @param {Column} column      the column that this pseudo-column is representing
+ * @param {SourceObjectWrapper} sourceObjectWrapper the sourceObjectWrapper object (might be undefined)
  * @param {string} name        to avoid processing the name again, this might be undefined.
- * @param {ERMrest.Tuple} mainTuple   if the reference is referring to just one tuple, this is defined.
+ * @param {Tuple} mainTuple   if the reference is referring to just one tuple, this is defined.
  * @constructor
  * @class
  */
@@ -905,11 +905,11 @@ _extends(VirtualColumn, ReferenceColumn);
  * entity (inbound or p&b association)
  *
  * @memberof ERMrest
- * @param {ERMrest.Reference} reference  column's reference
- * @param {ERMrest.Column} column      the column that this pseudo-column is representing
- * @param {ERMrest.SourceObjectWrapper} sourceObjectWrapper the sourceObjectWrapper object (might be undefined)
+ * @param {Reference} reference  column's reference
+ * @param {Column} column      the column that this pseudo-column is representing
+ * @param {SourceObjectWrapper} sourceObjectWrapper the sourceObjectWrapper object (might be undefined)
  * @param {string} name        to avoid processing the name again, this might be undefined.
- * @param {ERMrest.Tuple} mainTuple   if the reference is referring to just one tuple, this is defined.
+ * @param {Tuple} mainTuple   if the reference is referring to just one tuple, this is defined.
  * @constructor
  * @class
  */
@@ -1061,7 +1061,7 @@ PseudoColumn.prototype.formatPresentation = function(data, context, templateVari
  *          3.1.3.2. In entity mode, we are going to return list of row_names derived from `row_name/compact`.
  *  3.2. Otherwise we will only apply the pre_format annotation for the column.
  *
- * @param  {ERMrest.Page} page               the page object of main (current) refernece
+ * @param  {Page} page               the page object of main (current) refernece
  * @param {Object} contextHeaderParams the object that we want to log.
  * @return {Promise}
  */
@@ -1549,7 +1549,7 @@ Object.defineProperty(PseudoColumn.prototype, "aggregateFn", {
  * 3. if mainTuple is available, create the reference based on this path:
  *      <pseudoColumnSchema:PseudoColumnTable>/<path from pseudo-column to main table>/<facets based on value of shortestkey of main table>
  * 4. Otherwise create the path by traversing the path
- * @member {ERMrest.Reference} reference
+ * @member {Reference} reference
  * @memberof ERMrest.PseudoColumn#
  */
 Object.defineProperty(PseudoColumn.prototype, "reference", {
@@ -1688,13 +1688,13 @@ export function ForeignKeyPseudoColumn (reference, fk, sourceObjectWrapper, name
     ].join("/");
 
     /**
-     * @type {ERMrest.Reference}
+     * @type {Reference}
      * @desc The reference object that represents the table of this PseudoColumn
      */
     this.reference =  new Reference(parse(ermrestURI), table.schema.catalog);
 
     /**
-     * @type {ERMrest.ForeignKeyRef}
+     * @type {ForeignKeyRef}
      * @desc The Foreign key object that this PseudoColumn is created based on
      */
     this.foreignKey = fk;
@@ -1730,9 +1730,9 @@ ForeignKeyPseudoColumn.prototype.generateUniqueId = function (linkedData) {
  * constrained based on the domain_filter_pattern annotation. If thisx
  * annotation doesn't exist, it returns this (reference)
  * `this` is the same as column.reference
- * @param {ERMrest.ReferenceColumn} column - column that `this` is based on
+ * @param {ReferenceColumn} column - column that `this` is based on
  * @param {Object} data - tuple data with potential constraints
- * @returns {ERMrest.Reference} the constrained reference
+ * @returns {Reference} the constrained reference
  */
 ForeignKeyPseudoColumn.prototype.filteredRef = function(data, linkedData) {
     var getFilteredRef = function (self) {
@@ -2028,7 +2028,7 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "hasDomainFilter", {
 });
 /**
  * The visible columns that are used as part of the domain-filter
- * @member {ERMrest.ReferenceColumn[]} domainFilterUsedColumns
+ * @member {ReferenceColumn[]} domainFilterUsedColumns
  * @memberof ERMrest.ForeignKeyPseudoColumn#
  */
 Object.defineProperty(ForeignKeyPseudoColumn.prototype, 'domainFilterUsedColumns', {
@@ -2072,7 +2072,7 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "defaultValues", {
 
 /**
  * returns a reference using raw default values of the constituent columns.
- * @member {ERMrest.Refernece} defaultReference
+ * @member {Refernece} defaultReference
  * @memberof ERMrest.ForeignKeyPseudoColumn#
  */
 Object.defineProperty(ForeignKeyPseudoColumn.prototype, "defaultReference", {
@@ -2277,8 +2277,8 @@ Object.defineProperty(ForeignKeyPseudoColumn.prototype, "nullok", {
  * @memberof ERMrest
  * @constructor
  * @class
- * @param {ERMrest.Reference} reference column's reference
- * @param {ERMrest.Key} key the key
+ * @param {Reference} reference column's reference
+ * @param {Key} key the key
  * @desc
  * Constructor for KeyPseudoColumn. This class is a wrapper for {@link ERMrest.Key}.
  * This class extends the {@link ERMrest.ReferenceColumn}
@@ -2300,7 +2300,7 @@ export function KeyPseudoColumn (reference, key, sourceObjectWrapper, name) {
     this.isKey = true;
 
     /**
-     * @type {ERMrest.ForeignKeyRef}
+     * @type {ForeignKeyRef}
      * @desc The Foreign key object that this PseudoColumn is created based on
      */
     this.key = key;
@@ -2467,8 +2467,8 @@ Object.defineProperty(KeyPseudoColumn.prototype, "display", {
  * @memberof ERMrest
  * @constructor
  * @class
- * @param {ERMrest.Reference} reference column's reference
- * @param {ERMrest.Column} column the asset column
+ * @param {Reference} reference column's reference
+ * @param {Column} column the asset column
  *
  * @property {string} urlPattern  A desired upload location can be derived by Pattern Expansion on pattern.
  * @property {(ERMrest.Column|null)} filenameColumn if it's string, then it is the name of column we want to store filename inside of it.
@@ -2728,7 +2728,7 @@ AssetPseudoColumn.prototype._determineSortable = function () {
 
 /**
  * Returns the template_engine defined in the annotation
- * @member {ERMrest.Refernece} template_engine
+ * @member {Refernece} template_engine
  * @memberof ERMrest.AssetPseudoColumn#
  */
 Object.defineProperty(AssetPseudoColumn.prototype, "templateEngine", {
@@ -2742,7 +2742,7 @@ Object.defineProperty(AssetPseudoColumn.prototype, "templateEngine", {
 
 /**
  * Returns the url_pattern defined in the annotation (the raw value and not computed).
- * @member {ERMrest.Refernece} urlPattern
+ * @member {Refernece} urlPattern
  * @memberof ERMrest.AssetPseudoColumn#
  */
 Object.defineProperty(AssetPseudoColumn.prototype, "urlPattern", {
@@ -2756,7 +2756,7 @@ Object.defineProperty(AssetPseudoColumn.prototype, "urlPattern", {
 
 /**
  * The column object that filename is stored in.
- * @member {ERMrest.Column} filenameColumn
+ * @member {Column} filenameColumn
  * @memberof ERMrest.AssetPseudoColumn#
  */
 Object.defineProperty(AssetPseudoColumn.prototype, "filenameColumn", {
@@ -2775,7 +2775,7 @@ Object.defineProperty(AssetPseudoColumn.prototype, "filenameColumn", {
 
 /**
  * The column object that filename is stored in.
- * @member {ERMrest.Column} filenameColumn
+ * @member {Column} filenameColumn
  * @memberof ERMrest.AssetPseudoColumn#
  */
 Object.defineProperty(AssetPseudoColumn.prototype, "byteCountColumn", {
@@ -2794,7 +2794,7 @@ Object.defineProperty(AssetPseudoColumn.prototype, "byteCountColumn", {
 
 /**
  * The column object that md5 hash is stored in.
- * @member {ERMrest.Column} md5
+ * @member {Column} md5
  * @memberof ERMrest.AssetPseudoColumn#
  */
 Object.defineProperty(AssetPseudoColumn.prototype, "md5", {
@@ -2818,7 +2818,7 @@ Object.defineProperty(AssetPseudoColumn.prototype, "md5", {
 
 /**
  * The column object that sha256 hash is stored in.
- * @member {ERMrest.Column} sha256
+ * @member {Column} sha256
  * @memberof ERMrest.AssetPseudoColumn#
  */
 Object.defineProperty(AssetPseudoColumn.prototype, "sha256", {
@@ -2912,7 +2912,7 @@ Object.defineProperty(AssetPseudoColumn.prototype, "displayImagePreview", {
 
 /**
  * Returns the wait for list for this column.
- * @member {ERMrest.Refernece} waitFor
+ * @member {Refernece} waitFor
  * @memberof ERMrest.AssetPseudoColumn#
  */
 Object.defineProperty(AssetPseudoColumn.prototype, "waitFor", {
@@ -2939,8 +2939,8 @@ Object.defineProperty(AssetPseudoColumn.prototype, "waitFor", {
  * @memberof ERMrest
  * @constructor
  * @class
- * @param {ERMrest.Reference} reference column's reference
- * @param {ERMrest.Reference} fk the foreignkey
+ * @param {Reference} reference column's reference
+ * @param {Reference} fk the foreignkey
  * @desc
  * Constructor for InboundForeignKeyPseudoColumn. This class is a wrapper for {@link ERMrest.ForeignKeyRef}.
  * This is a bit different than the {@link ERMrest.ForeignKeyPseudoColumn}, as that was for foreign keys
@@ -2959,7 +2959,7 @@ export function InboundForeignKeyPseudoColumn (reference, relatedReference, sour
 
     /**
      * The reference that can be used to get the data for this pseudo-column
-     * @type {ERMrest.Reference}
+     * @type {Reference}
      */
     this.reference = relatedReference;
 
@@ -2967,13 +2967,13 @@ export function InboundForeignKeyPseudoColumn (reference, relatedReference, sour
 
     /**
      * The table that this pseudo-column represents
-     * @type {ERMrest.Table}
+     * @type {Table}
      */
     this.table = relatedReference.table;
 
     /**
      * The {@link ERMrest.ForeignKeyRef} that this pseudo-column is based on.
-     * @type {ERMrest.ForeignKeyRef}
+     * @type {ForeignKeyRef}
      */
     this.foreignKey = fk;
 
@@ -3073,9 +3073,9 @@ Object.defineProperty(InboundForeignKeyPseudoColumn.prototype, "compressedDataSo
  *
  * If the ReferenceColumn is not provided, then the FacetColumn is for reference
  *
- * @param {ERMrest.Reference} reference the reference that this FacetColumn blongs to.
+ * @param {Reference} reference the reference that this FacetColumn blongs to.
  * @param {int} index The index of this FacetColumn in the list of facetColumns
- * @param {ERMrest.SourceObjectWrapper} facetObjectWrapper The filter object that this FacetColumn will be created based on
+ * @param {SourceObjectWrapper} facetObjectWrapper The filter object that this FacetColumn will be created based on
  * @param {?ERMrest.FacetFilter[]} filters Array of filters
  * @memberof ERMrest
  * @constructor
@@ -3084,13 +3084,13 @@ export function FacetColumn (reference, index, facetObjectWrapper, filters) {
 
     /**
      * The column object that the filters are based on
-     * @type {ERMrest.Column}
+     * @type {Column}
      */
     this._column = facetObjectWrapper.column;
 
     /**
      * The reference that this facet blongs to
-     * @type {ERMrest.Reference}
+     * @type {Reference}
      */
     this.reference = reference;
 
@@ -3279,7 +3279,7 @@ FacetColumn.prototype = {
 
     /**
      * ReferenceColumn that this facetColumn is based on
-     * @type {ERMrest.ReferenceColumn}
+     * @type {ReferenceColumn}
      */
     get column () {
         if (this._referenceColumn === undefined) {
@@ -3313,7 +3313,7 @@ FacetColumn.prototype = {
      *   parse it.
      *
      *
-     * @type {ERMrest.Reference}
+     * @type {Reference}
      */
     get sourceReference () {
         if (this._sourceReference === undefined) {
@@ -3676,7 +3676,7 @@ FacetColumn.prototype = {
      * An {@link ERMrest.AttributeGroupReference} object that can be used to get
      * the available scalar values of this facet. This will use the sortColumns, and hideNumOccurrences APIs.
      * It will throw an error if it's used in entity-mode.
-     * @type {ERMrest.AttributeGroupReference}
+     * @type {AttributeGroupReference}
      */
     get scalarValuesReference() {
         verify(!this.isEntityMode, "this API cannot be used in entity-mode");
@@ -4089,7 +4089,7 @@ FacetColumn.prototype = {
     /**
      * Create a new Reference with appending a new Search filter to current FacetColumn
      * @param  {String} term the term for search
-     * @return {ERMrest.Reference} the Reference with the new filter
+     * @return {Reference} the Reference with the new filter
      */
     addSearchFilter: function (term) {
         verify (isDefinedAndNotNull(term), "`term` is required.");
@@ -4102,7 +4102,7 @@ FacetColumn.prototype = {
 
     /**
      * Create a new Reference with appending a list of choice filters to current FacetColumn
-     * @return {ERMrest.Reference} the reference with the new filter
+     * @return {Reference} the reference with the new filter
      */
     addChoiceFilters: function (values) {
         verify(Array.isArray(values), "given argument must be an array");
@@ -4118,7 +4118,7 @@ FacetColumn.prototype = {
     /**
      * Create a new Reference with replacing choice facet filters by the given input
      * This will also remove NotNullFacetFilter
-     * @return {ERMrest.Reference} the reference with the new filter
+     * @return {Reference} the reference with the new filter
      */
     replaceAllChoiceFilters: function (values) {
         verify(Array.isArray(values), "given argument must be an array");
@@ -4136,7 +4136,7 @@ FacetColumn.prototype = {
     /**
      * Given a term, it will remove any choice filter with that term (if any).
      * @param  {Array<any>} terms array of terms
-     * @return {ERMrest.Reference} the reference with the new filter
+     * @return {Reference} the reference with the new filter
      */
     removeChoiceFilters: function (terms) {
         verify(Array.isArray(terms), "given argument must be an array");
@@ -4152,7 +4152,7 @@ FacetColumn.prototype = {
      * @param  {boolean=} minExclusive whether the minimum boundary is exclusive or not.
      * @param  {String|int=} max maximum value. Can be null or undefined.
      * @param  {boolean=} maxExclusive whether the maximum boundary is exclusive or not.
-     * @return {ERMrest.Reference} the reference with the new filter
+     * @return {Reference} the reference with the new filter
      */
     addRangeFilter: function (min, minExclusive, max, maxExclusive) {
         verify (isDefinedAndNotNull(min) || isDefinedAndNotNull(max), "One of min and max must be defined.");
@@ -4181,7 +4181,7 @@ FacetColumn.prototype = {
      * @param  {boolean=} minExclusive whether the minimum boundary is exclusive or not.
      * @param  {String|int=} max maximum value. Can be null or undefined.
      * @param  {boolean=} maxExclusive whether the maximum boundary is exclusive or not.
-     * @return {ERMrest.Reference} the reference with the new filter
+     * @return {Reference} the reference with the new filter
      */
     removeRangeFilter: function (min, minExclusive, max, maxExclusive) {
         //TODO needs refactoring
@@ -4201,7 +4201,7 @@ FacetColumn.prototype = {
      * this function to only add the filter, and then in the client first remove all and thenadd
      * addNotNullFilter, but since the code is not very optimized that would result on a heavy
      * operation.
-     * @return {ERMrest.Reference}
+     * @return {Reference}
      */
     addNotNullFilter: function () {
         return this._applyFilters([new NotNullFacetFilter()]);
@@ -4209,7 +4209,7 @@ FacetColumn.prototype = {
 
     /**
      * Create a new Reference without any filters.
-     * @return {ERMrest.Reference}
+     * @return {Reference}
      */
     removeNotNullFilter: function () {
         var filters = this.filters.filter(function (f) {
@@ -4220,7 +4220,7 @@ FacetColumn.prototype = {
 
     /**
      * Create a new Reference by removing all the filters from current facet.
-     * @return {ERMrest.Reference} the reference with the new filter
+     * @return {Reference} the reference with the new filter
      */
     removeAllFilters: function() {
         return this._applyFilters([]);
@@ -4229,7 +4229,7 @@ FacetColumn.prototype = {
     /**
      * Create a new Reference by removing a filter from current facet.
      * @param  {int} index index of element that we want to remove from list
-     * @return {ERMrest.Reference} the reference with the new filter
+     * @return {Reference} the reference with the new filter
      */
     removeFilter: function (index) {
         var filters = this.filters.slice();
@@ -4243,8 +4243,8 @@ FacetColumn.prototype = {
      * Given an array of {@link ERMrest.FacetFilter}, will return a new
      * {@link ERMrest.Reference} with the applied filters to the current FacetColumn
      * @private
-     * @param  {ERMrest.FacetFilter[]} filters array of filters
-     * @return {ERMrest.Reference} the reference with the new filter
+     * @param  {FacetFilter[]} filters array of filters
+     * @return {Reference} the reference with the new filter
      */
     _applyFilters: function (filters) {
         var self = this, loc = this.reference.location;
@@ -4378,7 +4378,7 @@ _extends(ChoiceFacetFilter, FacetFilter);
  * @param       {boolean=} minExclusive whether the min filter is exclusive or not
  * @param       {String|int=} max
  * @param       {boolean=} maxExclusive whether the max filter is exclusive or not
- * @param       {ERMrest.Type}
+ * @param       {Type}
  * @constructor
  * @memberof ERMrest
  */
@@ -4465,7 +4465,7 @@ function NotNullFacetFilter () {
  *  for a specific column
  * @memberof ERMrest
  * @class
- * @param {ERMrest.ReferenceColumn} column - the column that is used for creating column aggregates
+ * @param {ReferenceColumn} column - the column that is used for creating column aggregates
  */
 export function ColumnAggregateFn (column) {
     this.column = column;
@@ -4512,7 +4512,7 @@ ColumnAggregateFn.prototype = {
  *  will access this constructor for purposes of fetching grouped aggregate data
  *  for a specific column
  *
- * @param {ERMrest.ReferenceColumn} column The column that is used for creating grouped aggregate
+ * @param {ReferenceColumn} column The column that is used for creating grouped aggregate
  * @memberof ERMrest
  * @constructor
  */
@@ -4532,7 +4532,7 @@ ColumnGroupAggregateFn.prototype = {
      * @param {Object=} sortColumns the sort column object that you want to pass
      * @param {Boolean=} hideNumOccurrences whether we should add number of Occurrences or not.
      * @param {Boolean=} dontAllowNull whether the null value should be returned for the facet or not.
-     * @returns {ERMrest.AttributeGroupReference}
+     * @returns {AttributeGroupReference}
      */
     entityCounts: function(columnDisplayname, sortColumns, hideNumOccurrences, dontAllowNull) {
         if (this.column.isPseudo) {
@@ -4633,7 +4633,7 @@ ColumnGroupAggregateFn.prototype = {
      * @param  {int} bucketCount number of buckets
      * @param  {int} min         minimum value
      * @param  {int} max         maximum value
-     * @return {ERMrest.BucketAttributeGroupReference}
+     * @return {BucketAttributeGroupReference}
      */
     histogram: function (bucketCount, min, max) {
         verify(typeof bucketCount === "number", "Invalid bucket count type.");

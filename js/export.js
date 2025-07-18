@@ -28,7 +28,7 @@ export const _exportHelpers = {
    * Returns the export templates that are defined on this table.
    * NOTE If this returns `null`, then the exportTemplates is not defined on the table or schema
    * NOTE The returned array should not be directly used as it might be using fragments
-   * @param {ERMrest.Table} table
+   * @param {Table} table
    * @param {string} context
    * @private
    * @ignore
@@ -81,7 +81,7 @@ export const _exportHelpers = {
 
   /**
    * Return the export fragments that should be used with export annotation.
-   * @param {ERMrest.Table} table
+   * @param {Table} table
    * @param {Object} defaultExportTemplate
    * @returns An object that can be used in combination with export annotation
    * @private
@@ -286,7 +286,7 @@ export const validateExportTemplate = function (template) {
  *
  * @memberof ERMrest
  * @class
- * @param {ERMrest.Reference} reference
+ * @param {Reference} reference
  * @param {String} bagName the name that will be used for the bag
  * @param {Object} template the tempalte must be in the valid format.
  * @param {String} servicePath the path to the service, i.e. "/deriva/export/"
@@ -506,7 +506,7 @@ Exporter.prototype = {
 
 /**
  * Try export/<context> then export then 'detailed'
- * @param {ERMrest.reference} ref
+ * @param {reference} ref
  * @param {Boolean} useCompact - whether the current context is compact or not
  */
 export const _getExportReference = function (ref, useCompact) {
@@ -575,12 +575,12 @@ export const _getExportReference = function (ref, useCompact) {
  * These are the same column names that we are using for row-name generation.
  *
  * @private
- * @param  {ERMrest.reference} ref       the reference that we want the output for
+ * @param  {reference} ref       the reference that we want the output for
  * @param  {String} tableAlias          the alias that is used for projecting table (last table in path)
  * @param  {String=} path               the string that will be prepended to the path
  * @param  {String=} addMainKey         whether we want to add the key of the main table.
  *                                      if this is true, the next parameter is required.
- * @param  {ERMrest.Reference=} mainRef The main reference
+ * @param  {Reference=} mainRef The main reference
  * @return {Object}                     the output object
  */
 export const _referenceExportOutput = function (ref, tableAlias, path, addMainKey, mainRef, useCompact) {
@@ -767,7 +767,7 @@ export const _referenceExportOutput = function (ref, tableAlias, path, addMainKe
 /**
  * Given a reference object, will return the appropriate output object using entity api
  * @private
- * @param  {ERMrest.Reference} ref  the reference object
+ * @param  {Reference} ref  the reference object
  * @param  {String} path the string that will be prepended to the path
  * @return {Object} the output object
  */
@@ -793,7 +793,7 @@ export const _referenceExportEntityOutput = function (ref, path) {
  * Given a column will return the appropriate output object for asset.
  * It will return null if column is not an asset.
  * @private
- * @param  {ERMrest.Column} col the column object
+ * @param  {Column} col the column object
  * @param  {String} destinationPath the string that will be prepended to destination path
  * @param  {String} sourcePath      the string that will be prepended to source path
  * @return {Object}

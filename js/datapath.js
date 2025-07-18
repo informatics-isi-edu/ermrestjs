@@ -15,7 +15,7 @@ import { _nextChar } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
 
 /**
  * @memberof ERMrest.Datapath
- * @param {ERMrest.Table} table
+ * @param {Table} table
  * @constructor
  */
 export function DataPath(table) {
@@ -23,13 +23,13 @@ export function DataPath(table) {
 
   /**
    *
-   * @type {ERMrest.Catalog}
+   * @type {Catalog}
    */
   this.catalog = table.schema.catalog;
 
   /**
    *
-   * @type {ERMrest.Datapath.PathTable}
+   * @type {Datapath.PathTable}
    */
   this.context = new PathTable(table, this, this._nextAlias);
 
@@ -63,8 +63,8 @@ DataPath.prototype = {
 
   /**
    *
-   * @param {ERMrest.Filters.Negation | ERMrest.Filters.Conjunction | ERMrest.Filters.Disjunction | ERMrest.Filters.UnaryPredicate | ERMrest.Filters.BinaryPredicate} filter
-   * @returns {ERMrest.Datapath.DataPath} a shallow copy of this datapath with filter
+   * @param {Filters.Negation | ERMrest.Filters.Conjunction | ERMrest.Filters.Disjunction | ERMrest.Filters.UnaryPredicate | ERMrest.Filters.BinaryPredicate} filter
+   * @returns {Datapath.DataPath} a shallow copy of this datapath with filter
    * @desc
    * this datapath is not modified
    */
@@ -76,10 +76,10 @@ DataPath.prototype = {
 
   /**
    *
-   * @param {ERMrest.Table} table
+   * @param {Table} table
    * @param context
    * @param link
-   * @returns {ERMrest.Datapath.PathTable}
+   * @returns {Datapath.PathTable}
    * @desc extend the Datapath with table
    */
   extend: function (table, context, link) {
@@ -152,7 +152,7 @@ DataPath.prototype = {
 
     /**
      *
-     * @param {ERMrest.Filters.Negation | ERMrest.Filters.Conjunction | ERMrest.Filters.Disjunction | ERMrest.Filters.UnaryPredicate | ERMrest.Filters.BinaryPredicate} filter
+     * @param {Filters.Negation | ERMrest.Filters.Conjunction | ERMrest.Filters.Disjunction | ERMrest.Filters.UnaryPredicate | ERMrest.Filters.BinaryPredicate} filter
      * @desc delete entities
      * @returns {Promise} promise that returns deleted entities if resolved or
      *     {@link ERMrest.Errors.TimedOutError}, {@link ERMrest.Errors.InternalServerError}, {@link ERMrest.Errors.ServiceUnavailableError},
@@ -184,21 +184,21 @@ DataPath.prototype = {
 /**
  *
  * @memberof ERMrest.Datapath
- * @param {ERMrest.Table} table
- * @param {ERMrest.Datapath.DataPath} datapath
+ * @param {Table} table
+ * @param {Datapath.DataPath} datapath
  * @param {string} alias
  * @constructor
  */
 function PathTable(table, datapath, alias) {
   /**
    *
-   * @type {ERMrest.Datapath.DataPath}
+   * @type {Datapath.DataPath}
    */
   this.datapath = datapath;
 
   /**
    *
-   * @type {ERMrest.Table}
+   * @type {Table}
    */
   this.table = table;
 
@@ -210,7 +210,7 @@ function PathTable(table, datapath, alias) {
 
   /**
    *
-   * @type {ERMrest.Datapath.PathColumns}
+   * @type {Datapath.PathColumns}
    */
   this.columns = new PathColumns(table, this); // pathcolumns
 }
@@ -230,8 +230,8 @@ PathTable.prototype = {
 /**
  *
  * @memberof ERMrest.Datapath
- * @param {ERMrest.Table} table
- * @param {ERMrest.Datapath.PathTable} pathtable
+ * @param {Table} table
+ * @param {Datapath.PathTable} pathtable
  */
 function PathColumns(table, pathtable) {
   this._table = table;
@@ -266,8 +266,8 @@ PathColumns.prototype = {
   /**
    *
    * @param {string} colName column name
-   * @returns {ERMrest.Datapath.PathColumn} returns the PathColumn
-   * @throws {ERMrest.Errors.NotFoundError} column not found
+   * @returns {Datapath.PathColumn} returns the PathColumn
+   * @throws {Errors.NotFoundError} column not found
    * @desc get PathColumn object by column name
    */
   get: function (colName) {
@@ -289,20 +289,20 @@ PathColumns.prototype = {
 
 /**
  * @memberof ERMrest.Datapath
- * @param {ERMrest.Column} column
- * @param {ERMrest.Datapath.PathTable} pathtable
+ * @param {Column} column
+ * @param {Datapath.PathTable} pathtable
  * @constructor
  */
 function PathColumn(column, pathtable) {
   /**
    *
-   * @type {ERMrest.Datapath.PathTable}
+   * @type {Datapath.PathTable}
    */
   this.pathtable = pathtable;
 
   /**
    *
-   * @type {ERMrest.Column}
+   * @type {Column}
    */
   this.column = column;
 
