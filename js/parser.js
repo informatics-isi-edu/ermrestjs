@@ -27,7 +27,8 @@ import {
 
   // legacy
   import { decodeFacet, encodeFacet, _encodeRegexp, versionDecodeBase32 } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
-  import { PathPrefixAliasMapping, _renderFacet, _sourceColumnHelpers } from '@isrd-isi-edu/ermrestjs/js/utils/pseudocolumn_helpers';
+  import { _renderFacet, _sourceColumnHelpers } from '@isrd-isi-edu/ermrestjs/js/utils/pseudocolumn_helpers';
+  import PathPrefixAliasMapping from '@isrd-isi-edu/ermrestjs/src/models/path-prefix-alias-mapping';
 
     /**
      * The ERMrest service name. Internal use only.

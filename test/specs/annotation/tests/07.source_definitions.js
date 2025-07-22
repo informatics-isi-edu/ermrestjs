@@ -31,11 +31,7 @@ exports.execute = function (options) {
 
   var testSourceWrapperAPIs = function (obj, reverse, isLeft, outAlias, expectedString, expectedRawSource, message) {
     var addedMessage = message ? message : '';
-
-    // TODO fiter-in-source
-    if (expectedString) {
-      expect(obj.toString(reverse, isLeft, outAlias)).toEqual(expectedString, 'toString missmatch ' + addedMessage);
-    }
+    expect(obj.toString(reverse, isLeft, outAlias)).toEqual(expectedString, 'toString missmatch ' + addedMessage);
 
     if (expectedRawSource) {
       var src = obj.getRawSourcePath(reverse, outAlias);
@@ -747,11 +743,10 @@ exports.execute = function (options) {
                   false,
                   true,
                   'alias',
-                  // TODO filter-in-source why is the order getting changed?
-                  // [
-                  //   '((id=' + moment().format('YYYY') + '&!(col%20w%20space::null::));col::ts::some%20val;!(RMB::null::;id::null::))',
-                  //   'alias:=left(id)=(source_definitions_schema:outbound1:id)',
-                  // ].join('/'),
+                  [
+                    '((id=' + moment().format('YYYY') + '&!(col%20w%20space::null::));col::ts::some%20val;!(RMB::null::;id::null::))',
+                    'alias:=left(id)=(source_definitions_schema:outbound1:id)',
+                  ].join('/'),
                   '',
                   null, // it's a big object that we cannot easily test and there's no point in testing as well
                   'case 3',

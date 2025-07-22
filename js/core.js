@@ -42,7 +42,8 @@ import {
 import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils';
 
 // legacy
-import { _sourceColumnHelpers, _compressSource, SourceObjectWrapper } from '@isrd-isi-edu/ermrestjs/js/utils/pseudocolumn_helpers';
+import { _sourceColumnHelpers, _compressSource } from '@isrd-isi-edu/ermrestjs/js/utils/pseudocolumn_helpers';
+import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-object-wrapper';
 import { _createReference } from '@isrd-isi-edu/ermrestjs/js/reference';
 import { parse } from '@isrd-isi-edu/ermrestjs/js/parser';
 import {
@@ -1714,7 +1715,7 @@ import {
         * - columns: the search columns
         * - allSamePathPrefix: if all using the same path prefix
         *
-        * @type {false|Object}
+        * @type {false|{columns: SourceObjectWrapper[], allSamePathPrefix: boolean}}
         */
         get searchSourceDefinition() {
             if (this._searchSourceDefinition === undefined) {

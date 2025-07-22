@@ -5,6 +5,9 @@ import { hash as sparkMD5Hash } from 'spark-md5';
 
 // models
 // import DeferredPromise from '@isrd-isi-edu/ermrestjs/src/models/deferred-promise';
+import SourceObjectNode from '@isrd-isi-edu/ermrestjs/src/models/source-object-node';
+import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-object-wrapper';
+import PathPrefixAliasMapping from '@isrd-isi-edu/ermrestjs/src/models/path-prefix-alias-mapping';
 
 // services
 import CatalogService from '@isrd-isi-edu/ermrestjs/src/services/catalog';
@@ -631,7 +634,10 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
         for (var i = 0; i < res.length; i++) {
             ["and", "or"].forEach(shortenAndOr(res[i]));
 
-            ["alias", "sourcekey", "inbound", "outbound", "filter", "operand_pattern", "operator", "negate"].forEach(shorten(res[i]));
+            [
+                "alias", "sourcekey", "inbound", "outbound",
+                "filter", "operand_pattern", "operand_pattern_processed", "operator", "negate"
+            ].forEach(shorten(res[i]));
         }
         return res;
     };
@@ -1277,483 +1283,7 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
         }
     };
 
-    /**
-     *
-     * @param {Object} sourceObject the column directive object
-     * @param {Table} table the root (starting) table
-     * @param {boolean} isFacet whether this is a facet or not
-     * @param {Object=} sources already generated source (only useful for source-def generation)
-     * @param {Tuple=} mainTuple the main tuple that is used for filters
-     * @param {boolean=} skipProcessingFilters whether we should skip processing filters or not
-     * @desc Represents a column-directive
-     */
-    export function SourceObjectWrapper (sourceObject, table, isFacet, sources, mainTuple, skipProcessingFilters) {
-        this.sourceObject = sourceObject;
 
-        // if the extra objects are not passed, we cannot process
-        if (isObjectAndNotNull(table)) {
-            var res = this._process(table, isFacet, sources, mainTuple, skipProcessingFilters);
-            if (res.error) {
-                throw new Error(res.message);
-            }
-        }
-    }
-
-    SourceObjectWrapper.prototype = {
-
-        /**
-         * return a new sourceObjectWrapper that is created by merging the given sourceObject and existing object.
-         *
-         * Useful when we have an object with sourcekey and want to find the actual definition. You can then call
-         * clone on the source-def and pass the object.
-         *
-         * const myCol = {"sourcekey": "some_key"};
-         * const sd = table.sourceDefinitions.getSource(myCol.sourcekey);
-         * if (sd) {
-         *   const wrapper = sd.clone(myCol, table);
-         * }
-         *
-         * - attributes in sourceObject will override the similar ones in the current object.
-         * - "source" of sourceObject will be ignored. so "sourcekey" always has priority over "source".
-         * - mainTuple should be passed in detailed context so we can use it for filters.
-         *
-         * @param {Object} sourceObject the source object
-         * @param {Table} table the table that these sources belong to.
-         * @param {boolean} isFacet whether this is for a facet or not
-         */
-        clone: function (sourceObject, table, isFacet, mainTuple) {
-            let key;
-            const self = this;
-
-            // remove the definition attributes
-            _sourceDefinitionAttributes.forEach(function (attr) {
-                delete sourceObject[attr];
-            });
-
-            for (key in self.sourceObject) {
-                if (!Object.prototype.hasOwnProperty.call(self.sourceObject, key)) continue;
-
-                // only add the attributes that are not defined again
-                if (!Object.prototype.hasOwnProperty.call(sourceObject, key)) {
-                    sourceObject[key] = self.sourceObject[key];
-                }
-            }
-
-            return new SourceObjectWrapper(sourceObject, table, isFacet, undefined, mainTuple);
-        },
-
-        /**
-         * Parse the given sourceobject and create the attributes
-         * @param {Table} table
-         * @param {boolean} isFacet  -- validation is differrent if it's a facet
-         * @param {Object=} sources already generated source (only useful for source-def generation)
-         * @param {Tuple=} mainTuple the main tuple that is used for filters
-         * @param {boolean=} skipProcessingFilters whether we should skip processing filters or not
-         * @returns  {Object}
-         */
-        _process: function (table, isFacet, sources, mainTuple, skipProcessingFilters) {
-            var self = this, sourceObject = this.sourceObject, wm = _warningMessages;
-
-            var returnError = function (message) {
-                return {error: true, message: message};
-            };
-
-            if (typeof sourceObject !== "object" || !sourceObject.source) {
-                return returnError(wm.INVALID_SOURCE);
-            }
-
-            var colName, col, colTable = table, source = sourceObject.source, sourceObjectNodes = [];
-            var hasPath = false, hasInbound = false, hasPrefix = false, isAllOutboundNotNull = false, isAllOutboundNotNullPerModel = false;
-            let lastForeignKeyNode, firstForeignKeyNode, foreignKeyPathLength = 0;
-            let isFiltered = false, filterProps = {};
-
-            // just the column name
-            if (isStringAndNotEmpty(source)){
-                colName = source;
-            }
-            // from 0 to source.length-1 we have paths
-            else if (Array.isArray(source) && source.length === 1 && isStringAndNotEmpty(source[0])) {
-                colName = source[0];
-            }
-            else if (Array.isArray(source) && source.length > 1) {
-                var res = _sourceColumnHelpers.processDataSourcePath(source, table, table.name, table.schema.catalog.id, sources, mainTuple, skipProcessingFilters);
-                if (res.error) {
-                    return res;
-                }
-
-                hasPath = res.foreignKeyPathLength > 0;
-                hasInbound = res.hasInbound;
-                hasPrefix = res.hasPrefix;
-                firstForeignKeyNode = res.firstForeignKeyNode;
-                lastForeignKeyNode = res.lastForeignKeyNode;
-                colTable = res.column.table;
-                foreignKeyPathLength = res.foreignKeyPathLength;
-                sourceObjectNodes = res.sourceObjectNodes;
-                colName = res.column.name;
-                isFiltered = res.isFiltered;
-                filterProps = res.filterProps;
-                isAllOutboundNotNull =  res.isAllOutboundNotNull;
-                isAllOutboundNotNullPerModel = res.isAllOutboundNotNullPerModel;
-
-            }  else {
-                return returnError("Invalid source definition");
-            }
-
-            // we need this check here to make sure the column is in the table
-            try {
-                col = colTable.columns.get(colName);
-            } catch (exp) {
-                return returnError(wm.INVALID_COLUMN_IN_SOURCE_PATH);
-            }
-            var isEntity = hasPath && (sourceObject.entity !== false) && col.isUniqueNotNull;
-
-            // validate aggregate fn
-            if (isFacet !== true && sourceObject.aggregate && _pseudoColAggregateFns.indexOf(sourceObject.aggregate) === -1) {
-                return returnError(wm.INVALID_AGG);
-            }
-
-            self.column = col;
-
-            self.hasPrefix = hasPrefix;
-            // NOTE hasPath only means foreign key path and not filter
-            self.hasPath = hasPath;
-            self.foreignKeyPathLength = foreignKeyPathLength;
-            self.hasInbound = hasInbound;
-            self.hasAggregate = typeof sourceObject.aggregate === "string";
-            self.isFiltered = isFiltered;
-            self.filterProps = filterProps;
-            self.isEntityMode = isEntity;
-            self.isUnique = !self.hasAggregate && !self.isFiltered && (!hasPath || !hasInbound);
-
-            // TODO FILTER_IN_SOURCE better name...
-            /**
-             * these type of columns would be very similiar to aggregate columns.
-             * but it requires more changes in both chaise and ermrestjs
-             * (most probably a new column type or at least more api to fetch their values is needed)
-             * (in chaise we would have to add a new type of secondary requests to active list)
-             * (not sure if these type of pseudo-columns are even useful or not)
-             * so for now we're not going to allow these type of pseudo-columns in visible-columns
-             */
-            self.isUniqueFiltered = !self.hasAggregate && self.isFiltered && (!hasPath || !hasInbound);
-
-            self.isAllOutboundNotNullPerModel = isAllOutboundNotNullPerModel;
-            self.isAllOutboundNotNull = isAllOutboundNotNull;
-
-            // attach last fk
-            if (lastForeignKeyNode != null) {
-                self.lastForeignKeyNode = lastForeignKeyNode;
-            }
-
-            // attach first fk
-            if (firstForeignKeyNode != null) {
-                self.firstForeignKeyNode = firstForeignKeyNode;
-            }
-
-            // generate name:
-            // TODO maybe we shouldn't even allow aggregate in faceting (for now we're ignoring it)
-            if ((sourceObject.self_link === true) || self.isFiltered || self.hasPath || self.isEntityMode || (isFacet !== true && self.hasAggregate)) {
-                self.name = _sourceColumnHelpers.generateSourceObjectHashName(sourceObject, isFacet, sourceObjectNodes);
-                self.isHash = true;
-
-                if (table.columns.has(self.name)) {
-                    return returnError("Generated Hash `" + self.name + "` for pseudo-column exists in table `" + table.name +"`.");
-                }
-            }else {
-                self.name = col.name;
-                self.isHash = false;
-            }
-
-            self.sourceObjectNodes = sourceObjectNodes;
-
-            return self;
-        },
-
-        /**
-         * Return the string representation of this foreignkey path
-         * returned format:
-         * if not isLeft and outAlias is not passed: ()=()/.../()=()
-         * if isLeft: left()=()/.../left()=()
-         * if outAlias defined: ()=()/.../outAlias:=()/()
-         * used in:
-         *   - export default
-         *   - column.getAggregate
-         *   - reference.read
-         * @param {Boolean} reverse whether we want the reverse path
-         * @param {Boolean} isLeft use left join
-         * @param {String=} outAlias the alias that should be added to the output
-         */
-        toString: function (reverse, isLeft, outAlias, isReverseRightJoin) {
-            var self = this;
-            return self.sourceObjectNodes.reduce(function (prev, sn, i) {
-                if (sn.isFilter) {
-                    if (reverse) {
-                        return sn.toString() + (i > 0 ? "/" : "") + prev;
-                    } else {
-                        return prev + (i > 0 ? "/" : "") + sn.toString();
-                    }
-                }
-
-                // it will always be the first one
-                if (sn.isPathPrefix) {
-                    // if we're reversing, we have to add alias to the first one,
-                    // otherwise we only need to add alias if this object only has a prefix and nothing else
-                    if (reverse) {
-                        return sn.toString(reverse, isLeft, outAlias, isReverseRightJoin);
-                    } else {
-                        return sn.toString(reverse, isLeft, self.foreignKeyPathLength == sn.nodeObject.foreignKeyPathLength ? outAlias : null, isReverseRightJoin);
-                    }
-                }
-
-                var fkStr = sn.toString(reverse, isLeft);
-                var addAlias = outAlias &&
-                               (reverse && sn === self.firstForeignKeyNode ||
-                               !reverse && sn === self.lastForeignKeyNode );
-
-                // NOTE alias on each node is ignored!
-                // currently we've added alias only for the association and
-                // therefore it's not really needed here anyways
-                var res = "";
-                if (reverse) {
-                    if (i > 0) {
-                        res += fkStr + "/";
-                    } else {
-                        if (addAlias) {
-                            res += outAlias + ":=";
-                            if (isReverseRightJoin) {
-                                res += "right";
-                            }
-                        }
-                        res += fkStr;
-                    }
-
-                    res += prev;
-                    return res;
-                } else {
-                    return prev + (i > 0 ? "/" : "") + (addAlias ? outAlias + ":=" : "") + fkStr;
-                }
-
-            }, "");
-
-        },
-
-        /**
-         * Turn this into a raw source path without any path prefix
-         * NOTE the returned array is not a complete path as it
-         *      doesn't include the last column
-         * currently used in two places:
-         *   - generating hashname for a sourcedef that uses path prefix
-         *   - generating the reverse path for a related entitty
-         * @param {Boolean} reverse
-         * @param {String=} outAlias alias that will be added to the last fk
-         *                     regardless of reversing or not
-         */
-        getRawSourcePath: function (reverse, outAlias) {
-            var path = [], self = this, obj;
-            var len = self.sourceObjectNodes.length;
-            var isLast = function (index) {
-                return reverse ? (index >= 0) : (index < len);
-            };
-
-            var i = reverse ? (len-1) : 0;
-            while (isLast(i)) {
-                let sn = self.sourceObjectNodes[i];
-                if (sn.isPathPrefix) {
-                    // if this is the last element, we have to add the alias to this
-                    path = path.concat(sn.nodeObject.getRawSourcePath(reverse, self.foreignKeyPathLength == sn.nodeObject.foreignKeyPathLength ? outAlias : null));
-                }
-                else if (sn.isFilter) {
-                    path.push(sn.nodeObject);
-                }  else {
-                    if ((reverse && sn.isInbound) || (!reverse && !sn.isInbound)) {
-                        obj = {"outbound": sn.nodeObject.constraint_names[0]};
-                    } else {
-                        obj = {"inbound": sn.nodeObject.constraint_names[0]};
-                    }
-
-                    // add alias to the last element
-                    if (isStringAndNotEmpty(outAlias) && sn == self.lastForeignKeyNode){
-                        obj.alias = outAlias;
-                    }
-
-                    path.push(obj);
-                }
-
-                i = i + (reverse ? -1 : 1);
-            }
-            return path;
-        },
-
-        /**
-         * Return the reverse path as facet with the value of shortestkey
-         * currently used in two places:
-         *   - column.refernece
-         *   - reference.generateRelatedReference
-         * both are for generating the reverse related entity path
-         * @param {Tuple} tuple
-         * @param {Table} rootTable
-         * @param {String=} outAlias
-         */
-        getReverseAsFacet: function (tuple, rootTable, outAlias) {
-            if (!isObjectAndNotNull(tuple)) return null;
-            var i, col, filters = [], filterSource = [];
-
-            // create the reverse path
-            filterSource = this.getRawSourcePath(true, outAlias);
-
-            // add the filter data
-            for (i = 0; i < rootTable.shortestKey.length; i++) {
-                col = rootTable.shortestKey[i];
-                if (!tuple.data || !tuple.data[col.name]) {
-                    return null;
-                }
-                const filter = {
-                    source: filterSource.concat(col.name)
-                };
-                filter[_facetFilterTypes.CHOICE] = [tuple.data[col.name]];
-                filters.push(filter);
-            }
-
-            if (filters.length == 0) {
-                return null;
-            }
-
-            return {"and": filters};
-        },
-
-        /**
-         * if sourceObject has the required input_iframe properties, will attach `inputIframeProps` and `isInputIframe`
-         * to the sourceObject.
-         * The returned value of this function summarizes whether processing was successful or not.
-         *
-         * var res = processInputIframe(reference, tuple, usedColumnMapping);
-         * if (res.error) {
-         *   console.log(res.message);
-         * } else {
-         *  // success
-         * }
-         *
-         * @param {*} reference the reference object of the parent
-         * @param {*} tuple the tuple object
-         * @param {*} usedIframeInputMappings an object capturing columns used in other mappings. used to avoid overlapping
-         */
-        processInputIframe: function (reference, tuple, usedIframeInputMappings) {
-            var self = this;
-            var context = reference._context;
-            var annot = this.sourceObject.input_iframe;
-            if (!isObjectAndNotNull(annot) || !isStringAndNotEmpty(annot.url_pattern)) {
-                return { error: true, message: 'url_pattern not defined.' };
-            }
-
-            if (!isObjectAndNotNull(annot.field_mapping)) {
-                return { erorr: true, message: 'field_mapping not defined.' };
-            }
-
-            var optionalFieldNames = [];
-            if (Array.isArray(annot.optional_fields)) {
-                annot.optional_fields.forEach(function (f) {
-                    if (isStringAndNotEmpty(f)) optionalFieldNames.push(f);
-                });
-            }
-
-            var emptyFieldConfirmMessage = '';
-            if (isStringAndNotEmpty(annot.empty_field_confirm_message_markdown)) {
-                emptyFieldConfirmMessage = renderMarkdown(annot.empty_field_confirm_message_markdown);
-            }
-
-            var columns = [], fieldMapping = {};
-            for (var f in annot.field_mapping) {
-                var colName = annot.field_mapping[f];
-
-                // column already used in another mapping
-                if (colName in usedIframeInputMappings) {
-                    return { error: true, message: 'column `' + colName + '` already used in another field_mapping.' };
-                }
-
-                try {
-                    var c = self.column.table.columns.get(colName);
-                    var isSerial = (c.type.name.indexOf('serial') === 0);
-
-                    // we cannot use getInputDisabled since we just want to do this based on ACLs
-                    if (context === _contexts.CREATE && (c.isSystemColumn || c.isGeneratedPerACLs || isSerial)) {
-                        if (colName in optionalFieldNames) continue;
-                        return { error: true, message: 'column `' + colName + '` cannot be modified by this user.'};
-                    }
-                    if ((context == _contexts.EDIT || context == _contexts.ENTRY) && (c.isSystemColumn || c.isImmutablePerACLs || isSerial)) {
-                        if (colName in optionalFieldNames) continue;
-                        return { error: true, message: 'column `' + colName + '` cannot be modified by this user.'};
-                    }
-
-                    // create a pseudo-column will make sure we're also handling assets
-                    var wrapper = new SourceObjectWrapper({'source': colName}, reference.table);
-                    var refCol = _createPseudoColumn(reference, wrapper, tuple);
-
-                    fieldMapping[f] = refCol;
-                    columns.push(refCol);
-                } catch (exp) {
-                    if (colName in optionalFieldNames) continue;
-                    return { error: true, message: 'column `' + colName + '` not found.'};
-                }
-            }
-
-            self.isInputIframe = true;
-            self.inputIframeProps = {
-                /**
-                 * can be used for finding the location of iframe
-                 */
-                urlPattern: annot.url_pattern,
-                urlTemplateEngine: annot.template_engine,
-                /**
-                 * the columns used in the mapping
-                 */
-                columns: columns,
-                /**
-                 * an object from field name to column.
-                 */
-                fieldMapping: fieldMapping,
-                /**
-                 * name of optional fields
-                 */
-                optionalFieldNames: optionalFieldNames,
-                /**
-                 * the message that we should show when user wants to submit empty.
-                 */
-                emptyFieldConfirmMessage: emptyFieldConfirmMessage
-            };
-
-            return {success: true, columns: columns};
-        },
-
-        /**
-         * @param {Table} table
-         * @param {Tuple=} mainTuple
-         * @param {boolean=} dontThrowError if set to true, will not throw an error if the filters are not valid
-         */
-        processFilterNodes: function (mainTuple, dontThrowError) {
-            if (!this.filterProps || this.filterProps.isFilterProcessed) {
-                return { success: true };
-            }
-
-            try {
-                for (const sn of this.sourceObjectNodes) {
-                    if (sn.isPathPrefix) {
-                        sn.nodeObject.processFilterNodes(mainTuple);
-                    } else if (sn.isFilter) {
-                        sn.processFilter(mainTuple);
-                    }
-                }
-
-                this.filterProps.isFilterProcessed = true;
-
-                return { success: true };
-            } catch (exp) {
-                if (dontThrowError) {
-                    return { success: false, error: true, message: exp.message };
-                } else {
-                    throw exp;
-                }
-            }
-        }
-    };
 
     /**
      * Helper functions related to source syntax
@@ -1810,7 +1340,6 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
                         prefix = rootTable.sourceDefinitions.getSource(source[i].sourcekey);
                     }
 
-                    // TODO filter-in-source should it process filters?
                     if (!prefix) {
                         return returnError("sourcekey is invalid.");
                     }
@@ -1828,7 +1357,7 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
                     if (!prefix.hasPath) {
                         return returnError("referrred `sourcekey` must be a foreign key path.");
                     }
-                    sourceObjectNodes.push(new SourceObjectNode(prefix, false, false, false, true, source[i].sourcekey, undefined, colTable));
+                    sourceObjectNodes.push(new SourceObjectNode(prefix, colTable, false, false, false, true, source[i].sourcekey, undefined, false));
 
                     firstForeignKeyNode = prefix.firstForeignKeyNode;
                     lastForeignKeyNode = prefix.lastForeignKeyNode;
@@ -1837,7 +1366,6 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
                     tableName = prefix.column.table.name;
                     hasInbound = hasInbound || prefix.hasInbound;
                     isFiltered = isFiltered || prefix.isFiltered;
-                    // TODO filter-in-source these should get it from prefix.filterProps
                     filterProps.hasRootFilter = prefix.hasRootFilter;
                     filterProps.hasFilterInBetween = prefix.hasFilterInBetween;
                     filterProps.leafFilterString = prefix.leafFilterString;
@@ -1852,7 +1380,7 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
 
                     var snf;
                     try {
-                        snf = new SourceObjectNode(source[i], true, false, false, false, undefined, undefined, colTable, undefined, mainTuple, skipProcessingFilters);
+                        snf = new SourceObjectNode(source[i], colTable, true, false, false, false, undefined, undefined, false, skipProcessingFilters, mainTuple);
                     } catch (exp) {
                         return returnError(exp.message);
                     }
@@ -1866,7 +1394,7 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
                     // create the string filter string, if this is not the last, then it will be emptied out
                     // for now we just want the string, later we could improve this implementation
                     // (for recordedit the whole object would be needed and not just string)
-                    // TODO filter-in-source toString is problematic here
+                    // NOTE filter-in-source toString is problematic here
                     filterProps.leafFilterString = filterProps.leafFilterString ?  [filterProps.leafFilterString, snf.toString()].join('/') : snf.toString();
 
                     // add the node to the list
@@ -1939,7 +1467,7 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
 
                     tableName = colTable.name;
 
-                    var sn = new SourceObjectNode(fk, false, true, isInbound, false, null, fkAlias, colTable, isAlternativeJoin);
+                    var sn = new SourceObjectNode(fk, colTable, false, true, isInbound, false, null, fkAlias, isAlternativeJoin);
                     sourceObjectNodes.push(sn);
 
                     if (firstForeignKeyNode == null) {
@@ -2258,9 +1786,9 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
          * parse the given source object node.
          * - this will mutate the given nodeObject and replaces the `operand_pattern` with the processed value
          *   and also set `operand_pattern_processed` to true
-         * @param {Object} nodeObject
-         * @param {Object} keyValues
-         * @param {Table} table
+         * @param {Object} nodeObject the source object node that should be parsed
+         * @param {Object} keyValues the key values that should be used for rendering the template
+         * @param {Table} table the table that this node refers to (the leaf table)
          * @returns
          */
         parseSourceObjectNodeFilter: function (nodeObject, keyValues, table) {
@@ -2499,7 +2027,7 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
             var stringifyAndOr = function (arr) {
                 // TODO we might want to sort this to make sure the order
                 // of elements doesn't matter
-                return "[" + arr.sort(helpers._sortFilterInSource).map(helpers._stringifyFilterInSource).join(",") + "]";
+                return "[" + arr.slice().sort(helpers._sortFilterInSource).map(helpers._stringifyFilterInSource).join(",") + "]";
             };
 
             var res = [];
@@ -2665,237 +2193,5 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
             }
 
             return _sourceColumnHelpers.generateSourceObjectHashName({source: source}, false);
-        }
-    };
-
-    /**
-     *
-     * @param {Object} nodeObject
-     * @param {boolean} isFilter
-     * @param {boolean} isForeignKey
-     * @param {boolean} isInbound
-     * @param {boolean} isPathPrefix
-     * @param {string=} pathPrefixSourcekey
-     * @param {string=} alias
-     * @param {Table} table the table that this node belongs to
-     * @param {boolean=} isAlternativeJoin
-     * @param {Object=} mainTuple
-     * @param {boolean=} skipProcessingFilters while parsing the sources for the first time, we don't have access to data
-     * so we cannot parse the filters. This is used to skip the filter parsing
-     * @desc This is the source object node that is used to represent a source object.
-     * It can be a filter, foreign key, inbound, outbound, or path prefix.
-     * - If it's a filter, it will parse the filter and store the parsed version in
-     *   `parsedFilterNode` and `nodeObject` will be modified to ensure the
-     *   `operand_pattern` is processed.
-     */
-    export function SourceObjectNode (
-        nodeObject, isFilter, isForeignKey, isInbound, isPathPrefix, pathPrefixSourcekey,
-        alias, table, isAlternativeJoin, mainTuple, skipProcessingFilters
-    ) {
-        this.nodeObject = nodeObject;
-
-        this.table = table;
-
-        this.isFilter = isFilter;
-        if (isFilter) {
-            if (!skipProcessingFilters) {
-                this.isFilterProcessed = true;
-                this.processFilter(mainTuple);
-            } else {
-                this.isFilterProcessed = false;
-            }
-        }
-
-        this.isForeignKey = isForeignKey;
-        this.isInbound = isInbound;
-
-        this.isPathPrefix = isPathPrefix;
-        this.pathPrefixSourcekey = pathPrefixSourcekey;
-
-        this.isAlternativeJoin = isAlternativeJoin;
-
-        this.alias = alias;
-    }
-
-    SourceObjectNode.prototype = {
-        /**
-         * Return the string representation of this node
-         * @param {boolean=} reverse - whether we should reverse the order (applicable to fk)
-         * @param {boolean=} isLeft  - whether we want to use left outer join (applicable to fk)
-         * @returns {String}
-         */
-        toString: function (reverse, isLeft, outAlias, isReverseRightJoin) {
-            var self = this;
-
-            if (self.isForeignKey) {
-                var rev = ( (reverse && self.isInbound) || (!reverse && !self.isInbound) );
-                return self.nodeObject.toString(rev, isLeft);
-            }
-
-            if (self.isPathPrefix) {
-                return self.nodeObject.toString(reverse, isLeft, outAlias, isReverseRightJoin);
-            }
-
-            return this.parsedFilterNode;
-        },
-
-        // TOOD what's the point of this???
-        // TODO FILTER_IN_SOURCE better name
-        get simpleConjunction () {
-            if (this._simpleConjunction === undefined) {
-
-                // TODO
-                var computeValue = function (self) {
-                    if (!self.isFilter) return null;
-
-                    var no = self.nodeObject;
-
-                    if ("or" in no) return null;
-
-                    // if ("")
-
-                };
-
-                this._simpleConjunction = computeValue(this);
-            }
-            return this._simpleConjunction;
-        },
-
-        processFilter: function (mainTuple) {
-            if (!this.isFilter) return;
-
-            let keyValues = {};
-            if (mainTuple && this.table) {
-                // get the key values from the main tuple
-                // this will be used to process the operand_pattern
-                keyValues = _getFormattedKeyValues(this.table, mainTuple.reference.context, mainTuple.data, mainTuple.linkedData);
-            }
-
-            // this will parse the filter and throw errors if it's invalid
-            this.parsedFilterNode = _sourceColumnHelpers.parseSourceObjectNodeFilter(this.nodeObject, keyValues, this.table);
-        }
-    };
-
-    /**
-     * This prototype is used for the shared prefix logic.
-     *
-     * @param {Object} forcedAliases        The aliases that must be used for the given sourcekeys
-     * @param {Object[]?} usedSourceObjects The source objects that are used in the url
-     *                                      (used for populating usedSourceKeys)
-     * @param {Table?} rootTable    The table that the source objects start from
-     *                                      (used for populating usedSourceKeys)
-     * @ignore
-     */
-    export function PathPrefixAliasMapping (forcedAliases, usedSourceObjects, rootTable) {
-        /**
-         * Aliases that already mapped to a join statement
-         * <sourcekey> -> <alias>
-         * @type {Object}
-         */
-        this.aliases = {};
-
-        /**
-         * sourcekeys that are used more than once and require alias
-         * <sourcekey> -> value is not important
-         * @type {Object}
-         */
-        this.usedSourceKeys = {};
-
-        /**
-         * The index of last added alias
-         * @type {number}
-         */
-        this.lastIndex = 0;
-
-        /**
-         * The aliases that must be used for the given sourcekeys
-         * <sourcekey> -> <alias>
-         * @type {Object}
-         */
-        this.forcedAliases = {};
-        if (isObjectAndNotNull(forcedAliases)) {
-            this.forcedAliases = forcedAliases;
-        }
-
-        // populate the this.usedSourceKeys based on the given objects
-        this._populateUsedSourceKeys(usedSourceObjects, rootTable);
-    }
-
-    PathPrefixAliasMapping.prototype = {
-        /**
-         * Given an array of source objects will populate the used source keys
-         * in the given first parameter.
-         * NOTE: this function doesn't account for cases where a recursive path
-         * is used twice. for example assume the following scenario:
-         * {
-         *   "key1": {
-         *     "source": [{"inbound": ["s", "const"]}, "RID"]
-         *   },
-         *   "key1_i1": {
-         *     "source": [{"sourcekey": "key1"}, {"inbound": ["s", "const2"]}, "RID"]
-         *   },
-             "key1_key1_i1": {
-         *     "source": [{"sourcekey": "key1_i1"}, {"inbound": ["s", "const3"]}, "RID"]
-         *   }
-         * }
-         * if "key1_i1" and "key1_key1_i1" are used in multiple sources, then it will include "key1" as well as
-         * "key1_i1" as part of usedSourcekeys even though adding alias for "key1_i1" is enough and
-         * we don't need any for "key1".
-         *
-         * @param {Object[]} sources the source objects that are used in the url
-         * @param {Table} rootTable the table that the source objects start from
-         * @private
-         */
-        _populateUsedSourceKeys: function (sources, rootTable) {
-            if (!Array.isArray(sources) || sources.length == 0 || !rootTable) return;
-            var self = this;
-            var addToSourceKey = function (key) {
-                if (!(key in rootTable.sourceDefinitions.sourceDependencies)) return;
-
-                rootTable.sourceDefinitions.sourceDependencies[key].forEach(function (dep) {
-                    if (dep in self.usedSourceKeys) {
-                        self.usedSourceKeys[dep]++;
-                    } else {
-                        self.usedSourceKeys[dep] = 1;
-                    }
-                });
-            };
-            sources.forEach(function (srcObj) {
-                if (!isObjectAndNotNull(srcObj)) return;
-
-                if (typeof srcObj.sourcekey === "string") {
-                    if (srcObj.sourcekey === _specialSourceDefinitions.SEARCH_BOX) {
-                        // add the search columns as well
-                        if (rootTable.searchSourceDefinition && Array.isArray(rootTable.searchSourceDefinition.columns)) {
-                            rootTable.searchSourceDefinition.columns.forEach(function (col, index) {
-                                // if the all are coming from the same path prefix, just look at the first one
-                                if (index > 0 && rootTable.searchSourceDefinition.allSamePathPrefix) {
-                                    return;
-                                }
-                                if (col.sourceObject && col.sourceObject.sourcekey) {
-                                    addToSourceKey(col.sourceObject.sourcekey);
-                                } else if (col.sourceObjectNodes.length > 0 && col.sourceObjectNodes[0].isPathPrefix) {
-                                    addToSourceKey(col.sourceObjectNodes[0].pathPrefixSourcekey);
-                                }
-                            });
-                        }
-                        return;
-                    }
-                    addToSourceKey (srcObj.sourcekey);
-                    return;
-                }
-
-                if (!Array.isArray(srcObj.source) || !isStringAndNotEmpty(srcObj.source[0].sourcekey)) {
-                    return;
-                }
-                // if this is the case, then it's an invalid url that will throw error later
-                if (srcObj.source[0].sourcekey === _specialSourceDefinitions.SEARCH_BOX) {
-                    return;
-                }
-                addToSourceKey(srcObj.source[0].sourcekey);
-            });
-            for (var k in self.usedSourceKeys) {
-                if (self.usedSourceKeys[k] < 2) delete self.usedSourceKeys[k];
-            }
         }
     };

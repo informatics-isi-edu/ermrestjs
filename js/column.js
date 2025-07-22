@@ -6,6 +6,8 @@ import moment from 'moment-timezone';
 
 // models
 // import DeferredPromise from '@isrd-isi-edu/ermrestjs/src/models/deferred-promise';
+import SourceObjectNode from '@isrd-isi-edu/ermrestjs/src/models/source-object-node';
+import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-object-wrapper';
 
 // services
 import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
@@ -73,8 +75,6 @@ import {
 import {
   _compressSource,
   _sourceColumnHelpers,
-  SourceObjectNode,
-  SourceObjectWrapper,
   _processWaitForList,
 } from '@isrd-isi-edu/ermrestjs/js/utils/pseudocolumn_helpers';
 
@@ -1702,7 +1702,7 @@ export function ForeignKeyPseudoColumn (reference, fk, sourceObjectWrapper, name
     // NOTE added for compatibility
     // I cannot simply create a sourceObjectWrapper because it needs a shortestkey of length one.
     if (!isObjectAndNotNull(sourceObjectWrapper)) {
-        this.lastForeignKeyNode = new SourceObjectNode(fk, false, true, false, false, undefined, undefined, fk.table);
+        this.lastForeignKeyNode = new SourceObjectNode(fk, fk.table, false, true, false, false, undefined, undefined, false);
         this.firstForeignKeyNode = this.lastForeignKeyNode;
         this.sourceObjectNodes = [this.lastForeignKeyNode];
         this.foreignKeyPathLength = 1;

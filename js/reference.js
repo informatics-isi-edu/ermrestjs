@@ -100,9 +100,9 @@ import {
   _compressFacetObject,
   _compressSource,
   _sourceColumnHelpers,
-  SourceObjectWrapper,
   _processWaitForList,
 } from '@isrd-isi-edu/ermrestjs/js/utils/pseudocolumn_helpers';
+import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-object-wrapper';
 
     /**
      * This function resolves a URI reference to a {@link ERMrest.Reference}
@@ -5981,7 +5981,7 @@ import {
          * and both the old and new value for the modified key are submitted together
          * for proper updating.
          *
-         * @type {Object}
+         * @type {any}
          */
         get data() {
             if (this._oldData === undefined) {
