@@ -127,9 +127,9 @@ Disjunction.prototype = {
 /**
  *
  * @memberof ERMrest.Filters
- * @param {ERMrest.Column} column
- * @param {ERMrest.Filters.OPERATOR} operator
- * @throws {ERMrest.Errors.InvalidFilterOperatorError} invalid filter operator
+ * @param {Column} column
+ * @param {Filters.OPERATOR} operator
+ * @throws {Errors.InvalidFilterOperatorError} invalid filter operator
  * @constructor
  */
 export function UnaryPredicate(column, operator) {
@@ -159,10 +159,10 @@ UnaryPredicate.prototype = {
 
 /**
  * @memberof ERMrest.Filters
- * @param {ERMrest.Column} column
- * @param {ERMrest.Filters.OPERATOR} operator
+ * @param {Column} column
+ * @param {Filters.OPERATOR} operator
  * @param {String | Number} rvalue
- * @throws {ERMrest.Errors.InvalidFilterOperatorError} invalid filter operator
+ * @throws {Errors.InvalidFilterOperatorError} invalid filter operator
  * @constructor
  */
 export function BinaryPredicate(column, operator, rvalue) {

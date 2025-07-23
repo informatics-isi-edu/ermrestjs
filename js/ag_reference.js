@@ -59,7 +59,7 @@ export function AttributeGroupReference(keyColumns, aggregateColumns, location, 
 
     /**
      * Array of AttributeGroupColumn that will be used as the key columns
-     * @type {ERMrest.AttributeGroupColumn[]}
+     * @type {AttributeGroupColumn[]}
      */
     this._keyColumns = keyColumns;
 
@@ -80,7 +80,7 @@ export function AttributeGroupReference(keyColumns, aggregateColumns, location, 
     this.table = sourceTable;
 
     /**
-     * @type {ERMrest.ReferenceAggregateFn}
+     * @type {ReferenceAggregateFn}
      */
     this.aggregate = new AttributeGroupReferenceAggregateFn(this);
 
@@ -124,7 +124,7 @@ AttributeGroupReference.prototype = {
 
     /**
      * Returns the visible key columns
-     * @type {ERMrest.AttributeGroupColumn[]}
+     * @type {AttributeGroupColumn[]}
      */
     get shortestKey() {
         return this._keyColumns.filter(function (kc) {
@@ -181,7 +181,7 @@ AttributeGroupReference.prototype = {
       * This will generate a new unfiltered reference each time.
       * Returns a reference that points to all entities of current table
       *
-      * @type {ERMrest.Reference}
+      * @type {Reference}
       */
      get unfilteredReference() {
          verify(this.table, "table is not defined for current reference");
@@ -512,7 +512,7 @@ AttributeGroupReference.prototype = {
     /**
      * Find a column in list of key and aggregate columns.
      * @param  {string} name the column name
-     * @return {ERMrest.AttributeGroupColumn}
+     * @return {AttributeGroupColumn}
      */
     getColumnByName: function (name) {
 
@@ -608,7 +608,7 @@ AttributeGroupReference.prototype = {
 export function AttributeGroupPage(reference, data, hasPrevious, hasNext) {
     /**
      * The page's associated reference.
-     * @type {ERMrest.AttributeGroupReference}
+     * @type {AttributeGroupReference}
      */
     this.reference = reference;
 
@@ -639,7 +639,7 @@ AttributeGroupPage.prototype = {
      *   console.log("Tuple:", tuple.displayname.value, "has values:", tuple.values);
      * }
      * ```
-     * @type {ERMrest.AttributeGroupTuple[]}
+     * @type {AttributeGroupTuple[]}
      */
     get tuples () {
         if (this._tuples === undefined) {
@@ -675,7 +675,7 @@ AttributeGroupPage.prototype = {
      *   );
      * }
      * ```
-     * @type {ERMrest.AttributeGroupReference|null}
+     * @type {AttributeGroupReference|null}
      */
     get next() {
         if (this.hasNext) {
@@ -696,7 +696,7 @@ AttributeGroupPage.prototype = {
      *   );
      * }
      * ```
-     * @type {ERMrest.AttributeGroupReference|null}
+     * @type {AttributeGroupReference|null}
      */
     get previous() {
         if (this.hasPrevious) {
@@ -892,7 +892,7 @@ AttributeGroupTuple.prototype = {
  *
  * @param       {string} alias the alias that we want to use. If alias exist we will use the alias=term for creating url.
  * @param       {string} term  the term string, e.g., cnt(*) or col1.
- * @param       {ERMrest.Column} baseColumn the database column that this is based on
+ * @param       {Column} baseColumn the database column that this is based on
  * @param       {Object|string} displayname displayname of column, if it's an object it will have `value`, `unformatted`, and `isHTML`
  * @param       {ERMrset.Type} colType    type of column
  * @param       {string} comment     The string for comment (tooltip)
@@ -927,7 +927,7 @@ export function AttributeGroupColumn(alias, term, baseColumn, displayname, colTy
 
     /**
      * The database column that this is based on. It might not be defined.
-     * @type {ERMrest.Column}
+     * @type {Column}
      */
     this.baseColumn = baseColumn;
 
@@ -949,7 +949,7 @@ export function AttributeGroupColumn(alias, term, baseColumn, displayname, colTy
 
         /**
         * Type object
-        * @type {ERMrest.Type}
+        * @type {Type}
         */
         this.type = colType;
     }
@@ -1104,7 +1104,7 @@ AttributeGroupColumn.prototype = {
  * Constructor for creating location object for creating a {@link ERMrest.AttributeGroupReference}
 
  * @param       {string} service      the service part of url
- * @param       {ERMrest.catalog} catalog      the catalog object
+ * @param       {catalog} catalog      the catalog object
  * @param       {String} path         the whole path string
  * @param       {Object} searchObject search obect, it should have `term`, and `column`.
  * @param       {Object[]} sortObject sort object, An array of objects with `column`, and `descending` as attribute.
@@ -1122,7 +1122,7 @@ export function AttributeGroupLocation(service, catalog, path, searchObject, sor
     /**
      * catalog object
      *
-     * @type {ERMrest.Catalog}
+     * @type {Catalog}
      */
     this.catalog = catalog;
 
@@ -1249,7 +1249,7 @@ AttributeGroupLocation.prototype = {
  *  will access this constructor for purposes of fetching grouped aggregate data
  *  for a specific column
  *
- * @param {ERMrest.AttributeGroupReference} reference The reference that this aggregate function belongs to
+ * @param {AttributeGroupReference} reference The reference that this aggregate function belongs to
  * @memberof ERMrest
  * @constructor
  */
@@ -1286,8 +1286,8 @@ AttributeGroupReferenceAggregateFn.prototype = {
  *  - This will currently be used by the aggregateGroup histogram function to return a
  *    BucketAttributeGroupReference rather than a {@link ERMrest.Reference}
  *
- * @param       {ERMrest.ReferenceColumn} baseColumn The column that is used for creating grouped aggregate
- * @param       {ERMrest.Reference} baseRef The reference representing the column
+ * @param       {ReferenceColumn} baseColumn The column that is used for creating grouped aggregate
+ * @param       {Reference} baseRef The reference representing the column
  * @param       {String} min The min value for the key column request
  * @param       {String} max The max value for the key column request
  * @param       {Integer} numberOfBuckets  The number of buckets for the request
