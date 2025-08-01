@@ -36,19 +36,19 @@
     "mustache": "x",
     "q": "1.5.1",
     "spark-md5": "^3.0.0",
-    "terser": "^5.39.0",
+    "terser": "^5.43.1",
     "typescript": "~5.8.3",
     "vite": "^6.3.4",
     "vite-plugin-compression2": "^1.3.3"
   },
   "devDependencies": {
-    "@eslint/js": "^9.23.0",
+    "@eslint/js": "^9.30.1",
     "@isrd-isi-edu/ermrest-data-utils": "0.0.5",
     "@types/node": "^24.0.10",
     "buffer-slice": "0.0.1",
-    "eslint": "^9.23.0",
-    "eslint-config-prettier": "^10.1.1",
-    "eslint-plugin-prettier": "^5.2.5",
+    "eslint": "^9.30.1",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-prettier": "^5.5.1",
     "file-api": "^0.10.4",
     "globals": "^16.0.0",
     "jasmine": "2.5.3",
@@ -56,10 +56,10 @@
     "jasmine-spec-reporter": "2.5.0",
     "mime": "1.4.1",
     "nock": "13.5.4",
-    "prettier": "^3.5.3",
+    "prettier": "^3.6.2",
     "require-reload": "^0.2.2",
     "rollup-plugin-visualizer": "^5.14.0",
     "set-cookie-parser": "x",
-    "typescript-eslint": "^8.28.0"
+    "typescript-eslint": "^8.35.1"
   }
 }

@@ -1,5 +1,7 @@
 const utils = require('./../../../utils/utilities.js');
 
+const moment = require('moment-timezone');
+
 /**
  * The structure of table and contexts used:
  * main -> f1 -> f2
@@ -166,11 +168,12 @@ exports.execute = function (options) {
       '$virtual-column-1',
       '$virtual-column-1-1',
       'rxU1VoEIaH0rnNoNVr0fwA',
-      'up2zcsXMZsWvCSiWNXt2Kg',
+      'JzpcyAVsEw4hj5XQ2RSAjA',
       'u2ZKnWX7hWq_KuPYF53ZhQ',
+      '70d05Zq4WBgu95blBsBAtg',
     ];
 
-    var detailedPseudoColumnIndices = [4, 5, 6, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 24, 25, 28, 29, 30];
+    var detailedPseudoColumnIndices = [4, 5, 6, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 24, 25, 28, 29, 30, 31];
 
     var detailedColumnTypes = [
       '',
@@ -201,6 +204,7 @@ exports.execute = function (options) {
       'isPathColumn',
       'isVirtualColumn',
       'isVirtualColumn',
+      'isPathColumn',
       'isPathColumn',
       'isPathColumn',
     ];
@@ -451,7 +455,7 @@ exports.execute = function (options) {
                 { outbound: ['pseudo_column_schema', 'main_inbound_2_association_fk2'] },
                 {
                   or: [
-                    { filter: 'RCT', operand_pattern: '{{{$moment.year}}}-{{{$moment.month}}}-{{{$moment.date}}}', operator: '::gt::' },
+                    { filter: 'RCT', operand_pattern: moment().format('YYYY-M-DD'), operator: '::gt::', operand_pattern_processed: true },
                     { filter: 'RID', operator: '::null::', negate: true },
                   ],
                 },
@@ -558,9 +562,23 @@ exports.execute = function (options) {
         it('other attributes must be as expected.', function () {});
       });
 
-      it('generateColumnsList, passing tuple should not change the column list.', function () {
+      it('generateColumnsList, passing tuple should parse the filters.', function () {
         detailedColsWTuple = mainRefDetailed.generateColumnsList(mainTuple);
-        areSameColumnList(detailedColsWTuple, detailedCols);
+        expect(detailedColsWTuple.length).toBe(32, 'length missmatch');
+        areSameColumnList(detailedColsWTuple.slice(0, detailedColsWTuple.length - 1), detailedCols);
+        const lastCol = detailedColsWTuple[detailedColsWTuple.length - 1];
+        utils.checkColumnList(
+          [lastCol],
+          [[
+            {filter: 'main_table_id_col', operand_pattern: '01', operand_pattern_processed: true},
+            { inbound: ['pseudo_column_schema', 'main_inbound_2_association_fk1'] },
+            { outbound: ['pseudo_column_schema', 'main_inbound_2_association_fk2'] },
+            { outbound: ['pseudo_column_schema', 'inbound_2_fk1'] },
+            {filter: 'id', operand_pattern: '01', operand_pattern_processed: true},
+            'id'
+          ]],
+          'PseudoColumn with filter missmatch.',
+        );
       });
 
       it('faceting should be able to handle these new type of columns.', function (done) {
@@ -977,7 +995,8 @@ exports.execute = function (options) {
             'main',
             'inbound_1_outbound_1_outbound_1',
             'inbound_2',
-            'outbound_2_inbound_1'
+            'outbound_2_inbound_1',
+            'inbound_2_outbound_1',
           ]);
         });
       });
@@ -1060,13 +1079,21 @@ exports.execute = function (options) {
             { o: ['pseudo_column_schema', 'main_inbound_2_association_fk2'] },
             {
               or: [
-                { f: 'RCT', opd: '{{{$moment.year}}}-{{{$moment.month}}}-{{{$moment.date}}}', opr: '::gt::' },
+                { f: 'RCT', opd: moment().format('YYYY-M-DD'), opr: '::gt::', opd_p: true },
                 { f: 'RID', opr: '::null::', n: true },
               ],
             },
             'id',
           ], // 29
-          [{ o: ['pseudo_column_schema', 'main_fk2'] }, { i: ['pseudo_column_schema', 'outbound_2_inbound_1_fk1'] }, 'id'] // 30
+          [{ o: ['pseudo_column_schema', 'main_fk2'] }, { i: ['pseudo_column_schema', 'outbound_2_inbound_1_fk1'] }, 'id'], // 30
+          [
+            {f: 'main_table_id_col', opd: '01', opd_p: true},
+            { i: ['pseudo_column_schema', 'main_inbound_2_association_fk1'] },
+            { o: ['pseudo_column_schema', 'main_inbound_2_association_fk2'] },
+            { o: ['pseudo_column_schema', 'inbound_2_fk1'] },
+            { f: 'id', opd: '01', opd_p: true },
+            'id',
+          ], // 31
         ];
         it('should return the data source of the pseudo-column.', function () {
           detailedColsWTuple.forEach(function (col, index) {
@@ -1572,8 +1599,8 @@ exports.execute = function (options) {
     }
   }
 
-  function checkReferenceColumns(tesCases) {
-    tesCases.forEach(function (test) {
+  function checkReferenceColumns(testCases) {
+    testCases.forEach(function (test) {
       utils.checkColumnList(test.ref.columns, test.expected, test.message ? test.message : 'checkReferenceColumns');
     });
   }

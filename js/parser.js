@@ -11,7 +11,7 @@ import {
     InvalidFacetOperatorError,
     InvalidFilterOperatorError,
   } from '@isrd-isi-edu/ermrestjs/src/models/errors';
-  
+
   // utils
   import {
     _ERMrestFeatures,
@@ -24,10 +24,11 @@ import {
   import { isObjectAndNotNull, isStringAndNotEmpty, verify } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
   import { fixedEncodeURIComponent, simpleDeepCopy, stripTrailingSlash, trimSlashes } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
   import { _facetingErrors, _FacetsLogicalOperators, _specialSourceDefinitions, _parserAliases } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
-  
+
   // legacy
   import { decodeFacet, encodeFacet, _encodeRegexp, versionDecodeBase32 } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
-  import { PathPrefixAliasMapping, _renderFacet, _sourceColumnHelpers } from '@isrd-isi-edu/ermrestjs/js/utils/pseudocolumn_helpers';
+  import { _renderFacet, _sourceColumnHelpers } from '@isrd-isi-edu/ermrestjs/js/utils/pseudocolumn_helpers';
+  import PathPrefixAliasMapping from '@isrd-isi-edu/ermrestjs/src/models/path-prefix-alias-mapping';
 
     /**
      * The ERMrest service name. Internal use only.
@@ -41,9 +42,9 @@ import {
      * @memberof ERMrest
      * @function parse
      * @param {String} uri An ERMrest resource URI to be parsed.
-     * @param {ERMrest.Catalog?} catalogObject the catalog object that the uri is based on
+     * @param {Catalog?} catalogObject the catalog object that the uri is based on
      * @returns {ERMrest.Location} Location object created from the URI.
-     * @throws {ERMrest.InvalidInputError} If the URI does not contain the
+     * @throws {InvalidInputError} If the URI does not contain the
      * service name.
      */
     export const parse = function (uri, catalogObject) {
@@ -143,7 +144,7 @@ import {
      * @param  {string} tableName  Name of table
      * @param  {object} facets     an object
      * @param  {object} cfacets    an object
-     * @param  {ERMrest.Catalog} [catalogObject] the catalog object (optional)
+     * @param  {Catalog} [catalogObject] the catalog object (optional)
      * @return {string}            a path that ERMrestJS understands and can parse, can be undefined
      */
     export const createLocation = function (service, catalogId, schemaName, tableName, facets, cfacets, catalogObject) {
@@ -191,7 +192,7 @@ import {
      * NOTE: For parsing the facet, Location object needs the catalog object.
      *       it should either be passed while creating the location object, or set after.
      * @param {String} uri full path
-     * @param {ERMrest.Catalog} the catalog object for parsing some parts of url might be needed.
+     * @param {Catalog} the catalog object for parsing some parts of url might be needed.
      * @constructor
      */
     export function Location(uri, catalogObject) {
@@ -1403,7 +1404,7 @@ import {
         },
 
         /**
-         * @type {ERMrest.catalog}
+         * @type {catalog}
          */
         get catalogObject() {
             return this._catalogObject;
@@ -1418,7 +1419,7 @@ import {
 
         /**
          * The reference object that this Location object belongs to
-         * @type {ERMrest.Reference}
+         * @type {Reference}
          */
         get referenceObject() {
             return this._referenceObject;
@@ -2178,7 +2179,7 @@ import {
      * https://github.com/informatics-isi-edu/ermrestjs/issues/447
      *
      * @param       {String|Object} str Can be blob or json (object).
-     * @param       {String} path to generate rediretUrl in error 
+     * @param       {String} path to generate rediretUrl in error
      * @constructor
      */
     function ParsedFacets (str, path) {
@@ -2237,7 +2238,7 @@ import {
      *
      *
      * @param       {String|Object} str Can be blob or json (object).
-     * @param       {String} path to generate rediretUrl in error 
+     * @param       {String} path to generate rediretUrl in error
      * @constructor
      */
     function CustomFacets (str, path) {
