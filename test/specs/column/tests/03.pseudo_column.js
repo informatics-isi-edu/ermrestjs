@@ -35,7 +35,9 @@ const moment = require('moment-timezone');
  * 26: virtual-column
  * 27: virtual-column-1-1
  * 28: array aggregate using recursive path prefix (end table: inbound_1_outbound_1_outbound_1)
- * 29: same as 8 with `array` in entity mode and filter at the end
+ * 29: same as 8 with `array` in entity mode and filter at the end (filter uses moment)
+ * 30: same as 24, agg min
+ * 31: path with length 3. has filters that use the main table data.
  *
  * Only the following indeces are PseudoColumn:
  * 4 (outbound len 1, scalar)
@@ -57,6 +59,7 @@ const moment = require('moment-timezone');
  * 28 (main <- inbound_1 -> inbound_1_outbound_1 -> inbound_1_outbound_1_outbound_1, col, agg array)
  * 29 (aggregate with filter)
  * 30 (same as 24, agg min)
+ * 31 (path with length 3. has filters that use the main table data.)
  *
  * For entry:
  * 0: main_table_id_col
@@ -168,7 +171,11 @@ exports.execute = function (options) {
       '$virtual-column-1',
       '$virtual-column-1-1',
       'rxU1VoEIaH0rnNoNVr0fwA',
-      'JzpcyAVsEw4hj5XQ2RSAjA',
+      /**
+       * the following is using moment in the filter,
+       * so we cannot hardcode the value.
+       */
+      '',
       'u2ZKnWX7hWq_KuPYF53ZhQ',
       '70d05Zq4WBgu95blBsBAtg',
     ];
@@ -455,7 +462,7 @@ exports.execute = function (options) {
                 { outbound: ['pseudo_column_schema', 'main_inbound_2_association_fk2'] },
                 {
                   or: [
-                    { filter: 'RCT', operand_pattern: moment().format('YYYY-M-DD'), operator: '::gt::', operand_pattern_processed: true },
+                    { filter: 'RCT', operand_pattern: moment().format('YYYY-M-D'), operator: '::gt::', operand_pattern_processed: true },
                     { filter: 'RID', operator: '::null::', negate: true },
                   ],
                 },
@@ -1079,7 +1086,7 @@ exports.execute = function (options) {
             { o: ['pseudo_column_schema', 'main_inbound_2_association_fk2'] },
             {
               or: [
-                { f: 'RCT', opd: moment().format('YYYY-M-DD'), opr: '::gt::', opd_p: true },
+                { f: 'RCT', opd: moment().format('YYYY-M-D'), opr: '::gt::', opd_p: true },
                 { f: 'RID', opr: '::null::', n: true },
               ],
             },
@@ -1568,7 +1575,10 @@ exports.execute = function (options) {
 
       it('name, should return a deterministic and unique hash.', function () {
         expect(
-          detailedColsWTuple.map(function (col) {
+          detailedColsWTuple.map(function (col, index) {
+            if (index === 29) {
+              return '';
+            }
             return col.name;
           }),
         ).toEqual(detailedExpectedNames);
