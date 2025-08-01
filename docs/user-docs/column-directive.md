@@ -211,6 +211,10 @@ Therefore the following are acceptable ways of defining source path:
 
     - The filter constrains a named _column_ in the current context table.
 
+    - The _value_ specifies the constant operand for a binary constraint operator and must be computed to a non-empty value.
+      - [Pattern expansion](annotation.md#pattern-expansion) MAY be used to access [the pre-defined values in templating envorinment](handlebars.md#using-pre-defined-attributes). In `detailed` context, you may also access the main table data or [foreign key values](handlebars.md#foreign-key-values).
+      - Like other pattern expansions, the default `template_engine` will be applied and if you want to change it, you can define `template_engine` alongside the `operand_pattern`.
+
     - The _operator_ specifies the constraint operator via one of the valid operator names in the ERMrest REST API, which are
 
         | operator  | meaning |
@@ -226,8 +230,6 @@ Therefore the following are acceptable ways of defining source path:
         | `::ts::` | column matches text-search query value |
 
       > If `operator` is missing, we will use `=` by default.
-
-    - The _value_ specifies the constant operand for a binary constraint operator and must be computed to a non-empty value. [Pattern expansion](annotation.md#pattern-expansion) MAY be used to access [the pre-defined values in templating envorinment](mustache-templating.md#using-pre-defined-attributes). Like other pattern expansions the default `template_engine` will be applied and if you want to change it, you can define `template_engine` alongside the `operand_pattern`.
 
     - The logical result of the constraint is negated only if _negate_ is `true`.
     - This syntax cannot be used with all-outbound paths or local columns in a non-`filter` context.
