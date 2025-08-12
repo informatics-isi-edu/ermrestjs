@@ -42,8 +42,8 @@ import {
      * @memberof ERMrest
      * @function parse
      * @param {String} uri An ERMrest resource URI to be parsed.
-     * @param {Catalog?} catalogObject the catalog object that the uri is based on
-     * @returns {ERMrest.Location} Location object created from the URI.
+     * @param {Catalog=} catalogObject the catalog object that the uri is based on
+     * @returns {Location} Location object created from the URI.
      * @throws {InvalidInputError} If the URI does not contain the
      * service name.
      */
@@ -1041,7 +1041,7 @@ import {
 
         /**
          * set the facet of the last path part
-         * @param  {object} json the json object of facets
+         * @param  {any} json the json object of facets
          */
         set facets(json) {
             var newFacet;
@@ -1431,7 +1431,7 @@ import {
          * @param {Object} sourceObjectWrapper the object that represents the join
          * @param {string} toSchema the name of schema that this join refers to
          * @param {string} toTable the name of table that this join refers to
-         * @param {boolean?} clone whether we should clone or use the existing object
+         * @param {boolean=} clone whether we should clone or use the existing object
          * @returns Location object
          */
         addJoin: function (sourceObjectWrapper, toSchema, toTable, clone) {

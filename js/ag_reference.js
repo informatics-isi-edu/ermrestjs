@@ -893,9 +893,9 @@ AttributeGroupTuple.prototype = {
  * @param       {string} alias the alias that we want to use. If alias exist we will use the alias=term for creating url.
  * @param       {string} term  the term string, e.g., cnt(*) or col1.
  * @param       {Column} baseColumn the database column that this is based on
- * @param       {Object|string} displayname displayname of column, if it's an object it will have `value`, `unformatted`, and `isHTML`
- * @param       {ERMrset.Type} colType    type of column
- * @param       {string} comment     The string for comment (tooltip)
+ * @param       {any|string} displayname displayname of column, if it's an object it will have `value`, `unformatted`, and `isHTML`
+ * @param       {any} colType    type of column
+ * @param       {string?} comment     The string for comment (tooltip)
  * @param       {Boolean} sortable   Whether the column is sortable
  * @param       {Boolean} visible    Whether we want this column be returned in the tuples
  * @constructor
@@ -949,7 +949,7 @@ export function AttributeGroupColumn(alias, term, baseColumn, displayname, colTy
 
         /**
         * Type object
-        * @type {Type}
+        * @type {any}
         */
         this.type = colType;
     }
@@ -1108,8 +1108,8 @@ AttributeGroupColumn.prototype = {
  * @param       {String} path         the whole path string
  * @param       {Object} searchObject search obect, it should have `term`, and `column`.
  * @param       {Object[]} sortObject sort object, An array of objects with `column`, and `descending` as attribute.
- * @param       {Object[]} afterObject  the object that will be used for paging to define after. It's an array of data
- * @param       {Object[]} beforeObject the object that will be used for paging to define before. It's an array of data
+ * @param       {Object[]=} afterObject  the object that will be used for paging to define after. It's an array of data
+ * @param       {Object[]=} beforeObject the object that will be used for paging to define before. It's an array of data
  * @constructor
  */
 export function AttributeGroupLocation(service, catalog, path, searchObject, sortObject, afterObject, beforeObject) {
@@ -1288,10 +1288,10 @@ AttributeGroupReferenceAggregateFn.prototype = {
  *
  * @param       {ReferenceColumn} baseColumn The column that is used for creating grouped aggregate
  * @param       {Reference} baseRef The reference representing the column
- * @param       {String} min The min value for the key column request
- * @param       {String} max The max value for the key column request
+ * @param       {any} min The min value for the key column request
+ * @param       {any} max The max value for the key column request
  * @param       {Integer} numberOfBuckets  The number of buckets for the request
- * @param       {String} bucketWidth the width of each bucket
+ * @param       {any} bucketWidth the width of each bucket
  * @constructor
  */
 export function BucketAttributeGroupReference(baseColumn, baseRef, min, max, numberOfBuckets, bucketWidth) {

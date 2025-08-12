@@ -395,15 +395,15 @@ exports.execute = (options) => {
                     });
 
                     it(".isGeneratedPerACLs should be false.", () => {
-                        expect(nameColumn._baseCols[0].isGeneratedPerACLs).toBe(false);
+                        expect(nameColumn.baseColumns[0].isGeneratedPerACLs).toBe(false);
                     });
 
                     it(".isImmutablePerACLs should be true", () => {
-                        expect(nameColumn._baseCols[0].isImmutablePerACLs).toBe(true);
+                        expect(nameColumn.baseColumns[0].isImmutablePerACLs).toBe(true);
                     });
 
                     it(".isHiddenPerACLs should be false.", () => {
-                        expect(nameColumn._baseCols[0].isHiddenPerACLs).toBe(false);
+                        expect(nameColumn.baseColumns[0].isHiddenPerACLs).toBe(false);
                     });
 
                 });
@@ -415,15 +415,15 @@ exports.execute = (options) => {
                     });
 
                     it(".isGeneratedPerACLs should be true.", () => {
-                        expect(termColumn._baseCols[0].isGeneratedPerACLs).toBe(true);
+                        expect(termColumn.baseColumns[0].isGeneratedPerACLs).toBe(true);
                     });
 
                     it(".isImmutablePerACLs should be false", () => {
-                        expect(termColumn._baseCols[0].isImmutablePerACLs).toBe(false);
+                        expect(termColumn.baseColumns[0].isImmutablePerACLs).toBe(false);
                     });
 
                     it(".isHiddenPerACLs should be false.", () => {
-                        expect(termColumn._baseCols[0].isHiddenPerACLs).toBe(false);
+                        expect(termColumn.baseColumns[0].isHiddenPerACLs).toBe(false);
                     });
 
                 });
@@ -528,15 +528,15 @@ exports.execute = (options) => {
                     });
 
                     it(".isGeneratedPerACLs should be true.", () => {
-                        expect(termColumn._baseCols[0].isGeneratedPerACLs).toBe(true);
+                        expect(termColumn.baseColumns[0].isGeneratedPerACLs).toBe(true);
                     });
 
                     it(".isImmutablePerACLs should be false", () => {
-                        expect(termColumn._baseCols[0].isImmutablePerACLs).toBe(true);
+                        expect(termColumn.baseColumns[0].isImmutablePerACLs).toBe(true);
                     });
 
                     it(".isHiddenPerACLs should be false.", () => {
-                        expect(termColumn._baseCols[0].isHiddenPerACLs).toBe(false);
+                        expect(termColumn.baseColumns[0].isHiddenPerACLs).toBe(false);
                     });
 
                 });

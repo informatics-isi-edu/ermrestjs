@@ -1,5 +1,3 @@
-import { isDefinedAndNotNull } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
-
 export enum _ERMrestFeatures {
   TABLE_RIGHTS_SUMMARY = 'trs',
   TABLE_COL_RIGHTS_SUMMARY = 'tcrs',
@@ -517,6 +515,8 @@ export const FILTER_TYPES = Object.freeze({
   UNARYPREDICATE: 'UnaryPredicate',
   NEGATION: 'Negation',
 });
+
+const isDefinedAndNotNull = (value: unknown) => typeof value !== 'undefined' && value !== null;
 
 export const ENV_IS_NODE = typeof process !== 'undefined' && isDefinedAndNotNull(process.versions) && isDefinedAndNotNull(process.versions.node);
 

@@ -2,6 +2,7 @@
 
 // models
 import SourceObjectNode from '@isrd-isi-edu/ermrestjs/src/models/source-object-node';
+import { ReferenceColumn } from '@isrd-isi-edu/ermrestjs/src/models/reference-column';
 
 // services
 // import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
@@ -10,14 +11,14 @@ import SourceObjectNode from '@isrd-isi-edu/ermrestjs/src/models/source-object-n
 import { isObjectAndNotNull, isStringAndNotEmpty } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
 import { _contexts, _facetFilterTypes, _pseudoColAggregateFns, _sourceDefinitionAttributes, _warningMessages } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
 import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils';
+import { createPseudoColumn } from '@isrd-isi-edu/ermrestjs/src/utils/column-utils';
 
 // legacy imports that need to be accessed
 import { _sourceColumnHelpers } from '@isrd-isi-edu/ermrestjs/js/utils/pseudocolumn_helpers';
-import { _createPseudoColumn, ReferenceColumn } from '@isrd-isi-edu/ermrestjs/js/column';
 import { Column, Table } from '@isrd-isi-edu/ermrestjs/js/core';
 import { Reference, Tuple } from '@isrd-isi-edu/ermrestjs/js/reference';
 
-type FilterPropsType = {
+export type FilterPropsType = {
   /**
    * whether the filter is processed or not
    */
@@ -35,7 +36,34 @@ type FilterPropsType = {
    * the leaf filter string
    */
   leafFilterString: string;
-}
+};
+
+export type InputIframePropsType = {
+  /**
+   * the url pattern that should be used to generate the iframe url
+   */
+  urlPattern: string;
+  /**
+   * the template engine that should be used to generate the url
+   */
+  urlTemplateEngine?: string;
+  /**
+   * the columns used in the mapping
+   */
+  columns: ReferenceColumn[];
+  /**
+   * an object from field name to column.
+   */
+  fieldMapping: Record<string, ReferenceColumn>;
+  /**
+   * name of optional fields
+   */
+  optionalFieldNames: string[];
+  /**
+   * the message that we should show when user wants to submit empty.
+   */
+  emptyFieldConfirmMessage: string;
+};
 
 /**
  * Represents a column-directive
@@ -108,32 +136,14 @@ class SourceObjectWrapper {
   public isHash = false;
   public sourceObjectNodes: SourceObjectNode[] = [];
   public isInputIframe = false;
-  public inputIframeProps?: {
-    /**
-     * the url pattern that should be used to generate the iframe url
-     */
-    urlPattern: string;
-    /**
-     * the template engine that should be used to generate the url
-     */
-    urlTemplateEngine?: string;
-    /**
-     * the columns used in the mapping
-     */
-    columns: ReferenceColumn[];
-    /**
-     * an object from field name to column.
-     */
-    fieldMapping: Record<string, ReferenceColumn>;
-    /**
-     * name of optional fields
-     */
-    optionalFieldNames: string[];
-    /**
-     * the message that we should show when user wants to submit empty.
-     */
-    emptyFieldConfirmMessage: string;
-  };
+  public inputIframeProps?: InputIframePropsType;
+
+
+  /**
+   * used for facets
+   * TODO is there a better way to manage this?
+   */
+  public entityChoiceFilterTuples?: Tuple[];
 
   /**
    * @param sourceObject the column directive object
@@ -608,7 +618,7 @@ class SourceObjectWrapper {
 
         // create a pseudo-column will make sure we're also handling assets
         const wrapper = new SourceObjectWrapper({ source: colName }, reference.table);
-        const refCol = _createPseudoColumn(reference, wrapper, tuple);
+        const refCol = createPseudoColumn(reference, wrapper, tuple);
 
         fieldMapping[f] = refCol;
         columns.push(refCol);

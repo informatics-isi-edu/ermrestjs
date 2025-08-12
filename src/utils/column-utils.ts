@@ -1,3 +1,15 @@
+// models
+import {
+  AssetPseudoColumn,
+  ForeignKeyPseudoColumn,
+  InboundForeignKeyPseudoColumn,
+  KeyPseudoColumn,
+  PseudoColumn,
+  ReferenceColumn,
+  VirtualColumn,
+} from '@isrd-isi-edu/ermrestjs/src/models/reference-column';
+import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-object-wrapper';
+
 // utils
 import { _contexts } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
 import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils';
@@ -11,6 +23,7 @@ import {
   _processColumnOrderList,
   _renderTemplate,
 } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
+import { Reference, Tuple } from '@isrd-isi-edu/ermrestjs/js/reference';
 
 /**
  * Convert the raw value of an aggregate column to a formatted value.
@@ -18,7 +31,7 @@ import {
  * @param pseudoColumn the pseudo column that this value belongs to
  */
 export function processAggregateValue(rawValue: any, pseudoColumn: any, aggFn: string, isRow: boolean) {
-  const column = pseudoColumn._baseCols[0];
+  const column = pseudoColumn.baseColumns[0];
   const sourceMarkdownPattern = pseudoColumn.display.sourceMarkdownPattern;
   const sourceTemplateEngine = pseudoColumn.display.sourceTemplateEngine;
 
@@ -194,4 +207,86 @@ export function processAggregateValue(rawValue: any, pseudoColumn: any, aggFn: s
   }
 
   return { isHTML: isHTML, value: res, templateVariables: templateVariables };
+}
+
+/**
+ * Will create the appropriate ReferenceColumn object based on the given sourceObject.
+ * It will return the following objects:
+ * - If aggregate: PseudoColumn
+ * - If self_link: KeyPseudoColumn
+ * - If no path, scalar, asset annot: AssetPseudoColumn
+ * - If no path, scalar (or entity in entry context): ReferenceColumn
+ * - If path, entity, outbound length 1: ForeignKeyPseudoColumn
+ * - If path, entity, inbound length 1: InboundForeignKeyPseudoColumn
+ * - If path, entity, p&b association: InboundForeignKeyPseudoColumn
+ * - Otherwise: PseudoColumn
+ */
+export function createPseudoColumn(reference: Reference, sourceObjectWrapper: SourceObjectWrapper, mainTuple?: Tuple): any {
+  const sourceObject = sourceObjectWrapper.sourceObject;
+  const column = sourceObjectWrapper.column;
+  const name = sourceObjectWrapper.name;
+  let relatedRef: any, fk: any;
+
+  const generalPseudo = (): any => {
+    if (!column) {
+      return new VirtualColumn(reference, sourceObjectWrapper, name, mainTuple);
+    }
+    return new PseudoColumn(reference, column, sourceObjectWrapper, name, mainTuple);
+  };
+
+  if (!column) return generalPseudo();
+
+  // has aggregate
+  if (sourceObjectWrapper.hasAggregate) {
+    return generalPseudo();
+  }
+
+  if (!sourceObjectWrapper.hasPath) {
+    // make sure the column is unique not-null
+    if (sourceObject.self_link === true && column && column.isUniqueNotNull) {
+      return new KeyPseudoColumn(reference, column.uniqueNotNullKey, sourceObjectWrapper, name);
+    }
+
+    // no path, scalar, asset
+    if (column && column.type.name === 'text' && column.isAssetURL) {
+      return new AssetPseudoColumn(reference, column, sourceObjectWrapper);
+    }
+
+    // no path, scalar
+    return new ReferenceColumn(reference, [column], sourceObjectWrapper, name, mainTuple);
+  }
+
+  // path, entity, outbound length 1, (cannot have any filters)
+  if (
+    sourceObjectWrapper.isEntityMode &&
+    !sourceObjectWrapper.isFiltered &&
+    sourceObjectWrapper.foreignKeyPathLength === 1 &&
+    !sourceObjectWrapper.firstForeignKeyNode!.isInbound
+  ) {
+    fk = sourceObjectWrapper.firstForeignKeyNode!.nodeObject;
+    return new ForeignKeyPseudoColumn(reference, fk, sourceObjectWrapper, name);
+  }
+
+  // path, entity, inbound length 1 (it can have filter)
+  if (sourceObjectWrapper.isEntityMode && sourceObjectWrapper.foreignKeyPathLength === 1 && sourceObjectWrapper.firstForeignKeyNode!.isInbound) {
+    fk = sourceObjectWrapper.firstForeignKeyNode!.nodeObject;
+    relatedRef = reference._generateRelatedReference(fk, mainTuple, false, sourceObjectWrapper);
+    return new InboundForeignKeyPseudoColumn(reference, relatedRef, sourceObjectWrapper, name);
+  }
+
+  // path, entity, inbound outbound p&b (it can have filter)
+  if (
+    sourceObjectWrapper.isEntityMode &&
+    sourceObjectWrapper.foreignKeyPathLength === 2 &&
+    sourceObjectWrapper.firstForeignKeyNode!.isInbound &&
+    !sourceObjectWrapper.lastForeignKeyNode!.isInbound
+  ) {
+    fk = sourceObjectWrapper.firstForeignKeyNode!.nodeObject;
+    if (fk._table.isPureBinaryAssociation) {
+      relatedRef = reference._generateRelatedReference(fk, mainTuple, true, sourceObjectWrapper);
+      return new InboundForeignKeyPseudoColumn(reference, relatedRef, sourceObjectWrapper, name);
+    }
+  }
+
+  return generalPseudo();
 }

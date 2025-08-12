@@ -35,7 +35,7 @@ import {
 } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
 import { parse } from '@isrd-isi-edu/ermrestjs/js/parser';
 import { Reference } from '@isrd-isi-edu/ermrestjs/js/reference';
-import { Column } from '@isrd-isi-edu/ermrestjs/js/core';
+import { Column, Key } from '@isrd-isi-edu/ermrestjs/js/core';
 import HandlebarsService from '@isrd-isi-edu/ermrestjs/src/services/handlebars';
 import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
 
@@ -309,7 +309,7 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
      * @function
      * @param {Object} element a model element (schema, table, or column)
      * @param {boolean} useName determines whether we can use name and name_style or not
-     * @param {Object} parentElement the upper element (schema->null, table->schema, column->table)
+     * @param {Object=} parentElement the upper element (schema->null, table->schema, column->table)
      * @desc This function determines the display name for the schema, table, or
      * column elements of a model.
      */
@@ -405,7 +405,7 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
     /**
     * @param {string} context the context that we want the value of.
     * @param {Object} annotation the annotation object.
-    * @param {Boolean} dontUseDefaultContext Whether we should use the default (*) context
+    * @param {Boolean=} dontUseDefaultContext Whether we should use the default (*) context
     * @desc returns the annotation value based on the given context.
     */
     export function _getAnnotationValueByContext(context, annotation, dontUseDefaultContext) {
@@ -642,6 +642,7 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
 
     /**
      * Given the source object and default comment props, will return the comment that should be used.
+     * @returns {CommentType}
      * @private
      */
     export function _processSourceObjectComment(sourceObject, defaultComment, defaultCommentRenderMd, defaultDisplayMode) {
@@ -660,8 +661,8 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
     /**
      * Turn a comment annotaiton/string value into a proper comment object.
      * @param {string|null|false} comment
-     * @param {boolean?} isMarkdown whether the given comment should be rendered as markdown (default: true).
-     * @param {string} displayMode the display mode of the comment (inline, tooltip)
+     * @param {boolean=} isMarkdown whether the given comment should be rendered as markdown (default: true).
+     * @param {string=} displayMode the display mode of the comment (inline, tooltip)
      * @private
      */
     export function _processModelComment(comment, isMarkdown, displayMode) {
@@ -730,7 +731,7 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
      * @param {Table} table The object that we want the formatted values for.
      * @param {String} context the context that we want the formatted values for.
      * @param {object} data The object which contains key value pairs of data to be transformed
-     * @param {object} linkedData The object which contains key value paris of foreign key data.
+     * @param {object=} linkedData The object which contains key value paris of foreign key data.
      * @return {object} A formatted keyvalue pair of object
      * @desc Returns a formatted keyvalue pairs of object as a result of using `col.formatvalue`.
      * If you want the formatted value of a single column, you should call formatvalue,
@@ -841,8 +842,8 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
      * @param  {Table} table  the table object
      * @param  {string} context    current context
      * @param  {Object} data       the raw data
-     * @param  {Object=} linkedData the raw data of foreignkeys
-     * @param  {Reference=} key the alternate key to use
+     * @param  {any=} linkedData the raw data of foreignkeys
+     * @param  {Key=} key the alternate key to use
      * @return {Object}
      */
     export function _getRowTemplateVariables(table, context, data, linkedData, key) {
@@ -861,7 +862,7 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
     /**
      * Given the available linked data, generate the uniqueId for the row this data represents given the shortest key of the table
      *
-     * @param {Key[]} tableShortestKey shortest key from the table the linkedData is for
+     * @param {Column[]} tableShortestKey shortest key from the table the linkedData is for
      * @param {Object} data data to use to generate the unique id
      * @returns string | null - unique id for the row the linkedData represents
      */
@@ -895,7 +896,7 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
      * @param {object} data The object which contains key value pairs of data.
      * @param {Object} linkedData The object which contains key value pairs of foreign key data.
      * @param {boolean} isTitle determines Whether we want rowname for title or not
-     * @returns {object} The displayname object for the row. It includes has value, isHTML, and unformatted.
+     * @returns {{value: string, isHTML: boolean, unformatted: string}} The displayname object for the row. It includes has value, isHTML, and unformatted.
      * @desc Returns the row name (html) using annotation or heuristics.
      * @private
      */
@@ -2247,7 +2248,7 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
      * @param  {Table} table    the table object
      * @param  {String} context  context string
      * @param  {Object} options
-     * @return {Object}          An object with `isHTML` and `value` attributes.
+     * @return {{isHTML: boolean, value: string, unformatted: string}}          An object with `isHTML` and `value` attributes.
      * @memberof ERMrest
      * @function processMarkdownPattern
      */

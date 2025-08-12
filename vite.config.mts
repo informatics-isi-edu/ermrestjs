@@ -20,7 +20,6 @@ export default defineConfig(async (): Promise<UserConfig> => {
 
   // dev related plugins
   if (isDev) {
-
     // visualize the bundle size
     const { visualizer } = await import('rollup-plugin-visualizer');
     plugins.push(
