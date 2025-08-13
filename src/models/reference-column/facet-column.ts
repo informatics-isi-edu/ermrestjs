@@ -27,7 +27,7 @@ import {
 // legacy
 import { parse } from '@isrd-isi-edu/ermrestjs/js/parser';
 import { Column } from '@isrd-isi-edu/ermrestjs/js/core';
-import { Page, Reference, Tuple, _referenceCopy } from '@isrd-isi-edu/ermrestjs/js/reference';
+import { Reference, Tuple, _referenceCopy } from '@isrd-isi-edu/ermrestjs/js/reference';
 import { type AttributeGroupReference } from '@isrd-isi-edu/ermrestjs/js/ag_reference';
 import { _processColumnOrderList, _processSourceObjectComment } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
 import { _compressSource } from '@isrd-isi-edu/ermrestjs/js/utils/pseudocolumn_helpers';
@@ -804,136 +804,129 @@ export class FacetColumn {
    * @param contextHeaderParams object that we want to be logged with the request
    * @return A promise resolved with list of objects that have `uniqueId`, and `displayname`.
    */
-  getChoiceDisplaynames(contextHeaderParams: any): Promise<FacetChoiceDisplayName[]> {
-    return new Promise((resolve, reject) => {
-      const filters: FacetChoiceDisplayName[] = [];
-      const table = this._column.table;
-      const column = this._column;
-      const columnName = this._column.name;
-      // whether the output must be displayed as markdown or not
-      const isHTML = _HTMLColumnType.indexOf(this._column.type.name) !== -1;
+  async getChoiceDisplaynames(contextHeaderParams: any): Promise<FacetChoiceDisplayName[]> {
+    const filters: FacetChoiceDisplayName[] = [];
+    const table = this._column.table;
+    const column = this._column;
+    const columnName = this._column.name;
+    // whether the output must be displayed as markdown or not
+    const isHTML = _HTMLColumnType.indexOf(this._column.type.name) !== -1;
 
-      const createRef = (filterStrs: string[]): Reference => {
-        const uri = [
-          table.schema.catalog.server.uri,
-          'catalog',
-          table.schema.catalog.id,
-          'entity',
-          fixedEncodeURIComponent(table.schema.name) + ':' + fixedEncodeURIComponent(table.name),
-          filterStrs.join(';'),
-        ].join('/');
+    const createRef = (filterStrs: string[]): Reference => {
+      const uri = [
+        table.schema.catalog.server.uri,
+        'catalog',
+        table.schema.catalog.id,
+        'entity',
+        fixedEncodeURIComponent(table.schema.name) + ':' + fixedEncodeURIComponent(table.name),
+        filterStrs.join(';'),
+      ].join('/');
 
-        let ref = new Reference(parse(uri), table.schema.catalog).contextualize.compactSelect;
-        ref = ref.sort([{ column: columnName, descending: false }]);
-        return ref;
-      };
+      let ref = new Reference(parse(uri), table.schema.catalog).contextualize.compactSelect;
+      ref = ref.sort([{ column: columnName, descending: false }]);
+      return ref;
+    };
 
-      const convertChoiceFilter = (f: ChoiceFacetFilter): FacetChoiceDisplayName => {
-        let displayedValue = f.toString();
-        if (column.type.name === 'json' || column.type.name === 'jsonb') {
-          /**
-           * If the value is already a valid string representation of a JSON object,
-           * return it as is. otherwise use the toString which will turn the object into a string.
-           */
-          try {
-            void JSON.parse(f.term as any);
-            displayedValue = f.term as string;
-          } catch {
-            /* empty */
-          }
+    const convertChoiceFilter = (f: ChoiceFacetFilter): FacetChoiceDisplayName => {
+      let displayedValue = f.toString();
+      if (column.type.name === 'json' || column.type.name === 'jsonb') {
+        /**
+         * If the value is already a valid string representation of a JSON object,
+         * return it as is. otherwise use the toString which will turn the object into a string.
+         */
+        try {
+          void JSON.parse(f.term as any);
+          displayedValue = f.term as string;
+        } catch {
+          /* empty */
         }
-        return {
-          uniqueId: f.term,
-          displayname: {
-            value: isHTML ? renderMarkdown(displayedValue!, true) : displayedValue!,
-            isHTML: isHTML,
-          },
-          tuple: null,
-        };
+      }
+      return {
+        uniqueId: f.term,
+        displayname: {
+          value: isHTML ? renderMarkdown(displayedValue!, true) : displayedValue!,
+          isHTML: isHTML,
+        },
+        tuple: null,
       };
+    };
 
-      // if no filter, just resolve with empty list.
-      if (this.choiceFilters.length === 0) {
-        resolve(filters);
-        return;
-      }
-      // in scalar mode, use the their toString as displayname.
-      else if (!this.isEntityMode) {
-        this.choiceFilters.forEach((f: ChoiceFacetFilter) => {
-          // don't return the null filter
-          if (f.term === null || f.term === undefined) return;
+    // if no filter, just return empty list.
+    if (this.choiceFilters.length === 0) {
+      return filters;
+    }
+    // in scalar mode, use the their toString as displayname.
+    else if (!this.isEntityMode) {
+      this.choiceFilters.forEach((f: ChoiceFacetFilter) => {
+        // don't return the null filter
+        if (f.term === null || f.term === undefined) return;
 
-          filters.push(convertChoiceFilter(f));
+        filters.push(convertChoiceFilter(f));
+      });
+      return filters;
+    }
+    // otherwise generate an ermrest request to get the displaynames.
+    else {
+      // if we already fetched the page, then just use it
+      if (this.sourceObjectWrapper.entityChoiceFilterTuples) {
+        this.sourceObjectWrapper.entityChoiceFilterTuples.forEach((t: Tuple) => {
+          filters.push({ uniqueId: t.data[columnName], displayname: t.displayname, tuple: t });
         });
-        resolve(filters);
-        return;
+        return filters;
       }
-      // otherwise generate an ermrest request to get the displaynames.
-      else {
-        // if we already fetched the page, then just use it
-        if (this.sourceObjectWrapper.entityChoiceFilterTuples) {
-          this.sourceObjectWrapper.entityChoiceFilterTuples.forEach((t: Tuple) => {
-            filters.push({ uniqueId: t.data[columnName], displayname: t.displayname, tuple: t });
-          });
-          resolve(filters);
+
+      const filterStr: string[] = []; // used for generating the request
+      const filterTerms: Record<string, number> = {}; // used for figuring out if there are any filter that didn't return result
+      // key is the term, value is the index in self.choiceFilters
+
+      // list of filters that we want their displaynames.
+      this.choiceFilters.forEach((f: ChoiceFacetFilter, index: number) => {
+        // don't return the null filter
+        if (f.term == null) {
           return;
         }
 
-        const filterStr: string[] = []; // used for generating the request
-        const filterTerms: Record<string, number> = {}; // used for figuring out if there are any filter that didn't return result
-        // key is the term, value is the index in self.choiceFilters
+        filterStr.push(fixedEncodeURIComponent(columnName) + '=' + fixedEncodeURIComponent(f.term as string));
+        filterTerms[f.term as string] = index;
+      });
 
-        // list of filters that we want their displaynames.
-        this.choiceFilters.forEach((f: ChoiceFacetFilter, index: number) => {
-          // don't return the null filter
-          if (f.term == null) {
-            return;
-          }
+      // the case that we have only the null value.
+      if (filterStr.length === 0) {
+        return filters;
+      }
 
-          filterStr.push(fixedEncodeURIComponent(columnName) + '=' + fixedEncodeURIComponent(f.term as string));
-          filterTerms[f.term as string] = index;
-        });
-
-        // the case that we have only the null value.
-        if (filterStr.length === 0) {
-          resolve(filters);
-          return;
-        }
-
+      try {
         // create a url
-        createRef(filterStr)
-          .read(this.choiceFilters.length, contextHeaderParams, true)
-          .then((page: Page) => {
-            // add the pages that we got
-            page.tuples.forEach((t: Tuple) => {
-              filters.push({ uniqueId: t.data[columnName], displayname: t.displayname, tuple: t });
+        const page = await createRef(filterStr).read(this.choiceFilters.length, contextHeaderParams, true);
 
-              // remove it from the term list
-              delete filterTerms[t.data[columnName]];
-            });
+        // add the pages that we got
+        page.tuples.forEach((t: Tuple) => {
+          filters.push({ uniqueId: t.data[columnName], displayname: t.displayname, tuple: t });
 
-            // if there are any filter terms that didn't match any rows, just return the raw value:
-            // NOTE we could merge these two (page and filter) together to make the code easier to follow,
-            //      but we want to keep the selected values ordered based on roworder and
-            //      not based on the order of filters in the url
+          // remove it from the term list
+          delete filterTerms[t.data[columnName]];
+        });
 
-            // sort the keys for deterministic output (based on the original order of filters in the url)
-            const filterTermKeys = Object.keys(filterTerms).sort((a: string, b: string) => {
-              return filterTerms[a] - filterTerms[b];
-            });
+        // if there are any filter terms that didn't match any rows, just return the raw value:
+        // NOTE we could merge these two (page and filter) together to make the code easier to follow,
+        //      but we want to keep the selected values ordered based on roworder and
+        //      not based on the order of filters in the url
 
-            // add the terms to filter list
-            filterTermKeys.forEach((k: string) => {
-              filters.push(convertChoiceFilter(this.choiceFilters[filterTerms[k]]));
-            });
+        // sort the keys for deterministic output (based on the original order of filters in the url)
+        const filterTermKeys = Object.keys(filterTerms).sort((a: string, b: string) => {
+          return filterTerms[a] - filterTerms[b];
+        });
 
-            resolve(filters);
-          })
-          .catch((err: unknown) => {
-            reject(ErrorService.responseToError(err));
-          });
+        // add the terms to filter list
+        filterTermKeys.forEach((k: string) => {
+          filters.push(convertChoiceFilter(this.choiceFilters[filterTerms[k]]));
+        });
+
+        return filters;
+      } catch (err: unknown) {
+        throw ErrorService.responseToError(err);
       }
-    });
+    }
   }
 
   /**
@@ -1124,7 +1117,7 @@ export class FacetColumn {
     if (this._hasNullFilter === undefined) {
       this._hasNullFilter =
         this.filters.filter((f: FacetFilter | NotNullFacetFilter) => {
-          return f instanceof ChoiceFacetFilter && f.term == null;
+          return f instanceof ChoiceFacetFilter && (f.term === null || f.term === undefined);
         })[0] !== undefined;
     }
     return this._hasNullFilter;

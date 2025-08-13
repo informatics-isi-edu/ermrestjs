@@ -465,13 +465,14 @@ export class AssetPseudoColumn extends ReferenceColumn {
       if (settings === false) {
         this._filePreview = null;
       } else {
-        // by default we're showing hiding the CSV header.
+        // by default we're hiding the CSV header.
         let showCSVHeader = false;
         if (isObjectAndKeyDefined(settings, 'show_csv_header') && typeof settings.show_csv_header === 'boolean') {
           showCSVHeader = settings.show_csv_header;
         }
         this._filePreview = { showCSVHeader };
       }
+      this._filePreview = null; // TODO: implement file preview settings
     }
     return this._filePreview;
   }

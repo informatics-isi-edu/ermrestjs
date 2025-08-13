@@ -46,6 +46,8 @@ import {
  * it will append "-<integer>" to it.
  */
 export class VirtualColumn extends ReferenceColumn {
+  public isPseudo: boolean = true;
+
   isVirtualColumn = true;
 
   constructor(reference: Reference, sourceObjectWrapper: SourceObjectWrapper, name: string, mainTuple?: Tuple) {
