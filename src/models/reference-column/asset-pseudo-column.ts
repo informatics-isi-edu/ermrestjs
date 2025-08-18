@@ -4,7 +4,7 @@ import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-objec
 
 // utils
 import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils';
-import { isDefinedAndNotNull, isObjectAndKeyDefined, isObjectAndNotNull, isStringAndNotEmpty } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
+import { isDefinedAndNotNull, isObjectAndKeyExists, isObjectAndNotNull, isStringAndNotEmpty } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
 import { _annotations, _contexts, _classNames } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
 
 // legacy
@@ -70,7 +70,7 @@ export class AssetPseudoColumn extends ReferenceColumn {
   private _filenameExtFilter?: string[];
   private _filenameExtRegexp?: string[];
   private _displayImagePreview?: boolean;
-  private _filePreview?: null | { showCSVHeader: boolean };
+  private _filePreview?: null | { showCsvHeader: boolean };
 
   constructor(reference: Reference, column: Column, sourceObjectWrapper?: SourceObjectWrapper, name?: string) {
     // call the parent constructor
@@ -457,22 +457,21 @@ export class AssetPseudoColumn extends ReferenceColumn {
   /**
    * whether we should show the file preview or not
    */
-  get filePreview(): null | { showCSVHeader: boolean } {
+  get filePreview(): null | { showCsvHeader: boolean } {
     if (this._filePreview === undefined) {
       const disp = this._annotation.display;
       const currDisplay = isObjectAndNotNull(disp) ? _getAnnotationValueByContext(this._context, disp) : null;
-      const settings = isObjectAndKeyDefined(currDisplay, 'file_preview') ? currDisplay.file_preview : {};
+      const settings = isObjectAndKeyExists(currDisplay, 'file_preview') ? currDisplay.file_preview : {};
       if (settings === false) {
         this._filePreview = null;
       } else {
         // by default we're hiding the CSV header.
-        let showCSVHeader = false;
-        if (isObjectAndKeyDefined(settings, 'show_csv_header') && typeof settings.show_csv_header === 'boolean') {
-          showCSVHeader = settings.show_csv_header;
+        let showCsvHeader = false;
+        if (isObjectAndKeyExists(settings, 'show_csv_header') && typeof settings.show_csv_header === 'boolean') {
+          showCsvHeader = settings.show_csv_header;
         }
-        this._filePreview = { showCSVHeader };
+        this._filePreview = { showCsvHeader };
       }
-      this._filePreview = null; // TODO: implement file preview settings
     }
     return this._filePreview;
   }

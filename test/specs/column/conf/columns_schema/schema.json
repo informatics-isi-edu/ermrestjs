@@ -1023,7 +1023,14 @@
                     "annotations": {
                         "tag:isrd.isi.edu,2017:asset": {
                             "url_pattern": "/hatrac/{{col_asset_4}}",
-                            "filename_column": "col_asset_4_filename"
+                            "filename_column": "col_asset_4_filename",
+                            "display": {
+                                "compact": {
+                                    "file_preview": {
+                                        "show_csv_header": true
+                                    }
+                                }
+                            }
                         },
                         "tag:isrd.isi.edu,2016:column-display" : {
                             "*" : {
@@ -1065,6 +1072,9 @@
                             "display": {
                                 "entry": {
                                     "image_preview": true
+                                },
+                                "compact": {
+                                    "file_preview": false
                                 }
                             }
                         }

@@ -1310,7 +1310,29 @@ exports.execute = function (options) {
 
                     expect(assetRefCompactCols[10].displayImagePreview).toBe(false, "invalid isAsset for index=14");
                 });
+            });
 
+            describe('.filePreview', () => {
+                it ('if annotation sets it to false, should return null.', () => {
+                    const val = assetRefCompactCols[10].filePreview;
+                    expect(val).toEqual(null);
+                });
+
+                it ('if annotation has a proper object, should use it.', () => {
+                    const val = assetRefCompactCols[8].filePreview;
+                    expect(val).toEqual({
+                        showCsvHeader: true
+                    });
+                });
+
+                it ('otherwise should return an object with the default values', () => {
+                    [0, 4, 6, 7].forEach((i) => {
+                        const val = assetRefCompactCols[i].filePreview;
+                        expect(val).toEqual({
+                            showCsvHeader: false
+                        });
+                    });
+                });
             });
         })
 

@@ -256,9 +256,9 @@ exports.execute = function (options) {
      *  5: col_byte
      *  6: col_asset_1 *AssetPseudoColumn* disabeld (no url_pattern) (was 8)
      *  7: col_asset_2 *AssetPseudoColumn* (asset with invalid options) has column-display (markdown and order) (was 9)
-     *  8: col_asset_4 *AssetPseudoColumn* (asset with url_pattern and filename) has column-display (markdown) (was 11)
+     *  8: col_asset_4 *AssetPseudoColumn* (asset with url_pattern and filename, file_preview) has column-display (markdown) (was 11)
      *  9: col_asset_5 (asset with type not text) (was 13)
-     *  10: col_asset_6 *AssetPseudoColumn* (asset with url_pattern, filename, and image_preview) (was 14)
+     *  10: col_asset_6 *AssetPseudoColumn* (asset with url_pattern, filename, image_preview, file_preview) (was 14)
      *  11: col_asset_6_byte_count
      *  + system columns
      *

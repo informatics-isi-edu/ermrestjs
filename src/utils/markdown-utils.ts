@@ -24,13 +24,23 @@ export const MarkdownIt = markdownit({ typographer: true, breaks: true })
 
 _bindCustomMarkdownTags(MarkdownIt);
 
-export function renderMarkdown(value: string, inline?: boolean) {
+/**
+ * returns the rendered markdown content
+ * @param value the markdown value
+ * @param inline whether we should parse this as as inline element or not
+ * @param throwError if true, it will throw the error instead of swalloing it
+ */
+export function renderMarkdown(value: string, inline?: boolean, throwError?: boolean) {
   try {
     if (inline) {
       return MarkdownIt.renderInline(value);
     }
     return MarkdownIt.render(value);
   } catch (e) {
+    if (throwError) {
+      throw e;
+    }
+
     $log.error(`Couldn't parse the given markdown value: ${value}`);
     $log.error(e);
     return value;
