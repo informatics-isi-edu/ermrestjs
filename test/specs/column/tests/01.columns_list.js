@@ -256,9 +256,9 @@ exports.execute = function (options) {
      *  5: col_byte
      *  6: col_asset_1 *AssetPseudoColumn* disabeld (no url_pattern) (was 8)
      *  7: col_asset_2 *AssetPseudoColumn* (asset with invalid options) has column-display (markdown and order) (was 9)
-     *  8: col_asset_4 *AssetPseudoColumn* (asset with url_pattern and filename) has column-display (markdown) (was 11)
+     *  8: col_asset_4 *AssetPseudoColumn* (asset with url_pattern and filename, file_preview) has column-display (markdown) (was 11)
      *  9: col_asset_5 (asset with type not text) (was 13)
-     *  10: col_asset_6 *AssetPseudoColumn* (asset with url_pattern, filename, and image_preview) (was 14)
+     *  10: col_asset_6 *AssetPseudoColumn* (asset with url_pattern, filename, image_preview, file_preview) (was 14)
      *  11: col_asset_6_byte_count
      *  + system columns
      *
@@ -926,7 +926,7 @@ exports.execute = function (options) {
         it('with config option: `systemColumnsDisplayCompact=true`, RID should be first, RCB, RMB, RCT, RMT at the end', function () {
           areSameColumnList(compactSystemColumnsModeRef.generateColumnsList(), compactSystemColumnsModeColumns);
           //verify RID is first
-          expect(compactSystemColumnsModeColumns[0]._baseCols[0].name).toBe('RID', 'RID is not fisrt');
+          expect(compactSystemColumnsModeColumns[0].baseColumns[0].name).toBe('RID', 'RID is not fisrt');
           expect(compactSystemColumnsModeColumns.length).toBe(8, 'length missmatch');
           //verify RMB, RCB, RMT, RCT are last
           expect(compactSystemColumnsModeColumns[4].isForeignKey).toBe(true, 'isForeignKey index=4 missmatch');
@@ -949,7 +949,7 @@ exports.execute = function (options) {
           areSameColumnList(detailedSystemColumnsModeRef.generateColumnsList(), detailedSystemColumnsModeColumns);
           expect(columnNames.length).toBe(6, 'length missmatch');
 
-          expect(detailedSystemColumnsModeColumns[0]._baseCols[0].name).toBe('RID', 'RID is not first');
+          expect(detailedSystemColumnsModeColumns[0].baseColumns[0].name).toBe('RID', 'RID is not first');
 
           // col_1 shouldn't be moved out of default order (defined before col_2 in table definition)
           expect(columnNames.indexOf('col_1') < columnNames.indexOf('col_2')).toBeTruthy('col_1 is not before col_2');
@@ -975,7 +975,7 @@ exports.execute = function (options) {
 
           areSameColumnList(entrySystemColumnsModeRef.generateColumnsList(), entrySystemColumnsModeColumns);
           //verify RID is first
-          expect(entrySystemColumnsModeColumns[0]._baseCols[0].name).toBe('RID', 'RID is not first');
+          expect(entrySystemColumnsModeColumns[0].baseColumns[0].name).toBe('RID', 'RID is not first');
           expect(entrySystemColumnsModeColumns.length).toBe(6, 'length mismatch');
 
           // the only system columns, and should be at the end

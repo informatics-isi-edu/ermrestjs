@@ -17,6 +17,15 @@ import {
   BatchDeleteResponse,
   UnsupportedFilters,
 } from '@isrd-isi-edu/ermrestjs/src/models/errors';
+import {
+    ReferenceColumn,
+    FacetColumn,
+    VirtualColumn,
+    ForeignKeyPseudoColumn,
+    KeyPseudoColumn,
+    AssetPseudoColumn,
+    InboundForeignKeyPseudoColumn
+} from '@isrd-isi-edu/ermrestjs/src/models/reference-column';
 
 // services
 import CatalogSerivce from '@isrd-isi-edu/ermrestjs/src/services/catalog';
@@ -26,6 +35,7 @@ import ErrorService from '@isrd-isi-edu/ermrestjs/src/services/error';
 import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
 
 // utils
+import { createPseudoColumn } from '@isrd-isi-edu/ermrestjs/src/utils/column-utils';
 import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils';
 import { isInteger, isObject, isObjectAndNotNull, isStringAndNotEmpty, verify } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
 import { fixedEncodeURIComponent, simpleDeepCopy, shallowCopy, shallowCopyExtras } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
@@ -57,16 +67,6 @@ import {
 // legacy
 import validateJSONLD from '@isrd-isi-edu/ermrestjs/js/json_ld_validator.js';
 import { parse, _getSearchTerm } from '@isrd-isi-edu/ermrestjs/js/parser';
-import {
-  AssetPseudoColumn,
-  _createPseudoColumn,
-  FacetColumn,
-  ForeignKeyPseudoColumn,
-  InboundForeignKeyPseudoColumn,
-  ReferenceColumn,
-  KeyPseudoColumn,
-  VirtualColumn,
-} from '@isrd-isi-edu/ermrestjs/js/column';
 import { ermrestFactory, Column, Table } from '@isrd-isi-edu/ermrestjs/js/core';
 import {
   _exportHelpers,
@@ -260,6 +260,12 @@ import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-objec
          * @type {ReferenceAggregateFn}
          */
         this.aggregate = new ReferenceAggregateFn(this);
+
+        // NOTE the following are added to avoid TypeScript errors
+        this._facetColumns = undefined;
+        this.origFKR = undefined;
+        this.pseudoColumn = undefined;
+        this.compressedDataSource = undefined;
     }
 
     Reference.prototype = {
@@ -270,7 +276,7 @@ import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-objec
          * displayname.isHTML will return true/false
          * displayname.value has the value
          *
-         * @type {object}
+         * @type {any}
          */
         get displayname () {
             /* Note that displayname is context dependent. For instance,
@@ -290,7 +296,7 @@ import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-objec
         /**
          * The comment for this reference.
          *
-         * @type {Object}
+         * @type {any}
          */
         get comment () {
             /* Note that comment is context dependent. For instance,
@@ -891,7 +897,7 @@ import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-objec
                 this._searchColumns = false;
                 if (this.table.searchSourceDefinition && Array.isArray(this.table.searchSourceDefinition.columns)) {
                     this._searchColumns = this.table.searchSourceDefinition.columns.map(function (sd) {
-                        return _createPseudoColumn(self, sd, null);
+                        return createPseudoColumn(self, sd, null);
                     });
                 }
             }
@@ -1400,14 +1406,14 @@ import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-objec
          * @param {!number} limit The limit of results to be returned by the
          * read request. __required__
          * @param {Object} contextHeaderParams the object that we want to log.
-         * @param {Boolean} useEntity whether we should use entity api or not (if true, we won't get foreignkey data)
-         * @param {Boolean} dontCorrectPage whether we should modify the page.
+         * @param {Boolean=} useEntity whether we should use entity api or not (if true, we won't get foreignkey data)
+         * @param {Boolean=} dontCorrectPage whether we should modify the page.
          * If there's a @before in url and the number of results is less than the
          * given limit, we will remove the @before and run the read again. Setting
          * dontCorrectPage to true, will not do this extra check.
-         * @param {Boolean} getTRS whether we should fetch the table-level row acls (if table supports it)
-         * @param {Boolean} getTCRS whether we should fetch the table-level and column-level row acls (if table supports it)
-         * @param {Boolean} getUnlinkTRS whether we should fetch the acls of association
+         * @param {Boolean=} getTRS whether we should fetch the table-level row acls (if table supports it)
+         * @param {Boolean=} getTCRS whether we should fetch the table-level and column-level row acls (if table supports it)
+         * @param {Boolean=} getUnlinkTRS whether we should fetch the acls of association
          *                  table. Use this only if the association is based on facet syntax
          *
          * NOTE setting useEntity to true, will ignore any sort that is based on
@@ -2303,7 +2309,7 @@ import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-objec
          *   // Use modulePath to render the rows
          * }
          * ```
-         * @type {Object}
+         * @type {any}
          *
          **/
         get display() {
@@ -2561,7 +2567,7 @@ import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-objec
                 if (fkr.isPath) {
                     // since we're sure that the pseudoColumn either going to be
                     // general pseudoColumn or InboundForeignKeyPseudoColumn then it will have reference
-                    relatedRef = _createPseudoColumn(this, fkr.sourceObjectWrapper, tuple).reference;
+                    relatedRef = createPseudoColumn(this, fkr.sourceObjectWrapper, tuple).reference;
                     fkName = relatedRef.pseudoColumn.name;
                 } else {
                     fkr = fkr.foreignKey;
@@ -3181,10 +3187,10 @@ import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-objec
          *  + If this reference is actually an inbound related reference,
          *      we should hide the foreign key (and all of its columns) that created the link.
          *
-         * @param  {Tuple} tuple the data for the current refe
-         * @param  {Object[]} columnsList if passed, we will skip the annotation and heuristics and use this list instead.
-         * @param  {boolean?} dontChangeReference whether we should mutate the reference or just return the generated list.
-         * @param  {boolean?} skipLog whether we should skip logging the warning messages
+         * @param  {Tuple=} tuple the data for the current reference
+         * @param  {Object[]=} columnsList if passed, we will skip the annotation and heuristics and use this list instead.
+         * @param  {boolean=} dontChangeReference whether we should mutate the reference or just return the generated list.
+         * @param  {boolean=} skipLog whether we should skip logging the warning messages
          * @return {ReferenceColumn[]}  Array of {@link ERMrest.ReferenceColumn}.
          */
         generateColumnsList: function(tuple, columnsList, dontChangeReference, skipLog) {
@@ -3448,7 +3454,7 @@ import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-objec
                         // avoid duplciates and hide the column
                         if (!ignore) {
                             consideredColumns[wrapper.name] = true;
-                            refCol = _createPseudoColumn(this, wrapper, tuple);
+                            refCol = createPseudoColumn(this, wrapper, tuple);
 
                             // we want yo call the addColumn for asset and local columns since it will take care of other things as well.
                             if (refCol.isAsset || !refCol.isPseudo) {
@@ -3680,8 +3686,8 @@ import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-objec
                     var isHidden = false;
 
                     // Iterate over the base columns. If any of them are hidden then hide the column
-                    for (var k=0; k< refCol._baseCols.length; k++) {
-                        if (refCol._baseCols[k].isHiddenPerACLs) {
+                    for (var k=0; k< refCol.baseColumns.length; k++) {
+                        if (refCol.baseColumns[k].isHiddenPerACLs) {
                             isHidden = true;
                             break;
                         }
@@ -5862,7 +5868,7 @@ import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-objec
      * @param {!ERMrest.Page} page The Page object from which
      * this data was acquired.
      * @param {!Object} data The unprocessed tuple of data returned from ERMrest.
-     * @param {!Object} linkedData extra foreign key data that is fetched during read
+     * @param {!Record<string, any>} linkedData extra foreign key data that is fetched during read
      * @param {!Object} linkedDataRIDs map of column name keys with column RID as values
      */
     export function Tuple(pageReference, page, data, linkedData, linkedDataRIDs, rightsSummary, associationRightsSummary) {
@@ -6048,7 +6054,7 @@ import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-objec
                         var ref = self._pageRef.contextualize.entryEdit;
                         if (ref.table == self._pageRef.table) { // make sure not alternative
                             canUpdateOneCol = ref.columns.some(function (col) {
-                                return !col.inputDisabled && !col._baseCols.some(function (bcol) {
+                                return !col.inputDisabled && !col.baseColumns.some(function (bcol) {
                                     return !self.checkPermissions(
                                         _ERMrestACLs.COLUMN_UPDATE,
                                         bcol.name
@@ -6197,7 +6203,7 @@ import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-objec
                         column = this._pageRef.columns[i];
 
                         // if user cannot update any of the base_columns then the column should be disabled
-                        this._canUpdateValues[i] = !column._baseCols.some(checkUpdateColPermission);
+                        this._canUpdateValues[i] = !column.baseColumns.some(checkUpdateColPermission);
 
                         if (column.isPseudo) {
                             if (column.isForeignKey) {
@@ -6296,7 +6302,7 @@ import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-objec
          * ```
          * console.log("This tuple has a displayable name of ", tuple.displayname.value);
          * ```
-         * @type {string}
+         * @type {DisplayName}
          */
         get displayname() {
             if (this._displayname === undefined) {
@@ -6735,9 +6741,9 @@ import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-objec
                 leafMatch = false;
 
             key.colset.columns.forEach(function(col) {
-                if (col.name === self._leafColumn._baseCols[0].name) {
+                if (col.name === self._leafColumn.baseColumns[0].name) {
                     leafMatch = true;
-                } else if (col.name === self._mainColumn._baseCols[0].name) {
+                } else if (col.name === self._mainColumn.baseColumns[0].name) {
                     mainMatch = true;
                 }
             });

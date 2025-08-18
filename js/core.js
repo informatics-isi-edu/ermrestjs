@@ -279,7 +279,6 @@ import {
         /**
          * For internal use only. A reference to the server instance.
          * @type {Server}
-         * @private
          */
         this.server = server;
 
@@ -1028,7 +1027,7 @@ import {
         this._rowDisplayKeys = {}; // Used for display key
 
         /**
-         * @type {object}
+         * @type {{isHTML: boolean, value: string, unformatted: string}}
          * @desc
          * Preferred display name for user presentation only.
          * this.displayname.isHTML will return true/false
@@ -2174,7 +2173,6 @@ import {
         /**
          * return the null value that should be shown for the columns under
          * this table for the given context.
-         * @type {object}
          */
         _getNullValue: function (context) {
             return _getNullValue(this, context, true);
@@ -2926,6 +2924,7 @@ import {
          *
          * @param {Object} data The 'raw' data value.
          * @param {String} context the app context
+         * @param {Object=} options
          * @returns {string|string[]} The formatted value. If column is array, it will be an array of values.
          */
         this.formatvalue = function (data, context, options) {
@@ -2977,9 +2976,9 @@ import {
          *
          * @param {Object} data The `raw` data for the table.
          * @param {String} context the app context
-         * @param {Object} templateVariables tempalte variables
+         * @param {Object} templateVariables template variables
          * @param {Object} options
-         * @returns {Object} A key value pair containing value and isHTML that detemrines the presentation.
+         * @returns {{isHTML: boolean, value: string, unformatted: string}} A key value pair containing value and isHTML that detemrines the presentation.
          */
         this.formatPresentation = function(data, context, templateVariables, options) {
             data = data || {};
@@ -3128,7 +3127,7 @@ import {
 
         /**
          * @desc The RID of this column (might not be defined)
-         * @type {?string}
+         * @type {string=}
          */
         this.RID = jsonColumn.RID;
 
@@ -3290,7 +3289,7 @@ import {
         this._display = {};  // Used for column.display annotation.
 
         /**
-         * @type {object}
+         * @type {{isHTML: boolean, value: string, unformatted: string}}
          * @desc
          * Preferred display name for user presentation only.
          * this.displayname.isHTML will return true/false
@@ -3419,7 +3418,7 @@ import {
 
         /**
          * return the null value for the column based on context and annotation
-         * @type {object}
+         * @returns {string | null}
          */
         _getNullValue: function (context) {
             return _getNullValue(this, context);
@@ -3747,7 +3746,7 @@ import {
 
         /**
          * json content
-         * @type {string}
+         * @type {any}
          */
         this.content = jsonAnnotation;
     }
@@ -3847,7 +3846,7 @@ import {
      * @desc
      * Constructor for Key.
      */
-    function Key(table, jsonKey) {
+    export function Key(table, jsonKey) {
 
         /*
          * @deprecated
@@ -4089,7 +4088,7 @@ import {
          * It won't preserve the order of given columns.
          * Returns set of columns sorted by their names.
          *
-         * @type {Array}
+         * @type {Column[]}
          */
         this.columns = columns.slice().sort(function(a, b) {
            return a.name.localeCompare(b.name);
@@ -4513,7 +4512,7 @@ import {
 
         /**
          * @desc The RID of this column (might not be defined)
-         * @type {?string}
+         * @type {string=}
          */
         this.RID = jsonFKR.RID;
 

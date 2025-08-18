@@ -15,6 +15,7 @@ import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
 import ConfigService from '@isrd-isi-edu/ermrestjs/src/services/config';
 
 // utils
+import { createPseudoColumn } from '@isrd-isi-edu/ermrestjs/src/utils/column-utils';
 import { isObjectAndNotNull, isObject, isDefinedAndNotNull, isStringAndNotEmpty } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
 import {
   fixedEncodeURIComponent,
@@ -23,7 +24,6 @@ import {
   shallowCopyExtras,
   urlEncodeBase64,
 } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
-import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils';
 import {
   _constraintTypes,
   _contexts,
@@ -46,7 +46,6 @@ import {
 
 // legacy
 import { generateKeyValueFilters, renameKey, _renderTemplate, _isEntryContext, _getFormattedKeyValues } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
-import { _createPseudoColumn } from '@isrd-isi-edu/ermrestjs/js/column';
 import { Table, Catalog } from '@isrd-isi-edu/ermrestjs/js/core';
 import { Reference, Tuple } from '@isrd-isi-edu/ermrestjs/js/reference';
 import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/parser';
@@ -755,7 +754,7 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
 
                 // NOTE this could be in the table.sourceDefinitions
                 // the only issue is that in there we don't have the mainTuple...
-                const pc = _createPseudoColumn(
+                const pc = createPseudoColumn(
                     baseReference,
                     /**
                      * cloning so,
@@ -834,7 +833,7 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
             var obj;
 
             if (refCol.isKey) {
-                var baseCol = refCol._baseCols[0];
+                var baseCol = refCol.baseColumns[0];
                 obj = {"source": baseCol.name};
 
                 // integer and serial key columns should show choice picker
@@ -886,12 +885,12 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
             obj = {"source": refCol.name};
 
             // integer and serial key columns should show choice picker
-            if (refCol._baseCols[0].isUniqueNotNull &&
+            if (refCol.baseColumns[0].isUniqueNotNull &&
                (refCol.type.name.indexOf("int") === 0 || refCol.type.name.indexOf("serial") === 0)) {
                 obj.ux_mode = _facetFilterTypes.CHOICE;
             }
 
-            return _facetHeuristicIgnoredTypes.indexOf(refCol._baseCols[0].type.name) === -1 ? obj : null;
+            return _facetHeuristicIgnoredTypes.indexOf(refCol.baseColumns[0].type.name) === -1 ? obj : null;
         },
 
         /**
@@ -927,7 +926,7 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
             }
 
             // column type array is not supported
-            if (col.type.isArray || col._baseCols[0].type.isArray) {
+            if (col.type.isArray || col.baseColumns[0].type.isArray) {
                 return false;
             }
 
