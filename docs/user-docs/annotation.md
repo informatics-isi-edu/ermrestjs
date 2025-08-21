@@ -747,7 +747,7 @@ Supported display _displayoption_ JSON payload patterns:
 
 - `{`... `"image_preview": true` ... `}`: Display a preview of the selected image below the default presentation of the asset. Be mindful that the client will not do any extra checks whether the selected file is an image, and you should guard against it by using `filename_ext_filter`. Current implementation of Chaise only supports this property in `entry` contexts and defining this for other contexts will not have any effect on Chaise.
 
-- `{`... `"file_preview":` _filepreviewoption_ | `false` ... `}`: By default, Chaise will try to display the preview for CSV, markdown, JSON, and text files in `detailed` context. If `false`, Chaise will not display the file preview to users. The following are the supported _filepreviewoption_ JSON payload patterns:
+- `{`... `"file_preview":` _filepreviewoption_ | `false` ... `}`: By default, Chaise will try to display the preview for CSV, TSV, markdown, JSON, and text files in `detailed` context. If `false`, Chaise will not display the file preview to users. The following are the supported _filepreviewoption_ JSON payload patterns:
   - `{` ... `"show_csv_header": true` ... `}`: Treat the first row of the CSV file as the header.
 
 Default heuristics:
