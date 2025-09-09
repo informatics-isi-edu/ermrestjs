@@ -30,9 +30,10 @@ For common markdown syntax please refer to [this reference sheet](http://commonm
         - [a.7. Iframe with caption styles and figure styles](#a7-iframe-with-caption-styles-and-figure-styles)
       - [b. Captions](#b-captions)
         - [b.1. Linkable caption](#b1-linkable-caption)
-        - [b.2. Caption positioned at the bottom](#b2-caption-positioned-at-the-bottom)
-        - [b.3. Caption class and style](#b3-caption-class-and-style)
-        - [b.4. Linkable caption open new tab](#b4-linkable-caption-open-new-tab)
+        - [b.2. Download link caption](#b2-download-link-caption)
+        - [b.3. Caption positioned at the bottom](#b3-caption-positioned-at-the-bottom)
+        - [b.4. Caption class and style](#b4-caption-class-and-style)
+        - [b.5. Linkable caption open new tab](#b5-linkable-caption-open-new-tab)
       - [c. Responsiveness and Other Cases](#c-responsiveness-and-other-cases)
         - [c.1. Stretch to height and width of parent container](#c1-stretch-to-height-and-width-of-parent-container)
         - [c.2. Fill container with min-width](#c2-fill-container-with-min-width)
@@ -188,7 +189,7 @@ The following is the list of special class names that you can use:
     - `.chaise-content-top`: Aligns the inner content to the top of the container this class is attached to
     - `.chaise-content-middle`: Aligns the inner content to the middle of the container this class is attached to
     - `.chaise-content-bottom`: Aligns the inner content to the bottom of the container this class is attached to
-- `.chaise-word-break-all`: This enforces the given content to be broken at any character if it's overflowing. Useful for long an arbitary content. 
+- `.chaise-word-break-all`: This enforces the given content to be broken at any character if it's overflowing. Useful for long an arbitary content.
   - For example you can add this to the asset presentation to ensure better UI in `compact` contexts: `[{{{filename}}}]({{{url}}}){download .chaise-word-break-all}`. Make sure to also add a `min-width` to the column header, otherwise the column might become very narrow.
 
 - `.chaise-gene-sequence-compact`: When applied to a [Gene Sequence](#17-gene-sequence) block, it will ensure showing a more compact version. This is recommended for `compact` contexts.
@@ -528,8 +529,25 @@ To style the whole iframe enclosing block (`<figure>`) you can either specify cl
 </figure>
 ```
 
+### b.2. Download link caption
 
-#### b.2. Caption positioned at the bottom
+```html
+::: iframe [CAPTION](https://example.com){width="800" height="300" caption-link="https://example.com" caption-link-attrs=download } \n:::
+
+# OUTPUT:
+<figure class="embed-block">
+    <div class="figcaption-wrapper" style="width: 800px;">
+        <figcaption class="embed-caption"><a href="https://example.com">CAPTION</a></figcaption>
+        <div class="iframe-btn-container">
+            <a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.com" download><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a>
+        </div>
+    </div>
+    <iframe src="https://example.com" width="800" height="300"></iframe>
+</figure>
+```
+
+
+#### b.3. Caption positioned at the bottom
 ```html
 ::: iframe [CAPTION](https://example.com){width="800" height="300" caption-link="https://example.com" pos="bottom" } \n:::
 
@@ -544,7 +562,7 @@ To style the whole iframe enclosing block (`<figure>`) you can either specify cl
 ```
 
 
-#### b.3. Caption class and style
+#### b.4. Caption class and style
 To style the caption of an iframe you can either specify classes using `caption-class` or CSS style using `caption-style`.
 
 ```html
@@ -560,7 +578,7 @@ To style the caption of an iframe you can either specify classes using `caption-
 </figure>
 ```
 
-#### b.4. Linkable caption open new tab
+#### b.5. Linkable caption open new tab
 To have the caption open in a new tab, use `caption-target=_blank`.
 ```html
 ::: iframe [CAPTION](https://example.com){width="800" height="300" caption-link="https://example.com" caption-target="_blank"} \n:::

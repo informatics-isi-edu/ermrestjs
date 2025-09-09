@@ -105,6 +105,7 @@ function _bindCustomMarkdownTags(md: typeof MarkdownIt) {
               posTop = true,
               captionClass = '',
               captionStyle = '',
+              captionLinkAttrs = '',
               figureClass = '',
               figureStyle = '',
               iframeSrc = '',
@@ -129,6 +130,9 @@ function _bindCustomMarkdownTags(md: typeof MarkdownIt) {
                 case 'link': // NOTE: link will be deprecated but leaving in conditional for backwards compatibility
                 case 'caption-link':
                   captionLink = attr[1];
+                  break;
+                case 'caption-link-attrs':
+                  captionLinkAttrs = attr[1];
                   break;
                 case 'pos':
                   posTop = attr[1].toLowerCase() == 'bottom' ? false : true;
@@ -244,8 +248,9 @@ function _bindCustomMarkdownTags(md: typeof MarkdownIt) {
             if (captionLink) {
               // set the fullscreen target string for the fullscreen button
               if (captionTarget) captionTarget = ' target=' + captionTarget;
+              if (captionLinkAttrs) captionLinkAttrs = ' ' + captionLinkAttrs;
               if (!captionHTML.trim().length) captionHTML = 'Enlarge';
-              captionHTML = '<a href="' + captionLink + '"' + captionTarget + '>' + captionHTML + '</a>';
+              captionHTML = `<a href="${captionLink}"${captionTarget}${captionLinkAttrs}>${captionHTML}</a>`;
             }
 
             // set the fullscreen target string for the fullscreen button

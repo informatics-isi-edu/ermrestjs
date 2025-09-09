@@ -267,35 +267,49 @@ exports.execute = function (options) {
           '<figure class="embed-block -chaise-post-load" style="font-weight:500;"><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.org/chaise/search"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a></div><iframe src="https://example.org/chaise/search"></iframe><figcaption class="embed-caption cclass">CAPTION</figcaption></figure>';
         expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML, 'case 06');
 
-        // 07: check for iframe tag with classes and target=_blank for fullscreen button
+        // 07: iframe with caption-link
+        var iframeMarkdown =
+          '::: iframe [Value](https://example.org/chaise/search){caption-link="https://example.org/chaise/caption"} \n:::';
+        var iframeHTML =
+          '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption"><a href="https://example.org/chaise/caption">Value</a></figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.org/chaise/search"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a></div></div><iframe src="https://example.org/chaise/search"></iframe></figure>';
+        expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML, 'case 07');
+
+        // 08: iframe with caption-link and caption-link-attrs
+        var iframeMarkdown =
+          '::: iframe [Value](https://example.org/chaise/search){caption-link="https://example.org/chaise/caption2" caption-link-attrs=download} \n:::';
+        var iframeHTML =
+          '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption"><a href="https://example.org/chaise/caption2" download>Value</a></figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.org/chaise/search"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a></div></div><iframe src="https://example.org/chaise/search"></iframe></figure>';
+        expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML, 'case 08');
+
+        // 09: check for iframe tag with classes and target=_blank for fullscreen button
         var iframeMarkdown =
           '::: iframe [SOME LINK CAPTION](https://example.org/chaise/search){.class-one .class-two fullscreen-target=_blank} \n:::';
         var iframeHTML =
           '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption">SOME LINK CAPTION</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://example.org/chaise/search" target=_blank><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a></div></div><iframe src="https://example.org/chaise/search" class="class-one class-two"></iframe></figure>';
-        expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML, 'case 07');
+        expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML, 'case 09');
 
-        // 08: Testing for YouTube video with classes
+        // 10: Testing for YouTube video with classes
         var iframeMarkdown = '::: iframe [SOME LINK CAPTION](https://www.youtube.com/embed/op1-Cw_l1Ow){.class-one .class-two} \n:::';
         var iframeHTML =
           '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 100%;"><figcaption class="embed-caption">SOME LINK CAPTION</figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://www.youtube.com/embed/op1-Cw_l1Ow"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a></div></div><span class="video-info-in-print" style="display:none;">Note: YouTube video ( https://www.youtube.com/embed/op1-Cw_l1Ow ) is hidden in print</span><iframe src="https://www.youtube.com/embed/op1-Cw_l1Ow" class="class-one class-two hide-in-print"></iframe></figure>';
-        expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML, 'case 08');
+        expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML, 'case 10');
 
-        // 09: Testing for YouTube video
+        // 11: Testing for YouTube video
         var iframeMarkdown =
           '::: iframe [SOME LINK CAPTION](https://www.youtube.com/embed/op1-Cw_l1Ow){width=640 height=480 link=https://www.youtube.com/embed/op1-Cw_l1Ow} \n:::';
         var iframeHTML =
           '<figure class="embed-block -chaise-post-load"><div class="figcaption-wrapper" style="width: 640px;"><figcaption class="embed-caption"><a href="https://www.youtube.com/embed/op1-Cw_l1Ow">SOME LINK CAPTION</a></figcaption><div class="iframe-btn-container"><a class="chaise-btn chaise-btn-secondary chaise-btn-iframe" href="https://www.youtube.com/embed/op1-Cw_l1Ow"><span class="chaise-btn-icon fullscreen-icon"></span><span>Full screen</span></a></div></div><span class="video-info-in-print" style="display:none;">Note: YouTube video ( https://www.youtube.com/embed/op1-Cw_l1Ow ) is hidden in print</span><iframe src="https://www.youtube.com/embed/op1-Cw_l1Ow" width="640" height="480" class="hide-in-print"></iframe></figure>';
-        expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML, 'case 09');
+        expect(printMarkdown(iframeMarkdown)).toBe(iframeHTML, 'case 11');
 
-        // 10: Check for dropdown tag
+        // 12: Check for dropdown tag
         var dropdownMarkdown =
           '::: dropdown MYCAPTION{.btn-lg} [CAPTION1](https://example.org/chaise/search){.btn .btn-danger} [CAPTION2](https://example.org/chaise/search) [CAPTION3](https://example.org/chaise/search) \n:::';
         var dropdownHTML =
           '<div class="btn-group markdown-dropdown"><button type="button"  class="btn btn-primary btn-lg">MYCAPTION</button><button type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"  class="btn btn-primary dropdown-toggle btn-lg"><span class="caret"></span><span class="sr-only">Toggle Dropdown</span></button><ul class="dropdown-menu"><li><a href="https://example.org/chaise/search" class="btn btn-danger" >CAPTION1</a></li><li><a href="https://example.org/chaise/search" >CAPTION2</a></li><li><a href="https://example.org/chaise/search" >CAPTION3</a></li></ul></div>';
-        expect(printMarkdown(dropdownMarkdown)).toBe(dropdownHTML, 'case 10');
+        expect(printMarkdown(dropdownMarkdown)).toBe(dropdownHTML, 'case 12');
 
-        // 11: Check for iframe followed by a dropdown using markdown for both
-        expect(printMarkdown(iframeMarkdown + '\n' + dropdownMarkdown)).toBe(iframeHTML + dropdownHTML, 'case 11');
+        // 13: Check for iframe followed by a dropdown using markdown for both
+        expect(printMarkdown(iframeMarkdown + '\n' + dropdownMarkdown)).toBe(iframeHTML + dropdownHTML, 'case 13');
       });
 
       describe('should support :::image.', function () {
