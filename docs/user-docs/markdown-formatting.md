@@ -529,7 +529,7 @@ To style the whole iframe enclosing block (`<figure>`) you can either specify cl
 </figure>
 ```
 
-### b.2. Download link caption
+#### b.2. Download link caption
 
 ```html
 ::: iframe [CAPTION](https://example.com){width="800" height="300" caption-link="https://example.com" caption-link-attrs=download } \n:::
