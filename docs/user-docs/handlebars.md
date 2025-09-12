@@ -480,12 +480,18 @@ ISO datetime is {{{$moment.ISOString}}}
 
 
 ### $catalog
-`$catalog` is an object that gives you access to the catalog information including version if it is present. The following properties are currently included:
+
+`$catalog` is an object that gives you access to the catalog information. The following properties are currently included:
+
+- `id`: The catalog identifier (without any version information).
+- `snapshot`: The catalog identifier with the version information if it's present.
+- `version`: Only available if the version is present.
+
 ```
 {
-  "snapshot": <id>@<version>,
-  "id": id,
-  "version": version
+  "snapshot": "<id>@<version>",
+  "id": "id",
+  "version": "version"
 }
 ```
 
