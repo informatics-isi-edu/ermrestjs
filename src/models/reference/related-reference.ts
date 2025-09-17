@@ -100,9 +100,9 @@ export class RelatedReference extends Reference {
       this._relatedFkColumnPositions,
       this._compressedDataSource,
       this._mainTuple,
-      typeof displayname !== 'undefined' ? displayname : this.displayname,
-      typeof comment !== 'undefined' ? comment : this.comment,
-      typeof pseudoColumn !== 'undefined' ? pseudoColumn : this.pseudoColumn,
+      typeof displayname !== 'undefined' ? displayname : this._displayname,
+      typeof comment !== 'undefined' ? comment : this._comment,
+      typeof pseudoColumn !== 'undefined' ? pseudoColumn : this._pseudoColumn,
     );
 
     if (this.derivedAssociationReference) {

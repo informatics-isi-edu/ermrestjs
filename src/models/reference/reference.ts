@@ -205,19 +205,20 @@ export class Reference {
    * different compared to `reference.columns`.
    */
   public contextualize: Contextualize;
+
+  /**
+   * The function that can be used to perform aggregation operations on columns in this reference.
+   */
   public aggregate: ReferenceAggregateFn;
 
+  // private members that the public API can access through getters/setters
   private _context: string;
   private _location: Location;
   private _server: Server;
   private _table: Table;
   private _facetBaseTable: Table;
   private _shortestKey: Column[];
-  private _displayname?: DisplayName;
-  private _comment?: CommentType | null;
-  private _pseudoColumn?: VisibleColumn;
   private _bulkCreateForeignKeyObject?: BulkCreateForeignKeyObject | null;
-
   private _canCreate?: boolean;
   private _canCreateReason?: string;
   private _canRead?: boolean;
@@ -226,23 +227,24 @@ export class Reference {
   private _canDelete?: boolean;
   private _canUseTRS?: boolean;
   private _canUseTCRS?: boolean;
-
   private _readPath?: string;
   private _readAttributeGroupPathProps_cached?: any;
   private _display?: ReferenceDisplay;
   private _defaultExportTemplate?: any;
-  private _exportTemplates?: any;
-  private _csvDownloadLink?: any;
+  private _csvDownloadLink?: string | null;
   private _searchColumns?: Array<VisibleColumn> | false;
   private _cascadingDeletedItems?: Array<Table | RelatedReference | Reference>;
-
-  // NOTE the following are added to avoid TypeScript errors
   private _referenceColumns?: Array<VisibleColumn>;
   private _related?: Array<RelatedReference>;
   private _facetColumns?: Array<FacetColumn>;
   private _activeList?: any;
   private _citation?: Citation | null;
   private _googleDatasetMetadata?: GoogleDatasetMetadata | null;
+
+  // props that the children can access
+  protected _displayname?: DisplayName;
+  protected _comment?: CommentType | null;
+  protected _pseudoColumn?: VisibleColumn;
 
   constructor(location: Location, catalog: Catalog, displayname?: DisplayName, comment?: CommentType, pseudoColumn?: VisibleColumn) {
     /**
@@ -468,7 +470,7 @@ export class Reference {
    * NOTE It will honor the visible columns in `export` context
    *
    **/
-  get csvDownloadLink(): string {
+  get csvDownloadLink(): string | null {
     if (this._csvDownloadLink === undefined) {
       const cid = this.table.schema.catalog.server.cid;
       let qParam = '?limit=none&accept=csv&uinit=1';
@@ -2662,7 +2664,7 @@ export class Reference {
           .then(() => {
             resolve();
           })
-          .catch((catchError: any) => {
+          .catch((catchError: unknown) => {
             reject(ErrorService.responseToError(catchError, this, delFlag));
           });
 
@@ -2718,7 +2720,7 @@ export class Reference {
             .then(() => {
               successTupleData = successTupleData.concat(currFilter.keyData);
             })
-            .catch((err: any) => {
+            .catch((err: unknown) => {
               failedTupleData = failedTupleData.concat(currFilter.keyData);
               deleteSubmessage.push(ErrorService.responseToError(err, this, delFlag).message);
             })
@@ -2747,9 +2749,9 @@ export class Reference {
     const ref = new Reference(
       this.location,
       this.location.catalogObject,
-      typeof displayname !== 'undefined' ? displayname : this.displayname,
-      typeof comment !== 'undefined' ? comment : this.comment,
-      typeof pseudoColumn !== 'undefined' ? pseudoColumn : this.pseudoColumn,
+      typeof displayname !== 'undefined' ? displayname : this._displayname,
+      typeof comment !== 'undefined' ? comment : this._comment,
+      typeof pseudoColumn !== 'undefined' ? pseudoColumn : this._pseudoColumn,
     );
 
     ref.setContext(this.context);
