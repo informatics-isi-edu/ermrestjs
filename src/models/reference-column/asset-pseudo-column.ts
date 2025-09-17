@@ -1,6 +1,7 @@
 // models
 import { ReferenceColumn, ReferenceColumnTypes } from '@isrd-isi-edu/ermrestjs/src/models/reference-column';
-import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-object-wrapper';
+import type SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-object-wrapper';
+import type { Reference, Tuple, VisibleColumn } from '@isrd-isi-edu/ermrestjs/src/models/reference';
 
 // utils
 import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils';
@@ -10,8 +11,7 @@ import { _annotations, _contexts, _classNames } from '@isrd-isi-edu/ermrestjs/sr
 // legacy
 import { _getAnnotationValueByContext, _isEntryContext, _renderTemplate, _isSameHost } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
 import { _processWaitForList } from '@isrd-isi-edu/ermrestjs/js/utils/pseudocolumn_helpers';
-import { Column } from '@isrd-isi-edu/ermrestjs/js/core';
-import { Reference } from '@isrd-isi-edu/ermrestjs/js/reference';
+import type { Column } from '@isrd-isi-edu/ermrestjs/js/core';
 
 type AssetMetadata = {
   url: string;
@@ -72,9 +72,9 @@ export class AssetPseudoColumn extends ReferenceColumn {
   private _displayImagePreview?: boolean;
   private _filePreview?: null | { showCsvHeader: boolean };
 
-  constructor(reference: Reference, column: Column, sourceObjectWrapper?: SourceObjectWrapper, name?: string) {
+  constructor(reference: Reference, column: Column, sourceObjectWrapper?: SourceObjectWrapper, name?: string, mainTuple?: Tuple) {
     // call the parent constructor
-    super(reference, [column], sourceObjectWrapper, name);
+    super(reference, [column], sourceObjectWrapper, name, mainTuple);
 
     this._baseCol = column;
     this.referenceColumnType = ReferenceColumnTypes.ASSET;
@@ -479,7 +479,7 @@ export class AssetPseudoColumn extends ReferenceColumn {
   /**
    * Returns the wait for list for this column.
    */
-  get waitFor(): any {
+  get waitFor(): VisibleColumn[] {
     if (this._waitFor === undefined) {
       if (!_isEntryContext(this._context)) {
         // calling the parent logic, which will get it from the source object

@@ -10,5 +10,4 @@ export * from '@isrd-isi-edu/ermrestjs/src/models/reference-column/foreign-key-p
 export * from '@isrd-isi-edu/ermrestjs/src/models/reference-column/key-pseudo-column';
 export * from '@isrd-isi-edu/ermrestjs/src/models/reference-column/asset-pseudo-column';
 export * from '@isrd-isi-edu/ermrestjs/src/models/reference-column/inbound-foreign-key-pseudo-column';
-
 export * from '@isrd-isi-edu/ermrestjs/src/models/reference-column/column-aggregate';

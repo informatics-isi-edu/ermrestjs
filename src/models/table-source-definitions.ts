@@ -1,10 +1,12 @@
+// models
+import { Tuple } from '@isrd-isi-edu/ermrestjs/src/models/reference';
+import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-object-wrapper';
+
 // services
 import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
 
 // legacy
 import { Column, ForeignKeyRef, Table } from '@isrd-isi-edu/ermrestjs/js/core';
-import { Tuple } from '@isrd-isi-edu/ermrestjs/js/reference';
-import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-object-wrapper';
 
 /**
  * Result of Table.sourceDefinitions

@@ -1246,7 +1246,7 @@ exports.execute = function (options) {
               done.fail('expected function to throw error');
             })
             .catch(function (e) {
-              expect(e.message).toBe('page is required.', 'error message missmatch.');
+              expect(e.message).toBe('given page object must be defined and from the base table.', 'error message missmatch.');
               done();
             });
         });

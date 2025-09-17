@@ -8,7 +8,8 @@ import {
   ReferenceColumn,
   VirtualColumn,
 } from '@isrd-isi-edu/ermrestjs/src/models/reference-column';
-import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-object-wrapper';
+import type SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-object-wrapper';
+import { generateRelatedReference, type Reference, type Tuple, type VisibleColumn } from '@isrd-isi-edu/ermrestjs/src/models/reference';
 
 // utils
 import { _contexts } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
@@ -23,7 +24,6 @@ import {
   _processColumnOrderList,
   _renderTemplate,
 } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
-import { Reference, Tuple } from '@isrd-isi-edu/ermrestjs/js/reference';
 
 /**
  * Convert the raw value of an aggregate column to a formatted value.
@@ -221,7 +221,11 @@ export function processAggregateValue(rawValue: any, pseudoColumn: any, aggFn: s
  * - If path, entity, p&b association: InboundForeignKeyPseudoColumn
  * - Otherwise: PseudoColumn
  */
-export function createPseudoColumn(reference: Reference, sourceObjectWrapper: SourceObjectWrapper, mainTuple?: Tuple): any {
+export function createPseudoColumn(
+  reference: Reference,
+  sourceObjectWrapper: SourceObjectWrapper,
+  mainTuple?: Tuple,
+): ReferenceColumn | ForeignKeyPseudoColumn | InboundForeignKeyPseudoColumn | AssetPseudoColumn | PseudoColumn {
   const sourceObject = sourceObjectWrapper.sourceObject;
   const column = sourceObjectWrapper.column;
   const name = sourceObjectWrapper.name;
@@ -270,7 +274,7 @@ export function createPseudoColumn(reference: Reference, sourceObjectWrapper: So
   // path, entity, inbound length 1 (it can have filter)
   if (sourceObjectWrapper.isEntityMode && sourceObjectWrapper.foreignKeyPathLength === 1 && sourceObjectWrapper.firstForeignKeyNode!.isInbound) {
     fk = sourceObjectWrapper.firstForeignKeyNode!.nodeObject;
-    relatedRef = reference._generateRelatedReference(fk, mainTuple, false, sourceObjectWrapper);
+    relatedRef = generateRelatedReference(reference, fk, mainTuple, false, sourceObjectWrapper);
     return new InboundForeignKeyPseudoColumn(reference, relatedRef, sourceObjectWrapper, name);
   }
 
@@ -283,10 +287,22 @@ export function createPseudoColumn(reference: Reference, sourceObjectWrapper: So
   ) {
     fk = sourceObjectWrapper.firstForeignKeyNode!.nodeObject;
     if (fk._table.isPureBinaryAssociation) {
-      relatedRef = reference._generateRelatedReference(fk, mainTuple, true, sourceObjectWrapper);
+      relatedRef = generateRelatedReference(reference, fk, mainTuple, true, sourceObjectWrapper);
       return new InboundForeignKeyPseudoColumn(reference, relatedRef, sourceObjectWrapper, name);
     }
   }
 
   return generalPseudo();
+}
+
+export function isRelatedColumn(col: VisibleColumn): boolean {
+  if ((col as InboundForeignKeyPseudoColumn).isInboundForeignKey) return true;
+  const pseudoCol = col as PseudoColumn;
+  return pseudoCol.isPathColumn && pseudoCol.hasPath && !pseudoCol.isUnique && !pseudoCol.hasAggregate;
+}
+
+export function isAllOutboundColumn(col: VisibleColumn): boolean {
+  if ((col as ForeignKeyPseudoColumn).isForeignKey) return true;
+  const pseudoCol = col as PseudoColumn;
+  return pseudoCol.isPathColumn && pseudoCol.hasPath && pseudoCol.isUnique && !pseudoCol.hasAggregate;
 }

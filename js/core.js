@@ -9,6 +9,7 @@ import { contextHeaderName, _ERMrestFeatures } from '@isrd-isi-edu/ermrestjs/src
 // models
 import { InvalidInputError, MalformedURIError, NotFoundError } from '@isrd-isi-edu/ermrestjs/src/models/errors';
 import TableSourceDefinitions from '@isrd-isi-edu/ermrestjs/src/models/table-source-definitions';
+import { Reference } from '@isrd-isi-edu/ermrestjs/src/models/reference';
 
 // import DeferredPromise from '@isrd-isi-edu/ermrestjs/src/models/deferred-promise';
 
@@ -44,7 +45,6 @@ import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils
 // legacy
 import { _sourceColumnHelpers, _compressSource } from '@isrd-isi-edu/ermrestjs/js/utils/pseudocolumn_helpers';
 import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-object-wrapper';
-import { _createReference } from '@isrd-isi-edu/ermrestjs/js/reference';
 import { parse } from '@isrd-isi-edu/ermrestjs/js/parser';
 import {
   _isValidBulkCreateForeignKey,
@@ -120,7 +120,7 @@ import {
      * @param {Object} contextHeaderParams an object with at least `cid`
      * @constructor
      */
-    function Server(uri, contextHeaderParams) {
+    export function Server(uri, contextHeaderParams) {
         /**
          * The URI of the ERMrest service
          * @type {string}
@@ -234,7 +234,7 @@ import {
 
         /**
          * @param {string} id Catalog ID.
-         * @param {Boolean} dontFetchSchema whether we should fetch the schemas
+         * @param {Boolean=} dontFetchSchema whether we should fetch the schemas
          * @return {Promise} a promise that returns the catalog  if resolved or
          *     {@link ERMrest.TimedOutError}, {@link ERMrest.InternalServerError}, {@link ERMrest.ServiceUnavailableError},
          *     {@link ERMrest.NotFoundError}, {@link ERMrest.ForbiddenError} or {@link ERMrest.UnauthorizedError} if rejected
@@ -303,7 +303,7 @@ import {
 
         /**
          * The ERMrest features that the catalog supports
-         * @type {Object}
+         * @type {Record<string, boolean>}
          */
         this.features = {};
 
@@ -481,9 +481,8 @@ import {
                  * whether catalog is generated.
                  * This should be done before initializing tables because tables require this field.
                  * @type {boolean|null}
-                 * @private
                  */
-                self._isGenerated = _processACLAnnotation(self.annotations, _annotations.GENERATED, false);
+                self.isGenerated = _processACLAnnotation(self.annotations, _annotations.GENERATED, false);
 
                 /**
                  * whether catalog is immutable.
@@ -491,16 +490,14 @@ import {
                  * false: catalog is mutable (per annotation)
                  * null: annotation is not defined
                  * @type {boolean|null}
-                 * @private
                  */
-                self._isImmutable = _processACLAnnotation(self.annotations, _annotations.IMMUTABLE, null);
+                self.isImmutable = _processACLAnnotation(self.annotations, _annotations.IMMUTABLE, null);
 
                 /**
                  * whether catalog is non-deletable
                  * @type {boolean}
-                 * @private
                  */
-                self._isNonDeletable = _processACLAnnotation(self.annotations, _annotations.NON_DELETABLE, false);
+                self.isNonDeletable = _processACLAnnotation(self.annotations, _annotations.NON_DELETABLE, false);
 
                 /**
                  * this will make sure the nameStyle is populated on the catalog as well,
@@ -529,9 +526,8 @@ import {
         /**
          * @desc returns the constraint object for the pair.
          * @param {Array.<string>} pair constraint name array. Its length must be two.
-         * @param {?string} subject the retuned must have the same object, otherwise return null.
+         * @param {string=} subject the retuned must have the same object, otherwise return null.
          * @throws {NotFoundError} constraint not found
-         * @returns {Object|null} the constraint object. Null means the constraint name is not valid.
          */
         constraintByNamePair: function (pair, subject) {
             return CatalogService.getConstraintObject(this.id, pair[0], pair[1], subject);
@@ -763,7 +759,7 @@ import {
          * @type {boolean|null}
          * @private
          */
-        this._isGenerated = _processACLAnnotation(this.annotations, _annotations.GENERATED, this.catalog._isGenerated);
+        this.isGenerated = _processACLAnnotation(this.annotations, _annotations.GENERATED, this.catalog.isGenerated);
 
         /**
          * whether schema is immutable.
@@ -773,14 +769,14 @@ import {
          * @type {boolean|null}
          * @private
          */
-        this._isImmutable = _processACLAnnotation(this.annotations, _annotations.IMMUTABLE, this.catalog._isImmutable);
+        this.isImmutable = _processACLAnnotation(this.annotations, _annotations.IMMUTABLE, this.catalog.isImmutable);
 
         /**
          * whether schema is non-deletable
          * @type {boolean}
          * @private
          */
-        this._isNonDeletable = _processACLAnnotation(this.annotations, _annotations.NON_DELETABLE, this.catalog._isNonDeletable);
+        this.isNonDeletable = _processACLAnnotation(this.annotations, _annotations.NON_DELETABLE, this.catalog.isNonDeletable);
 
         this._nameStyle = {}; // Used in the displayname to store the name styles.
 
@@ -1001,9 +997,8 @@ import {
          * whether table is generated
          * inherits from schema
          * @type {boolean}
-         * @private
          */
-        this._isGenerated = _processACLAnnotation(this.annotations, _annotations.GENERATED, this.schema._isGenerated);
+        this.isGenerated = _processACLAnnotation(this.annotations, _annotations.GENERATED, this.schema.isGenerated);
 
         /**
          * whether table is immutable
@@ -1012,16 +1007,14 @@ import {
          * false: table is mutable (per annotation)
          * null: annotation is not defined on table nor schema
          * @type {boolean}
-         * @private
          */
-        this._isImmutable = _processACLAnnotation(this.annotations, _annotations.IMMUTABLE, this.schema._isImmutable);
+        this.isImmutable = _processACLAnnotation(this.annotations, _annotations.IMMUTABLE, this.schema.isImmutable);
 
         /**
          * whether table is non-deletable
          * @type {boolean}
-         * @private
          */
-        this._isNonDeletable = _processACLAnnotation(this.annotations, _annotations.NON_DELETABLE, this.schema._isNonDeletable);
+        this.isNonDeletable = _processACLAnnotation(this.annotations, _annotations.NON_DELETABLE, this.schema.isNonDeletable);
 
         this._nameStyle = {}; // Used in the displayname to store the name styles.
         this._rowDisplayKeys = {}; // Used for display key
@@ -1059,7 +1052,7 @@ import {
 
         /**
          *
-         * @type {Object}
+         * @type {any}
          */
         this.rights = jsonTable.rights;
 
@@ -1071,7 +1064,7 @@ import {
 
         /**
          * All the FKRs to this table.
-         * @type {ForeignKeys}
+         * @type {InboundForeignKeys}
          */
         this.referredBy = new InboundForeignKeys(this);
 
@@ -1170,6 +1163,16 @@ import {
         this._exportTemplates = {};
 
         this._display = {};
+
+        // NOTE added to silence typescript errors
+        /**
+         * @type {ForeignKeyRef}
+         */
+        this._altForeignKey = undefined;
+        /**
+         * @type {Key}
+         */
+        this._altSharedKey = undefined;
     }
 
     Table.prototype = {
@@ -1424,7 +1427,7 @@ import {
 
         /**
          * @param {string} context used to figure out if the column has markdown_pattern annoation or not.
-         * @returns{Column[]|undefined} list of columns. If couldn't find a suitable columns will return undefined.
+         * @returns{Key|undefined} list of columns. If couldn't find a suitable columns will return undefined.
          * @desc
          * This key will be used for referring to a row of data. Therefore it shouldn't be foreignkey and markdown type.
          * It's the same as displaykey but with extra restrictions. It might return undefined.
@@ -1496,7 +1499,7 @@ import {
 
         get reference() {
             if (!this._reference) {
-                this._reference = _createReference(parse(this._uri), this.schema.catalog);
+                this._reference = new Reference(parse(this._uri), this.schema.catalog);
             }
 
             return this._reference;
@@ -2051,9 +2054,9 @@ import {
 
         /**
          *
-         * @param {Object} context optional
+         * @param {string=} context optional
          * @private
-         * @returns {String} app tag
+         * @returns {string} app tag
          */
         _getAppLink: function (context) {
 
@@ -2828,7 +2831,7 @@ import {
 
         /**
          *
-         * @returns {Array} array of all columns
+         * @returns {Array<Column>} array of all columns
          */
         all: function () {
             return this._columns;
@@ -3090,7 +3093,7 @@ import {
 
         /**
          *
-         * @type {Object}
+         * @type {any}
          */
         this.rights = jsonColumn.rights;
 
@@ -4302,10 +4305,9 @@ import {
          * - object: The facet object if it's a path.
          * - column: the column object if it's a path.
          * - name: the pseudo column name
-         * @private
          * @param  {String} context
          * @param  {Tuple} mainTuple the main table data
-         * @return {Object}
+         * @return {any}
          */
         _contextualize: function (context, mainTuple) {
             // if(context in this._contextualize_cached) {
@@ -4496,7 +4498,7 @@ import {
      */
     export function ForeignKeyRef(table, jsonFKR) {
 
-        /*
+        /**
          * @deprecated
          * TODO
          * I added `this.table` below and we should remove `this._table`. But
@@ -4653,8 +4655,8 @@ import {
 
         /**
          * returns string representation of ForeignKeyRef object
-         * @param {boolean} reverse false: returns (keyCol1, keyCol2)=(s:t:FKCol1,FKCol2) true: returns (FKCol1, FKCol2)=(s:t:keyCol1,keyCol2)
-         * @param {boolean} isLeft  true: left join, other values: inner join
+         * @param {boolean=} reverse false: returns (keyCol1, keyCol2)=(s:t:FKCol1,FKCol2) true: returns (FKCol1, FKCol2)=(s:t:keyCol1,keyCol2)
+         * @param {boolean=} isLeft  true: left join, other values: inner join
          * @return {string} string representation of ForeignKeyRef object
          */
         toString: function (reverse, isLeft){

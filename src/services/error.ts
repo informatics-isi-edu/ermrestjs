@@ -1,4 +1,6 @@
-import { ermrestFactory } from '@isrd-isi-edu/ermrestjs/js/core';
+// models
+import { Reference } from '@isrd-isi-edu/ermrestjs/src/models/reference';
+
 import { contextHeaderName, _operationsFlag } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
 import {
   ERMrestError,
@@ -20,8 +22,8 @@ import {
 import { fixedEncodeURIComponent } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
 
 // legacy
-import { Reference } from '@isrd-isi-edu/ermrestjs/js/reference';
 import { parse } from '@isrd-isi-edu/ermrestjs/js/parser';
+import { ermrestFactory } from '@isrd-isi-edu/ermrestjs/js/core';
 
 export default class ErrorService {
   /**

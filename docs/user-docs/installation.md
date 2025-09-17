@@ -13,10 +13,10 @@ This pages documents how to install ERMrestJS, a Javascript client API for the
 ## Building The Package
 
 If you want to build the package, you will need to have `Node.js` installed and on your path. The build script will pull in all of the
-dependencies into the `/dist/` directory.
+dependencies into the `dist/` directory.
 
-```
-$ make dist
+```sh
+make dist
 ```
 
 Even though this command will not deploy the package, during build we will inject some build-related parameters into the code. So you should make sure these environment variables are properly defined. You can find more information about these variables in the next section.
@@ -59,22 +59,6 @@ Even though this command will not deploy the package, during build we will injec
     Notes:
     - If the given directory does not exist, it will first create it. So you may need to run `make deploy` with _super user_ privileges depending on the deployment directory you choose (by default it's `/var/www/html/`).
 
-
-
-
-## Updating API Documentation
-
-The API documentation is automatically generated. Source code is documented with
-[jsdoc](http://usejsdoc.org/) comments. We use `jsdoc2md` to generate the
-markdown API documentation.
-
-```
-$ make doc
-```
-
-By doing `make all`, it will automatically create the API documentation for you.
-So you don't necessarily need to run `make doc`.
-
 ## Unit Testing
 
 Before running the test cases you need to set the environment variables.
@@ -82,32 +66,25 @@ Before running the test cases you need to set the environment variables.
 - `AUTH_COOKIE`: a primary user cookie valid to the (possibly, remote) host running the ERMrest service.
 - `RESTRICTED_AUTH_COOKIE`: a secondary user cookie valid to the (possibly, remote) host running the ERMrest service.
 
-```
+```sh
 export ERMREST_URL=https://hostname/ermrest
 export AUTH_COOKIE=YOUR_WEBAUTHN_COOKIE
 export RESTRICTED_AUTH_COOKIE=YOUR_SECOND_USER_WEBAUTHN_COOKIE
 ```
 
+
+You also need to ensure all dependencies are installed (`make dist` only installed modules needed for build) by running the following:
+
+```sh
+make deps-test
+```
+
 To execute the tests, run the following command:
 
-```
-$ make test
-```
-
-This command internally invokes the `node test/jasmine-runner.js` script. To find more information about unit testing see the [Unit Testing documentation](../dev-docs/unit-test.md).
-
-## Code Quality
-
-We use [static analysis programs](https://en.wikipedia.org/wiki/Static_program_analysis),
-including jshint, and Google Closure Compiler (as part of the minification
-step).
-
-To run jshint:
-```
-$ make lint
+```sh
+make test
 ```
 
-To check with Closure compiler run `make all`.
 
 ## More Help
 

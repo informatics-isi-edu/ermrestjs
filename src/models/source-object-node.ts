@@ -1,9 +1,9 @@
-// utils
-import { _getFormattedKeyValues } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
+// models
+import { Tuple } from '@isrd-isi-edu/ermrestjs/src/models/reference';
 
 // legacy
 import { Table } from '@isrd-isi-edu/ermrestjs/js/core';
-import { Tuple } from '@isrd-isi-edu/ermrestjs/js/reference';
+import { _getFormattedKeyValues } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
 import { _sourceColumnHelpers } from '@isrd-isi-edu/ermrestjs/js/utils/pseudocolumn_helpers';
 
 /**

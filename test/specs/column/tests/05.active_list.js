@@ -273,7 +273,7 @@ exports.execute = function (options) {
             });
         });
 
-        describe("Reference._getReadPath in case of attributegroup", function () {
+        describe("Reference.readPath in case of attributegroup", function () {
             // NOTE since we're using static ACLs here, the readPath should not have trs/tcrs
 
             it ("should add the allOutBounds.", function () {

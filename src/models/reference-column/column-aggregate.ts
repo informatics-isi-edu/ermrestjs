@@ -1,6 +1,7 @@
 import moment from 'moment-timezone';
 
 // models
+import { Reference } from '@isrd-isi-edu/ermrestjs/src/models/reference';
 import { ReferenceColumn } from '@isrd-isi-edu/ermrestjs/src/models/reference-column';
 import { DisplayName } from '@isrd-isi-edu/ermrestjs/src/models/display-name';
 
@@ -20,7 +21,6 @@ import {
   AttributeGroupLocation,
   BucketAttributeGroupReference,
 } from '@isrd-isi-edu/ermrestjs/js/ag_reference';
-import { Reference } from '@isrd-isi-edu/ermrestjs/js/reference';
 
 /**
  * Constructs an Aggregate Function object

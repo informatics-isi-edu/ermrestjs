@@ -582,10 +582,10 @@ export const _getExportReference = function (ref, useCompact) {
  * @param  {reference} ref       the reference that we want the output for
  * @param  {String} tableAlias          the alias that is used for projecting table (last table in path)
  * @param  {String=} path               the string that will be prepended to the path
- * @param  {String=} addMainKey         whether we want to add the key of the main table.
+ * @param  {boolean=} addMainKey         whether we want to add the key of the main table.
  *                                      if this is true, the next parameter is required.
  * @param  {Reference=} mainRef The main reference
- * @return {Object}                     the output object
+ * @return {any}                     the output object
  */
 export const _referenceExportOutput = function (ref, tableAlias, path, addMainKey, mainRef, useCompact) {
   var projectionList = [],
@@ -837,5 +837,120 @@ export const _getAssetExportOutput = function (col, destinationPath, sourcePath)
       // exporter will throw an error if the url is null, so we are adding the check for not-null.
       path: (sourcePath ? sourcePath + '/' : '') + '!(' + encode(col.name) + '::null::)/' + path.join(','),
     },
+  };
+};
+
+/**
+ * Returns a object, that can be used as a default export template.
+ * NOTE SHOULD ONLY BE USED IN DETAILED CONTEXT
+ * It will include:
+ * - csv of the main table.
+ * - csv of all the related entities
+ * - fetch all the assets. For fetch, we need to provide url, length, and md5 (or other checksum types).
+ *   if these columns are missing from the asset annotation, they won't be added.
+ * - fetch all the assetes of related tables.
+ * @param {Reference} reference the reference object
+ */
+export const _getDefaultExportTemplate = function (reference) {
+  const outputs = [],
+    relatedTableAlias = 'R';
+
+  const getTableOutput = _referenceExportOutput,
+    getAssetOutput = _getAssetExportOutput;
+
+  const addOutput = function (output) {
+    if (output != null) {
+      outputs.push(output);
+    }
+  };
+
+  // create a csv + fetch all the assets
+  const processRelatedReference = function (rel) {
+    // the path that will be used for assets of related entities
+    const destinationPath = rel.displayname.unformatted;
+    // this will be used for source path
+    let sourcePath;
+    if (rel.pseudoColumn && !rel.pseudoColumn.isInboundForeignKey) {
+      // const lastFk = rel.pseudoColumn.sourceObjectWrapper.lastForeignKeyNode;
+      // path from main to the related reference
+      sourcePath = rel.pseudoColumn.sourceObjectWrapper.toString(false, false, relatedTableAlias);
+
+      // path more than length one, we need to add the main table fkey
+      addOutput(getTableOutput(rel, relatedTableAlias, sourcePath, rel.pseudoColumn.foreignKeyPathLength >= 2, reference));
+    }
+    // association table
+    else if (rel.derivedAssociationReference) {
+      const assoc = rel.derivedAssociationReference;
+      sourcePath = assoc.origFKR.toString() + '/' + relatedTableAlias + ':=' + assoc.associationToRelatedFKR.toString(true);
+      addOutput(getTableOutput(rel, relatedTableAlias, sourcePath, true, reference));
+    }
+    // single inbound related
+    else {
+      sourcePath = relatedTableAlias + ':=' + rel.origFKR.toString(false, false);
+      addOutput(getTableOutput(rel, relatedTableAlias, sourcePath));
+    }
+
+    // add asset of the related table
+    const expRef = _getExportReference(rel);
+
+    // alternative table, don't add asset
+    if (expRef.table !== rel.table) return;
+
+    expRef.columns.forEach(function (col) {
+      const output = getAssetOutput(col, destinationPath, sourcePath);
+      addOutput(output);
+    });
+  };
+
+  // main entity
+  addOutput(getTableOutput(reference, reference.location.mainTableAlias));
+
+  const exportRef = _getExportReference(reference);
+
+  // we're not supporting alternative tables
+  if (exportRef.table.name === reference.table.name) {
+    // main assets
+    exportRef.columns.forEach(function (col) {
+      const output = getAssetOutput(col, '', '');
+      addOutput(output);
+    });
+
+    // inline entities
+    exportRef.columns.forEach(function (col) {
+      if (col.isInboundForeignKey || (col.isPathColumn && col.hasPath && !col.isUnique && !col.hasAggregate)) {
+        return processRelatedReference(col.reference);
+      }
+    });
+  }
+
+  // related entities (use the export context otherwise detailed)
+  let hasRelatedExport = false;
+  if (reference.table.annotations.contains(_annotations.VISIBLE_FOREIGN_KEYS)) {
+    const exportRelated = _getRecursiveAnnotationValue(
+      _contexts.EXPORT,
+      reference.table.annotations.get(_annotations.VISIBLE_FOREIGN_KEYS).content,
+      true,
+    );
+    hasRelatedExport = exportRelated !== -1 && Array.isArray(exportRelated);
+  }
+
+  // if export context is defined in visible-foreign-keys, use it, otherwise fallback to detailed
+  const exportRefForRelated = hasRelatedExport
+    ? reference.contextualize.export
+    : reference._context === _contexts.DETAILED
+      ? reference
+      : reference.contextualize.detailed;
+  if (exportRefForRelated.table.name === reference.table.name) {
+    exportRefForRelated.related.forEach(processRelatedReference);
+  }
+
+  if (outputs.length === 0) {
+    return null;
+  }
+
+  return {
+    displayname: 'BDBag',
+    type: 'BAG',
+    outputs: outputs,
   };
 };

@@ -4,6 +4,7 @@ import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-objec
 import SourceObjectNode from '@isrd-isi-edu/ermrestjs/src/models/source-object-node';
 import { DisplayName } from '@isrd-isi-edu/ermrestjs/src/models/display-name';
 import { CommentType } from '@isrd-isi-edu/ermrestjs/src/models/comment';
+import { Tuple } from '@isrd-isi-edu/ermrestjs/src/models/reference';
 
 // services
 import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
@@ -13,9 +14,9 @@ import { isObjectAndNotNull, isStringAndNotEmpty, isObjectAndKeyExists } from '@
 import { fixedEncodeURIComponent } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
 import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils';
 import { _annotations, _foreignKeyInputModes } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
+import { Reference } from '@isrd-isi-edu/ermrestjs/src/models/reference';
 
 // legacy
-import { Reference, Tuple } from '@isrd-isi-edu/ermrestjs/js/reference';
 import { Column, ForeignKeyRef, Table } from '@isrd-isi-edu/ermrestjs/js/core';
 import {
   _generateTupleUniqueId,
@@ -347,9 +348,9 @@ export class ForeignKeyPseudoColumn extends ReferenceColumn {
 
     if (this.display.sourceMarkdownPattern) {
       let selfTemplateVariables = {};
-      if (mainTuple._linkedData[this.name]) {
+      if (mainTuple.linkedData[this.name]) {
         selfTemplateVariables = {
-          $self: _getRowTemplateVariables(this.table, context, mainTuple._linkedData[this.name]),
+          $self: _getRowTemplateVariables(this.table, context, mainTuple.linkedData[this.name]),
         };
       }
 
@@ -360,7 +361,7 @@ export class ForeignKeyPseudoColumn extends ReferenceColumn {
       });
     }
 
-    return this.formatPresentation(mainTuple._linkedData[this.name], mainTuple._pageRef._context, null, { skipWaitFor: true });
+    return this.formatPresentation(mainTuple.linkedData[this.name], mainTuple.page.reference.context, null, { skipWaitFor: true });
   }
 
   _determineSortable(): void {

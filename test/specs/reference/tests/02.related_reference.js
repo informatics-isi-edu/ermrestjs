@@ -791,13 +791,13 @@ exports.execute = function(options) {
                         expect(usedRefForCascading.columns.length).toBe(4, 'related length missmatch');
 
                         const expectedVals = [
-                            { type: 'Reference', displayname: 'vis col inbound related' },
-                            { type: 'Reference', displayname: 'vis col path related' },
-                            { type: 'Reference', displayname: 'inbound_5_to_table_w_inbound_cascade_delete' },
-                            { type: 'Reference', displayname: 'inbound related' },
-                            { type: 'Reference', displayname: 'assoc_table_to_table_w_inbound_cascade_delete' },
-                            { type: 'Reference', displayname: 'path related' },
-                            { type: 'Reference', displayname: 'inbound_6_to_table_w_inbound_cascade_delete' },
+                            { type: 'RelatedReference', displayname: 'vis col inbound related' },
+                            { type: 'RelatedReference', displayname: 'vis col path related' },
+                            { type: 'RelatedReference', displayname: 'inbound_5_to_table_w_inbound_cascade_delete' },
+                            { type: 'RelatedReference', displayname: 'inbound related' },
+                            { type: 'RelatedReference', displayname: 'assoc_table_to_table_w_inbound_cascade_delete' },
+                            { type: 'RelatedReference', displayname: 'path related' },
+                            { type: 'RelatedReference', displayname: 'inbound_6_to_table_w_inbound_cascade_delete' },
                             { type: 'Table', displayname: 'inbound_2_to_table_w_inbound_cascade_delete' }
                         ];
                         const items = usedRefForCascading.cascadingDeletedItems;
@@ -811,7 +811,7 @@ exports.execute = function(options) {
                     // chaise might call this on related references (there was a bug related to this, that's why we're testing it).
                     it ('should handle calling it on a related reference', () => {
                         const expectedVals = [
-                            [], [], [], [], [{ type: 'Reference', displayname: 'inbound_to_inbound_6_to_table_w_inbound_cascade_delete' }], []
+                            [], [], [], [], [{ type: 'RelatedReference', displayname: 'inbound_to_inbound_6_to_table_w_inbound_cascade_delete' }], []
                         ];
                         usedRefForCascading.related.forEach((r, rIndex) => {
                             const items = r.cascadingDeletedItems;
@@ -826,7 +826,7 @@ exports.execute = function(options) {
                     // chaise might call this on inline related references (there was a bug related to this, that's why we're testing it).
                     it ('should handle calling it on an inline related reference', () => {
                         const expectedVals = [
-                            [], [], [{ type: 'Reference', displayname: 'inbound_to_inbound_5_to_table_w_inbound_cascade_delete' }], []
+                            [], [], [{ type: 'RelatedReference', displayname: 'inbound_to_inbound_5_to_table_w_inbound_cascade_delete' }], []
                         ];
                         usedRefForCascading.columns.forEach((c, rIndex) => {
                             const items = c.reference.cascadingDeletedItems;

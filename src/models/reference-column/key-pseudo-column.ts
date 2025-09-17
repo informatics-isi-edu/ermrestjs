@@ -3,6 +3,7 @@ import { ReferenceColumn, ReferenceColumnTypes } from '@isrd-isi-edu/ermrestjs/s
 import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-object-wrapper';
 import { CommentType } from '@isrd-isi-edu/ermrestjs/src/models/comment';
 import { DisplayName } from '@isrd-isi-edu/ermrestjs/src/models/display-name';
+import { Reference, Tuple } from '@isrd-isi-edu/ermrestjs/src/models/reference';
 
 // utils
 import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils';
@@ -10,7 +11,6 @@ import { isStringAndNotEmpty } from '@isrd-isi-edu/ermrestjs/src/utils/type-util
 
 // legacy
 import { Key, Table } from '@isrd-isi-edu/ermrestjs/js/core';
-import { Reference, Tuple } from '@isrd-isi-edu/ermrestjs/js/reference';
 import {
   _determineDisplayName,
   _generateKeyPresentation,
@@ -119,7 +119,7 @@ export class KeyPseudoColumn extends ReferenceColumn {
 
     if (this.display.sourceMarkdownPattern) {
       const selfTemplateVariables = {
-        $self: _getRowTemplateVariables(this.table, context, mainTuple._data),
+        $self: _getRowTemplateVariables(this.table, context, mainTuple.data),
       };
 
       const keyValues = {};

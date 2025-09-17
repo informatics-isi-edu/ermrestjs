@@ -4,6 +4,7 @@ import SourceObjectNode from '@isrd-isi-edu/ermrestjs/src/models/source-object-n
 import { ReferenceColumn, ReferenceColumnTypes } from '@isrd-isi-edu/ermrestjs/src/models/reference-column';
 import { CommentType } from '@isrd-isi-edu/ermrestjs/src/models/comment';
 import { DisplayName } from '@isrd-isi-edu/ermrestjs/src/models/display-name';
+import { Reference, RelatedReference, type Page, type Tuple } from '@isrd-isi-edu/ermrestjs/src/models/reference';
 
 // services
 import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
@@ -24,7 +25,6 @@ import {
 
 // legacy
 import { Column, Key } from '@isrd-isi-edu/ermrestjs/js/core';
-import { Page, Reference, Tuple, _referenceCopy } from '@isrd-isi-edu/ermrestjs/js/reference';
 import { parse } from '@isrd-isi-edu/ermrestjs/js/parser';
 import {
   _isEntryContext,
@@ -205,20 +205,20 @@ export class PseudoColumn extends ReferenceColumn {
       // all-outbound paths
       else if (this.hasPath && this.isUnique) {
         // use the linked data if exists
-        if (!mainTuple._linkedData[this.name]) {
+        if (!mainTuple.linkedData[this.name]) {
           selfTemplateVariables = {};
         }
         // scalar default
         else if (!this.isEntityMode) {
           selfTemplateVariables = {
-            $self: baseCol.formatvalue(mainTuple._linkedData[this.name][baseCol.name], context),
-            $_self: mainTuple._linkedData[this.name][baseCol.name],
+            $self: baseCol.formatvalue(mainTuple.linkedData[this.name][baseCol.name], context),
+            $_self: mainTuple.linkedData[this.name][baseCol.name],
           };
         }
         // entity default
         else {
           selfTemplateVariables = {
-            $self: _getRowTemplateVariables(this.table, context, mainTuple._linkedData[this.name]),
+            $self: _getRowTemplateVariables(this.table, context, mainTuple.linkedData[this.name]),
           };
         }
       }
@@ -245,7 +245,7 @@ export class PseudoColumn extends ReferenceColumn {
 
     // all outbound
     if (this.hasPath && this.isUnique) {
-      return this.formatPresentation(mainTuple._linkedData[this.name], mainTuple._pageRef._context, null, { skipWaitFor: true });
+      return this.formatPresentation(mainTuple.linkedData[this.name], mainTuple.page.reference.context, null, { skipWaitFor: true });
     }
 
     // other cases
@@ -287,7 +287,7 @@ export class PseudoColumn extends ReferenceColumn {
       const values: { value: any; isHTML: boolean; templateVariables: any }[] = [];
       const mainTable = this._currentTable;
       const location = this._baseReference.location;
-      const http = this._baseReference._server.http;
+      const http = this._baseReference.server.http;
       const column = this.baseColumns[0];
       let pathToCol: string;
 
@@ -298,8 +298,7 @@ export class PseudoColumn extends ReferenceColumn {
       // verify the input
       try {
         verify(this.hasAggregate, 'this function should only be used when `hasAggregate` is true.');
-        verify(page && page instanceof Page, 'page is required.');
-        verify(page.reference.table === mainTable, 'given page object must be from the base table.');
+        verify(page && page.reference.table === mainTable, 'given page object must be defined and from the base table.');
       } catch (e) {
         reject(e);
         return;
@@ -310,7 +309,7 @@ export class PseudoColumn extends ReferenceColumn {
         contextHeaderParams = { action: 'read/aggregate' };
       }
       const config = {
-        headers: this.reference._generateContextHeader(contextHeaderParams, page.tuples.length),
+        headers: this.reference._generateContextHeader(contextHeaderParams),
       };
 
       // return empty list if page is empty
@@ -473,7 +472,7 @@ export class PseudoColumn extends ReferenceColumn {
     return new Promise((resolve, reject) => {
       const encode = fixedEncodeURIComponent;
       const location = this._baseReference.location;
-      const http = this._baseReference._server.http;
+      const http = this._baseReference.server.http;
 
       // these are the same checks as the processWaitFor in the entry context. since that's the only usecase of this for now.
       const sw = this.sourceObjectWrapper!;
@@ -494,7 +493,7 @@ export class PseudoColumn extends ReferenceColumn {
         contextHeaderParams = { action: 'read/outbound' };
       }
       const config = {
-        headers: this.reference._generateContextHeader(contextHeaderParams, data.length),
+        headers: this.reference._generateContextHeader(contextHeaderParams),
       };
       // if agg is missing, we're getting the rows
       const aggFn = this.sourceObject.aggregate ? this.sourceObject.aggregate : 'array_d';
@@ -763,12 +762,12 @@ export class PseudoColumn extends ReferenceColumn {
    *      <pseudoColumnSchema:PseudoColumnTable>/<path from pseudo-column to main table>/<facets based on value of shortestkey of main table>
    * 4. Otherwise create the path by traversing the path
    */
-  get reference(): Reference {
+  get reference(): Reference | RelatedReference {
     if (this._reference === undefined) {
       if (!this.hasPath) {
-        this._reference = _referenceCopy(this._baseReference);
+        this._reference = this._baseReference.copy(undefined, undefined, this);
       } else {
-        let facet: any;
+        let facet: unknown;
         if (this._mainTuple) {
           facet = this.sourceObjectWrapper!.getReverseAsFacet(this._mainTuple, this._baseReference.table);
         }
@@ -779,26 +778,25 @@ export class PseudoColumn extends ReferenceColumn {
           uri = this._baseReference.location.compactUri + '/' + this.sourceObjectWrapper!.toString(false, false);
         }
 
-        this._reference = new Reference(parse(uri), this.table.schema.catalog);
+        // this._reference = new Reference(parse(uri), this.table.schema.catalog, this.displayname, this.comment, this);
+        this._reference = new RelatedReference(
+          parse(uri),
+          this.table.schema.catalog,
+          this._baseReference.table,
+          this.firstForeignKeyNode!.nodeObject,
+          [],
+          [],
+          this.compressedDataSource,
+          undefined,
+          this.displayname,
+          this.comment,
+          this,
+        );
 
         // make sure data exists
         if (isObjectAndNotNull(facet)) {
           this._reference.location.facets = facet;
         }
-      }
-
-      // attach the current pseudo-column to the reference
-      (this._reference as any).pseudoColumn = this;
-
-      // make sure data-source is available on the reference
-      // TODO this has been added to be consistent with the old related reference apis
-      // other apis are not available, maybe we should add them as well? (origFKR, etc.)
-      (this._reference as any).compressedDataSource = this.compressedDataSource;
-
-      // make sure the refernece has the correct displayname
-      if (this.hasPath) {
-        (this._reference as any)._displayname = this.displayname;
-        (this._reference as any)._comment = this.comment;
       }
     }
     return this._reference;
@@ -808,12 +806,11 @@ export class PseudoColumn extends ReferenceColumn {
     //TODO this should be revisited, chaise is mutating the reference!
     this._reference = ref;
   }
-
-  get default(): any {
+  get default(): unknown {
     throw new Error('can not use this type of column in entry mode.');
   }
 
-  get nullok(): any {
+  get nullok(): boolean {
     throw new Error('can not use this type of column in entry mode.');
   }
 
