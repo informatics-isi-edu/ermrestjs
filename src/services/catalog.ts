@@ -1,7 +1,11 @@
+import { ForeignKeyRef, Key } from '@isrd-isi-edu/ermrestjs/js/core';
 import { _constraintTypes } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
 
 export default class CatalogService {
-  private static constraintNames: any = {};
+  private static constraintNames: Record<
+    string,
+    Record<string, Record<string, { subject: _constraintTypes; object: Key | ForeignKeyRef; RID: string }>>
+  > = {};
 
   static addConstraintName(catalogId: string, schemaName: string, constraintName: string, obj: any, subject: _constraintTypes) {
     if (!(catalogId in CatalogService.constraintNames)) {

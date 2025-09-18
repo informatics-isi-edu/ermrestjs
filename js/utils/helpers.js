@@ -9,6 +9,7 @@ import { default as mustache } from 'mustache';
 import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
 import ConfigService from '@isrd-isi-edu/ermrestjs/src/services/config';
 import { InvalidFacetOperatorError } from '@isrd-isi-edu/ermrestjs/src/models/errors';
+import { Reference } from '@isrd-isi-edu/ermrestjs/src/models/reference';
 
 // legacy
 import { isObject, isObjectAndNotNull, isValidColorRGBHex, isStringAndNotEmpty } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
@@ -34,7 +35,6 @@ import {
   ENV_IS_NODE,
 } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
 import { parse } from '@isrd-isi-edu/ermrestjs/js/parser';
-import { Reference } from '@isrd-isi-edu/ermrestjs/js/reference';
 import { Column, Key } from '@isrd-isi-edu/ermrestjs/js/core';
 import HandlebarsService from '@isrd-isi-edu/ermrestjs/src/services/handlebars';
 import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
@@ -97,7 +97,7 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
      * @private
      * @param {Array} a an array of sorted integer values
      * @param {Array} b an array of sorted integer values
-     * @param {boolean?} greater - whether we should do greater check instead of greater equal
+     * @param {boolean=} greater - whether we should do greater check instead of greater equal
      *
      * return,
      *  -  1 if the position in the first argument are before the second one.
@@ -385,7 +385,7 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
      * @function
      * @param {string} context the context that we want the value of.
      * @param {Annotation} annotation the annotation object.
-     * @param {Boolean} dontUseDefaultContext Whether we should use the default (*) context
+     * @param {Boolean=} dontUseDefaultContext Whether we should use the default (*) context
      * @desc This function returns the list that should be used for the given context.
      * Used for visible columns and visible foreign keys.
      */
@@ -732,7 +732,7 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
      * @param {String} context the context that we want the formatted values for.
      * @param {object} data The object which contains key value pairs of data to be transformed
      * @param {object=} linkedData The object which contains key value paris of foreign key data.
-     * @return {object} A formatted keyvalue pair of object
+     * @return {any} A formatted keyvalue pair of object
      * @desc Returns a formatted keyvalue pairs of object as a result of using `col.formatvalue`.
      * If you want the formatted value of a single column, you should call formatvalue,
      * this function is written for the purpose of being used in markdown.
@@ -844,7 +844,7 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
      * @param  {Object} data       the raw data
      * @param  {any=} linkedData the raw data of foreignkeys
      * @param  {Key=} key the alternate key to use
-     * @return {Object}
+     * @return {{values: Record<string, any>, rowName: {value: string, isHTML: boolean, unformatted: string}, uri: {detailed: string}}}
      */
     export function _getRowTemplateVariables(table, context, data, linkedData, key) {
         var uri = _generateRowURI(table, data, key);

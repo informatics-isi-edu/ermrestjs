@@ -3,6 +3,7 @@
 // models
 import SourceObjectNode from '@isrd-isi-edu/ermrestjs/src/models/source-object-node';
 import { ReferenceColumn } from '@isrd-isi-edu/ermrestjs/src/models/reference-column';
+import { Tuple, Reference } from '@isrd-isi-edu/ermrestjs/src/models/reference';
 
 // services
 // import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
@@ -16,7 +17,6 @@ import { createPseudoColumn } from '@isrd-isi-edu/ermrestjs/src/utils/column-uti
 // legacy imports that need to be accessed
 import { _sourceColumnHelpers } from '@isrd-isi-edu/ermrestjs/js/utils/pseudocolumn_helpers';
 import { Column, Table } from '@isrd-isi-edu/ermrestjs/js/core';
-import { Reference, Tuple } from '@isrd-isi-edu/ermrestjs/js/reference';
 
 export type FilterPropsType = {
   /**
@@ -546,16 +546,16 @@ class SourceObjectWrapper {
    * }
    *
    * @param reference the reference object of the parent
-   * @param tuple the tuple object
    * @param usedIframeInputMappings an object capturing columns used in other mappings. used to avoid overlapping
+   * @param tuple the tuple object
    */
-  processInputIframe(reference: Reference, tuple: Tuple, usedIframeInputMappings: any): {
+  processInputIframe(reference: Reference, usedIframeInputMappings: any, tuple?: Tuple): {
     success?: boolean;
     error?: boolean;
     message?: string;
     columns?: ReferenceColumn[];
   } {
-    const context = reference._context;
+    const context = reference.context;
     const annot: any = this.sourceObject.input_iframe;
     if (!isObjectAndNotNull(annot) || !isStringAndNotEmpty(annot.url_pattern)) {
       return { error: true, message: 'url_pattern not defined.' };

@@ -1,10 +1,10 @@
 import { ReferenceColumn, ReferenceColumnTypes } from '@isrd-isi-edu/ermrestjs/src/models/reference-column';
-import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-object-wrapper';
-import { CommentType } from '@isrd-isi-edu/ermrestjs/src/models/comment';
-import { DisplayName } from '@isrd-isi-edu/ermrestjs/src/models/display-name';
+import type { Reference, RelatedReference } from '@isrd-isi-edu/ermrestjs/src/models/reference';
+import type SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-object-wrapper';
+import type { CommentType } from '@isrd-isi-edu/ermrestjs/src/models/comment';
+import type { DisplayName } from '@isrd-isi-edu/ermrestjs/src/models/display-name';
 
 import { _sourceColumnHelpers, _compressSource } from '@isrd-isi-edu/ermrestjs/js/utils/pseudocolumn_helpers';
-import { Reference } from '@isrd-isi-edu/ermrestjs/js/reference';
 import { ForeignKeyRef, Table } from '@isrd-isi-edu/ermrestjs/js/core';
 /**
  * @class
@@ -23,30 +23,25 @@ import { ForeignKeyRef, Table } from '@isrd-isi-edu/ermrestjs/js/core';
 export class InboundForeignKeyPseudoColumn extends ReferenceColumn {
   /**
    * The reference that can be used to get the data for this pseudo-column
-   * @type {Reference}
    */
-  public reference: Reference;
+  public reference: RelatedReference;
 
   /**
    * The table that this pseudo-column represents
-   * @type {Table}
    */
   public table: Table;
 
   /**
    * The {@link ForeignKeyRef} that this pseudo-column is based on.
-   * @type {ForeignKeyRef}
    */
   public foreignKey: ForeignKeyRef;
 
   /**
-   * @type {boolean}
    * @desc indicates that this object represents a PseudoColumn.
    */
   public isPseudo: boolean = true;
 
   /**
-   * @type {boolean}
    * @desc Indicates that this ReferenceColumn is an inbound foreign key.
    */
   public isInboundForeignKey: boolean = true;
@@ -56,7 +51,7 @@ export class InboundForeignKeyPseudoColumn extends ReferenceColumn {
   private _currentRef: Reference;
   private _constraintName: string;
 
-  constructor(reference: Reference, relatedReference: Reference, sourceObjectWrapper?: SourceObjectWrapper, name?: string) {
+  constructor(reference: Reference, relatedReference: RelatedReference, sourceObjectWrapper?: SourceObjectWrapper, name?: string) {
     const fk = relatedReference.origFKR;
 
     // call the parent constructor
@@ -65,11 +60,11 @@ export class InboundForeignKeyPseudoColumn extends ReferenceColumn {
     this.referenceColumnType = ReferenceColumnTypes.INBOUND_FOREIGN_KEY;
 
     this.reference = relatedReference;
-    this.reference.pseudoColumn = this;
+    this.reference.setPseudoColumn(this);
     this.table = relatedReference.table;
     this.foreignKey = fk;
 
-    this._context = reference._context;
+    this._context = reference.context;
     this._currentRef = reference;
     this._currentTable = reference.table;
     this._constraintName = fk._constraintName;

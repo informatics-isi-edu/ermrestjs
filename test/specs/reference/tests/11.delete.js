@@ -371,30 +371,33 @@ exports.execute = function (options) {
             });
 
             it("should check failure cases for deleteBatchAssociationTuples", function (done) {
+                const expectedFailure = () => done.fail('expected function to throw error');
+
                 // no mainTuple defined
-                filteredLeafReference.deleteBatchAssociationTuples(null, relatedLeafTuples).then(null, function (err) {
-                    expect(err.message).toBe("'parentTuple' must be specified");
+                filteredLeafReference.deleteBatchAssociationTuples(null, relatedLeafTuples).then(expectedFailure, function (err) {
+                    expect(err.message).toBe("`parentTuple` must be specified");
 
                     // no tuuples set defined
                     return filteredLeafReference.deleteBatchAssociationTuples(mainTuple, null);
-                }).then(null, function (err) {
-                    expect(err.message).toBe("'tuples' must be specified");
+                }).then(expectedFailure, function (err) {
+                    expect(err.message).toBe("`tuples` must be specified");
 
                     // tuples set is empty
                     return filteredLeafReference.deleteBatchAssociationTuples(mainTuple, [])
-                }).then(null, function (err) {
-                    expect(err.message).toBe("'tuples' must have at least one row to delete");
+                }).then(expectedFailure, function (err) {
+                    expect(err.message).toBe("`tuples` must have at least one row to delete");
 
                     // the reference is not filtered (no derived association)
-                    return filteredLeafReference.unfilteredReference.deleteBatchAssociationTuples(mainTuple, relatedLeafTuples);
-                }).then(null, function (err) {
-                    expect(err.message).toBe("The current reference ('self') must have a derived association reference defined");
+                    const ref = filteredLeafReference.unfilteredReference;
+                    return ref.deleteBatchAssociationTuples(mainTuple, relatedLeafTuples);
+                }).then(expectedFailure, function (err) {
+                    expect(err.message).toBe("ref.deleteBatchAssociationTuples is not a function");
 
                     // one of the tuples has an empty data object
                     newTuples = relatedLeafTuples;
                     newTuples.push({data: {}});
                     return filteredLeafReference.deleteBatchAssociationTuples(mainTuple, newTuples)
-                }).then(null, function (err) {
+                }).then(expectedFailure, function (err) {
                     expect(err.message).toBe("One or more association_table records have a null value for leaf_key_col.");
 
                     done();

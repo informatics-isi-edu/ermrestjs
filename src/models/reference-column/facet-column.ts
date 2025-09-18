@@ -1,9 +1,10 @@
 // models
 import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-object-wrapper';
-import SourceObjectNode from '@isrd-isi-edu/ermrestjs/src/models/source-object-node';
+import type SourceObjectNode from '@isrd-isi-edu/ermrestjs/src/models/source-object-node';
 import { ReferenceColumn } from '@isrd-isi-edu/ermrestjs/src/models/reference-column';
-import { CommentType } from '@isrd-isi-edu/ermrestjs/src/models/comment';
-import { DisplayName } from '@isrd-isi-edu/ermrestjs/src/models/display-name';
+import type { CommentType } from '@isrd-isi-edu/ermrestjs/src/models/comment';
+import type { DisplayName } from '@isrd-isi-edu/ermrestjs/src/models/display-name';
+import { type Tuple, Reference } from '@isrd-isi-edu/ermrestjs/src/models/reference';
 
 // services
 import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
@@ -24,10 +25,9 @@ import {
   _parserAliases,
 } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
 
-// legacy
+// legacy imports
 import { parse } from '@isrd-isi-edu/ermrestjs/js/parser';
 import { Column } from '@isrd-isi-edu/ermrestjs/js/core';
-import { Reference, Tuple, _referenceCopy } from '@isrd-isi-edu/ermrestjs/js/reference';
 import { type AttributeGroupReference } from '@isrd-isi-edu/ermrestjs/js/ag_reference';
 import { _processColumnOrderList, _processSourceObjectComment } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
 import { _compressSource } from '@isrd-isi-edu/ermrestjs/js/utils/pseudocolumn_helpers';
@@ -245,7 +245,7 @@ export class FacetColumn {
   private _choiceFilters?: ChoiceFacetFilter[];
   private _rangeFilters?: RangeFacetFilter[];
 
-  constructor(reference: Reference, index: number, facetObjectWrapper: SourceObjectWrapper, filters?: FacetFilter[]) {
+  constructor(reference: Reference, index: number, facetObjectWrapper: SourceObjectWrapper, filters?: Array<FacetFilter | NotNullFacetFilter>) {
     this._column = facetObjectWrapper.column!;
     this.reference = reference;
     this.index = index;
@@ -1324,8 +1324,8 @@ export class FacetColumn {
    */
   private _applyFilters(filters: (FacetFilter | NotNullFacetFilter)[]): Reference {
     const loc = this.reference.location;
-    const newReference = _referenceCopy(this.reference);
-    newReference._facetColumns = [];
+    const newReference = this.reference.copy();
+    const facets: FacetColumn[] = [];
 
     // create a new FacetColumn so it doesn't reference to the current FacetColum
     // TODO can be refactored
@@ -1342,16 +1342,17 @@ export class FacetColumn {
         newFc = new FacetColumn(newReference, this.index, this.sourceObjectWrapper, filters as FacetFilter[]);
       }
 
-      newReference._facetColumns.push(newFc);
+      facets.push(newFc);
 
       if (newFc.filters.length !== 0) {
         jsonFilters.push(newFc.toJSON());
       }
     });
 
-    newReference._location = this.reference._location._clone(newReference);
-    newReference._location.beforeObject = null;
-    newReference._location.afterObject = null;
+    newReference.manuallySetFacetColumns(facets);
+    newReference.setLocation(this.reference.location._clone(newReference));
+    newReference.location.beforeObject = null;
+    newReference.location.afterObject = null;
 
     // TODO might be able to improve this
     if (typeof loc.searchTerm === 'string') {
@@ -1369,9 +1370,9 @@ export class FacetColumn {
 
     // change the facets in location object
     if (jsonFilters.length > 0) {
-      newReference._location.facets = { and: jsonFilters };
+      newReference.location.facets = { and: jsonFilters };
     } else {
-      newReference._location.facets = null;
+      newReference.location.facets = null;
     }
 
     return newReference;

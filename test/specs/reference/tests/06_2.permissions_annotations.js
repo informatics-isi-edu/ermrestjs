@@ -99,7 +99,7 @@ exports.execute = (options) => {
             describe("generated catalog should return true for read and delete, false for all else,", () => {
 
                 it("_isGenerated should be true in table,", () => {
-                    expect(reference._table._isGenerated).toBe(true);
+                    expect(reference._table.isGenerated).toBe(true);
                 });
 
                 it("canCreate.", () => {
@@ -152,7 +152,7 @@ exports.execute = (options) => {
             describe("generated schema should return true for read and delete, false for all else,", () => {
 
                 it("_isGenerated should be true in table,", () => {
-                    expect(reference._table._isGenerated).toBe(true);
+                    expect(reference._table.isGenerated).toBe(true);
                 });
 
                 it("canCreate.", () => {
@@ -177,7 +177,7 @@ exports.execute = (options) => {
 
             describe("when table has generated annotation with `false` value.", function () {
                 it("_isGenerated should be false in table,", () => {
-                    expect(referenceTable2._table._isGenerated).toBe(false);
+                    expect(referenceTable2._table.isGenerated).toBe(false);
                 });
 
                 it("canCreate.", () => {
@@ -199,7 +199,7 @@ exports.execute = (options) => {
 
             describe("when table has immutable annotation with `false` value.", function () {
                 it("_isGenerated should be false in table,", () => {
-                    expect(referenceTable3._table._isGenerated).toBe(true);
+                    expect(referenceTable3._table.isGenerated).toBe(true);
                 });
 
                 it("canCreate.", () => {
@@ -241,7 +241,7 @@ exports.execute = (options) => {
             describe("generated table should return true for read and delete, false for all else,", () => {
 
                 it("_isGenerated should be true in table,", () => {
-                    expect(reference._table._isGenerated).toBe(true);
+                    expect(reference._table.isGenerated).toBe(true);
                 });
 
                 it("canCreate.", () => {
@@ -266,7 +266,7 @@ exports.execute = (options) => {
 
             describe("when table has immutable annotation with `false` value.", function () {
                 it("_isGenerated should be true in table,", () => {
-                    expect(reference._table._isGenerated).toBe(true);
+                    expect(reference._table.isGenerated).toBe(true);
                 });
 
                 it("canCreate.", () => {
@@ -306,7 +306,7 @@ exports.execute = (options) => {
             describe("generated columns should return true for read and delete, false for all else,", () => {
 
                 it("_isGenerated should be false in table,", () => {
-                    expect(reference._table._isGenerated).toBe(false);
+                    expect(reference._table.isGenerated).toBe(false);
                 });
 
                 it("canCreate.", () => {
@@ -347,7 +347,7 @@ exports.execute = (options) => {
             describe("some generated columns should return true for all,", () => {
 
                 it("_isGenerated should be false in table", () => {
-                    expect(reference._table._isGenerated).toBe(false);
+                    expect(reference._table.isGenerated).toBe(false);
                 });
 
                 it("canCreate.", () => {
@@ -384,7 +384,7 @@ exports.execute = (options) => {
             describe("immutable catalog should return true for create, read, and delete, false for update,", () => {
 
                 it("_isImmutable should be true in table,", () => {
-                    expect(reference._table._isImmutable).toBe(true);
+                    expect(reference._table.isImmutable).toBe(true);
                 });
 
                 it("canCreate.", () => {
@@ -433,7 +433,7 @@ exports.execute = (options) => {
             describe("immutable schema should return true for create, read, and delete, false for update,", () => {
 
                 it("_isImmutable should be true in table,", () => {
-                    expect(reference._table._isImmutable).toBe(true);
+                    expect(reference._table.isImmutable).toBe(true);
                 });
 
                 it("canCreate.", () => {
@@ -457,7 +457,7 @@ exports.execute = (options) => {
 
             describe("when table has immutable annotation with `false` value.", function () {
                 it("_isImmutable should be false in table,", () => {
-                    expect(referenceTable2._table._isImmutable).toBe(false);
+                    expect(referenceTable2._table.isImmutable).toBe(false);
                 });
 
                 it("canCreate.", () => {
@@ -495,7 +495,7 @@ exports.execute = (options) => {
             describe("immutable table should return true for create, read, and delete, false for update,", () => {
 
                 it("_isImmutable should be true in table", () => {
-                    expect(reference._table._isImmutable).toBe(true);
+                    expect(reference._table.isImmutable).toBe(true);
                 });
 
                 it("canCreate.", () => {
@@ -536,7 +536,7 @@ exports.execute = (options) => {
 
                 it("_isImmutable should be null in table", () => {
                     // annotation is missing, so it should return null
-                    expect(reference._table._isImmutable).toBe(null);
+                    expect(reference._table.isImmutable).toBe(null);
                 });
 
                 it("canCreate.", () => {
@@ -575,7 +575,7 @@ exports.execute = (options) => {
             describe("some immutable columns should return true for all,", () => {
 
                 it("_isImmutable should be null in table", () => {
-                    expect(reference._table._isImmutable).toBe(null);
+                    expect(reference._table.isImmutable).toBe(null);
                 });
 
                 it("canCreate.", () => {
@@ -612,7 +612,7 @@ exports.execute = (options) => {
             describe("Catalog that is non-deletable should return false for delete, true for all,", () => {
 
                 it("_isNonDeletable should be true in table", () => {
-                    expect(reference._table._isNonDeletable).toBe(true);
+                    expect(reference._table.isNonDeletable).toBe(true);
                 });
 
                 it("canCreate.", () => {
@@ -659,7 +659,7 @@ exports.execute = (options) => {
             describe("Table that is non-deletable should return false for delete, true for all,", () => {
 
                 it("_isNonDeletable should be true in table", () => {
-                    expect(reference._table._isNonDeletable).toBe(true);
+                    expect(reference._table.isNonDeletable).toBe(true);
                 });
 
                 it("canCreate.", () => {
@@ -698,7 +698,7 @@ exports.execute = (options) => {
             describe("Table that is non-deletable should return false for delete, true for all,", () => {
 
                 it("_isNonDeletable should be true in table", () => {
-                    expect(reference._table._isNonDeletable).toBe(true);
+                    expect(reference._table.isNonDeletable).toBe(true);
                 });
 
                 it("canCreate.", () => {

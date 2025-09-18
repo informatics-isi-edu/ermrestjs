@@ -4,8 +4,7 @@ import SourceObjectNode from '@isrd-isi-edu/ermrestjs/src/models/source-object-n
 import { CommentType } from '@isrd-isi-edu/ermrestjs/src/models/comment';
 import { DisplayName } from '@isrd-isi-edu/ermrestjs/src/models/display-name';
 import { ColumnAggregateFn, ColumnGroupAggregateFn } from '@isrd-isi-edu/ermrestjs/src/models/reference-column';
-// import { PseudoColumn } from '@isrd-isi-edu/ermrestjs/src/models/reference-column/pseudo-column';
-// import { ForeignKeyPseudoColumn } from '@isrd-isi-edu/ermrestjs/src/models/reference-column/foreign-key-pseudo-column';
+import { Tuple, Reference } from '@isrd-isi-edu/ermrestjs/src/models/reference';
 
 // services
 
@@ -16,7 +15,6 @@ import { _annotations, _contexts } from '@isrd-isi-edu/ermrestjs/src/utils/const
 
 // legacy
 import { Column, Table, Type } from '@isrd-isi-edu/ermrestjs/js/core';
-import { Reference, Tuple } from '@isrd-isi-edu/ermrestjs/js/reference';
 import {
   _getFormattedKeyValues,
   _isEntryContext,
@@ -124,6 +122,9 @@ export class ReferenceColumn {
   protected _hasWaitFor?: boolean;
   protected _hasWaitForAggregate?: boolean;
   protected _waitFor?: ReferenceColumn[];
+  /**
+   * the reference that this column is defined on
+   */
   protected _baseReference: Reference;
   protected _context: string;
   protected _name?: string;
@@ -132,7 +133,7 @@ export class ReferenceColumn {
 
   constructor(reference: Reference, cols: Column[], sourceObjectWrapper?: SourceObjectWrapper, name?: string, mainTuple?: Tuple) {
     this._baseReference = reference;
-    this._context = reference._context;
+    this._context = reference.context;
     this.baseColumns = cols;
 
     this.sourceObjectWrapper = sourceObjectWrapper;
@@ -634,7 +635,7 @@ export class ReferenceColumn {
     // rest of the cases
     // NOTE by passing the given templateVariables instead of the one attached to the main tuple, we're supporting wait_for in column and key display.
     // (in combination with the wait_for logic that looks for the one that is defined on column/key display)
-    const pres = this.formatPresentation(mainTuple._data, mainTuple._pageRef._context, templateVariables, { skipWaitFor: true });
+    const pres = this.formatPresentation(mainTuple.data, mainTuple.page.reference.context, templateVariables, { skipWaitFor: true });
     if (this.type.name === 'gene_sequence') {
       pres.isHTML = true;
     }

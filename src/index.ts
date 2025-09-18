@@ -51,7 +51,7 @@ import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils
 import { Checksum, Upload } from '@isrd-isi-edu/ermrestjs/js/hatrac';
 import { onload, getElapsedTime } from '@isrd-isi-edu/ermrestjs/js/setup/node';
 import printf from '@isrd-isi-edu/ermrestjs/js/format';
-import { resolve, _createPage } from '@isrd-isi-edu/ermrestjs/js/reference';
+import { resolve, _createPage } from '@isrd-isi-edu/ermrestjs/src/models/reference';
 import { ermrestFactory } from '@isrd-isi-edu/ermrestjs/js/core';
 import { parse, createPath, createSearchPath, createLocation } from '@isrd-isi-edu/ermrestjs/js/parser';
 import {

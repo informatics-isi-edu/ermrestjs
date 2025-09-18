@@ -10,7 +10,7 @@ import {
     InvalidPageCriteria,
     InvalidFacetOperatorError,
     InvalidFilterOperatorError,
-  } from '@isrd-isi-edu/ermrestjs/src/models/errors';
+} from '@isrd-isi-edu/ermrestjs/src/models/errors';
 
   // utils
   import {
@@ -1011,7 +1011,7 @@ import {
 
         /**
          * The last join in the uri. Take a look at `joins` for structure of join object.
-         * @return {object}
+         * @return {ParsedJoin}
          */
         get lastJoin() {
             if (this.hasJoin) {
@@ -1058,15 +1058,15 @@ import {
 
         /**
          * facets object of the last path part
-         * @return {ParsedFacets} facets object
+         * @type {ParsedFacets} facets object
          */
         get facets() {
             return this.lastPathPart ? this.lastPathPart.facets : undefined;
         },
 
         /**
-         * Chnge the custom facet of the last path part
-         * @param  {Object} json
+         * Change the custom facet of the last path part
+         * @param  {any} json
          */
         set customFacets(json) {
             var newFacet;
@@ -1151,7 +1151,7 @@ import {
 
         /**
          * change sort with new sort Object
-         * @param {Object[]} so in this format [{"column":colname, "descending":true},...]
+         * @param {{ column: string; descending?: boolean }[] | null} so in this format [{"column":colname, "descending":true},...]
          */
         set sortObject(so) {
             if ((!so && !this._sort) || (so === this._sort))
@@ -1200,7 +1200,7 @@ import {
 
         /**
          * array of values that is used for before
-         * @return {Object[]}
+         * @return {Object[]?}
          */
         get beforeObject () {
             if (this._beforeObject === undefined) {
@@ -1225,7 +1225,7 @@ import {
 
         /**
          * change the beforeObject with new values
-         * @param {Object[]} Array of values that you want to page with.
+         * @param {Object[]?} Array of values that you want to page with.
          */
         set beforeObject(values) {
             // invalid argument, or empty string -> remove before
@@ -1247,7 +1247,7 @@ import {
 
         /**
          * array of values that is used for after
-         * @return {Object[]}
+         * @return {Object[]?}
          */
         get afterObject () {
             if (this._afterObject === undefined) {
@@ -1272,7 +1272,7 @@ import {
 
         /**
          * change the paging with new afterObject
-         * @param {Object[]} Array of values that you want to page with.
+         * @param {Object[]?} Array of values that you want to page with.
          */
         set afterObject(values) {
             // invalid argument, or empty string -> remove after
@@ -1362,8 +1362,8 @@ import {
 
         /**
          * Create a new location object with the same uri and catalogObject
-         * @param {ERMrest.Reference}
-         * @returns {ERMrest.Location} new location object
+         * @param {Reference}
+         * @returns {Location} new location object
          *
          * @private
          */
@@ -1811,6 +1811,10 @@ import {
      */
      export function ParsedFilter (type) {
          this.type = type;
+         this.column = undefined;
+         this.operator = undefined;
+         this.value = undefined;
+         this.filters = undefined;
      }
 
      ParsedFilter.prototype = {
@@ -2187,7 +2191,7 @@ import {
         if (typeof str === 'object') {
             /**
              * encode JSON object that represents facets
-             * @type {object}
+             * @type {any}
              */
             this.decoded = str;
 

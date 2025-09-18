@@ -8,6 +8,7 @@ import { hash as sparkMD5Hash } from 'spark-md5';
 import SourceObjectNode from '@isrd-isi-edu/ermrestjs/src/models/source-object-node';
 import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-object-wrapper';
 import PathPrefixAliasMapping from '@isrd-isi-edu/ermrestjs/src/models/path-prefix-alias-mapping';
+import { Tuple, Reference } from '@isrd-isi-edu/ermrestjs/src/models/reference';
 
 // services
 import CatalogService from '@isrd-isi-edu/ermrestjs/src/services/catalog';
@@ -47,7 +48,6 @@ import {
 // legacy
 import { generateKeyValueFilters, renameKey, _renderTemplate, _isEntryContext, _getFormattedKeyValues } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
 import { Table, Catalog } from '@isrd-isi-edu/ermrestjs/js/core';
-import { Reference, Tuple } from '@isrd-isi-edu/ermrestjs/js/reference';
 import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/parser';
 
 /**
@@ -736,7 +736,7 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
                 const sd = currentTable.sourceDefinitions.getSource(wf);
 
                 // entitysets are only allowed in detailed
-                if (sd.hasInbound && !sd.sourceObject.aggregate && baseReference._context !== _contexts.DETAILED) {
+                if (sd.hasInbound && !sd.sourceObject.aggregate && baseReference.context !== _contexts.DETAILED) {
                     $log.warn(errorMessage + "entity sets are not allowed in non-detailed.");
                     return;
                 }

@@ -264,7 +264,7 @@ export class UnsupportedFilters extends ERMrestError {
     // process discarded facets
     const discardedFacetMsg: any[] = [],
       discardedFacetSubMsg: any[] = [];
-    discardedFacets.forEach(function (f: any) {
+    discardedFacets.forEach((f: any) => {
       if (!f.markdown_name) return;
       discardedFacetMsg.push(f.markdown_name);
       discardedFacetSubMsg.push(createDiscardedFacetSubMessage(f));
@@ -272,7 +272,7 @@ export class UnsupportedFilters extends ERMrestError {
     // process partialy discarded facets
     const partDiscardedFacetMsg: any[] = [],
       partDiscardedFacetSubMsg: any[] = [];
-    partialyDiscardedFacets.forEach(function (f: any) {
+    partialyDiscardedFacets.forEach((f: any) => {
       if (!f.markdown_name) return;
       partDiscardedFacetMsg.push(f.markdown_name);
       partDiscardedFacetSubMsg.push(createDiscardedFacetSubMessage(f, true));
