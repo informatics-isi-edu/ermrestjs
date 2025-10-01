@@ -15,7 +15,9 @@ export default defineConfig(async (): Promise<UserConfig> => {
     /**
      * generate the *.js.gz files so server can directly serve them
      */
-    compression(),
+    compression({
+      algorithms: ['gzip'],
+    }),
   ];
 
   // dev related plugins
