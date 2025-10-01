@@ -27,7 +27,7 @@
     "@types/q": "^1.5.8",
     "axios": "1.12.2",
     "handlebars": "4.7.8",
-    "jsdoc-to-markdown": "8.0.0",
+    "jsdoc-to-markdown": "9.1.2",
     "jshint": "2.13.4",
     "lz-string": "^1.5.0",
     "markdown-it": "12.3.2",
