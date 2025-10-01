@@ -2291,55 +2291,6 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
         return m && r;
     };
 
-    /**
-     *  version is a 64-bit integer representing microseconds since the Unix "epoch"
-     *  The 64-bit integer is encoded using a custom base32 encoding scheme
-     *  @returns {String} the version decoded to it's time since epoch in milliseconds
-     */
-    export function versionDecodeBase32(version) {
-        // use 5-bit value as index to find symbol
-        // e.g. b32_symbols[15] == 'F'
-        var b32Symbols = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
-
-        // reverse mapping symbol -> 5-bit value
-        var b32Values = {};
-        for (var i=0; i<b32Symbols.length; i++) {
-            var symbol = b32Symbols[i];
-            b32Values[symbol] = i;
-        }
-
-        // """Decode 64-bit integer as approximate float value."""
-
-        // map to canonical symbols w/o separators
-        var s = version.toUpperCase()
-            .replaceAll('-', '')
-            .replaceAll('O', '0')
-            .replaceAll('I', '1')
-            .replaceAll('L', '1');
-
-        if (s.length > 13) {
-            // throw error maybe?
-            throw new Error("Invalid Version String", s.length + " symbols exceedlimit of 13");
-            // raise ValueError('%d symbols exceeds limit of 13' % len(s))
-        } else if (s.length < 13) {
-            // normalize to full 13-symbol format as general case
-            s = '0'.repeat(13 - s.length) + s;
-        }
-
-        // interpret first symbol as 2's complement signed value
-        var accum = parseFloat(b32Values[s[0]]);
-        if (accum >= 16) accum -= 32;
-
-        // interpret remaining symbols as unsigned values
-        for (var k=1; k<s.length; k++) {
-            var char = s[k];
-            accum = accum * 32 + b32Values[char];
-        }
-
-        // remove least significant pad bit and convert to milliseconds for precision
-        return (accum / 2.0)/1000;
-    };
-
     export function _isEntryContext(context) {
         return _entryContexts.indexOf(context) !== -1;
     };

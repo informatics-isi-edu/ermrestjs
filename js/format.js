@@ -326,7 +326,7 @@ var printf_parse = function (fmt) {
 * @param {Object} options A javascript object that contains format property and optional bool_true_value
                         and bool_false_value. These will be used to replace true and false in `t` type fields.
 * @param {String|Number|Object} value This would be the value that needs to be formatted.
-* @param {String} type The column type that the data is being formatted for
+* @param {String=} type The column type that the data is being formatted for
 * @returns {String}
 **/
 export default function printf(options, value, type) {

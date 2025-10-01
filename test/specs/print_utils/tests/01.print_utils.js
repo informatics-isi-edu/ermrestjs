@@ -1,9 +1,9 @@
-const { templates } = require('handlebars');
-const moment = require('moment-timezone');
+import moment from 'moment-timezone';
+import { run } from 'node:test';
 
 const ISRD_TESTERS_GROUP_ID = 'https://auth.globus.org/9d596ac6-22b9-11e6-b519-22000aef184d';
 
-exports.execute = function (options) {
+export function execute (options) {
   var module = options.includes.ermRest;
   var formatUtils = module._formatUtils;
   describe("Print utils, For pretty printing values based on a value's type, ", function () {
@@ -819,12 +819,16 @@ exports.execute = function (options) {
         expect(module.renderHandlebarsTemplate('{{#each values}}{{this}}\n{{/each}}', { values: [2, 3, 7, 9] })).toBe('2\n3\n7\n9\n');
       });
 
-      it('formatDate helper', function () {
-        expect(module.renderHandlebarsTemplate("{{formatDate '2018-07-26' 'YYYY'}}")).toBe('2018');
+      it('formatDatetime helper', function () {
+        expect(module.renderHandlebarsTemplate("{{formatDatetime '2018-07-26T12:34:56Z' 'YYYY'}}")).toBe('2018');
+        expect(module.renderHandlebarsTemplate("{{formatDatetime '02-16-97' 'YYYY'}}")).toBe('1997');
+        expect(module.renderHandlebarsTemplate("{{formatDatetime 'aaa' 'YYYY'}}")).toBe('');
+        expect(module.renderHandlebarsTemplate("{{formatDatetime date 'YYYY'}}", { date: null })).toBe('');
+
+        // backward compatibility
+        expect(module.renderHandlebarsTemplate("{{formatDate '2018-07-26T12:34:56Z' 'YYYY'}}")).toBe('2018');
         expect(module.renderHandlebarsTemplate("{{formatDate '02-16-97' 'YYYY'}}")).toBe('1997');
-        // should be able to handle invalid dates
         expect(module.renderHandlebarsTemplate("{{formatDate 'aaa' 'YYYY'}}")).toBe('');
-        // should be able to handle null value
         expect(module.renderHandlebarsTemplate("{{formatDate date 'YYYY'}}", { date: null })).toBe('');
       });
 
@@ -925,6 +929,62 @@ exports.execute = function (options) {
           expect(module.renderHandlebarsTemplate(`{{#if (isUserInAcl "group-1" "${ISRD_TESTERS_GROUP_ID}" )}}in{{else}}out{{/if}}`, {})).toBe('in', 'test 08');
           expect(module.renderHandlebarsTemplate(`{{#if (isUserInAcl "group-1" "${ISRD_TESTERS_GROUP_ID}-2" )}}in{{else}}out{{/if}}`, {})).toBe('out', 'test 09');
         }
+      });
+
+      it ('datetimeToSnapshot helper', () => {
+        const runTest = (pattern, value, expected, message) => {
+          expect(module.renderHandlebarsTemplate(pattern, value)).toBe(expected, message);
+        }
+        const runTestPartial = (datetime, message) => {
+          let valIso = moment(datetime).toISOString();
+          const snap = module.renderHandlebarsTemplate("{{datetimeToSnapshot val}}", { val: datetime });
+          const snapIso = module.renderHandlebarsTemplate("{{datetimeToSnapshot val}}", { val: valIso });
+          expect(snap).toBe(snapIso, message);
+        }
+
+        runTest("{{datetimeToSnapshot '2025-07-26T19:20:30Z'}}", {}, '33N-PFKM-4DR0', 'test 01');
+        runTest("{{datetimeToSnapshot '2025-07-26T19:20:30+03:00'}}", {}, '33N-NVFW-RQR0', 'test 02');
+        runTest("{{datetimeToSnapshot val}}", { val: '1980-07-26T19:20:30Z' }, 'JY-KGBW-6DR0', 'test 03');
+        runTest("{{datetimeToSnapshot val}}", { val: '2016-04-16T09:08:54.4143+00:00' }, '2K1-5KT1-HKB0', 'test 04');
+
+        runTest("{{datetimeToSnapshot '2025-01-01T00:00:00.000+00:00'}}", {}, '32N-6DT1-HG00', 'test 05');
+        runTest("{{datetimeToSnapshot '2025-01-01T00:00:00.002+00:00'}}", {}, '32N-6DT1-HKX0', 'test 06');
+        runTest("{{datetimeToSnapshot '2025-01-01T00:00:00.999+00:00'}}", {}, '32N-6DT3-EF5G', 'test 07');
+        runTest("{{datetimeToSnapshot '2025-01-01T00:00:00.000+01:00'}}", {}, '32N-673F-2Y00', 'test 08');
+        runTest("{{datetimeToSnapshot '2025-01-01T00:00:00.000-07:00'}}", {}, '32N-7WR2-QE00', 'test 09');
+        runTest("{{datetimeToSnapshot '2025-01-01T00:00:00.000-09:30'}}", {}, '32N-8DGG-VV00', 'test 10');
+        
+        // since we're not setting timezone for these, the client timezone will be used
+        // so we cannot hardcode the expected snapshot value
+        runTestPartial('2025-08-02', 'test 11');
+        runTestPartial('1995-12-17 12:30', 'test 12');
+        runTestPartial('2000/02/29 00:00', 'test 13');
+
+        runTest("{{datetimeToSnapshot 'invalid'}}", {}, '', 'test 14');
+      });
+
+      it('snapshotToDatetime helper', () => {
+        const runTest = (pattern, value, expected, message) => {
+          expect(module.renderHandlebarsTemplate(pattern, value)).toBe(expected, message);
+        }
+
+        runTest("{{snapshotToDatetime '33N-PFKM-4DR0'}}", {}, '2025-07-26T19:20:30.000000+00:00', 'test 01');
+        runTest("{{snapshotToDatetime '33N-NVFW-RQR0'}}", {}, '2025-07-26T16:20:30.000000+00:00', 'test 02');
+        runTest("{{snapshotToDatetime snap}}", { snap: 'JY-KGBW-6DR0' }, '1980-07-26T19:20:30.000000+00:00', 'test 03');
+        runTest("{{snapshotToDatetime snap}}", { snap: '2K1-5KT1-HKX0' }, '2016-04-16T09:08:54.414288+00:00', 'test 04');
+
+        runTest("{{snapshotToDatetime '32N-6DT1-HG00'}}", {}, '2025-01-01T00:00:00.000000+00:00', 'test 05');
+        runTest("{{snapshotToDatetime '32N-6DT1-HKX0'}}", {}, '2025-01-01T00:00:00.002000+00:00', 'test 06');
+        runTest("{{snapshotToDatetime '32N-6DT3-EF5G'}}", {}, '2025-01-01T00:00:00.999000+00:00', 'test 07');
+        runTest("{{snapshotToDatetime '32N-673F-2Y00'}}", {}, '2024-12-31T23:00:00.000000+00:00', 'test 08');
+        runTest("{{snapshotToDatetime '32N-7WR2-QE00'}}", {}, '2025-01-01T07:00:00.000000+00:00', 'test 09');
+        runTest("{{snapshotToDatetime '32N-8DGG-VV00'}}", {}, '2025-01-01T09:30:00.000000+00:00', 'test 10');
+
+        let expected = moment('2025-07-26T19:20:30.000000+00:00').format('YYYY-MM-DD HH:mm');
+        runTest("{{snapshotToDatetime snap format}}", { snap: '33N-PFKM-4DR0', format: 'YYYY-MM-DD HH:mm' }, expected, 'test 11');
+
+        expected = moment('2016-04-16 09:08:54.414288+00').format('MM/DD/YYYY');
+        runTest("{{snapshotToDatetime snap format}}", { snap: '2K1-5KT1-HKX0', format: 'MM/DD/YYYY' }, expected, 'test 12');
       });
 
       it('encodeFacet helper', function () {
@@ -1500,4 +1560,4 @@ exports.execute = function (options) {
       });
     });
   });
-};
+}

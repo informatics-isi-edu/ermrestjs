@@ -12,6 +12,9 @@ import {
     InvalidFilterOperatorError,
 } from '@isrd-isi-edu/ermrestjs/src/models/errors';
 
+// services
+import HistoryService from '@isrd-isi-edu/ermrestjs/src/services/history';
+
   // utils
   import {
     _ERMrestFeatures,
@@ -26,7 +29,7 @@ import {
   import { _facetingErrors, _FacetsLogicalOperators, _specialSourceDefinitions, _parserAliases } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
 
   // legacy
-  import { decodeFacet, encodeFacet, _encodeRegexp, versionDecodeBase32 } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
+  import { decodeFacet, encodeFacet, _encodeRegexp } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
   import { _renderFacet, _sourceColumnHelpers } from '@isrd-isi-edu/ermrestjs/js/utils/pseudocolumn_helpers';
   import PathPrefixAliasMapping from '@isrd-isi-edu/ermrestjs/src/models/path-prefix-alias-mapping';
 
@@ -854,16 +857,14 @@ import {
         },
 
         /**
-        * version is a 64-bit integer representing microseconds since the Unix "epoch"
-        * The 64-bit integer is encoded using a custom base32 encoding scheme
-        * @param {String} version - optional, include this param if no version in uri
-        * @returns {String} the version decoded to it's time since epoch in milliseconds
-        */
-        get versionAsMillis() {
-            if (this._versionAsMillis === undefined) {
-                this._versionAsMillis = versionDecodeBase32(this._version);
+         * The datetime iso string representation of the catalog version
+         * @returns {String} the iso string or null if version is not specified
+         */
+        get versionAsISOString() {
+            if (this._versionAsISOString === undefined) {
+                this._versionAsISOString = HistoryService.snapshotToDatetimeISO(this._version, false);
             }
-            return this._versionAsMillis;
+            return this._versionAsISOString;
         },
 
         /**
