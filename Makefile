@@ -130,8 +130,8 @@ help: usage
 usage:
 	@echo "Available 'make' targets:"
 	@echo "    all               - run linter, build the pacakge andand docs"
-	@echo "    dist   	         - local install of node dependencies, and build the package"
-	@echo "    deploy   	       - deploy the package to $(ERMRESTJSDIR)"
+	@echo "    dist              - local install of node dependencies, and build the package"
+	@echo "    deploy            - deploy the package to $(ERMRESTJSDIR)"
 	@echo "    deps              - local install of node dependencies"
 	@echo "    deps-test         - local install of dev node dependencies"
 	@echo "    lint              - lint the source"
