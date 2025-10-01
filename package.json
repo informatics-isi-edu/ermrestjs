@@ -56,7 +56,6 @@
     "prettier": "^3.6.2",
     "require-reload": "^0.2.2",
     "rollup-plugin-visualizer": "^5.14.0",
-    "set-cookie-parser": "x",
     "typescript-eslint": "^8.35.1"
   }
 }
