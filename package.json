@@ -28,7 +28,7 @@
     "axios": "1.12.2",
     "handlebars": "4.7.8",
     "jsdoc-to-markdown": "8.0.0",
-    "jshint": "2.13.4",
+    "jshint": "2.13.6",
     "lz-string": "^1.5.0",
     "markdown-it": "12.3.2",
     "moment": "2.29.4",
