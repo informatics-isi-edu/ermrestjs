@@ -25,7 +25,7 @@
   ],
   "dependencies": {
     "@types/q": "^1.5.8",
-    "axios": "1.12.1",
+    "axios": "1.12.2",
     "handlebars": "4.7.8",
     "jsdoc-to-markdown": "8.0.0",
     "jshint": "2.13.4",
