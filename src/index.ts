@@ -63,7 +63,6 @@ import {
   processMarkdownPattern,
   renderMustacheTemplate,
   _validateMustacheTemplate,
-  versionDecodeBase32,
 } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
 import {
   AttributeGroupColumn,
@@ -76,6 +75,7 @@ import { DataPath } from '@isrd-isi-edu/ermrestjs/js/datapath';
 import HandlebarsService from '@isrd-isi-edu/ermrestjs/src/services/handlebars';
 import { Exporter } from '@isrd-isi-edu/ermrestjs/js/export';
 import validateJSONLD from '@isrd-isi-edu/ermrestjs/js/json_ld_validator.js';
+import HistoryService from '@isrd-isi-edu/ermrestjs/src/services/history';
 
 const logError = ErrorService.logError;
 const responseToError = ErrorService.responseToError;
@@ -109,6 +109,7 @@ export {
   // HTTPService,
   AuthnService,
   Exporter,
+  HistoryService,
 
   // constants
   contextHeaderName,
@@ -122,7 +123,6 @@ export {
   fixedEncodeURIComponent,
   decodeFacet,
   encodeFacet,
-  versionDecodeBase32,
   setClientConfig,
   /**
    * @deprecated

@@ -271,6 +271,7 @@ export const _handlebarsHelpersList = [
   'ifCond',
   'escape',
   'encode',
+  'formatDatetime',
   'formatDate',
   'encodeFacet',
   'regexMatch',
@@ -283,6 +284,8 @@ export const _handlebarsHelpersList = [
   'printf',
   'stringLength',
   'isUserInAcl',
+  'snapshotToDatetime',
+  'datetimeToSnapshot',
   // math helpers
   'add',
   'subtract',

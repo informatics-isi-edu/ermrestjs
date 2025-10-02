@@ -1838,22 +1838,21 @@ exports.execute = function (options) {
     });
   });
 
-  describe('Decoding Version snapshot, ', function () {
-    var decode = options.ermRest.versionDecodeBase32;
-
-    it('should decode snapshot values to milliseconds from epoch.', function () {
-      expect(decode('0') * 1000).toBe(0.0);
-      expect(decode('2') * 1000).toBe(1.0);
-      expect(decode('Z-ZZZZ-ZZZZ-ZZZY') * 1000).toBe(-1.0);
-      expect(decode('G-0000-0000-0000') * 1000).toBe(-9.223372036854776e18);
-      expect(decode('Z-M9DK-J8QS-NN80') * 1000).toBe(-210866774822000000.0);
+  describe('History support, ', function () {
+    it('snapshotToDatetimeISO should work properly', () => {
+      const decode = options.ermRest.HistoryService.snapshotToDatetimeISO;
+      expect(decode('0')).toBe('1970-01-01T00:00:00.000000+00:00', 'test 01');
+      expect(decode('2')).toBe('1970-01-01T00:00:00.000001+00:00', 'test 02');
+      expect(decode('1-X140')).toBe('1970-01-01T00:00:01.000000+00:00', 'test 03');
+      expect(decode('2R6-QAMZ-AB8W')).toBe('2019-03-05T18:49:24.459150+00:00', 'test 04');
     });
 
-    it('should decode to a value that we can properly convert to a datetime.', function () {
-      expect(moment(decode('Z-ZZZZ-ZZZY-2YW0')).utc().format('YYYY-MM-DDTHH:mm:ss')).toBe('1969-12-31T23:59:59');
-      expect(moment(decode('0')).utc().format('YYYY-MM-DDTHH:mm:ss')).toBe('1970-01-01T00:00:00');
-      expect(moment(decode('1-X140')).utc().format('YYYY-MM-DDTHH:mm:ss')).toBe('1970-01-01T00:00:01');
-      expect(moment(decode('2R6-QAMZ-AB8W')).utc().format('YYYY-MM-DDTHH:mm:ss.SSS')).toBe('2019-03-05T18:49:24.459');
+    it('datetimeISOToSnapshot should work properly', () => {
+      const encode = options.ermRest.HistoryService.datetimeISOToSnapshot;
+      expect(encode('1970-01-01T00:00:00.000000+00:00')).toBe('0', 'test 01');
+      expect(encode('1970-01-01T00:00:00.000001+00:00')).toBe('2', 'test 02');
+      expect(encode('1970-01-01T00:00:01.000000+00:00')).toBe('1-X140', 'test 03');
+      expect(encode('2019-03-05T18:49:24.459150+00:00')).toBe('2R6-QAMZ-AB8W', 'test 04');
     });
   });
 
