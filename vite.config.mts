@@ -1,6 +1,7 @@
 import { resolve } from 'path';
 import { defineConfig, UserConfig } from 'vite';
 import { compression } from 'vite-plugin-compression2';
+import dts from 'vite-plugin-dts';
 
 // if NODE_DEV defined properly, uset it. otherwise set it to production.
 const nodeDevs = ['production', 'development'];
@@ -12,6 +13,19 @@ const isDev = mode === 'development';
 
 export default defineConfig(async (): Promise<UserConfig> => {
   const plugins = [
+    /**
+     * generate TypeScript declaration files
+     */
+    dts({
+      include: ['src/**/*'],
+      exclude: ['js/**/*', 'test/**/*', 'vendor/**/*'],
+      outDir: 'dist',
+      rollupTypes: true, // bundle all .d.ts files into a single ermrest.d.ts
+      compilerOptions: {
+        skipLibCheck: true,
+      },
+      logLevel: 'silent', // suppress warnings about legacy JS files
+    }),
     /**
      * generate the *.js.gz files so server can directly serve them
      */
@@ -45,6 +59,15 @@ export default defineConfig(async (): Promise<UserConfig> => {
         fileName: 'ermrest',
       },
       rollupOptions: {
+        /**
+         * suppress warnings on `js` folder.
+         */
+        onwarn(warning, warn) {
+          if (warning.id && warning.id.includes('/js/')) {
+            return;
+          }
+          warn(warning);
+        },
         output: [
           // nodejs (test cases) and some static sites use this:
           {
