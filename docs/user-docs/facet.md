@@ -4,24 +4,35 @@ This document will go over the syntax that can be used for defining facets. Face
 
 ## Table of contents
 
-- [Table of contents](#table-of-contents)
-- [Structure](#structure)
-- [Logical operators](#logical-operators)
-- [Source path](#source-path)
-- [Source key](#source-key)
-- [Fast filter source](#fast-filter-source)
-- [Constraints](#constraints)
-- [Extra properties](#extra-properties)
-  - [entity v.s. scalar facet](#entity-vs-scalar-facet)
-  - [markdown\_name](#markdown_name)
-  - [comment](#comment)
-  - [open](#open)
-  - [ux\_mode](#ux_mode)
-  - [hide\_null\_choice/hide\_not\_null\_choice](#hide_null_choicehide_not_null_choice)
-  - [bar\_plot](#bar_plot)
-  - [order](#order)
-  - [hide\_num\_occurrences](#hide_num_occurrences)
-- [Examples](#examples)
+- [Facet JSON Structure](#facet-json-structure)
+  - [Table of contents](#table-of-contents)
+  - [Structure](#structure)
+  - [Logical operators](#logical-operators)
+  - [Grouped facets](#grouped-facets)
+  - [Source path](#source-path)
+  - [Source key](#source-key)
+  - [Fast filter source](#fast-filter-source)
+  - [Constraints](#constraints)
+  - [Extra properties](#extra-properties)
+    - [entity v.s. scalar facet](#entity-vs-scalar-facet)
+    - [markdown\_name](#markdown_name)
+    - [comment](#comment)
+    - [open](#open)
+    - [ux\_mode](#ux_mode)
+    - [hide\_null\_choice/hide\_not\_null\_choice](#hide_null_choicehide_not_null_choice)
+      - [Default heuristics](#default-heuristics)
+    - [bar\_plot](#bar_plot)
+    - [order](#order)
+    - [hide\_num\_occurrences](#hide_num_occurrences)
+  - [Examples](#examples)
+    - [Example 1](#example-1)
+    - [Example 2](#example-2)
+    - [Example 3 (Entity vs. Scalar)](#example-3-entity-vs-scalar)
+    - [Example 4 (Choice Vs. Range)](#example-4-choice-vs-range)
+    - [Example 5 (Facet Title)](#example-5-facet-title)
+    - [Example 6 (Open Vs. Close)](#example-6-open-vs-close)
+    - [Example 7 (Change order of scalar values)](#example-7-change-order-of-scalar-values)
+    - [Example 8 (Grouped facets)](#example-8-grouped-facets)
 
 ## Structure
 
@@ -50,6 +61,32 @@ We want the structure to be as general as possible, so we don't need to redesign
     { "not": term }
 
 The current implementation of faceting in Chaise only supports `and`. The rest of logical operators are currently not supported.
+
+## Grouped facets
+
+Instead of each individual `term` inside the `and`, you may also have another layer of facets:
+
+```js
+  {
+    "and": [
+      {
+        "markdown_name": "Group 1",
+        "and": [
+          ....
+        ]
+      },
+      ...
+    ]
+  }
+```
+
+Notes:
+
+- `markdown_name` is required for each group.
+- By default all groups are opened, if you want to close the group by default you may add `"open": false` to the definition.
+- This doesn't change the generated ermrest queries and just signal to UI, to show them in a group
+
+
 
 ## Source path
 
@@ -388,5 +425,30 @@ In a scalar facet that is using the `choices` UX mode, the values are sorted in 
     "order": [
         {"column": "f1_text", "descending": false}
     ]
+}
+```
+
+### Example 8 (Grouped facets)
+
+```js
+{
+  "and": [
+    {"source": "id", "ux_mode": "choices"},
+    {
+      "markdown_name": "Update info",
+      "and": [
+        {"source": "RMB"},
+        {"source": "RMT"}
+      ]
+    },
+    {
+      "markdown_name": "Create info",
+      "open": false,
+      "and": [
+        {"source": "RCB"},
+        {"source": "RCT"}
+      ]
+    }
+  ]
 }
 ```

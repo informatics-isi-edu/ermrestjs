@@ -894,24 +894,56 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
         },
 
         /**
-         * Given a source object wrapper,  do we support the facet for it or not
-         * @ignore
+         * Given a source definition object, it will return a SourceObjectWrapper that can be used as a facet object.
+         * It will return null if the source definition is not supported as a facet.
+         * NOTE: this function will remove any filter defined in the source definition if hasFilterOrFacet is true.
+         *
+         * TODO should this throw errors instead of just returning null?
+         * @param {any} obj the source definition object
+         * @param {Table} table the table that this source definition is based on
+         * @param {boolean} hasFilterOrFacet whether the url has any filter or facet defined. If this is true, we will remove any filter defined in the source definition.
+         * @returns
          */
-        checkFacetObjectWrapper: function (facetObjectWrapper) {
-            var col = facetObjectWrapper.column;
+        sourceDefToFacetObjectWrapper: function (obj, table, hasFilterOrFacet) {
+            let wrapper;
+            try {
+                // if both source and sourcekey are defined, ignore the source and use sourcekey
+                if (obj.sourcekey) {
+                    const sd = table.sourceDefinitions.getSource(obj.sourcekey);
+                    if (!sd || !sd.processFilterNodes(undefined).success) return null;
+                    wrapper = sd.clone(obj, table, true);
+                } else {
+                    wrapper = new SourceObjectWrapper(obj, table, true);
+                }
+            } catch (exp) {
+                return null;
+            }
+
+            const col = wrapper.column;
 
             // aggregate is not supported
-            if (facetObjectWrapper.hasAggregate) {
-                return false;
+            if (wrapper.hasAggregate) {
+                return null;
             }
 
             // column type array is not supported
             if (col.type.isArray) {
-                return false;
+                return null;
             }
 
             // check the column type
-            return _facetUnsupportedTypes.indexOf(col.type.name) === -1;
+            if (!_facetUnsupportedTypes.indexOf(col.type.name) === -1) {
+                return null;
+            }
+
+            // if we have filters in the url, we will get the filters only from url
+            if (hasFilterOrFacet) {
+                delete wrapper.sourceObject.not_null;
+                delete wrapper.sourceObject.choices;
+                delete wrapper.sourceObject.search;
+                delete wrapper.sourceObject.ranges;
+            }
+            return wrapper;
         },
 
         /**
@@ -1003,7 +1035,10 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
          * NOTE: facetColumns MUST be only used in COMPACT_SELECT context
          * It doesn't feel right that I am doing contextualization in here,
          * it's something that should be in client.
-         * @ignore
+         * @param {SourceObjectWrapper} facetObjectWrapper the facet object
+         * @param {boolean} usedAnnotation the annotation that was used to create this facet (if any)
+         * @param {Table} table the current table that we want to make sure the facetObject is valid for.
+         * @returns {boolean} whether the facetObjectWrapper is valid for this table.
          */
         checkForAlternative: function (facetObjectWrapper, usedAnnotation, table) {
             var currTable = facetObjectWrapper.column.table;

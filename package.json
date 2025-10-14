@@ -19,6 +19,7 @@
   ],
   "scripts": {
     "build": "tsc && vite build",
+    "watch": "tsc --watch && vite build --watch",
     "pretest": "make deps-test && make dist-w-deps",
     "deploy": "make deploy",
     "test": "make test",

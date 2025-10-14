@@ -163,7 +163,8 @@ class NotNullFacetFilter {
 
 /**
  * @param {Reference} reference the reference that this FacetColumn blongs to.
- * @param {int} index The index of this FacetColumn in the list of facetColumns
+ * @param {number} index The index of this FacetColumn in the list of facetColumns
+ * @param {number} structureIndex The index of this FacetColumn in the structure array
  * @param {SourceObjectWrapper} facetObjectWrapper The filter object that this FacetColumn will be created based on
  * @param {?FacetFilter[]} filters Array of filters
  */
@@ -180,9 +181,13 @@ export class FacetColumn {
 
   /**
    * The index of facetColumn in the list of facetColumns
-   * NOTE: Might not be needed
    */
   public index: number;
+
+  /**
+   * if part of the group, the index of that group in the facetColumnsStructure array
+   */
+  public groupIndex?: number;
 
   /**
    * A valid data-source path
@@ -245,10 +250,17 @@ export class FacetColumn {
   private _choiceFilters?: ChoiceFacetFilter[];
   private _rangeFilters?: RangeFacetFilter[];
 
-  constructor(reference: Reference, index: number, facetObjectWrapper: SourceObjectWrapper, filters?: Array<FacetFilter | NotNullFacetFilter>) {
+  constructor(
+    reference: Reference,
+    index: number,
+    facetObjectWrapper: SourceObjectWrapper,
+    groupIndex?: number,
+    filters?: Array<FacetFilter | NotNullFacetFilter>,
+  ) {
     this._column = facetObjectWrapper.column!;
     this.reference = reference;
     this.index = index;
+    this.groupIndex = groupIndex;
     this.dataSource = facetObjectWrapper.sourceObject.source;
     this.compressedDataSource = _compressSource(this.dataSource);
 
@@ -1337,9 +1349,9 @@ export class FacetColumn {
     let newFc: FacetColumn;
     this.reference.facetColumns.forEach((fc: FacetColumn) => {
       if (fc.index !== this.index) {
-        newFc = new FacetColumn(newReference, fc.index, fc.sourceObjectWrapper, fc.filters.slice() as FacetFilter[]);
+        newFc = new FacetColumn(newReference, fc.index, fc.sourceObjectWrapper, fc.groupIndex, fc.filters.slice() as FacetFilter[]);
       } else {
-        newFc = new FacetColumn(newReference, this.index, this.sourceObjectWrapper, filters as FacetFilter[]);
+        newFc = new FacetColumn(newReference, this.index, this.sourceObjectWrapper, this.groupIndex, filters as FacetFilter[]);
       }
 
       facets.push(newFc);

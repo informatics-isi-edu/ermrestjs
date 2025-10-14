@@ -858,11 +858,12 @@ import HistoryService from '@isrd-isi-edu/ermrestjs/src/services/history';
 
         /**
          * The datetime iso string representation of the catalog version
-         * @returns {String} the iso string or null if version is not specified
+         * @returns {String|null} the iso string or null if version is not specified
          */
         get versionAsISOString() {
             if (this._versionAsISOString === undefined) {
-                this._versionAsISOString = HistoryService.snapshotToDatetimeISO(this._version, false);
+                this._versionAsISOString = HistoryService.snapshotToDatetimeISO(this._version, true);
+                if (this._versionAsISOString === '') this._versionAsISOString = null;
             }
             return this._versionAsISOString;
         },
@@ -972,7 +973,7 @@ import HistoryService from '@isrd-isi-edu/ermrestjs/src/services/history';
 
         /**
          * filter is converted to the last join table (if uri has join)
-         * @returns {ParsedFilter} undefined if there is no filter
+         * @returns {ParsedFilter|undefined} undefined if there is no filter
          */
         get filter() {
             return this.lastPathPart ? this.lastPathPart.filter : undefined;
@@ -1059,7 +1060,7 @@ import HistoryService from '@isrd-isi-edu/ermrestjs/src/services/history';
 
         /**
          * facets object of the last path part
-         * @type {ParsedFacets} facets object
+         * @type {ParsedFacets|undefined} facets object
          */
         get facets() {
             return this.lastPathPart ? this.lastPathPart.facets : undefined;
@@ -1084,7 +1085,7 @@ import HistoryService from '@isrd-isi-edu/ermrestjs/src/services/history';
 
         /**
          * the custom facet of the last path part
-         * @type {CustomFacets}
+         * @type {CustomFacets|undefined}
          */
         get customFacets() {
             return this.lastPathPart ? this.lastPathPart.customFacets : undefined;
