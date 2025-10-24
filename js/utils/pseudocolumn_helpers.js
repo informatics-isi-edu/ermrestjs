@@ -916,6 +916,9 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
                     wrapper = new SourceObjectWrapper(obj, table, true);
                 }
             } catch (exp) {
+                $log.info('error parsing facet source definition: ');
+                $log.info('facet: ', obj);
+                $log.info(exp);
                 return null;
             }
 
@@ -928,11 +931,13 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
 
             // column type array is not supported
             if (col.type.isArray) {
+                $log.info('Facet is not supported for array column types.');
                 return null;
             }
 
             // check the column type
-            if (!_facetUnsupportedTypes.indexOf(col.type.name) === -1) {
+            if (_facetUnsupportedTypes.indexOf(col.type.name) !== -1) {
+                $log.info('Facet is not supported for column type: ' + col.type.name);
                 return null;
             }
 

@@ -1079,6 +1079,11 @@ export function generateFacetColumns(
     usedAnnotation = true;
     // NOTE We're allowing duplicates in annotation.
     annotationCols.forEach((obj: any, objIndex: number) => {
+      if (!isObjectAndNotNull(obj)) {
+        $log.info(`Invalid facet object at index ${objIndex} in annotation for table ${reference.table.name}.`);
+        return;
+      }
+
       // if we have filters in the url, we will get the filters only from url
       if (obj.sourcekey === _specialSourceDefinitions.SEARCH_BOX && andFilters.length === 0) {
         if (!searchTerm) {
