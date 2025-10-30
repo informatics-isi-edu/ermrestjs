@@ -70,10 +70,12 @@ Instead of each individual `term` inside the `and`, you may also have another la
   {
     "and": [
       {
-        "markdown_name": "Group 1",
+        "markdown_name": "Group 1", // required
         "and": [
           ....
-        ]
+        ],
+        "comment": "some comment", // optional
+        "open": false, // optional
       },
       ...
     ]
@@ -83,9 +85,9 @@ Instead of each individual `term` inside the `and`, you may also have another la
 Notes:
 
 - `markdown_name` is required for each group.
-- By default all groups are opened, if you want to close the group by default you may add `"open": false` to the definition.
 - This doesn't change the generated ermrest queries and just signal to UI, to show them in a group
-
+- By default all groups are opened, if you want to close the group by default you may add `"open": false` to the definition.
+- You may use the `comment` property to add a tooltip to the group.
 
 
 ## Source path
@@ -444,6 +446,7 @@ In a scalar facet that is using the `choices` UX mode, the values are sorted in 
     {
       "markdown_name": "Create info",
       "open": false,
+      "comment": "All the create information",
       "and": [
         {"source": "RCB"},
         {"source": "RCT"}

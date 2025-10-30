@@ -268,6 +268,12 @@ exports.execute = function (options) {
                             expect(refF4.facetColumns[6]._facetObject.markdown_name).toBe("main_wo_faceting_annot_1", "missmatch for inbound.");
                         });
                     });
+
+                    it('facetColumnsStructure should be properly defined.', () => {
+                        const structure = refF4.facetColumnsStructure;
+                        expect(structure.length).toBe(7);
+                        expect(structure).toBe([0, 1, 2, 3, 4, 5, 6]);
+                    });
                 });
 
                 it("it should ignore asset columns, and composite keys. But create a facet for composite inbound and outbound foreignKeys based on shortestKey.", function (done) {
@@ -332,6 +338,7 @@ exports.execute = function (options) {
                 it("should ignore invalid facets.", function (done) {
                     options.ermRest.resolve(createURL(tableF2), { cid: "test" }).then(function (ref) {
                         expect(ref.facetColumns.length).toBe(0);
+                        expect(ref.facetColumnsStructure.length).toBe(0);
                         done();
                     }).catch(function (err) {
                         console.log(err);
@@ -342,6 +349,7 @@ exports.execute = function (options) {
                 it("should ignore array columns.", function (done) {
                     options.ermRest.resolve(createURL(tableWArray), { cid: "test" }).then(function (ref) {
                         expect(ref.facetColumns.length).toBe(0);
+                        expect(ref.facetColumnsStructure.length).toBe(0);
                         done();
                     }).catch(function (err) {
                         console.log(err);
@@ -351,6 +359,8 @@ exports.execute = function (options) {
 
                 it("should create facets based on what data modelers have defined, and ignore the column types that are not supported (json).", function () {
                     expect(refMain.facetColumns.length).toBe(28);
+                    expect(ref.facetColumnsStructure.length).toBe(28);
+                    expect(ref.facetColumnsStructure).toBe(Array.from({length: 28}, (_, k) => k));
 
                     expect(refMain.facetColumns.map(function (fc) {
                         return fc._column.name;

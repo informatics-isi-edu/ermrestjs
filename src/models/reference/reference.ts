@@ -696,6 +696,7 @@ export class Reference {
         resolve(res);
       }).catch((err) => {
         this._facetColumns = [];
+        this._facetColumnsStructure = [];
         reject(err);
       });
     });
@@ -705,8 +706,9 @@ export class Reference {
    * This is only added so _applyFilters in facet-column can use it.
    * SHOULD NOT be used outside of this library.
    */
-  manuallySetFacetColumns(facetCols: FacetColumn[]) {
+  manuallySetFacetColumns(facetCols: FacetColumn[], facetColsStructure: Array<number | FacetGroup>) {
     this._facetColumns = facetCols;
+    this._facetColumnsStructure = facetColsStructure;
   }
 
   /**
@@ -1220,11 +1222,11 @@ export class Reference {
 
   /**
    * Remove all the filters, facets, and custom-facets from the reference
-   * @param {boolean} sameFilter By default we're removing filters, if this is true filters won't be changed.
-   * @param {boolean} sameCustomFacet By default we're removing custom-facets, if this is true custom-facets won't be changed.
-   * @param {boolean} sameFacet By default we're removing facets, if this is true facets won't be changed.
+   * @param sameFilter By default we're removing filters, if this is true filters won't be changed.
+   * @param sameCustomFacet By default we're removing custom-facets, if this is true custom-facets won't be changed.
+   * @param sameFacet By default we're removing facets, if this is true facets won't be changed.
    *
-   * @return {reference} A reference without facet filters
+   * @return A reference without facet filters
    */
   removeAllFacetFilters(sameFilter?: boolean, sameCustomFacet?: boolean, sameFacet?: boolean) {
     verify(!(sameFilter && sameCustomFacet && sameFacet), 'at least one of the options must be false.');
@@ -1242,6 +1244,10 @@ export class Reference {
       newReference._facetColumns!.push(
         new FacetColumn(newReference, fc.index, fc.sourceObjectWrapper, fc.groupIndex, sameFacet ? fc.filters.slice() : []),
       );
+    });
+    newReference._facetColumnsStructure = [];
+    this.facetColumnsStructure.forEach((structure) => {
+      newReference._facetColumnsStructure!.push(typeof structure === 'number' ? structure : structure.copy(newReference));
     });
 
     // update the location object
@@ -1852,6 +1858,12 @@ export class Reference {
         newReference._facetColumns!.push(new FacetColumn(newReference, fc.index, fc.sourceObjectWrapper, fc.groupIndex, fc.filters.slice()));
       });
     }
+    if (this._facetColumnsStructure !== undefined) {
+      newReference._facetColumnsStructure = [];
+      this.facetColumnsStructure.forEach((structure) => {
+        newReference._facetColumnsStructure!.push(typeof structure === 'number' ? structure : structure.copy(newReference));
+      });
+    }
 
     return newReference;
   }
@@ -1887,6 +1899,12 @@ export class Reference {
       newReference._facetColumns = [];
       this.facetColumns.forEach((fc) => {
         newReference._facetColumns!.push(new FacetColumn(newReference, fc.index, fc.sourceObjectWrapper, fc.groupIndex, fc.filters.slice()));
+      });
+    }
+    if (this._facetColumnsStructure !== undefined) {
+      newReference._facetColumnsStructure = [];
+      this.facetColumnsStructure.forEach((structure) => {
+        newReference._facetColumnsStructure!.push(typeof structure === 'number' ? structure : structure.copy(newReference));
       });
     }
 

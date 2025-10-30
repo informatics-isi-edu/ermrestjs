@@ -64,4 +64,19 @@ export class FacetGroup {
     }
     return this._isOpen;
   }
+
+  /**
+   * creates a copy of this facet group for the new reference
+   * @param newReference the reference that the cloned facet group will belong to
+   * @returns a cloned facet group
+   */
+  copy(newReference?: Reference): FacetGroup {
+    const newFg = new FacetGroup(
+      newReference ? newReference : this.reference,
+      this.structureIndex,
+      this.facetObjectGroupWrapper,
+      this.children.slice(),
+    );
+    return newFg;
+  }
 }

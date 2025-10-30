@@ -1,7 +1,7 @@
 // models
 import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-object-wrapper';
 import type SourceObjectNode from '@isrd-isi-edu/ermrestjs/src/models/source-object-node';
-import { ReferenceColumn } from '@isrd-isi-edu/ermrestjs/src/models/reference-column';
+import { FacetGroup, ReferenceColumn } from '@isrd-isi-edu/ermrestjs/src/models/reference-column';
 import type { CommentType } from '@isrd-isi-edu/ermrestjs/src/models/comment';
 import type { DisplayName } from '@isrd-isi-edu/ermrestjs/src/models/display-name';
 import { type Tuple, Reference } from '@isrd-isi-edu/ermrestjs/src/models/reference';
@@ -1361,7 +1361,12 @@ export class FacetColumn {
       }
     });
 
-    newReference.manuallySetFacetColumns(facets);
+    const facetColsStructure: Array<FacetGroup | number> = this.reference.facetColumnsStructure;
+    this.reference.facetColumnsStructure.forEach((structure) => {
+      facetColsStructure.push(typeof structure === 'number' ? structure : structure.copy(newReference));
+    });
+
+    newReference.manuallySetFacetColumns(facets, facetColsStructure);
     newReference.setLocation(this.reference.location._clone(newReference));
     newReference.location.beforeObject = null;
     newReference.location.afterObject = null;
