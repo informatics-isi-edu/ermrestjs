@@ -51,14 +51,14 @@ export class FacetGroup {
         isOpen = sourceOpen;
       }
 
-      // TODO does this make sense? this is mostly needed for when the child has filters and we need to preprocess them.
-      this.facetObjectGroupWrapper.children.forEach((child) => {
-        const facet = this.reference.facetColumns.filter((fc) => fc.sourceObjectWrapper.name === child.name)[0];
-        // if any of the children facets are open, the group should be open
-        if (facet && facet.isOpen) {
+      // if any of the childrens have filters, the group should be opened
+      for (const child of this.facetObjectGroupWrapper.children) {
+        const facet = this.reference.facetColumns.find((fc) => fc.sourceObjectWrapper.name === child.name);
+        if (facet && facet.filters.length > 0) {
           isOpen = true;
+          break;
         }
-      });
+      }
 
       this._isOpen = isOpen;
     }

@@ -51,7 +51,7 @@ export default defineConfig(async (): Promise<UserConfig> => {
       'process.env.NODE_ENV': JSON.stringify(mode),
     },
     build: {
-      minify: 'terser',
+      minify: isDev ? false : 'terser',
       reportCompressedSize: false,
       sourcemap: isDev,
       lib: {

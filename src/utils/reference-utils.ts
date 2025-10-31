@@ -1048,6 +1048,7 @@ export function generateFacetColumns(
   | Promise<{ facetColumns: FacetColumn[]; issues: UnsupportedFilters | null; facetColumnsStructure: Array<number | FacetGroup> }>
   | { facetColumns: FacetColumn[]; issues: UnsupportedFilters | null; facetColumnsStructure: Array<number | FacetGroup> } {
   const andOperator = _FacetsLogicalOperators.AND;
+  const addedGroups: Record<string, boolean> = {};
   let searchTerm = reference.location.searchTerm;
   const helpers = _facetColumnHelpers;
 
@@ -1097,7 +1098,13 @@ export function generateFacetColumns(
 
       if ('and' in obj) {
         try {
-          facetObjectWrappers.push(new FacetObjectGroupWrapper(obj, reference.table, hasFilterOrFacet));
+          const fow = new FacetObjectGroupWrapper(obj, reference.table, hasFilterOrFacet);
+          // avoid duplicate groups
+          if (fow.displayname.unformatted! in addedGroups) {
+            throw new Error(`Duplicate facet group name: ${fow.displayname.unformatted}`);
+          }
+          addedGroups[fow.displayname.unformatted!] = true;
+          facetObjectWrappers.push(fow);
         } catch (exp: unknown) {
           $log.error(`Error processing facet group at index ${objIndex}: ` + (exp as Error).message);
           return;
