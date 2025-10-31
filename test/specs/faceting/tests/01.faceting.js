@@ -272,7 +272,7 @@ exports.execute = function (options) {
                     it('facetColumnsStructure should be properly defined.', () => {
                         const structure = refF4.facetColumnsStructure;
                         expect(structure.length).toBe(7);
-                        expect(structure).toBe([0, 1, 2, 3, 4, 5, 6]);
+                        expect(structure).toEqual([0, 1, 2, 3, 4, 5, 6]);
                     });
                 });
 
@@ -359,8 +359,8 @@ exports.execute = function (options) {
 
                 it("should create facets based on what data modelers have defined, and ignore the column types that are not supported (json).", function () {
                     expect(refMain.facetColumns.length).toBe(28);
-                    expect(ref.facetColumnsStructure.length).toBe(28);
-                    expect(ref.facetColumnsStructure).toBe(Array.from({length: 28}, (_, k) => k));
+                    expect(refMain.facetColumnsStructure.length).toBe(28);
+                    expect(refMain.facetColumnsStructure).toEqual(Array.from({length: 28}, (_, k) => k));
 
                     expect(refMain.facetColumns.map(function (fc) {
                         return fc._column.name;

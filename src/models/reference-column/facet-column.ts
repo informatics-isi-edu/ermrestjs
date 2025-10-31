@@ -1338,6 +1338,7 @@ export class FacetColumn {
     const loc = this.reference.location;
     const newReference = this.reference.copy();
     const facets: FacetColumn[] = [];
+    const facetColsStructure: Array<FacetGroup | number> = [];
 
     // create a new FacetColumn so it doesn't reference to the current FacetColum
     // TODO can be refactored
@@ -1361,7 +1362,7 @@ export class FacetColumn {
       }
     });
 
-    const facetColsStructure: Array<FacetGroup | number> = this.reference.facetColumnsStructure;
+    // recreate the facetColumnsStructure so we don't have to recompute the whole thing.
     this.reference.facetColumnsStructure.forEach((structure) => {
       facetColsStructure.push(typeof structure === 'number' ? structure : structure.copy(newReference));
     });
