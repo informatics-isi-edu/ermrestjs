@@ -126,3 +126,56 @@ exports.DeferredPromise = function () {
     this.reject = reject;
   });
 };
+
+exports.appLinkFn = (tag, location) => {
+  const chaiseURL = 'https://example.org/chaise',
+    recordURL = chaiseURL + '/record',
+    record2URL = chaiseURL + '/record-two',
+    viewerURL = chaiseURL + '/viewer',
+    searchURL = chaiseURL + '/search',
+    recordsetURL = chaiseURL + '/recordset';
+  let url;
+  switch (tag) {
+    case 'tag:isrd.isi.edu,2016:chaise:record':
+      url = recordURL;
+      break;
+    case 'tag:isrd.isi.edu,2016:chaise:record-two':
+      url = record2URL;
+      break;
+    case 'tag:isrd.isi.edu,2016:chaise:viewer':
+      url = viewerURL;
+      break;
+    case 'tag:isrd.isi.edu,2016:chaise:search':
+      url = searchURL;
+      break;
+    case 'tag:isrd.isi.edu,2016:chaise:recordset':
+      url = recordsetURL;
+      break;
+    default:
+      url = recordURL;
+      break;
+  }
+
+  url = url + '/' + location.path;
+
+  return url;
+};
+
+/**
+ * Resolves and returns a reference for the given schema, table and facets.
+ * Returns a promise that resolves to the reference.
+ *
+ * @param {Object} options - The options object containing the ermRest instance.
+ * @param {string} schemaName - The name of the schema.
+ * @param {string} tableName - The name of the table.
+ * @param {Object} [facets] - Optional facets to apply to the reference.
+ * @returns {Promise} A promise that resolves to the reference.
+ */
+exports.resolveURL = (options, schemaName, tableName, facets) => {
+  const catalogId = process.env.DEFAULT_CATALOG;
+  let url = `${options.url}/catalog/${catalogId}/entity/${schemaName}:${tableName}`;
+  if (facets && typeof facets === 'object') {
+    url += `/*::facets::${options.ermRest.encodeFacet(facets)}}`;
+  }
+  return options.ermRest.resolve(url, { cid: 'test' });
+};

@@ -682,7 +682,11 @@ export class Reference {
    * });
    * ```
    */
-  generateFacetColumns(): Promise<{ facetColumns: FacetColumn[]; issues: UnsupportedFilters | null }> {
+  generateFacetColumns(): Promise<{
+    facetColumns: FacetColumn[];
+    facetColumnsStructure: Array<number | FacetGroup>;
+    issues: UnsupportedFilters | null;
+  }> {
     return new Promise((resolve, reject) => {
       const p = generateFacetColumns(this, false) as Promise<{
         facetColumns: FacetColumn[];

@@ -678,11 +678,22 @@ export default class SourceObjectWrapper {
   }
 }
 
+/**
+ * Represents a facet object group
+ */
 export class FacetObjectGroupWrapper {
   sourceObject: Record<string, unknown>;
   children: SourceObjectWrapper[];
   displayname: DisplayName;
 
+  /**
+   * Creates a new instance of FacetObjectGroupWrapper.
+   * Will throw an error if there was any issues in processing the source object.
+   *
+   * @param sourceObject The source object representing the facet group.
+   * @param table The table to which the facet group belongs.
+   * @param hasFilterOrFacet Indicates if the group has any filters or facets.
+   */
   constructor(sourceObject: Record<string, unknown>, table: Table, hasFilterOrFacet: boolean) {
     if (!Array.isArray(sourceObject.and) || sourceObject.and.length === 0) {
       throw new Error('valid array of children is required');

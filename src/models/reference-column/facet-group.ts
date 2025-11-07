@@ -71,12 +71,6 @@ export class FacetGroup {
    * @returns a cloned facet group
    */
   copy(newReference?: Reference): FacetGroup {
-    const newFg = new FacetGroup(
-      newReference ? newReference : this.reference,
-      this.structureIndex,
-      this.facetObjectGroupWrapper,
-      this.children.slice(),
-    );
-    return newFg;
+    return new FacetGroup(newReference ? newReference : this.reference, this.structureIndex, this.facetObjectGroupWrapper, this.children.slice());
   }
 }
