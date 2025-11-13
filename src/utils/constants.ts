@@ -327,6 +327,7 @@ export const _errorStatus = Object.freeze({
   INVALID_PAGE: 'Invalid Page Criteria',
   INVALID_SERVER_RESPONSE: 'Invalid Server Response',
   UNSUPPORTED_FILTERS: 'Unsupported Filters',
+  SNAPSHOT_NOT_FOUND: 'Snapshot Not Found',
 });
 
 export const _errorMessage = Object.freeze({
