@@ -3,7 +3,8 @@ require('./../../utils/starter.spec.js').runTests({
     testCases: [
         "/common/tests/01.foreignkey.js",
         "/common/tests/02.column.js",
-        "/common/tests/03.table.js"
+        "/common/tests/03.table.js",
+        "/common/tests/04.catalog.js",
     ],
     schemaConfigurations: [
         "/common/conf/common_schema_2.conf.json", //this should come first since schema_1 has fk to it.

@@ -96,6 +96,12 @@ export class DuplicateConflictError extends ConflictError {
   }
 }
 
+export class SnapshotNotFoundError extends ERMrestError {
+  constructor(status: string, message: string, subMessage?: string) {
+    super(_HTTPErrorCodes.CONFLICT, _errorStatus.SNAPSHOT_NOT_FOUND, message, subMessage);
+  }
+}
+
 export class PreconditionFailedError extends ERMrestError {
   constructor(status: string, message: string) {
     const usedStatus = isStringAndNotEmpty(status) ? status : _errorStatus.PRECONDITION_FAILED;

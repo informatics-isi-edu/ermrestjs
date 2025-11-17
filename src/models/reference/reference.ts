@@ -123,13 +123,15 @@ export const resolve = async (uri: string, contextHeaderParams?: any): Promise<R
   await onload();
   //added try block to make sure it rejects all parse() related error
   // It should have been taken care by outer try but did not work
-  const location = parse(uri);
+  const loc = parse(uri);
 
-  const server = ermrestFactory.getServer(location.service, contextHeaderParams);
+  console.log(loc.catalog);
 
-  const catalog = await server.catalogs.get(location.catalog);
+  const server = ermrestFactory.getServer(loc.service, contextHeaderParams);
 
-  return new Reference(location, catalog);
+  const catalog = await server.catalogs.get(loc.catalog);
+
+  return new Reference(loc, catalog);
 };
 
 /**
