@@ -459,6 +459,7 @@
                 "tag:isrd.isi.edu,2016:visible-columns": {
                     "filter": {
                         "and": [
+                            "id",
                             {"source": "some col"},
                             {"source": [{"outbound": ["faceting_schema", "main_fk2"]}, "id"]},
                             {"source": [{"inbound": ["faceting_schema", "main_fk1"]}, "id"]},
@@ -1637,9 +1638,17 @@
                 "tag:isrd.isi.edu,2016:visible-columns": {
                     "filter": {
                         "and": [
-                            "text_array", "boolean_array", "date_array", "timestamp_array",
-                            "timestamptz_array", "float4_array", "float8_array", "numeric_array",
-                            "int2_array", "int4_array", "int8_array"
+                            {"source": "text_array"},
+                            {"source": "boolean_array"},
+                            {"source": "date_array"},
+                            {"source": "timestamp_array"},
+                            {"source": "timestamptz_array"},
+                            {"source": "float4_array"},
+                            {"source": "float8_array"},
+                            {"source": "numeric_array"},
+                            {"source": "int2_array"},
+                            {"source": "int4_array"},
+                            {"source": "int8_array"}
                         ]
                     }
                 }

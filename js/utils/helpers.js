@@ -642,6 +642,10 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
 
     /**
      * Given the source object and default comment props, will return the comment that should be used.
+     * @param {any} sourceObject the object that might have comment props
+     * @param {string=} defaultComment the default comment that should be used if sourceObject doesn't have comment
+     * @param {boolean=} defaultCommentRenderMd the default comment_render_markdown that should be used if sourceObject doesn't have comment_render_markdown
+     * @param {string=} defaultDisplayMode the default comment_display that should be used if sourceObject doesn't have comment_display
      * @returns {CommentType}
      * @private
      */
