@@ -916,9 +916,10 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
                     wrapper = new SourceObjectWrapper(obj, table, true);
                 }
             } catch (exp) {
-                $log.info('error parsing facet source definition: ');
-                $log.info('facet: ', obj);
-                $log.info(exp);
+                // TODO better error message
+                $log.info(`error parsing facet source definition: ${exp.message}`);
+                // $log.info('facet: ', obj);
+                // $log.info(exp);
                 return null;
             }
 

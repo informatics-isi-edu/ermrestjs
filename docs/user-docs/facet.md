@@ -1,38 +1,38 @@
+<!-- omit in toc -->
 # Facet JSON Structure
 
 This document will go over the syntax that can be used for defining facets. Facets are defined as part of the [`visible-columns`](annotation.md#tag-2016-visible-columns) annotation.
 
+<!-- omit in toc -->
 ## Table of contents
 
-- [Facet JSON Structure](#facet-json-structure)
-  - [Table of contents](#table-of-contents)
-  - [Structure](#structure)
-  - [Logical operators](#logical-operators)
-  - [Grouped facets](#grouped-facets)
-  - [Source path](#source-path)
-  - [Source key](#source-key)
-  - [Fast filter source](#fast-filter-source)
-  - [Constraints](#constraints)
-  - [Extra properties](#extra-properties)
-    - [entity v.s. scalar facet](#entity-vs-scalar-facet)
-    - [markdown\_name](#markdown_name)
-    - [comment](#comment)
-    - [open](#open)
-    - [ux\_mode](#ux_mode)
-    - [hide\_null\_choice/hide\_not\_null\_choice](#hide_null_choicehide_not_null_choice)
-      - [Default heuristics](#default-heuristics)
-    - [bar\_plot](#bar_plot)
-    - [order](#order)
-    - [hide\_num\_occurrences](#hide_num_occurrences)
-  - [Examples](#examples)
-    - [Example 1](#example-1)
-    - [Example 2](#example-2)
-    - [Example 3 (Entity vs. Scalar)](#example-3-entity-vs-scalar)
-    - [Example 4 (Choice Vs. Range)](#example-4-choice-vs-range)
-    - [Example 5 (Facet Title)](#example-5-facet-title)
-    - [Example 6 (Open Vs. Close)](#example-6-open-vs-close)
-    - [Example 7 (Change order of scalar values)](#example-7-change-order-of-scalar-values)
-    - [Example 8 (Grouped facets)](#example-8-grouped-facets)
+- [Structure](#structure)
+- [Logical operators](#logical-operators)
+- [Grouped facets](#grouped-facets)
+- [Source path](#source-path)
+- [Source key](#source-key)
+- [Fast filter source](#fast-filter-source)
+- [Constraints](#constraints)
+- [Extra properties](#extra-properties)
+  - [entity v.s. scalar facet](#entity-vs-scalar-facet)
+  - [markdown\_name](#markdown_name)
+  - [comment](#comment)
+  - [open](#open)
+  - [ux\_mode](#ux_mode)
+  - [hide\_null\_choice/hide\_not\_null\_choice](#hide_null_choicehide_not_null_choice)
+    - [Default heuristics](#default-heuristics)
+  - [bar\_plot](#bar_plot)
+  - [order](#order)
+  - [hide\_num\_occurrences](#hide_num_occurrences)
+- [Examples](#examples)
+  - [Example 1](#example-1)
+  - [Example 2](#example-2)
+  - [Example 3 (Entity vs. Scalar)](#example-3-entity-vs-scalar)
+  - [Example 4 (Choice Vs. Range)](#example-4-choice-vs-range)
+  - [Example 5 (Facet Title)](#example-5-facet-title)
+  - [Example 6 (Open Vs. Close)](#example-6-open-vs-close)
+  - [Example 7 (Change order of scalar values)](#example-7-change-order-of-scalar-values)
+  - [Example 8 (Grouped facets)](#example-8-grouped-facets)
 
 ## Structure
 
@@ -84,10 +84,12 @@ Instead of each individual `term` inside the `and`, you may also have another la
 
 Notes:
 
-- `markdown_name` is required for each group.
-- This doesn't change the generated ermrest queries and just signal to UI, to show them in a group
-- By default all groups are opened, if you want to close the group by default you may add `"open": false` to the definition.
+- `markdown_name` is required for each group. If you have multiple groups, the `markdown_name`s used for these groups must be unique.
 - You may use the `comment` property to add a tooltip to the group.
+- By default all groups are opened, if you want to close the group by default you may add `"open": false` to the definition.
+- This doesn't change the generated ermrest queries and is just a signal to the UI to display them in a group.
+- Groups with no valid children will be ignored.
+- In the facet list, you may have any combination of groups and individual facets.
 
 
 ## Source path

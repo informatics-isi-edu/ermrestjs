@@ -125,8 +125,6 @@ export const resolve = async (uri: string, contextHeaderParams?: any): Promise<R
   // It should have been taken care by outer try but did not work
   const loc = parse(uri);
 
-  console.log(loc.catalog);
-
   const server = ermrestFactory.getServer(loc.service, contextHeaderParams);
 
   const catalog = await server.catalogs.get(loc.catalog);
@@ -244,7 +242,6 @@ export class Reference {
   private _activeList?: any;
   private _citation?: Citation | null;
   private _googleDatasetMetadata?: GoogleDatasetMetadata | null;
-  public some_value = 'test';
 
   // props that the children can access
   protected _displayname?: DisplayName;
