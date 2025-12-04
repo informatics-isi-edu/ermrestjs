@@ -523,6 +523,21 @@ export function generateColumnsList(reference: Reference | RelatedReference, tup
   const isCompact = typeof context === 'string' && context.startsWith(_contexts.COMPACT);
   const isCompactEntry = typeof context === 'string' && context.startsWith(_contexts.COMPACT_ENTRY);
 
+  // create a map of tableColumns to make it easier to find one
+  reference.table.columns.all().forEach((c: any) => {
+    tableColumns[c.name] = true;
+  });
+
+  // get columns from the input (used when we just want to process the given list of columns)
+  let columns: unknown = -1;
+  if (Array.isArray(columnsList)) {
+    columns = columnsList;
+  }
+  // get column orders from annotation
+  else if (reference.table.annotations.contains(_annotations.VISIBLE_COLUMNS)) {
+    columns = _getRecursiveAnnotationValue(reference.context, reference.table.annotations.get(_annotations.VISIBLE_COLUMNS).content);
+  }
+
   // check if we should hide some columns or not.
   // NOTE: if the reference is actually an inbound related reference, we should hide the foreign key that created reference link.
   const hasOrigFKRToHide = typeof context === 'string' && context.startsWith(_contexts.COMPACT_BRIEF) && isObjectAndNotNull(hiddenFKR);
@@ -597,28 +612,14 @@ export function generateColumnsList(reference: Reference | RelatedReference, tup
   };
 
   const wm = _warningMessages;
-  const logCol = (bool: boolean, message: string, index?: number) => {
+  const logCol = (bool: boolean, message: string, index: number) => {
     if (bool && !skipLog) {
-      $log.info(`columns list for table: ${reference.table.name}, context: ${context}, column index:${index}`);
+      $log.info(`vis-col for table '${reference.table.name}' in context '${context}' at index '${index}':`);
       $log.info(message);
+      // we could log the object too, but it might be too verbose
     }
     return bool;
   };
-
-  // create a map of tableColumns to make it easier to find one
-  reference.table.columns.all().forEach((c: any) => {
-    tableColumns[c.name] = true;
-  });
-
-  // get columns from the input (used when we just want to process the given list of columns)
-  let columns: unknown = -1;
-  if (Array.isArray(columnsList)) {
-    columns = columnsList;
-  }
-  // get column orders from annotation
-  else if (reference.table.annotations.contains(_annotations.VISIBLE_COLUMNS)) {
-    columns = _getRecursiveAnnotationValue(reference.context, reference.table.annotations.get(_annotations.VISIBLE_COLUMNS).content);
-  }
 
   // annotation
   if (columns !== -1 && Array.isArray(columns)) {
@@ -725,7 +726,7 @@ export function generateColumnsList(reference: Reference | RelatedReference, tup
             wrapper = new SourceObjectWrapper(col, reference.table, false, undefined, tuple);
           }
         } catch (exp: unknown) {
-          logCol(true, wm.INVALID_SOURCE + ': ' + (exp as Error).message, i);
+          logCol(true, (exp as Error).message, i);
           continue;
         }
 
@@ -755,7 +756,7 @@ export function generateColumnsList(reference: Reference | RelatedReference, tup
             i,
           ) ||
           logCol(wrapper.hasAggregate && isEntry, wm.NO_AGG_IN_ENTRY, i) ||
-          logCol(wrapper.isUniqueFiltered, wm.FILTER_NO_PATH_NOT_ALLOWED) ||
+          logCol(wrapper.isUniqueFiltered, wm.FILTER_NO_PATH_NOT_ALLOWED, i) ||
           logCol(
             isEntry && wrapper.hasPath && (wrapper.hasInbound || wrapper.isFiltered || wrapper.foreignKeyPathLength > 1),
             wm.NO_PATH_IN_ENTRY,
@@ -1076,12 +1077,18 @@ export function generateFacetColumns(
     }
   }
 
+  const wm = _warningMessages;
+  const logError = (message: string, index: number) => {
+    $log.info(`vis-col for table '${reference.table.name}' in context 'filter' at index '${index}':`);
+    $log.info(message);
+  };
+
   if (annotationCols !== -1) {
     usedAnnotation = true;
     // NOTE We're allowing duplicates in annotation.
     annotationCols.forEach((obj: any, objIndex: number) => {
       if (!isObjectAndNotNull(obj)) {
-        $log.info(`Invalid facet object at index ${objIndex} in annotation for table ${reference.table.name}.`);
+        logError(wm.INVALID_FACET_ENTRY, objIndex);
         return;
       }
 
@@ -1096,8 +1103,8 @@ export function generateFacetColumns(
       // make sure it's not referring to the annotation object.
       obj = simpleDeepCopy(obj);
 
-      if ('and' in obj) {
-        try {
+      try {
+        if ('and' in obj) {
           const fow = new FacetObjectGroupWrapper(obj, reference.table, hasFilterOrFacet);
           // avoid duplicate groups
           if (fow.displayname.unformatted! in addedGroups) {
@@ -1105,15 +1112,13 @@ export function generateFacetColumns(
           }
           addedGroups[fow.displayname.unformatted!] = true;
           facetObjectWrappers.push(fow);
-        } catch (exp: unknown) {
-          $log.error(`Error processing facet group at index ${objIndex}: ` + (exp as Error).message);
-          return;
+        } else {
+          const wrapper = helpers.sourceDefToFacetObjectWrapper(obj, reference.table, hasFilterOrFacet);
+          facetObjectWrappers.push(wrapper);
         }
-      } else {
-        const wrapper = helpers.sourceDefToFacetObjectWrapper(obj, reference.table, hasFilterOrFacet);
-        if (!wrapper) return;
-
-        facetObjectWrappers.push(wrapper);
+      } catch (exp) {
+        logError((exp as Error).message, objIndex);
+        return;
       }
     });
   }

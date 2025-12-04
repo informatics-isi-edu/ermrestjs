@@ -896,50 +896,49 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
         /**
          * Given a source definition object, it will return a SourceObjectWrapper that can be used as a facet object.
          * It will return null if the source definition is not supported as a facet.
-         * NOTE: this function will remove any filter defined in the source definition if hasFilterOrFacet is true.
          *
-         * TODO should this throw errors instead of just returning null?
+         * NOTE:
+         * - this function will remove any filter defined in the source definition if hasFilterOrFacet is true.
+         * - might throw an error if the source definition is invalid.
+         *
+         *
          * @param {any} obj the source definition object
          * @param {Table} table the table that this source definition is based on
          * @param {boolean} hasFilterOrFacet whether the url has any filter or facet defined. If this is true, we will remove any filter defined in the source definition.
-         * @returns
+         *
+         * @throws {Error} if the source definition is invalid for facet
+         *
+         * @returns {SourceObjectWrapper} the source object wrapper that can be used as a facet object.
          */
         sourceDefToFacetObjectWrapper: function (obj, table, hasFilterOrFacet) {
             let wrapper;
-            try {
-                // if both source and sourcekey are defined, ignore the source and use sourcekey
-                if (obj.sourcekey) {
-                    const sd = table.sourceDefinitions.getSource(obj.sourcekey);
-                    if (!sd || !sd.processFilterNodes(undefined).success) return null;
-                    wrapper = sd.clone(obj, table, true);
-                } else {
-                    wrapper = new SourceObjectWrapper(obj, table, true);
+            // if both source and sourcekey are defined, ignore the source and use sourcekey
+            if (obj.sourcekey) {
+                const sd = table.sourceDefinitions.getSource(obj.sourcekey);
+                if (!sd) {
+                    throw new Error(_facetingErrors.invalidSourcekey);
                 }
-            } catch (exp) {
-                // TODO better error message
-                $log.info(`error parsing facet source definition: ${exp.message}`);
-                // $log.info('facet: ', obj);
-                // $log.info(exp);
-                return null;
+
+                wrapper = sd.clone(obj, table, true);
+            } else {
+                wrapper = new SourceObjectWrapper(obj, table, true);
             }
 
             const col = wrapper.column;
 
             // aggregate is not supported
             if (wrapper.hasAggregate) {
-                return null;
+                throw new Error(_facetingErrors.aggregateFnNowtAllowed);
             }
 
             // column type array is not supported
             if (col.type.isArray) {
-                $log.info('Facet is not supported for array column types.');
-                return null;
+                throw new Error(_facetingErrors.arrayColumnTypeNotSupported);
             }
 
             // check the column type
             if (_facetUnsupportedTypes.indexOf(col.type.name) !== -1) {
-                $log.info('Facet is not supported for column type: ' + col.type.name);
-                return null;
+                throw new Error(`Facet of column type '${col.type.name}' is not supported.`);
             }
 
             // if we have filters in the url, we will get the filters only from url

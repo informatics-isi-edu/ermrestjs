@@ -7,7 +7,7 @@ import type { Tuple, Reference } from '@isrd-isi-edu/ermrestjs/src/models/refere
 import type { DisplayName } from '@isrd-isi-edu/ermrestjs/src/models/display-name';
 
 // services
-// import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
+import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
 
 // utils
 import { isObjectAndNotNull, isStringAndNotEmpty } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
@@ -158,6 +158,8 @@ export default class SourceObjectWrapper {
    * @param sources already generated source (only useful for source-def generation)
    * @param mainTuple the main tuple that is used for filters
    * @param skipProcessingFilters whether we should skip processing filters or not
+   *
+   * @throws Will throw an error if the source object is invalid.
    */
   constructor(
     sourceObject: Record<string, unknown>,
@@ -693,6 +695,8 @@ export class FacetObjectGroupWrapper {
    * @param sourceObject The source object representing the facet group.
    * @param table The table to which the facet group belongs.
    * @param hasFilterOrFacet Indicates if the group has any filters or facets.
+   *
+   * @throws Will throw an error if the source object is invalid or has no valid children.
    */
   constructor(sourceObject: Record<string, unknown>, table: Table, hasFilterOrFacet: boolean) {
     if (!Array.isArray(sourceObject.and) || sourceObject.and.length === 0) {
@@ -722,14 +726,17 @@ export class FacetObjectGroupWrapper {
 
     const children: SourceObjectWrapper[] = [];
     for (const child of sourceObject.and) {
-      const wrapper = _facetColumnHelpers.sourceDefToFacetObjectWrapper(child, table, hasFilterOrFacet);
-      if (wrapper) {
+      try {
+        const wrapper = _facetColumnHelpers.sourceDefToFacetObjectWrapper(child, table, hasFilterOrFacet);
         children.push(wrapper);
+      } catch (exp: unknown) {
+        $log.info(`child of facet group "${sourceObject.markdown_name}", index: ${children.length} is invalid:`);
+        $log.info((exp as Error).message);
       }
     }
 
     if (children.length === 0) {
-      throw new Error('at least one valid child is required');
+      throw new Error('the group must have at least one valid child');
     }
 
     this.children = children;
