@@ -1,9 +1,10 @@
 // models
 import { InvalidPageCriteria, InvalidSortCriteria, UnsupportedFilters } from '@isrd-isi-edu/ermrestjs/src/models/errors';
-import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-object-wrapper';
+import SourceObjectWrapper, { FacetObjectGroupWrapper } from '@isrd-isi-edu/ermrestjs/src/models/source-object-wrapper';
 import {
   AssetPseudoColumn,
   FacetColumn,
+  FacetGroup,
   ForeignKeyPseudoColumn,
   InboundForeignKeyPseudoColumn,
   KeyPseudoColumn,
@@ -61,7 +62,7 @@ export interface ReadPathResult {
 }
 
 export type ValidatedFacetFilters = {
-  facetObjectWrappers: Array<SourceObjectWrapper>;
+  facetObjectWrappers: Array<SourceObjectWrapper | FacetObjectGroupWrapper>;
   newFilters: Array<any>;
   issues: UnsupportedFilters | null;
 };
@@ -522,6 +523,21 @@ export function generateColumnsList(reference: Reference | RelatedReference, tup
   const isCompact = typeof context === 'string' && context.startsWith(_contexts.COMPACT);
   const isCompactEntry = typeof context === 'string' && context.startsWith(_contexts.COMPACT_ENTRY);
 
+  // create a map of tableColumns to make it easier to find one
+  reference.table.columns.all().forEach((c: any) => {
+    tableColumns[c.name] = true;
+  });
+
+  // get columns from the input (used when we just want to process the given list of columns)
+  let columns: unknown = -1;
+  if (Array.isArray(columnsList)) {
+    columns = columnsList;
+  }
+  // get column orders from annotation
+  else if (reference.table.annotations.contains(_annotations.VISIBLE_COLUMNS)) {
+    columns = _getRecursiveAnnotationValue(reference.context, reference.table.annotations.get(_annotations.VISIBLE_COLUMNS).content);
+  }
+
   // check if we should hide some columns or not.
   // NOTE: if the reference is actually an inbound related reference, we should hide the foreign key that created reference link.
   const hasOrigFKRToHide = typeof context === 'string' && context.startsWith(_contexts.COMPACT_BRIEF) && isObjectAndNotNull(hiddenFKR);
@@ -596,28 +612,14 @@ export function generateColumnsList(reference: Reference | RelatedReference, tup
   };
 
   const wm = _warningMessages;
-  const logCol = (bool: boolean, message: string, index?: number) => {
+  const logCol = (bool: boolean, message: string, index: number) => {
     if (bool && !skipLog) {
-      $log.info(`columns list for table: ${reference.table.name}, context: ${context}, column index:${index}`);
+      $log.info(`vis-col for table '${reference.table.name}' in context '${context}' at index '${index}':`);
       $log.info(message);
+      // we could log the object too, but it might be too verbose
     }
     return bool;
   };
-
-  // create a map of tableColumns to make it easier to find one
-  reference.table.columns.all().forEach((c: any) => {
-    tableColumns[c.name] = true;
-  });
-
-  // get columns from the input (used when we just want to process the given list of columns)
-  let columns: unknown = -1;
-  if (Array.isArray(columnsList)) {
-    columns = columnsList;
-  }
-  // get column orders from annotation
-  else if (reference.table.annotations.contains(_annotations.VISIBLE_COLUMNS)) {
-    columns = _getRecursiveAnnotationValue(reference.context, reference.table.annotations.get(_annotations.VISIBLE_COLUMNS).content);
-  }
 
   // annotation
   if (columns !== -1 && Array.isArray(columns)) {
@@ -724,7 +726,7 @@ export function generateColumnsList(reference: Reference | RelatedReference, tup
             wrapper = new SourceObjectWrapper(col, reference.table, false, undefined, tuple);
           }
         } catch (exp: unknown) {
-          logCol(true, wm.INVALID_SOURCE + ': ' + (exp as Error).message, i);
+          logCol(true, (exp as Error).message, i);
           continue;
         }
 
@@ -754,7 +756,7 @@ export function generateColumnsList(reference: Reference | RelatedReference, tup
             i,
           ) ||
           logCol(wrapper.hasAggregate && isEntry, wm.NO_AGG_IN_ENTRY, i) ||
-          logCol(wrapper.isUniqueFiltered, wm.FILTER_NO_PATH_NOT_ALLOWED) ||
+          logCol(wrapper.isUniqueFiltered, wm.FILTER_NO_PATH_NOT_ALLOWED, i) ||
           logCol(
             isEntry && wrapper.hasPath && (wrapper.hasInbound || wrapper.isFiltered || wrapper.foreignKeyPathLength > 1),
             wm.NO_PATH_IN_ENTRY,
@@ -1043,13 +1045,16 @@ export function generateColumnsList(reference: Reference | RelatedReference, tup
 export function generateFacetColumns(
   reference: Reference,
   skipMappingEntityChoices: boolean,
-): Promise<{ facetColumns: FacetColumn[]; issues: UnsupportedFilters | null }> | { facetColumns: FacetColumn[]; issues: UnsupportedFilters | null } {
+):
+  | Promise<{ facetColumns: FacetColumn[]; issues: UnsupportedFilters | null; facetColumnsStructure: Array<number | FacetGroup> }>
+  | { facetColumns: FacetColumn[]; issues: UnsupportedFilters | null; facetColumnsStructure: Array<number | FacetGroup> } {
   const andOperator = _FacetsLogicalOperators.AND;
+  const addedGroups: Record<string, boolean> = {};
   let searchTerm = reference.location.searchTerm;
   const helpers = _facetColumnHelpers;
 
   // if location has facet or filter, we should honor it and we should not add preselected facets in annotation
-  const hasFilterOrFacet = reference.location.facets || reference.location.filter || reference.location.customFacets;
+  const hasFilterOrFacet = !!reference.location.facets || !!reference.location.filter || !!reference.location.customFacets;
 
   const andFilters = reference.location.facets ? reference.location.facets.andFilters : [];
   // change filters to facet NOTE can be optimized to actually merge instead of just appending to list
@@ -1060,7 +1065,7 @@ export function generateFacetColumns(
 
   let annotationCols: any = -1;
   let usedAnnotation = false;
-  const facetObjectWrappers: any[] = [];
+  const facetObjectWrappers: Array<SourceObjectWrapper | FacetObjectGroupWrapper> = [];
 
   // get column orders from annotation
   if (reference.table.annotations.contains(_annotations.VISIBLE_COLUMNS)) {
@@ -1072,10 +1077,21 @@ export function generateFacetColumns(
     }
   }
 
+  const wm = _warningMessages;
+  const logError = (message: string, index: number) => {
+    $log.info(`vis-col for table '${reference.table.name}' in context 'filter' at index '${index}':`);
+    $log.info(message);
+  };
+
   if (annotationCols !== -1) {
     usedAnnotation = true;
     // NOTE We're allowing duplicates in annotation.
     annotationCols.forEach((obj: any, objIndex: number) => {
+      if (!isObjectAndNotNull(obj)) {
+        logError(wm.INVALID_FACET_ENTRY, objIndex);
+        return;
+      }
+
       // if we have filters in the url, we will get the filters only from url
       if (obj.sourcekey === _specialSourceDefinitions.SEARCH_BOX && andFilters.length === 0) {
         if (!searchTerm) {
@@ -1087,36 +1103,23 @@ export function generateFacetColumns(
       // make sure it's not referring to the annotation object.
       obj = simpleDeepCopy(obj);
 
-      let sd: any, wrapper: any;
       try {
-        // if both source and sourcekey are defined, ignore the source and use sourcekey
-        if (obj.sourcekey) {
-          sd = reference.table.sourceDefinitions.getSource(obj.sourcekey);
-          if (!sd || !sd.processFilterNodes(undefined).success) return;
-
-          wrapper = sd.clone(obj, reference.table, true);
+        if ('and' in obj) {
+          const fow = new FacetObjectGroupWrapper(obj, reference.table, hasFilterOrFacet);
+          // avoid duplicate groups
+          if (fow.displayname.unformatted! in addedGroups) {
+            throw new Error(`Duplicate facet group name: ${fow.displayname.unformatted}`);
+          }
+          addedGroups[fow.displayname.unformatted!] = true;
+          facetObjectWrappers.push(fow);
         } else {
-          wrapper = new SourceObjectWrapper(obj, reference.table, true);
+          const wrapper = helpers.sourceDefToFacetObjectWrapper(obj, reference.table, hasFilterOrFacet);
+          facetObjectWrappers.push(wrapper);
         }
       } catch (exp) {
-        $log.info(`facet definition index=${objIndex}: ` + exp);
-        // invalid definition or not unsupported
-        // TODO could show the error message
+        logError((exp as Error).message, objIndex);
         return;
       }
-
-      const supported = helpers.checkFacetObjectWrapper(wrapper);
-      if (!supported) return;
-
-      // if we have filters in the url, we will get the filters only from url
-      if (hasFilterOrFacet) {
-        delete wrapper.sourceObject.not_null;
-        delete wrapper.sourceObject.choices;
-        delete wrapper.sourceObject.search;
-        delete wrapper.sourceObject.ranges;
-      }
-
-      facetObjectWrappers.push(wrapper);
     });
   }
   // annotation didn't exist, so we are going to use the
@@ -1164,20 +1167,39 @@ export function generateFacetColumns(
   }
 
   // if we have filters in the url, we should just get the structure from annotation
-  const finalize = (res: any) => {
-    const facetColumns: any[] = [];
+  const finalize = (res: ValidatedFacetFilters) => {
+    const facetColumns: FacetColumn[] = [];
+    const facetColumnsStructure: Array<number | FacetGroup> = [];
 
     // turn facetObjectWrappers into facetColumn
-    res.facetObjectWrappers.forEach((fo: any, index: number) => {
-      // if the function returns false, it couldn't handle that case,
-      // and therefore we are ignoring it.
-      // it might change the fo
-      if (!helpers.checkForAlternative(fo, usedAnnotation, reference.table)) return;
-      facetColumns.push(new FacetColumn(reference, index, fo));
+    res.facetObjectWrappers.forEach((fo) => {
+      // if it's a group, we should create object for all children and add their index to the group
+      if ('children' in fo) {
+        // TODO should this be a proper check for FacetObjectGroupWrapper?
+        const structureIndex = facetColumnsStructure.length;
+        const childIndexes: number[] = [];
+        fo.children.forEach((child) => {
+          // if the function returns false, it couldn't handle that case, and therefore we are ignoring it.
+          if (!helpers.checkForAlternative(child, usedAnnotation, reference.table)) return;
+          const usedIndex = facetColumns.length;
+          facetColumns.push(new FacetColumn(reference, usedIndex, child, structureIndex));
+          childIndexes.push(usedIndex);
+        });
+        if (childIndexes.length === 0) return; // if there wasn't any valid child, ignore the group
+        facetColumnsStructure.push(new FacetGroup(reference, structureIndex, fo, childIndexes));
+      }
+      // individual facet column
+      else {
+        // if the function returns false, it couldn't handle that case, and therefore we are ignoring it.
+        if (!helpers.checkForAlternative(fo, usedAnnotation, reference.table)) return;
+        const usedIndex = facetColumns.length;
+        facetColumns.push(new FacetColumn(reference, usedIndex, fo));
+        facetColumnsStructure.push(usedIndex);
+      }
     });
 
     // get the existing facets on the columns (coming from annotation)
-    facetColumns.forEach((fc: any) => {
+    facetColumns.forEach((fc) => {
       if (fc.filters.length !== 0) {
         res.newFilters.push(fc.toJSON());
       }
@@ -1190,24 +1212,26 @@ export function generateFacetColumns(
       reference.location.facets = null;
     }
 
-    return facetColumns;
+    return { facetColumns, facetColumnsStructure };
   };
 
   // if we don't want to map entity choices, then function will work in sync mode
   if (skipMappingEntityChoices) {
     const res = validateFacetsFilters(reference, andFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices) as ValidatedFacetFilters;
-    const facetColumns = finalize(res);
+    const finalizedRes = finalize(res);
     return {
-      facetColumns,
+      facetColumns: finalizedRes.facetColumns,
+      facetColumnsStructure: finalizedRes.facetColumnsStructure,
       issues: res.issues,
     };
   } else {
     return new Promise((resolve, reject) => {
       (validateFacetsFilters(reference, andFilters, facetObjectWrappers, searchTerm, skipMappingEntityChoices) as Promise<ValidatedFacetFilters>)
         .then((res) => {
-          const facetColumns = finalize(res);
+          const finalizedRes = finalize(res);
           resolve({
-            facetColumns,
+            facetColumns: finalizedRes.facetColumns,
+            facetColumnsStructure: finalizedRes.facetColumnsStructure,
             issues: res.issues,
           });
         })
@@ -1234,14 +1258,14 @@ export function generateFacetColumns(
 export function validateFacetsFilters(
   reference: Reference,
   facetAndFilters: any,
-  facetObjectWrappers: Array<SourceObjectWrapper>,
+  facetObjectWrappers: Array<SourceObjectWrapper | FacetObjectGroupWrapper>,
   searchTerm?: string,
   skipMappingEntityChoices?: boolean,
   changeLocation?: boolean,
 ): ValidatedFacetFilters | Promise<ValidatedFacetFilters> {
   const helpers = _facetColumnHelpers;
   const promises: any[] = [];
-  const checkedObjects: { [key: number]: boolean } = {};
+  const checkedObjects: { [key: string]: boolean } = {};
   let j: number;
   const facetLen = facetObjectWrappers.length;
   let andFilterObject: SourceObjectWrapper;
@@ -1422,21 +1446,42 @@ export function validateFacetsFilters(
         // find the facet corresponding to the filter
         let found = false;
         for (j = 0; j < facetLen; j++) {
-          // it can be merged only once, since in a facet the filter is
-          // `or` and outside it's `and`.
-          if (checkedObjects[j]) continue;
+          const curr = res.facetObjectWrappers[j];
 
-          // we want to make sure these two sources are exactly the same
-          // so we can compare their hashnames
-          if (res.facetObjectWrappers[j].name === resp.andFilterObject.name) {
-            checkedObjects[j] = true;
-            found = true;
-            // merge facet objects
-            helpers.mergeFacetObjects(res.facetObjectWrappers[j].sourceObject, resp.andFilterObject.sourceObject);
+          if (curr instanceof FacetObjectGroupWrapper) {
+            curr.children.forEach((child, childIndex) => {
+              if (checkedObjects[`${j}_${childIndex}`]) return;
+              if (child.name === resp.andFilterObject.name) {
+                checkedObjects[`${j}_${childIndex}`] = true;
+                found = true;
+                // merge facet objects
+                helpers.mergeFacetObjects(child.sourceObject, resp.andFilterObject.sourceObject);
 
-            // make sure the page object is stored
-            if (resp.andFilterObject.entityChoiceFilterTuples) {
-              res.facetObjectWrappers[j].entityChoiceFilterTuples = resp.andFilterObject.entityChoiceFilterTuples;
+                // make sure the page object is stored
+                if (resp.andFilterObject.entityChoiceFilterTuples) {
+                  child.entityChoiceFilterTuples = resp.andFilterObject.entityChoiceFilterTuples;
+                }
+              }
+            });
+          } else {
+            // it can be merged only once, since in a facet the filter is
+            // `or` and outside it's `and`.
+            if (checkedObjects[j]) continue;
+
+            const facetObjectWrapper = curr as SourceObjectWrapper;
+
+            // we want to make sure these two sources are exactly the same
+            // so we can compare their hashnames
+            if (facetObjectWrapper.name === resp.andFilterObject.name) {
+              checkedObjects[j] = true;
+              found = true;
+              // merge facet objects
+              helpers.mergeFacetObjects(facetObjectWrapper.sourceObject, resp.andFilterObject.sourceObject);
+
+              // make sure the page object is stored
+              if (resp.andFilterObject.entityChoiceFilterTuples) {
+                facetObjectWrapper.entityChoiceFilterTuples = resp.andFilterObject.entityChoiceFilterTuples;
+              }
             }
           }
         }

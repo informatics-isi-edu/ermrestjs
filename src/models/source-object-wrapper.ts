@@ -1,22 +1,29 @@
 /* eslint-disable prettier/prettier */
 
 // models
-import SourceObjectNode from '@isrd-isi-edu/ermrestjs/src/models/source-object-node';
-import { ReferenceColumn } from '@isrd-isi-edu/ermrestjs/src/models/reference-column';
-import { Tuple, Reference } from '@isrd-isi-edu/ermrestjs/src/models/reference';
+import type SourceObjectNode from '@isrd-isi-edu/ermrestjs/src/models/source-object-node';
+import type { ReferenceColumn } from '@isrd-isi-edu/ermrestjs/src/models/reference-column';
+import type { Tuple, Reference } from '@isrd-isi-edu/ermrestjs/src/models/reference';
+import type { DisplayName } from '@isrd-isi-edu/ermrestjs/src/models/display-name';
 
 // services
-// import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
+import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
 
 // utils
 import { isObjectAndNotNull, isStringAndNotEmpty } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
-import { _contexts, _facetFilterTypes, _pseudoColAggregateFns, _sourceDefinitionAttributes, _warningMessages } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
+import {
+  _contexts,
+  _facetFilterTypes,
+  _pseudoColAggregateFns,
+  _sourceDefinitionAttributes,
+  _warningMessages,
+} from '@isrd-isi-edu/ermrestjs/src/utils/constants';
 import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils';
 import { createPseudoColumn } from '@isrd-isi-edu/ermrestjs/src/utils/column-utils';
 
 // legacy imports that need to be accessed
-import { _sourceColumnHelpers } from '@isrd-isi-edu/ermrestjs/js/utils/pseudocolumn_helpers';
-import { Column, Table } from '@isrd-isi-edu/ermrestjs/js/core';
+import { _facetColumnHelpers, _sourceColumnHelpers } from '@isrd-isi-edu/ermrestjs/js/utils/pseudocolumn_helpers';
+import type { Column, Table } from '@isrd-isi-edu/ermrestjs/js/core';
 
 export type FilterPropsType = {
   /**
@@ -68,7 +75,7 @@ export type InputIframePropsType = {
 /**
  * Represents a column-directive
  */
-class SourceObjectWrapper {
+export default class SourceObjectWrapper {
   /**
    * the source object
    */
@@ -107,7 +114,7 @@ class SourceObjectWrapper {
     isFilterProcessed: true,
     hasRootFilter: false,
     hasFilterInBetween: false,
-    leafFilterString: ''
+    leafFilterString: '',
   };
 
   /**
@@ -138,7 +145,6 @@ class SourceObjectWrapper {
   public isInputIframe = false;
   public inputIframeProps?: InputIframePropsType;
 
-
   /**
    * used for facets
    * TODO is there a better way to manage this?
@@ -152,6 +158,8 @@ class SourceObjectWrapper {
    * @param sources already generated source (only useful for source-def generation)
    * @param mainTuple the main tuple that is used for filters
    * @param skipProcessingFilters whether we should skip processing filters or not
+   *
+   * @throws Will throw an error if the source object is invalid.
    */
   constructor(
     sourceObject: Record<string, unknown>,
@@ -226,7 +234,7 @@ class SourceObjectWrapper {
     isFacet?: boolean,
     sources?: any,
     mainTuple?: Tuple,
-    skipProcessingFilters?: boolean
+    skipProcessingFilters?: boolean,
   ): true | { error: boolean; message: string } {
     const sourceObject = this.sourceObject;
     const wm = _warningMessages;
@@ -270,7 +278,7 @@ class SourceObjectWrapper {
         table.schema.catalog.id,
         sources,
         mainTuple,
-        skipProcessingFilters
+        skipProcessingFilters,
       ) as any;
 
       if (res.error) {
@@ -346,21 +354,13 @@ class SourceObjectWrapper {
 
     // generate name:
     // TODO maybe we shouldn't even allow aggregate in faceting (for now we're ignoring it)
-    if (
-      sourceObject.self_link === true ||
-      this.isFiltered ||
-      this.hasPath ||
-      this.isEntityMode ||
-      (isFacet !== true && this.hasAggregate)
-    ) {
+    if (sourceObject.self_link === true || this.isFiltered || this.hasPath || this.isEntityMode || (isFacet !== true && this.hasAggregate)) {
       this.name = _sourceColumnHelpers.generateSourceObjectHashName(sourceObject, !!isFacet, sourceObjectNodes) as string;
 
       this.isHash = true;
 
       if (table.columns.has(this.name)) {
-        return returnError(
-          'Generated Hash `' + this.name + '` for pseudo-column exists in table `' + table.name + '`.'
-        );
+        return returnError('Generated Hash `' + this.name + '` for pseudo-column exists in table `' + table.name + '`.');
       }
     } else {
       this.name = col.name;
@@ -403,19 +403,12 @@ class SourceObjectWrapper {
         if (reverse) {
           return sn.toString(reverse, isLeft, outAlias, isReverseRightJoin);
         } else {
-          return sn.toString(
-            reverse,
-            isLeft,
-            this.foreignKeyPathLength === sn.nodeObject.foreignKeyPathLength ? outAlias : null,
-            isReverseRightJoin
-          );
+          return sn.toString(reverse, isLeft, this.foreignKeyPathLength === sn.nodeObject.foreignKeyPathLength ? outAlias : null, isReverseRightJoin);
         }
       }
 
       const fkStr = sn.toString(reverse, isLeft);
-      const addAlias =
-        outAlias &&
-        ((reverse && sn === this.firstForeignKeyNode) || (!reverse && sn === this.lastForeignKeyNode));
+      const addAlias = outAlias && ((reverse && sn === this.firstForeignKeyNode) || (!reverse && sn === this.lastForeignKeyNode));
 
       // NOTE alias on each node is ignored!
       // currently we've added alias only for the association and
@@ -465,12 +458,7 @@ class SourceObjectWrapper {
       const sn = this.sourceObjectNodes[i];
       if (sn.isPathPrefix) {
         // if this is the last element, we have to add the alias to this
-        path.push(
-          ...sn.nodeObject.getRawSourcePath(
-            reverse,
-            this.foreignKeyPathLength == sn.nodeObject.foreignKeyPathLength ? outAlias : null
-          )
-        );
+        path.push(...sn.nodeObject.getRawSourcePath(reverse, this.foreignKeyPathLength == sn.nodeObject.foreignKeyPathLength ? outAlias : null));
       } else if (sn.isFilter) {
         path.push(sn.nodeObject);
       } else {
@@ -549,7 +537,11 @@ class SourceObjectWrapper {
    * @param usedIframeInputMappings an object capturing columns used in other mappings. used to avoid overlapping
    * @param tuple the tuple object
    */
-  processInputIframe(reference: Reference, usedIframeInputMappings: any, tuple?: Tuple): {
+  processInputIframe(
+    reference: Reference,
+    usedIframeInputMappings: any,
+    tuple?: Tuple,
+  ): {
     success?: boolean;
     error?: boolean;
     message?: string;
@@ -595,20 +587,14 @@ class SourceObjectWrapper {
         const isSerial = c.type.name.indexOf('serial') === 0;
 
         // we cannot use getInputDisabled since we just want to do this based on ACLs
-        if (
-          context === _contexts.CREATE &&
-          (c.isSystemColumn || c.isGeneratedPerACLs || isSerial)
-        ) {
+        if (context === _contexts.CREATE && (c.isSystemColumn || c.isGeneratedPerACLs || isSerial)) {
           if (colName in optionalFieldNames) continue;
           return {
             error: true,
             message: 'column `' + colName + '` cannot be modified by this user.',
           };
         }
-        if (
-          (context === _contexts.EDIT || context === _contexts.ENTRY) &&
-          (c.isSystemColumn || c.isImmutablePerACLs || isSerial)
-        ) {
+        if ((context === _contexts.EDIT || context === _contexts.ENTRY) && (c.isSystemColumn || c.isImmutablePerACLs || isSerial)) {
           if (colName in optionalFieldNames) continue;
           return {
             error: true,
@@ -660,7 +646,10 @@ class SourceObjectWrapper {
    * @param mainTuple
    * @param dontThrowError if set to true, will not throw an error if the filters are not valid
    */
-  processFilterNodes(mainTuple?: Tuple, dontThrowError?: boolean): {
+  processFilterNodes(
+    mainTuple?: Tuple,
+    dontThrowError?: boolean,
+  ): {
     success: boolean;
     error?: boolean;
     message?: string;
@@ -691,4 +680,65 @@ class SourceObjectWrapper {
   }
 }
 
-export default SourceObjectWrapper;
+/**
+ * Represents a facet object group
+ */
+export class FacetObjectGroupWrapper {
+  sourceObject: Record<string, unknown>;
+  children: SourceObjectWrapper[];
+  displayname: DisplayName;
+
+  /**
+   * Creates a new instance of FacetObjectGroupWrapper.
+   * Will throw an error if there was any issues in processing the source object.
+   *
+   * @param sourceObject The source object representing the facet group.
+   * @param table The table to which the facet group belongs.
+   * @param hasFilterOrFacet Indicates if the group has any filters or facets.
+   *
+   * @throws Will throw an error if the source object is invalid or has no valid children.
+   */
+  constructor(sourceObject: Record<string, unknown>, table: Table, hasFilterOrFacet: boolean) {
+    if (!Array.isArray(sourceObject.and) || sourceObject.and.length === 0) {
+      throw new Error('valid array of children is required');
+    }
+
+    this.sourceObject = sourceObject;
+
+    let displayname: DisplayName | null = null;
+    const rendered = renderMarkdown(
+      sourceObject.markdown_name && typeof sourceObject.markdown_name === 'string' ? sourceObject.markdown_name : '',
+      true,
+    );
+    if (rendered) {
+      displayname = {
+        value: rendered,
+        unformatted: sourceObject.markdown_name as string,
+        isHTML: true,
+      };
+    }
+
+    if (!displayname) {
+      throw new Error('valid markdown_name is required');
+    }
+
+    this.displayname = displayname;
+
+    const children: SourceObjectWrapper[] = [];
+    for (const child of sourceObject.and) {
+      try {
+        const wrapper = _facetColumnHelpers.sourceDefToFacetObjectWrapper(child, table, hasFilterOrFacet);
+        children.push(wrapper);
+      } catch (exp: unknown) {
+        $log.info(`child of facet group "${sourceObject.markdown_name}", index: ${children.length} is invalid:`);
+        $log.info((exp as Error).message);
+      }
+    }
+
+    if (children.length === 0) {
+      throw new Error('the group must have at least one valid child');
+    }
+
+    this.children = children;
+  }
+}

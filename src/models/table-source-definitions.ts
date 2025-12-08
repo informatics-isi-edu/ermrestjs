@@ -81,8 +81,10 @@ class TableSourceDefinitions {
 
   /**
    * Get a source definition by its key.
+   * This will also make sure the filter nodes are processed and valid.
    * @param sourcekey The key of the source definition.
-   * @returns The source definition or undefined if not found.
+   * @param mainTuple The main tuple to use for processing the filter nodes.
+   * @returns The source object wrapper or undefined if not found.
    */
   getSource(sourcekey: string, mainTuple?: Tuple): SourceObjectWrapper | undefined {
     const sd = this.sources[sourcekey];

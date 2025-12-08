@@ -18,6 +18,7 @@ import {
   KeyPseudoColumn,
   AssetPseudoColumn,
   InboundForeignKeyPseudoColumn,
+  type FacetGroup,
   type PseudoColumn,
   type ColumnAggregateFn,
 } from '@isrd-isi-edu/ermrestjs/src/models/reference-column';
@@ -123,8 +124,6 @@ export const resolve = async (uri: string, contextHeaderParams?: any): Promise<R
   //added try block to make sure it rejects all parse() related error
   // It should have been taken care by outer try but did not work
   const loc = parse(uri);
-
-  console.log(loc.catalog);
 
   const server = ermrestFactory.getServer(loc.service, contextHeaderParams);
 
@@ -239,6 +238,7 @@ export class Reference {
   private _referenceColumns?: Array<VisibleColumn>;
   private _related?: Array<RelatedReference>;
   private _facetColumns?: Array<FacetColumn>;
+  private _facetColumnsStructure?: Array<number | FacetGroup>;
   private _activeList?: any;
   private _citation?: Citation | null;
   private _googleDatasetMetadata?: GoogleDatasetMetadata | null;
@@ -614,17 +614,35 @@ export class Reference {
   }
 
   /**
-   * NOTE this will not map the entity choice pickers, use "generateFacetColumns" instead.
-   * so directly using this is not recommended.
+   * Returns the list of facets.
+   *
+   * NOTE this will not map the entity choice pickers, make sure to call "generateFacetColumns" first.
    */
   get facetColumns(): FacetColumn[] {
     if (this._facetColumns === undefined) {
       const res = generateFacetColumns(this, true);
       if (!(res instanceof Promise)) {
         this._facetColumns = res.facetColumns;
+        this._facetColumnsStructure = res.facetColumnsStructure;
       }
     }
     return this._facetColumns!;
+  }
+
+  /**
+   * An array of numbers and FacetGroup objects that represent the structure of facet columns.
+   * Each number indicates the number of facet columns in that group, while a FacetGroup object
+   * represents a nested group of facets.
+   */
+  get facetColumnsStructure(): Array<number | FacetGroup> {
+    if (this._facetColumnsStructure === undefined) {
+      const res = generateFacetColumns(this, true);
+      if (!(res instanceof Promise)) {
+        this._facetColumns = res.facetColumns;
+        this._facetColumnsStructure = res.facetColumnsStructure;
+      }
+    }
+    return this._facetColumnsStructure!;
   }
 
   /**
@@ -663,14 +681,25 @@ export class Reference {
    * });
    * ```
    */
-  generateFacetColumns(): Promise<{ facetColumns: FacetColumn[]; issues: UnsupportedFilters | null }> {
+  generateFacetColumns(): Promise<{
+    facetColumns: FacetColumn[];
+    facetColumnsStructure: Array<number | FacetGroup>;
+    issues: UnsupportedFilters | null;
+  }> {
     return new Promise((resolve, reject) => {
-      const p = generateFacetColumns(this, false) as Promise<{ facetColumns: FacetColumn[]; issues: UnsupportedFilters | null }>;
+      const p = generateFacetColumns(this, false) as Promise<{
+        facetColumns: FacetColumn[];
+        issues: UnsupportedFilters | null;
+        facetColumnsStructure: Array<number | FacetGroup>;
+      }>;
+
       p.then((res) => {
         this._facetColumns = res.facetColumns;
+        this._facetColumnsStructure = res.facetColumnsStructure;
         resolve(res);
       }).catch((err) => {
         this._facetColumns = [];
+        this._facetColumnsStructure = [];
         reject(err);
       });
     });
@@ -680,8 +709,9 @@ export class Reference {
    * This is only added so _applyFilters in facet-column can use it.
    * SHOULD NOT be used outside of this library.
    */
-  manuallySetFacetColumns(facetCols: FacetColumn[]) {
+  manuallySetFacetColumns(facetCols: FacetColumn[], facetColsStructure: Array<number | FacetGroup>) {
     this._facetColumns = facetCols;
+    this._facetColumnsStructure = facetColsStructure;
   }
 
   /**
@@ -1195,11 +1225,11 @@ export class Reference {
 
   /**
    * Remove all the filters, facets, and custom-facets from the reference
-   * @param {boolean} sameFilter By default we're removing filters, if this is true filters won't be changed.
-   * @param {boolean} sameCustomFacet By default we're removing custom-facets, if this is true custom-facets won't be changed.
-   * @param {boolean} sameFacet By default we're removing facets, if this is true facets won't be changed.
+   * @param sameFilter By default we're removing filters, if this is true filters won't be changed.
+   * @param sameCustomFacet By default we're removing custom-facets, if this is true custom-facets won't be changed.
+   * @param sameFacet By default we're removing facets, if this is true facets won't be changed.
    *
-   * @return {reference} A reference without facet filters
+   * @return A reference without facet filters
    */
   removeAllFacetFilters(sameFilter?: boolean, sameCustomFacet?: boolean, sameFacet?: boolean) {
     verify(!(sameFilter && sameCustomFacet && sameFacet), 'at least one of the options must be false.');
@@ -1214,10 +1244,16 @@ export class Reference {
     //    compute that logic again, those facets will disappear.
     newReference._facetColumns = [];
     this.facetColumns.forEach((fc) => {
-      newReference._facetColumns!.push(new FacetColumn(newReference, fc.index, fc.sourceObjectWrapper, sameFacet ? fc.filters.slice() : []));
+      newReference._facetColumns!.push(
+        new FacetColumn(newReference, fc.index, fc.sourceObjectWrapper, fc.groupIndex, sameFacet ? fc.filters.slice() : []),
+      );
+    });
+    newReference._facetColumnsStructure = [];
+    this.facetColumnsStructure.forEach((structure) => {
+      newReference._facetColumnsStructure!.push(typeof structure === 'number' ? structure : structure.copy(newReference));
     });
 
-    // update the location objectcd
+    // update the location object
     newReference._location = this._location._clone(newReference);
     newReference._location.beforeObject = null;
     newReference._location.afterObject = null;
@@ -1802,7 +1838,7 @@ export class Reference {
    * b) A single term with space using ""
    * c) use space for conjunction of terms
    */
-  search(term: string) {
+  search(term?: string | null) {
     if (term) {
       if (typeof term === 'string') term = term.trim();
       else throw new InvalidInputError('Invalid input. Seach expects a string.');
@@ -1822,7 +1858,13 @@ export class Reference {
     if (this._facetColumns !== undefined) {
       newReference._facetColumns = [];
       this.facetColumns.forEach((fc) => {
-        newReference._facetColumns!.push(new FacetColumn(newReference, fc.index, fc.sourceObjectWrapper, fc.filters.slice()));
+        newReference._facetColumns!.push(new FacetColumn(newReference, fc.index, fc.sourceObjectWrapper, fc.groupIndex, fc.filters.slice()));
+      });
+    }
+    if (this._facetColumnsStructure !== undefined) {
+      newReference._facetColumnsStructure = [];
+      this.facetColumnsStructure.forEach((structure) => {
+        newReference._facetColumnsStructure!.push(typeof structure === 'number' ? structure : structure.copy(newReference));
       });
     }
 
@@ -1859,7 +1901,13 @@ export class Reference {
     if (this._facetColumns !== undefined) {
       newReference._facetColumns = [];
       this.facetColumns.forEach((fc) => {
-        newReference._facetColumns!.push(new FacetColumn(newReference, fc.index, fc.sourceObjectWrapper, fc.filters.slice()));
+        newReference._facetColumns!.push(new FacetColumn(newReference, fc.index, fc.sourceObjectWrapper, fc.groupIndex, fc.filters.slice()));
+      });
+    }
+    if (this._facetColumnsStructure !== undefined) {
+      newReference._facetColumnsStructure = [];
+      this.facetColumnsStructure.forEach((structure) => {
+        newReference._facetColumnsStructure!.push(typeof structure === 'number' ? structure : structure.copy(newReference));
       });
     }
 

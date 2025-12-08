@@ -481,7 +481,7 @@ import {
             // load the catalog (or use the one that is cached)
             this._get().then((response) => {
                 this.snaptime = response.snaptime;
-                
+
                 let versionCorrected = false;
                 if (isStringAndNotEmpty(this.version) && this.version !== this.snaptime) {
                     this.version = this.snaptime;
@@ -4351,7 +4351,7 @@ import {
             var definitions = this._table.sourceDefinitions, wm = _warningMessages;
             var logErr = function (bool, message, i) {
                 if (bool) {
-                    $log.info("inbound foreignkeys list for table: " + self._table.name + ", context: " + context + ", fk index:" + i);
+                    $log.info(`vis-fk for table '${self._table.name}' in context '${context}' at index '${i}':`);
                     $log.info(message);
                 }
                 return bool;
