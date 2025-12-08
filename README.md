@@ -1,6 +1,6 @@
 # ERMrestJS [![Build Status](https://github.com/informatics-isi-edu/ermrestjs/actions/workflows/unit-test.yml/badge.svg?branch=master)](https://github.com/informatics-isi-edu/ermrestjs/actions?query=workflow%3A%22ERmrestJS+tests%22+branch%3Amaster)
 
-ERMrestJS is a javascript client library for interacting with the [ERMrest](http://github.com/informatics-isi-edu/ermrest) service. It provides higher-level, simplified application programming interfaces (APIs) for working with the Entity-Relationship concepts native to ERMrest. 
+ERMrestJS is a javascript client library for interacting with the [ERMrest](http://github.com/informatics-isi-edu/ermrest) service. It provides higher-level, simplified application programming interfaces (APIs) for working with the Entity-Relationship concepts native to ERMrest.
 
 The library has been extended to also support [Hatrac](https://github.com/informatics-isi-edu/hatrac) (an object store service), and [deriva-web export](https://github.com/informatics-isi-edu/deriva-web). ERMrestJS is a part of [Deriva Platform](http://isrd.isi.edu/deriva).
 
@@ -29,7 +29,7 @@ Documents are categorized based on their audience.
 
 When developing new code for ERMrestJS, please make sure you're following these steps:
 
-1. create a new branch and make your updates to the code in the branch (avoid changing the `master` branch directly);
+1. create a new branch and make your updates to the code in the branch (follow DO NOT change `master` branch directly and ensure your commit messages follow [the convetions described here](docs/dev-docs/dev-guide.md#commit-message-conventions));
 2. do your own quality assurance;
 3. update all relevant documentation (Please refer to [this page](docs/dev-docs/update-docs.md) for more information);
 4. update the unit tests (if applicable);

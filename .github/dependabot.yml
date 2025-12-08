@@ -9,6 +9,10 @@ updates:
     directory: "/"
     schedule:
       interval: "quarterly"
+    commit-message:
+      prefix: "fix"
+      prefix-development: "chore"
+      include: "scope"
     versioning-strategy: "increase"
     open-pull-requests-limit: 10
     ignore:
