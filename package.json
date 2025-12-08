@@ -78,7 +78,7 @@
     "nock": "13.5.4",
     "prettier": "^3.6.2",
     "require-reload": "^0.2.2",
-    "rollup-plugin-visualizer": "^6.0.3",
+    "rollup-plugin-visualizer": "^6.0.5",
     "typescript-eslint": "^8.45.0",
     "vite-plugin-dts": "^4.5.4"
   }
