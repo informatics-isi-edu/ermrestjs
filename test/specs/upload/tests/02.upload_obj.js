@@ -1,9 +1,7 @@
+var uploadUtils = require('../utils.js');
+
 exports.execute = function (options) {
   var exec = require('child_process').execSync;
-
-  var FileAPI = require('file-api'),
-    File = FileAPI.File;
-  File.prototype.jsdom = true;
 
   describe('For verifying the upload object, ', function () {
     var schemaName = 'upload',
@@ -55,8 +53,8 @@ exports.execute = function (options) {
       exec('perl -e \'print "\\x01" x ' + file.size + "' > " + filePath);
       exec('cp ' + filePath + ' ' + filePathDiffName);
 
-      file.file = new File(filePath);
-      fileDiffName.file = new File(filePathDiffName);
+      file.file = uploadUtils.createMockFile(filePath);
+      fileDiffName.file = uploadUtils.createMockFile(filePathDiffName);
 
       options.ermRest.resolve(baseUri, { cid: 'test' }).then(
         function (response) {

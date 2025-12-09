@@ -1,9 +1,7 @@
+var uploadUtils = require('../utils.js');
+
 exports.execute = function (options) {
   var exec = require('child_process').execSync;
-
-  var FileAPI = require('file-api'),
-    File = FileAPI.File;
-  File.prototype.jsdom = true;
 
   describe('For Checking upload object creation and checksum calculation works, ', function () {
     var schemaName = 'upload',
@@ -62,7 +60,7 @@ exports.execute = function (options) {
         exec('perl -e \'print "\\x01" x ' + f.size + "' > " + filePath);
 
         //exec("dd if=/dev/random of=" + filePath + " bs=" + f.size + " count=1");
-        f.file = new File(filePath);
+        f.file = uploadUtils.createMockFile(filePath);
       });
 
       ermRest.resolve(baseUri, { cid: 'test' }).then(
@@ -232,7 +230,7 @@ exports.execute = function (options) {
 
       exec('perl -e \'print "\\x01" x ' + file.size + "' > " + filePath);
 
-      file.file = new File(filePath);
+      file.file = uploadUtils.createMockFile(filePath);
 
       ermRest.resolve(baseUri, { cid: 'test' }).then(
         function (response) {

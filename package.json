@@ -69,7 +69,6 @@
     "eslint": "^9.36.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
-    "file-api": "^0.10.4",
     "globals": "^16.4.0",
     "husky": "^9.1.7",
     "jasmine": "2.5.3",

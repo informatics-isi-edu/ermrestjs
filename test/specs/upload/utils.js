@@ -1,4 +1,60 @@
 const { resolve } = require('path');
+const fs = require('fs');
+
+/**
+ * Mock File object to mimic browser File API for Node.js testing
+ * @param {string} path - The file path to create a File object from
+ * @returns {File} A File-like object compatible with ermRest.Upload
+ */
+function createMockFile(path) {
+  const stats = fs.statSync(path);
+  const buffer = fs.readFileSync(path);
+
+  const file = {
+    name: path.split('/').pop(),
+    size: stats.size,
+    type: getMimeType(path.split('/').pop()),
+    lastModified: stats.mtime.getTime(),
+    lastModifiedDate: stats.mtime,
+    _buffer: buffer,
+    path: path, // Upload constructor expects file.path
+
+    // Add slice method for compatibility with chunked uploads
+    slice: function(start, end, contentType) {
+      const slicedBuffer = this._buffer.slice(start, end);
+      return {
+        size: slicedBuffer.length,
+        type: contentType || this.type,
+        _buffer: slicedBuffer
+      };
+    }
+  };
+
+  return file;
+}
+
+/**
+ * Get MIME type based on file extension
+ * @param {string} filename - The filename to get MIME type for
+ * @returns {string} The MIME type
+ */
+function getMimeType(filename) {
+  const ext = filename.split('.').pop().toLowerCase();
+  const mimeTypes = {
+    'pdf': 'application/pdf',
+    'txt': 'text/plain',
+    'png': 'image/png',
+    'jpg': 'image/jpeg',
+    'jpeg': 'image/jpeg',
+    'gif': 'image/gif',
+    'tiff': 'image/tiff',
+    'zip': 'application/zip',
+    'json': 'application/json'
+  };
+  return mimeTypes[ext] || 'application/octet-stream';
+}
+
+exports.createMockFile = createMockFile;
 
 /**
  * @param {File} file - the file object to be uploaded

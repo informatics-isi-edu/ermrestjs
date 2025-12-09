@@ -3,8 +3,6 @@ var utils = require("../../../utils/utilities.js");
 
 exports.execute = function (options) {
     var exec = require('child_process').execSync;
-    var FileAPI = require('file-api'), File = FileAPI.File;
-    File.prototype.jsdom = true;
 
     describe("updating reference objects, ", function () {
         var catalogId = process.env.DEFAULT_CATALOG,
@@ -82,9 +80,9 @@ exports.execute = function (options) {
                     var file = files[i];
                     var filePath = "test/specs/upload/files/" + file.name;
 
-                    exec("perl -e 'print \"\1\" x " + file.size + "' > " + filePath);
+                    exec("perl -e 'print \"\\1\" x " + file.size + "' > " + filePath);
 
-                    file.file = new File(filePath);
+                    file.file = uploadUtils.createMockFile(filePath);
                 }
 
                 options.ermRest.resolve(baseUri, { cid: "test" }).then(function (response) {
