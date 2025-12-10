@@ -19,18 +19,21 @@ We're using [semantic-release](https://github.com/semantic-release/semantic-rele
 <type>: <short summary>
 ```
 
-The Valid `type`s are (some might not apply to this repo):
+The Valid `type`s are:
 
-- `feat`: new feature (minor version bump)
-- `fix`: bug fix (patch version bump)
-- `docs`: documentation changes
-- `chore`: maintenance tasks
-- `refactor`: code refactoring
-- `test`: adding tests
-- `style`: formatting changes
-- `perf`: performance improvements
-- `ci`: CI/CD changes
+- The ones that bump the version:
+  - `feat`: new feature (minor version bump)
+  - `fix`: bug fix, depedency update, or improvement to a process (patch version bump)
+  - `perf`: performance improvements (patch version bump)
 
+- Other types that will not be associated with a release:
+
+  - `docs`: documentation changes
+  - `chore`: maintenance tasks
+  - `refactor`: code refactoring
+  - `test`: adding tests
+  - `style`: formatting changes
+  - `ci`: CI/CD changes
 
 And for `scope` (this list is subject to change):
 
