@@ -8,6 +8,9 @@ ifneq ($(NODE_ENV),development)
 NODE_ENV:=production
 endif
 
+# so npm scripts can also use it (without this, npm ci will install dev dependencies too by default)
+export NODE_ENV
+
 # env variables needed for installation
 WEB_URL_ROOT?=/
 WEB_INSTALL_ROOT?=/var/www/html/

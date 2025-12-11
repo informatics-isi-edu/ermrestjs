@@ -6,4 +6,18 @@ if echo "$COMMIT_MSG" | grep -q "chore(release):"; then
   exit 0
 fi
 
+# Check if commitlint is installed
+if [ ! -f node_modules/.bin/commitlint ]; then
+  echo ""
+  echo "⚠️  commitlint is not installed"
+  echo ""
+  echo "Please run"
+  echo "  make deps-test"
+  echo "or"
+  echo "  npm clean-install --include=dev"
+  echo "to install the necessary dependencies."
+  echo ""
+  exit 1
+fi
+
 npx --no -- commitlint --edit $1
