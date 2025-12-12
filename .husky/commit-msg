@@ -9,15 +9,16 @@ fi
 # Check if commitlint is installed
 if [ ! -f node_modules/.bin/commitlint ]; then
   echo ""
-  echo "⚠️  commitlint is not installed"
+  echo "commitlint is not installed. Please run: npm ci --include=dev"
   echo ""
-  echo "Please run"
-  echo "  make deps-test"
-  echo "or"
-  echo "  npm clean-install --include=dev"
-  echo "to install the necessary dependencies."
+  echo "To skip this check, use: git commit --no-verify"
   echo ""
   exit 1
 fi
 
-npx --no -- commitlint --edit $1
+npx --no -- commitlint --edit $1 || {
+  echo ""
+  echo "To skip this check, use: git commit --no-verify"
+  echo ""
+  exit 1
+}
