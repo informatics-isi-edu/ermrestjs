@@ -42,7 +42,7 @@ jobs:
           sudo su -c 'python3 -c "import site;print(site.PREFIXES);"'
           sudo su -c 'python3 -c "import site;print(site.getsitepackages())"'
           : # the line below will make sure pyopenssl and cryptography have compatible versions
-          sudo pip3 install -U pyopenssl cryptography
+          sudo pip3 install --ignore-installed pyopenssl cryptography
           sudo pip3 install flask
           sudo pip3 install requests
           sudo pip3 install globus_sdk
