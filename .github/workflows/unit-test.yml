@@ -25,29 +25,24 @@ jobs:
           sudo timedatectl set-timezone America/Los_Angeles
           export PATH="$(systemd-path user-binaries):$PATH"
           sudo apt-get -y update
-          sudo apt-get -y install libcurl4-openssl-dev libjson-c-dev
+          sudo apt-get install -y --no-install-recommends $APT_PACKAGES
           sudo service postgresql stop || true
           sudo service postgresql start
-          sudo apt-get install apache2 apache2-dev ssl-cert libapache2-mod-wsgi-py3
           sudo ln -s /etc/apache2/conf-enabled /etc/apache2/conf.d
           sudo a2enmod ssl
           sudo a2ensite default-ssl
           sudo groupadd -o -g $(id -g www-data) apache
-          sudo apt-get install -y python3-setuptools python3-ply
           echo "python3 version:"
           sudo python3 --version
           echo "pip3 version:"
           sudo pip3 --version
-          sudo su -c 'echo /usr/lib/python3.12/site-packages > /usr/local/lib/python3.12/dist-packages/sys-site-packages.pth'
-          sudo su -c 'python3 -c "import site;print(site.PREFIXES);"'
-          sudo su -c 'python3 -c "import site;print(site.getsitepackages())"'
-          : # the line below will make sure pyopenssl and cryptography have compatible versions
-          sudo pip3 install --ignore-installed pyopenssl cryptography
-          sudo pip3 install flask
-          sudo pip3 install requests
-          sudo pip3 install globus_sdk
-          sudo pip3 install psycopg2-binary
-          sudo pip3 install oauth2client
+        env:
+            APT_PACKAGES: >
+              libcurl4-openssl-dev libjson-c-dev \
+              python3-psycopg2 python3-pip python3-setuptools python3-ply \
+              apache2 apache2-dev ssl-cert libapache2-mod-wsgi-py3 ca-certificates \
+              python3-cryptography python3-openssl python3-oauth2client \
+              python3-flask python3-requests
       - name: Install webauthn
         run: |
           sudo useradd -m -r webauthn
