@@ -37,18 +37,17 @@ jobs:
           echo "pip3 version:"
           sudo pip3 --version
         env:
-            APT_PACKAGES: >
-              libcurl4-openssl-dev libjson-c-dev
-              python3-psycopg2 python3-pip python3-setuptools python3-ply
-              apache2 apache2-dev ssl-cert libapache2-mod-wsgi-py3 ca-certificates
-              python3-cryptography python3-openssl python3-oauth2client
-              python3-flask python3-requests
+          APT_PACKAGES: >
+            libcurl4-openssl-dev libjson-c-dev
+            python3-psycopg2 python3-pip python3-setuptools python3-ply
+            apache2 apache2-dev ssl-cert libapache2-mod-wsgi-py3 ca-certificates
+            python3-cryptography python3-openssl python3-oauth2client
+            python3-flask python3-requests
       - name: Install webauthn
         run: |
-          sudo useradd -m -r webauthn
-          sudo su -c '/usr/bin/python3 -c "import sys;import pprint;pprint.pprint(sys.path)"' - webauthn
           git clone https://github.com/informatics-isi-edu/webauthn.git
           cd webauthn
+          sudo useradd -m -r webauthn
           sudo make testvars
           sudo make install
           sudo make deploy
