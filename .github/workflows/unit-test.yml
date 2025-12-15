@@ -4,7 +4,7 @@ on: [push]
 
 jobs:
   install-and-test:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         node-version: ["20.x", "22.x", "24.x"]
@@ -13,35 +13,32 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout repository code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: ermrestjs
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
       - name: Setup the system
         run: |
-          whoami
-          echo "npm version:"
-          npm --version
-          echo "node version:"
-          node --version
           sudo timedatectl set-timezone America/Los_Angeles
           export PATH="$(systemd-path user-binaries):$PATH"
           sudo apt-get -y update
           sudo apt-get -y install libcurl4-openssl-dev libjson-c-dev
           sudo service postgresql stop || true
-          sudo service postgresql start 12
+          sudo service postgresql start
           sudo apt-get install apache2 apache2-dev ssl-cert libapache2-mod-wsgi-py3
           sudo ln -s /etc/apache2/conf-enabled /etc/apache2/conf.d
           sudo a2enmod ssl
           sudo a2ensite default-ssl
           sudo groupadd -o -g $(id -g www-data) apache
           sudo apt-get install -y python3-setuptools python3-ply
+          echo "python3 version:"
           sudo python3 --version
+          echo "pip3 version:"
           sudo pip3 --version
-          sudo su -c 'echo /usr/lib/python3.10/site-packages > /usr/local/lib/python3.10/dist-packages/sys-site-packages.pth'
+          sudo su -c 'echo /usr/lib/python3.12/site-packages > /usr/local/lib/python3.12/dist-packages/sys-site-packages.pth'
           sudo su -c 'python3 -c "import site;print(site.PREFIXES);"'
           sudo su -c 'python3 -c "import site;print(site.getsitepackages())"'
           : # the line below will make sure pyopenssl and cryptography have compatible versions
