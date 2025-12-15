@@ -19,34 +19,32 @@ import ConfigService from '@isrd-isi-edu/ermrestjs/src/services/config';
 import { createPseudoColumn } from '@isrd-isi-edu/ermrestjs/src/utils/column-utils';
 import { isObjectAndNotNull, isObject, isDefinedAndNotNull, isStringAndNotEmpty } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
 import {
-  fixedEncodeURIComponent,
-  hexToBase64,
-  simpleDeepCopy,
-  shallowCopyExtras,
-  urlEncodeBase64,
+    fixedEncodeURIComponent,
+    hexToBase64,
+    simpleDeepCopy,
+    shallowCopyExtras,
+    urlEncodeBase64,
 } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
 import {
-  _constraintTypes,
-  _contexts,
-  _ERMrestFeatures,
-  _ERMrestFilterPredicates,
-  _ERMrestLogicalOperators,
-  _facetingErrors,
-  _facetFilterTypes,
-  _facetHeuristicIgnoredTypes,
-  _FacetsLogicalOperators,
-  _facetUnsupportedTypes,
-  _pseudoColAggregateFns,
-  _shorterVersion,
-  _sourceDefinitionAttributes,
-  _sourceProperties,
-  _specialSourceDefinitions,
-  _systemColumnNames,
-  _warningMessages,
+    _constraintTypes,
+    _contexts,
+    _ERMrestFeatures,
+    _ERMrestFilterPredicates,
+    _ERMrestLogicalOperators,
+    _facetingErrors,
+    _facetFilterTypes,
+    _facetHeuristicIgnoredTypes,
+    _FacetsLogicalOperators,
+    _facetUnsupportedTypes, _shorterVersion,
+    _sourceDefinitionAttributes,
+    _sourceProperties,
+    _specialSourceDefinitions,
+    _systemColumnNames,
+    _warningMessages
 } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
 
 // legacy
-import { generateKeyValueFilters, renameKey, _renderTemplate, _isEntryContext, _getFormattedKeyValues } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
+import { generateKeyValueFilters, renameKey, _renderTemplate, _isEntryContext } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
 import { Table, Catalog } from '@isrd-isi-edu/ermrestjs/js/core';
 import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/parser';
 
@@ -929,11 +927,6 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
             // aggregate is not supported
             if (wrapper.hasAggregate) {
                 throw new Error(_facetingErrors.aggregateFnNowtAllowed);
-            }
-
-            // column type array is not supported
-            if (col.type.isArray) {
-                throw new Error(_facetingErrors.arrayColumnTypeNotSupported);
             }
 
             // check the column type

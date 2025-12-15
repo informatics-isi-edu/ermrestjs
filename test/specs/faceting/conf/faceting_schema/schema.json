@@ -1639,9 +1639,9 @@
                     "filter": {
                         "and": [
                             {"source": "text_array"},
-                            {"source": "boolean_array"},
-                            {"source": "date_array"},
-                            {"source": "timestamp_array"},
+                            {"source": "boolean_array", "ux_mode": "ranges"},
+                            {"source": "date_array", "ux_mode": "choices"},
+                            {"source": "timestamp_array", "ux_mode": "check_presence"},
                             {"source": "timestamptz_array"},
                             {"source": "float4_array"},
                             {"source": "float8_array"},

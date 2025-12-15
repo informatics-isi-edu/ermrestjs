@@ -80,6 +80,7 @@ exports.execute = function (options) {
 
         var refF1, refF2, refF4, refMain, refWOAnnot1, refWOAnnot2, refLP5, refSP2;
         var refMainMoreFilters, refNotNullFilter, refWCustomFilters, refMainAllData;
+        let refWArrayFacets;
         var unsupportedFilter = "id=1;int_col::geq::5";
         var mainFacets;
         var i, facetObj, ref;
@@ -346,10 +347,17 @@ exports.execute = function (options) {
                     });
                 });
 
-                it("should ignore array columns.", function (done) {
+                it("should support array columns.", function (done) {
                     options.ermRest.resolve(createURL(tableWArray), { cid: "test" }).then(function (ref) {
-                        expect(ref.facetColumns.length).toBe(0);
-                        expect(ref.facetColumnsStructure.length).toBe(0);
+                        expect(ref.facetColumns.length).toBe(11);
+                        expect(ref.facetColumnsStructure.length).toBe(11);
+                        refWArrayFacets = ref;
+                        expect(ref.facetColumns.map(function (fc) {
+                            return fc._column.name;
+                        })).toEqual([
+                            'text_array', 'boolean_array', 'date_array', 'timestamp_array',  'timestamptz_array',
+                            'float4_array', 'float8_array', 'numeric_array', 'int2_array', 'int4_array', 'int8_array',
+                        ]);
                         done();
                     }).catch(function (err) {
                         console.log(err);
@@ -1314,11 +1322,16 @@ exports.execute = function (options) {
                     expect(newRef.facetColumns[1].preferredMode).toBe("ranges");
                 });
 
+                it ('should return check_presence for array columns.', () => {
+                    refWArrayFacets.facetColumns.forEach((fc, index) => {
+                        expect(fc.preferredMode).toBe("check_presence", `missmatch for facet index=${index}`);
+                    });
+                });
+
                 it('if ux_mode is defined and is valid, should return it.', function () {
                     expect(mainFacets[8].preferredMode).toBe("ranges", "missmatch for facet index=8");
                     expect(mainFacets[13].preferredMode).toBe("check_presence", "missmatch for facet index=13");
                 });
-
 
                 it("if in entity mode should return `choices`.", function () {
                     [10, 11, 15, 16, 18].forEach(function (fc) {
@@ -1481,6 +1494,27 @@ exports.execute = function (options) {
                             return f.term;
                         })).toEqual(["1", "2"], "filter terms missmatch.");
                     });
+
+                    it ('should handle arrays.', (done) => {
+                        // add null to all facets
+                        let newRef = refWArrayFacets.facetColumns[0].addChoiceFilters([null]);
+                        refWArrayFacets.facetColumns.forEach((_, index) => {
+                           if (index === 0) return;
+                           newRef = newRef.facetColumns[index].addChoiceFilters([null]);
+                        });
+
+                        expect(newRef.location.ermrestCompactPath).toBe([
+                            'M:=faceting_schema:table_w_array/text_array::null::/$M/boolean_array::null::/$M/date_array::null::/$M/',
+                            'timestamp_array::null::/$M/timestamptz_array::null::/$M/float4_array::null::/$M/float8_array::null::/$M/',
+                            'numeric_array::null::/$M/int2_array::null::/$M/int4_array::null::/$M/int8_array::null::/$M',
+                        ].join(''));
+
+                        newRef.contextualize.detailed.read(5).then((page) => {
+                            expect(page.length).toBe(1);
+                            expect(page.tuples[0].data.id).toBe('02');
+                            done();
+                        }).catch((err) => done.fail(err));
+                    })
 
                 });
 
@@ -1659,6 +1693,17 @@ exports.execute = function (options) {
                         );
                         expect(refNotNullFilter.facetColumns[0].filters.length).toBe(1, "filters length missmatch.");
                     });
+
+                    it('should handle arrays.', (done) => {
+                        let newRef = refWArrayFacets.facetColumns[0].addNotNullFilter();
+                        expect(newRef.location.ermrestCompactPath).toBe('M:=faceting_schema:table_w_array/!(text_array::null::)/$M');
+                        expect(refNotNullFilter.facetColumns[0].filters.length).toBe(1);
+                        newRef.contextualize.detailed.read(5).then((page) => {
+                            expect(page.length).toBe(1);
+                            expect(page.tuples[0].data.id).toBe('01');
+                            done();
+                        }).catch((err) => done.fail(err));
+                    })
                 });
 
                 describe("removeNotNullFilter, ", function () {

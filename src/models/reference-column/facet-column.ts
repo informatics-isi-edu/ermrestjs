@@ -350,6 +350,11 @@ export class FacetColumn {
           return onlyChoice ? modes.CHOICE : modes.RANGE;
         }
 
+        // only check_presence can be supported for arrays.
+        if (self._column.type.isArray) {
+          return modes.PRESENCE;
+        }
+
         // use the defined ux_mode
         if (_facetUXModeNames.indexOf(self._facetObject.ux_mode) !== -1) {
           return self._facetObject.ux_mode;
@@ -1196,7 +1201,7 @@ export class FacetColumn {
     verify(Array.isArray(values), 'given argument must be an array');
 
     const filters = this.filters.slice();
-    values.forEach((v: any) => {
+    values.forEach((v) => {
       filters.push(new ChoiceFacetFilter(v, this._column));
     });
 
@@ -1213,7 +1218,7 @@ export class FacetColumn {
     const filters = this.filters.slice().filter((f: FacetFilter | NotNullFacetFilter) => {
       return !(f instanceof ChoiceFacetFilter) && !(f instanceof NotNullFacetFilter);
     });
-    values.forEach((v: any) => {
+    values.forEach((v) => {
       filters.push(new ChoiceFacetFilter(v, this._column));
     });
 
@@ -1342,7 +1347,7 @@ export class FacetColumn {
 
     // create a new FacetColumn so it doesn't reference to the current FacetColum
     // TODO can be refactored
-    const jsonFilters: any[] = [];
+    const jsonFilters = [];
 
     // TODO might be able to imporve this. Instead of recreating the whole json file.
     // gather all the filters from the facetColumns
