@@ -404,7 +404,7 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
 
     /**
     * @param {string} context the context that we want the value of.
-    * @param {Object} annotation the annotation object.
+    * @param {any} annotation the annotation object.
     * @param {Boolean=} dontUseDefaultContext Whether we should use the default (*) context
     * @desc returns the annotation value based on the given context.
     */
