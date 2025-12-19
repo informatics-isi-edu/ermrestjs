@@ -4,54 +4,67 @@ This document summarizes the key concepts of Handlebars that are relevant to Der
 
 ## Table of contents
 
-- [Handlebars vs. Mustache](#handlebars-vs-mustache)
-  - [Null checking](#null-checking)
-  - [Encode syntax](#encode-syntax)
-  - [Restriction in the adjacency of opening and closing tags](#restriction-in-the-adjacency-of-opening-and-closing-tags)
-- [Usage](#usage)
-  - [Handlebars Paths](#handlebars-paths)
-  - [Raw values](#raw-values)
-  - [Foreign Key Values](#foreign-key-values)
-  - [Automatic null detection](#automatic-null-detection)
-  - [Accessing current context](#accessing-current-context)
-  - [HTML-escaping](#html-escaping)
-  - [Using Arrays](#using-arrays)
-  - [Escaping Handlebars expressions](#escaping-handlebars-expressions)
-  - [Accessing keys with spaces and special characters](#accessing-keys-with-spaces-and-special-characters)
-  - [Subexpressions](#subexpressions)
-- [Using Pre-defined Attributes](#using-pre-defined-attributes)
-  - [$moment](#moment)
-  - [$catalog](#catalog)
-  - [$dcctx](#dcctx)
-  - [$location](#location)
-  - [$session](#session)
-- [Helpers](#helpers)
-  - [printf helper](#printf-helper)
-  - [formatDate helper](#formatdate-helper)
-  - [humanizeBytes helper](#humanizebytes-helper)
-  - [stringLength helper](#stringLength-helper)
-  - [Math Helpers](#math-helpers)
-    - [add](#add)
-    - [subtract](#subtract)
-- [Block Helpers](#block-helpers)
-  - [If helper](#if-helper)
-  - [Unless helper](#unless-helper)
-  - [Each helper](#each-helper)
-  - [With helper](#with-helper)
-  - [Lookup helper](#lookup-helper)
-  - [Encode helper](#encode-helper)
-  - [Escape helper](#escape-helper)
-  - [Encodefacet helper](#encodefacet-helper)
-  - [JsonStringify helper](#jsonstringify-helper)
-  - [Findfirst helper](#findfirst-helper)
-  - [Findall helper](#findall-helper)
-  - [Replace helper](#replace-helper)
-  - [ToTitleCase helper](#totitlecase-helper)
-- [Boolean Helpers](#boolean-helpers)
-  - [Comparison Helpers](#comparison-helpers)
-  - [Regular Expression Match](#regular-expression-match)
-  - [Access Control (ACL) check](#access-control-acl-check)
-  - [Logical Helpers](#logical-helpers)
+- [Handlebars Templating](#handlebars-templating)
+  - [Table of contents](#table-of-contents)
+  - [Handlebars vs. Mustache](#handlebars-vs-mustache)
+    - [Null checking](#null-checking)
+    - [Encode syntax](#encode-syntax)
+    - [Restriction in the adjacency of opening and closing tags](#restriction-in-the-adjacency-of-opening-and-closing-tags)
+  - [Usage](#usage)
+    - [Handlebars Paths](#handlebars-paths)
+    - [Raw values](#raw-values)
+    - [Foreign Key Values](#foreign-key-values)
+    - [Automatic null detection](#automatic-null-detection)
+    - [Accessing current context](#accessing-current-context)
+    - [HTML-escaping](#html-escaping)
+    - [Using Arrays](#using-arrays)
+    - [Escaping Handlebars expressions](#escaping-handlebars-expressions)
+    - [Accessing keys with spaces and special characters](#accessing-keys-with-spaces-and-special-characters)
+    - [Subexpressions](#subexpressions)
+  - [Using Pre-defined Attributes](#using-pre-defined-attributes)
+    - [$moment](#moment)
+    - [$catalog](#catalog)
+    - [$dcctx](#dcctx)
+    - [$location](#location)
+    - [$session](#session)
+  - [Helpers](#helpers)
+    - [printf helper](#printf-helper)
+    - [formatDatetime helper](#formatdatetime-helper)
+    - [datetimeToSnapshot helper](#datetimetosnapshot-helper)
+    - [snapshotToDatetime helper](#snapshottodatetime-helper)
+    - [humanizeBytes helper](#humanizebytes-helper)
+      - [`mode`](#mode)
+      - [`precision`](#precision)
+      - [`tooltip`](#tooltip)
+    - [stringLength helper](#stringlength-helper)
+    - [Math Helpers](#math-helpers)
+      - [add](#add)
+      - [subtract](#subtract)
+  - [Block Helpers](#block-helpers)
+    - [If helper](#if-helper)
+    - [Unless helper](#unless-helper)
+    - [Each helper](#each-helper)
+    - [With helper](#with-helper)
+      - [Accessing outer context](#accessing-outer-context)
+      - [Accessing current value](#accessing-current-value)
+      - [Define known reference](#define-known-reference)
+      - [Using `else` with `with` block](#using-else-with-with-block)
+    - [Lookup helper](#lookup-helper)
+    - [Encode helper](#encode-helper)
+    - [Escape helper](#escape-helper)
+    - [Encodefacet helper](#encodefacet-helper)
+      - [1. Passing the string representation of a facet blob](#1-passing-the-string-representation-of-a-facet-blob)
+      - [2. Passing the JSON object representing a facet](#2-passing-the-json-object-representing-a-facet)
+    - [JsonStringify helper](#jsonstringify-helper)
+    - [Findfirst helper](#findfirst-helper)
+    - [Findall helper](#findall-helper)
+    - [Replace helper](#replace-helper)
+    - [ToTitleCase helper](#totitlecase-helper)
+  - [Boolean Helpers](#boolean-helpers)
+    - [Comparison Helpers](#comparison-helpers)
+    - [Regular Expression Match](#regular-expression-match)
+    - [Access Control (ACL) check](#access-control-acl-check)
+    - [Logical Helpers](#logical-helpers)
 
 
 ## Handlebars vs. Mustache
@@ -453,12 +466,12 @@ Ermrestjs allows users to access some pre-defined variables in the template envi
 * `LocaleTimeString`: 4:04:46 PM
 * `LocalString`: 10/19/2017, 4:04:46 PM
 
-The `$moment` object can be referred directly in the Mustache environment. If you would like to display the current date and time in a different format, you can use `$moment.ISOString` with [`formatDate`](#formatDate) helper.
+The `$moment` object can be referred directly in the Mustache environment. If you would like to display the current date and time in a different format, you can use `$moment.ISOString` with [`formatDatetime`](#formatDatetime) helper.
 
 **Examples**
 
 ```js
-Today's date is {{formatDate $moment.ISOString "YYYY/M/D"}}.
+Today's date is {{formatDatetime $moment.ISOString "YYYY/M/D"}}.
 ```
 
 ```js
@@ -583,20 +596,57 @@ Example:
 
 Keep in mind that `printf` doesn't check the validity of the given values. So for example if the value might not be a number, you cannot blindly use the `d` type and should guard against it.
 
-### formatDate helper
+### formatDatetime helper
 
-You can use the `formatDate` helper to take any `date`, `timestamp`, or `timestamptz` value and format it according to the [Pre Format Guide](pre-format.md#syntax-for-dates-and-timestamps).
+> :loudspeaker: This helped used to be called `formatDate` but was changed to the more accurate  `formatDatetime` name. While both work, you should stop using `formatDate`.
+
+You can use the `formatDatetime` helper to take any `date`, `timestamp`, or `timestamptz` value and format it according to the [Pre Format Guide](pre-format.md#syntax-for-dates-and-timestamps).
 
 Syntax:
 ```
-{{formatDate value format}}
+{{formatDatetime value format}}
 ```
 
 Example:
 ```
-{{formatDate "30-08-2018' 'YYYY'}} ==> '2018'
+{{formatDatetime "30-08-2018' 'YYYY'}} ==> '2018'
 
-{{formatDate '30-08-2018' 'YYYY/M/D'}} ==> '2018/8/30'
+{{formatDatetime '30-08-2018' 'YYYY-MM-DD'}} ==> '2018-08-30'
+
+{{formatDatetime '2018-09-25T00:12:34.00-07:00' 'MM/DD/YYYY HH:mm A'}} ==> '09/25/2018 03:12 AM'
+```
+
+### datetimeToSnapshot helper
+
+`datetimeToSnapshot` can be used to encode a given `date`, `timstamp`, or `timestamptz` value to a snapshot ID. The snapshot ID could be used for navigating to a specific version of the catalog.
+
+Syntax
+```
+{{datetimeToSnapshot value }}
+```
+
+Example:
+```
+{{datetimeToSnapshot '2025-07-26T19:20:30Z' }} ==> 33N-PFKM-4DR0
+
+{{datetimeToSnapshot '2025-08-02' }} ==> 33P-PF8H-Q800
+```
+
+### snapshotToDatetime helper
+
+`snapshotToDatetime` can be used to decode a snapshot value to a datetime value. If no format is provided, the output will be in the ISO format.
+
+Syntax
+```
+{{snapshotToDatetime value }}
+{{snapshotToDatetime value format }}
+```
+
+Example:
+```
+{{snapshotToDatetime '33N-PFKM-4DR0'}} ==> 2025-07-26T19:20:30.000000+00:00
+
+{{snapshotToDatetime '33N-PFKM-4DR0' 'YYYY-MM-DD'}} ==> 2025-07-26
 ```
 
 ### humanizeBytes helper

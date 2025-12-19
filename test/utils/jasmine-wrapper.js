@@ -20,7 +20,7 @@ var setRestrictedUserId = function (config) {
     })
       .then(function (response) {
         process.env[authCookieEnvName + '_ID'] = response.data.client.id;
-        console.log('restricted user cookie: ' + process.env[authCookieEnvName] + ' \nrestricted user id: ' + process.env[authCookieEnvName + '_ID']);
+        console.log(`restricted user cookie: ${process.env[authCookieEnvName]} \nrestricted user id: ${process.env[authCookieEnvName + '_ID']}`);
         runSpecs(config);
       })
       .catch(function (err) {
@@ -36,26 +36,27 @@ exports.run = function (config) {
   if (process.env.CI) {
     var exec = require('child_process').exec;
     exec('hostname', function (error, stdout, stderr) {
-      process.env.ERMREST_URL = 'http://' + stdout.trim() + '/ermrest';
+      process.env.ERMREST_URL = `http://${stdout.trim()}/ermrest`;
 
       var setCookie = function (username, password, authCookieEnvName, cb) {
-        console.log('Attempting to retreive ' + authCookieEnvName + ' ...');
+        console.log(`Attempting to retreive ${authCookieEnvName} ...`);
         axios({
           url: process.env.ERMREST_URL.replace('ermrest', 'authn') + '/session',
           method: 'POST',
-          data: 'username=' + username + '&password=' + password,
+          data: `username=${username}&password=${password}`,
         })
-          .then(function (response) {
+          .then(function (res) {
             console.log('username and password are working.');
             try {
-              var cookies = require('set-cookie-parser').parse(response);
-
-              cookies.forEach(function (c) {
-                if (c.name == 'webauthn') {
-                  process.env[authCookieEnvName] = c.name + '=' + c.value + ';';
-                  console.log('Cookie found in CI ' + c.name + '=' + c.value + '; and set in env variable ' + authCookieEnvName);
-                }
-              });
+              const cookieName = 'webauthn';
+              const cookie = res.headers['set-cookie'].find((cookie) => cookie.includes(cookieName))?.match(new RegExp(`^${cookieName}=(.+?);`))?.[1];
+              if (cookie) {
+                process.env[authCookieEnvName] = `${cookieName}=${cookie};`;
+                console.log(`Cookie found in CI ${cookieName}=${cookie}; and set in env variable ${authCookieEnvName}`);
+              } else {
+                console.log('Cookie not found in CI');
+                process.env[authCookieEnvName] = null;
+              }
             } catch (exp) {
               console.dir(exp);
               process.env[authCookieEnvName] = null;
@@ -64,7 +65,7 @@ exports.run = function (config) {
             if (process.env[authCookieEnvName]) {
               cb();
             } else {
-              throw new Error('Unable to retreive ' + authCookieEnvName + ' : set-cookie was not in response');
+              throw new Error(`Unable to retreive ${authCookieEnvName} : set-cookie was not in response`);
             }
           })
           .catch(function (error) {
@@ -75,7 +76,7 @@ exports.run = function (config) {
             } else {
               console.log('Error', error.message);
             }
-            throw new Error('Unable to retreive ' + authCookieEnvName);
+            throw new Error(`Unable to retreive ${authCookieEnvName}`);
           });
       };
 
@@ -95,7 +96,7 @@ exports.run = function (config) {
 // useful when running the jasmine specs.
 process.on('uncaughtException', function (e) {
   if (e) {
-    console.log('Caught unhandled exception: ' + e.message);
+    console.log(`Caught unhandled exception: ${e.message}`);
     console.log(e.stack);
   }
 

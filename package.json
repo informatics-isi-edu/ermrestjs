@@ -1,22 +1,41 @@
 {
-  "name": "ermrestjs",
+  "name": "@isrd-isi-edu/ermrestjs",
   "description": "ERMrest client library in JavaScript",
-  "version": "2.0.0",
+  "version": "2.1.1",
   "license": "Apache-2.0",
-  "private": true,
+  "engines": {
+    "node": ">= 20.0.0",
+    "npm": ">=6.0.0"
+  },
+  "main": "dist/ermrest.js",
+  "module": "dist/ermrest.min.js",
+  "types": "dist/ermrest.d.ts",
+  "files": [
+    "dist",
+    "js",
+    "src",
+    "tsconfig.json",
+    "vite.config.mts"
+  ],
   "scripts": {
     "build": "tsc && vite build",
+    "watch": "tsc --watch && vite build --watch",
     "pretest": "make deps-test && make dist-w-deps",
     "deploy": "make deploy",
     "test": "make test",
     "lint": "eslint src js --quiet",
     "lint-w-warn": "eslint src js",
-    "format": "prettier --write src"
+    "format": "prettier --write src",
+    "prepare": "node .husky/install.mjs"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/informatics-isi-edu/ermrestjs.git"
+    "url": "git+https://github.com/informatics-isi-edu/ermrestjs.git"
   },
+  "bugs": {
+    "url": "https://github.com/informatics-isi-edu/ermrestjs/issues"
+  },
+  "homepage": "https://github.com/informatics-isi-edu/ermrestjs#readme",
   "keywords": [
     "database",
     "rest",
@@ -24,11 +43,10 @@
     "library"
   ],
   "dependencies": {
+    "@types/markdown-it": "^14.1.2",
     "@types/q": "^1.5.8",
-    "axios": "1.12.1",
+    "axios": "1.13.2",
     "handlebars": "4.7.8",
-    "jsdoc-to-markdown": "8.0.0",
-    "jshint": "2.13.4",
     "lz-string": "^1.5.0",
     "markdown-it": "12.3.2",
     "moment": "2.29.4",
@@ -36,30 +54,31 @@
     "mustache": "x",
     "q": "1.5.1",
     "spark-md5": "^3.0.0",
-    "terser": "^5.43.1",
-    "typescript": "~5.8.3",
-    "vite": "^6.3.6",
-    "vite-plugin-compression2": "^1.3.3"
+    "terser": "^5.44.1",
+    "typescript": "~5.9.3",
+    "vite": "^6.4.1",
+    "vite-plugin-compression2": "^2.2.1",
+    "vite-plugin-dts": "^4.5.4"
   },
   "devDependencies": {
-    "@eslint/js": "^9.30.1",
+    "@commitlint/cli": "^20.2.0",
+    "@commitlint/config-conventional": "^20.2.0",
+    "@eslint/js": "^9.36.0",
     "@isrd-isi-edu/ermrest-data-utils": "0.0.5",
-    "@types/node": "^24.0.10",
-    "buffer-slice": "0.0.1",
-    "eslint": "^9.30.1",
-    "eslint-config-prettier": "^10.1.5",
-    "eslint-plugin-prettier": "^5.5.1",
-    "file-api": "^0.10.4",
-    "globals": "^16.0.0",
+    "@semantic-release/git": "^10.0.1",
+    "@types/node": "^24.6.1",
+    "eslint": "^9.36.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "globals": "^16.4.0",
+    "husky": "^9.1.7",
     "jasmine": "2.5.3",
     "jasmine-expect": "3.7.1",
     "jasmine-spec-reporter": "2.5.0",
-    "mime": "1.4.1",
     "nock": "13.5.4",
-    "prettier": "^3.6.2",
+    "prettier": "^3.7.4",
     "require-reload": "^0.2.2",
-    "rollup-plugin-visualizer": "^5.14.0",
-    "set-cookie-parser": "x",
-    "typescript-eslint": "^8.35.1"
+    "rollup-plugin-visualizer": "^6.0.3",
+    "typescript-eslint": "^8.45.0"
   }
 }

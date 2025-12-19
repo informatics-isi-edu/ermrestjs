@@ -205,6 +205,10 @@ import {
      */
     function Catalogs(server) {
         this._server = server;
+
+        /**
+         * @type {{[catalogId: string]: Catalog}}
+         */
         this._catalogs = {};
     }
 
@@ -243,21 +247,28 @@ import {
         get: function (id, dontFetchSchema) {
             // do introspection here and return a promise
 
-            var self = this, defer = ConfigService.q.defer(), catalog;
+            const defer = ConfigService.q.defer();
+            let catalog;
 
             // create a new catalog object if the object has not been created before
             if (id in this._catalogs) {
-                catalog = self._catalogs[id];
+                catalog = this._catalogs[id];
             } else {
-                catalog = new Catalog(self._server, id);
+                catalog = new Catalog(this._server, id);
             }
 
             // make sure the catalog is introspected.
             // the introspect function might or might not
-            catalog._introspect(dontFetchSchema).then(function () {
-                self._catalogs[id] = catalog;
+            catalog._introspect(dontFetchSchema).then(() => {
+                /**
+                 * TODO the catalog id might have changed if the version was corrected.
+                 * with the current implementation, the next time this function is called,
+                 * it will not use the cached catalog and will create a new one (so a new request).
+                 * We might be able to improve this in the future.
+                 */
+                this._catalogs[id] = catalog;
                 defer.resolve(catalog);
-            }).catch(function (error) {
+            }).catch((error) => {
                 defer.reject(error);
             });
 
@@ -317,6 +328,11 @@ import {
 
         // this property is needed by _determineDisplayName
         this.name = id;
+
+        /**
+         * Indicates whether the version in the catalog ID was corrected to match the server's snaptime.
+         */
+        this.versionCorrected = false;
 
         this._nameStyle = {}; // Used in the displayname to store the name styles.
 
@@ -460,21 +476,28 @@ import {
          * @private
          */
         _introspect: function (dontFetchSchema) {
-            var defer = ConfigService.q.defer(), self = this;
+            var defer = ConfigService.q.defer();
 
             // load the catalog (or use the one that is cached)
-            this._get().then(function(response) {
-                self.snaptime = response.snaptime;
+            this._get().then((response) => {
+                this.snaptime = response.snaptime;
+
+                let versionCorrected = false;
+                if (isStringAndNotEmpty(this.version) && this.version !== this.snaptime) {
+                    this.version = this.snaptime;
+                    this.id = this.id.split("@")[0] + "@" + this.version;
+                    this.versionCorrected = true;
+                }
 
                 if ("features" in response) {
-                    for (var k in self.features) {
-                        self.features[k] = response.features[k];
+                    for (var k in this.features) {
+                        this.features[k] = response.features[k];
                     }
                 }
 
-                self.annotations = new Annotations();
+                this.annotations = new Annotations();
                 for (var uri in response.annotations) {
-                    self.annotations._push(new Annotation("catalog", uri, response.annotations[uri]));
+                    this.annotations._push(new Annotation("catalog", uri, response.annotations[uri]));
                 }
 
                 /**
@@ -482,7 +505,7 @@ import {
                  * This should be done before initializing tables because tables require this field.
                  * @type {boolean|null}
                  */
-                self.isGenerated = _processACLAnnotation(self.annotations, _annotations.GENERATED, false);
+                this.isGenerated = _processACLAnnotation(this.annotations, _annotations.GENERATED, false);
 
                 /**
                  * whether catalog is immutable.
@@ -491,32 +514,32 @@ import {
                  * null: annotation is not defined
                  * @type {boolean|null}
                  */
-                self.isImmutable = _processACLAnnotation(self.annotations, _annotations.IMMUTABLE, null);
+                this.isImmutable = _processACLAnnotation(this.annotations, _annotations.IMMUTABLE, null);
 
                 /**
                  * whether catalog is non-deletable
                  * @type {boolean}
                  */
-                self.isNonDeletable = _processACLAnnotation(self.annotations, _annotations.NON_DELETABLE, false);
+                this.isNonDeletable = _processACLAnnotation(this.annotations, _annotations.NON_DELETABLE, false);
 
                 /**
                  * this will make sure the nameStyle is populated on the catalog as well,
                  * so schema can use it.
                  */
-                _determineDisplayName(self, true);
+                _determineDisplayName(this, true);
 
-                if (dontFetchSchema === true || self._schemaFetched) {
-                    defer.resolve();
+                if (dontFetchSchema === true || this._schemaFetched) {
+                    defer.resolve({ versionCorrected });
                 } else {
                     // load all schemas
-                    self._fetchSchema().then(function () {
-                        defer.resolve();
-                    }).catch(function (err) {
+                    this._fetchSchema().then(() => {
+                        defer.resolve({ versionCorrected });
+                    }).catch((err) => {
                         throw err;
                     });
                 }
 
-            }).catch(function (response) {
+            }).catch((response) => {
                 defer.reject(ErrorService.responseToError(response));
             });
 
@@ -4328,7 +4351,7 @@ import {
             var definitions = this._table.sourceDefinitions, wm = _warningMessages;
             var logErr = function (bool, message, i) {
                 if (bool) {
-                    $log.info("inbound foreignkeys list for table: " + self._table.name + ", context: " + context + ", fk index:" + i);
+                    $log.info(`vis-fk for table '${self._table.name}' in context '${context}' at index '${i}':`);
                     $log.info(message);
                 }
                 return bool;

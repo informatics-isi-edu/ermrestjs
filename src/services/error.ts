@@ -1,7 +1,9 @@
+import moment from 'moment-timezone';
+
 // models
 import { Reference } from '@isrd-isi-edu/ermrestjs/src/models/reference';
 
-import { contextHeaderName, _operationsFlag } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
+import { contextHeaderName, _operationsFlag, _dataFormats } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
 import {
   ERMrestError,
   NoConnectionError,
@@ -18,12 +20,15 @@ import {
   IntegrityConflictError,
   DuplicateConflictError,
   ConflictError,
+  SnapshotNotFoundError,
 } from '@isrd-isi-edu/ermrestjs/src/models/errors';
 import { fixedEncodeURIComponent } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
 
 // legacy
+
 import { parse } from '@isrd-isi-edu/ermrestjs/js/parser';
 import { ermrestFactory } from '@isrd-isi-edu/ermrestjs/js/core';
+import HistoryService from '@isrd-isi-edu/ermrestjs/src/services/history';
 
 export default class ErrorService {
   /**
@@ -121,7 +126,20 @@ export default class ErrorService {
     const conflictErrorPrefix = ['409 Conflict\nThe request conflicts with the state of the server. ', 'Request conflicts with state of server.'];
     let siteAdminMsg = '\nIf you have trouble removing dependencies please contact the site administrator.';
 
-    if (generatedErrMessage.indexOf('violates foreign key constraint') > -1 && actionFlag === _operationsFlag.DELETE) {
+    if (generatedErrMessage.indexOf('Requested catalog revision ') > -1 && generatedErrMessage.indexOf('is prior to any known revision.') > -1) {
+      const match = generatedErrMessage.match(/Requested catalog revision "([^"]+)"/);
+      const snapshot = match ? match[1] : '';
+      let formattedTime = '';
+      if (snapshot) {
+        formattedTime = HistoryService.snapshotToDatetimeISO(snapshot, true);
+        if (formattedTime) {
+          formattedTime = moment(formattedTime).format(_dataFormats.DATETIME.display);
+        }
+      }
+      const newMessage = `The requested snapshot time ${formattedTime ? '(' + formattedTime + ') ' : ''}is older than any available history.`;
+
+      return new SnapshotNotFoundError(errorStatusText, newMessage);
+    } else if (generatedErrMessage.indexOf('violates foreign key constraint') > -1 && actionFlag === _operationsFlag.DELETE) {
       let referenceTable: any = '';
 
       let detail: string | number = generatedErrMessage.search(/DETAIL:/g);

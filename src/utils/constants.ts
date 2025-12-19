@@ -271,6 +271,7 @@ export const _handlebarsHelpersList = [
   'ifCond',
   'escape',
   'encode',
+  'formatDatetime',
   'formatDate',
   'encodeFacet',
   'regexMatch',
@@ -283,6 +284,8 @@ export const _handlebarsHelpersList = [
   'printf',
   'stringLength',
   'isUserInAcl',
+  'snapshotToDatetime',
+  'datetimeToSnapshot',
   // math helpers
   'add',
   'subtract',
@@ -324,6 +327,7 @@ export const _errorStatus = Object.freeze({
   INVALID_PAGE: 'Invalid Page Criteria',
   INVALID_SERVER_RESPONSE: 'Invalid Server Response',
   UNSUPPORTED_FILTERS: 'Unsupported Filters',
+  SNAPSHOT_NOT_FOUND: 'Snapshot Not Found',
 });
 
 export const _errorMessage = Object.freeze({
@@ -349,6 +353,8 @@ export const _facetingErrors = Object.freeze({
   onlyOneNullFilter: 'Only one null filter is allowed in the facets',
   duplicateFacets: 'Cannot define two different sets of facets',
   invalidSourcekey: 'Given sourcekey string is not valid',
+  aggregateFnNowtAllowed: 'Aggregate functions are not allowed in facet source definition.',
+  arrayColumnTypeNotSupported: 'Facet of array column types are not supported.',
 });
 
 export const _HTTPErrorCodes = Object.freeze({
@@ -366,6 +372,7 @@ export const _HTTPErrorCodes = Object.freeze({
 
 export const _warningMessages = Object.freeze({
   NO_PSEUDO_IN_ENTRY: 'pseudo-columns are not allowed in entry contexts.',
+  INVALID_FACET_ENTRY: 'given value must be an object with either `source` or `sourcekey` defined.',
   INVALID_SOURCE: 'given object is invalid. `source` is required and it must be valid',
   INVALID_SOURCEKEY: 'given object is invalid. The defined `sourcekey` is invalid.',
   INVALID_VIRTUAL_NO_NAME: '`markdown_name` is required when `source` and `sourcekey` are undefiend.',

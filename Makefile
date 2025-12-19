@@ -8,6 +8,9 @@ ifneq ($(NODE_ENV),development)
 NODE_ENV:=production
 endif
 
+# so npm scripts can also use it (without this, npm ci will install dev dependencies too by default)
+export NODE_ENV
+
 # env variables needed for installation
 WEB_URL_ROOT?=/
 WEB_INSTALL_ROOT?=/var/www/html/
@@ -63,12 +66,13 @@ FORCE:
 # Rule for node deps
 .PHONY: deps
 deps:
-	@npm clean-install
+	@npm clean-install --loglevel=error
 
 # for test cases we have to make sure we're installing dev dependencies
+# NODE_ENV=development is needed so husky is properly installed
 .PHONY: deps-test
 deps-test:
-	@npm clean-install --include=dev
+	@NODE_ENV=development npm clean-install --include=dev
 
 # Rule to clean project directory
 .PHONY: clean
@@ -130,8 +134,8 @@ help: usage
 usage:
 	@echo "Available 'make' targets:"
 	@echo "    all               - run linter, build the pacakge andand docs"
-	@echo "    dist   	         - local install of node dependencies, and build the package"
-	@echo "    deploy   	       - deploy the package to $(ERMRESTJSDIR)"
+	@echo "    dist              - local install of node dependencies, and build the package"
+	@echo "    deploy            - deploy the package to $(ERMRESTJSDIR)"
 	@echo "    deps              - local install of node dependencies"
 	@echo "    deps-test         - local install of dev node dependencies"
 	@echo "    lint              - lint the source"

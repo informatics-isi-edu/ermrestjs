@@ -1,1 +1,30 @@
-[]
+[
+  {
+    "id": "01",
+    "text_array": ["Hello", "World"],
+    "boolean_array": [true],
+    "date_array": ["2023-01-01"],
+    "timestamp_array": ["2023-01-01 12:00:00"],
+    "timestamptz_array": ["2023-01-01T12:00:00Z"],
+    "float4_array": [1.23],
+    "float8_array": [4.56],
+    "numeric_array": [123.45],
+    "int2_array": [1],
+    "int4_array": [1000],
+    "int8_array": [1000000000]
+  },
+  {
+    "id": "02",
+    "text_array": null,
+    "boolean_array": null,
+    "date_array": null,
+    "timestamp_array": null,
+    "timestamptz_array": null,
+    "float4_array": null,
+    "float8_array": null,
+    "numeric_array": null,
+    "int2_array": null,
+    "int4_array": null,
+    "int8_array": null
+  }
+]
