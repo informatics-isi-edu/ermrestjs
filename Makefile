@@ -1,5 +1,3 @@
-
-
 # Makefile rules for ermrestjs package
 
 # Disable built-in rules
@@ -68,12 +66,13 @@ FORCE:
 # Rule for node deps
 .PHONY: deps
 deps:
-	@npm clean-install
+	@npm clean-install --loglevel=error
 
 # for test cases we have to make sure we're installing dev dependencies
+# NODE_ENV=development is needed so husky is properly installed
 .PHONY: deps-test
 deps-test:
-	@npm clean-install --include=dev
+	@NODE_ENV=development npm clean-install --include=dev
 
 # Rule to clean project directory
 .PHONY: clean

@@ -25,7 +25,8 @@
     "test": "make test",
     "lint": "eslint src js --quiet",
     "lint-w-warn": "eslint src js",
-    "format": "prettier --write src"
+    "format": "prettier --write src",
+    "prepare": "node .husky/install.mjs"
   },
   "repository": {
     "type": "git",
