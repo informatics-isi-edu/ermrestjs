@@ -749,6 +749,11 @@ Supported display _displayoption_ JSON payload patterns:
 
 - `{`... `"file_preview":` _filepreviewoption_ | `false` ... `}`: By default, Chaise will try to display the preview for CSV, TSV, markdown, JSON, and text files in `detailed` context. If `false`, Chaise will not display the file preview to users. The following are the supported _filepreviewoption_ JSON payload patterns:
   - `{` ... `"show_csv_header": true` ... `}`: Treat the first row of the CSV file as the header.
+  - `{` ... `"filename_ext_mapping": ` _fileextmapping_ ... `}`: Map other filename extensions to the supported preview types. _fileextmapping_ must be an object which can have any or all of the following properties:
+    - `"text"`: For value, you must define an array of filename extensions that you want to be previewed.
+    - `"json"`: For value, you must define an array of filename extensions that you want to be treated as JSON and should be previewed.
+    - `"markdown"`: For value, you must define an array of filename extensions that you want to be treated as markdown and should be previewed.
+    - `"csv"`:
 
 Default heuristics:
 - The `2017 Asset` annotation explicitly indicates that the associated column is the asset location.

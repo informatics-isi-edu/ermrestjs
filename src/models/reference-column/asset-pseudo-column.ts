@@ -70,7 +70,7 @@ export class AssetPseudoColumn extends ReferenceColumn {
   private _filenameExtFilter?: string[];
   private _filenameExtRegexp?: string[];
   private _displayImagePreview?: boolean;
-  private _filePreview?: null | { showCsvHeader: boolean };
+  private _filePreview?: FilePreviewProps | null;
 
   constructor(reference: Reference, column: Column, sourceObjectWrapper?: SourceObjectWrapper, name?: string, mainTuple?: Tuple) {
     // call the parent constructor
@@ -457,7 +457,7 @@ export class AssetPseudoColumn extends ReferenceColumn {
   /**
    * whether we should show the file preview or not
    */
-  get filePreview(): null | { showCsvHeader: boolean } {
+  get filePreview(): FilePreviewProps | null {
     if (this._filePreview === undefined) {
       const disp = this._annotation.display;
       const currDisplay = isObjectAndNotNull(disp) ? _getAnnotationValueByContext(this._context, disp) : null;
@@ -465,12 +465,7 @@ export class AssetPseudoColumn extends ReferenceColumn {
       if (settings === false) {
         this._filePreview = null;
       } else {
-        // by default we're hiding the CSV header.
-        let showCsvHeader = false;
-        if (isObjectAndKeyExists(settings, 'show_csv_header') && typeof settings.show_csv_header === 'boolean') {
-          showCsvHeader = settings.show_csv_header;
-        }
-        this._filePreview = { showCsvHeader };
+        this._filePreview = new FilePreviewProps(settings);
       }
     }
     return this._filePreview;
@@ -494,5 +489,161 @@ export class AssetPseudoColumn extends ReferenceColumn {
       }
     }
     return this._waitFor;
+  }
+}
+
+class FilePreviewProps {
+  static previewTypes = ['text', 'markdown', 'csv', 'json'];
+
+  /**
+   * whether we should show the CSV header or not
+   * (default: false)
+   */
+  showCSVHeader: boolean = false;
+
+  private _prefetchBytes: { [key: string]: number | null } = {
+    text: null,
+    markdown: null,
+    csv: null,
+    json: null,
+  };
+
+  private _prefetchMaxFileSize: { [key: string]: number | null } = {
+    text: null,
+    markdown: null,
+    csv: null,
+    json: null,
+  };
+
+  private _filenameExtMapping: { [key: string]: string[] | null } = {
+    text: null,
+    markdown: null,
+    csv: null,
+    json: null,
+  };
+
+  private _contentTypeMapping: { [key: string]: string[] | null } = {
+    text: null,
+    markdown: null,
+    csv: null,
+    json: null,
+  };
+
+  constructor(settings: any) {
+    if (isObjectAndKeyExists(settings, 'show_csv_header') && typeof settings.show_csv_header === 'boolean') {
+      this.showCSVHeader = settings.show_csv_header;
+    }
+
+    if (isObjectAndKeyExists(settings, 'prefetch_bytes')) {
+      if (isObjectAndNotNull(settings.prefetch_bytes)) {
+        for (const key of Object.keys(settings.prefetch_bytes)) {
+          if (FilePreviewProps.previewTypes.includes(key)) {
+            const definedRes = this._getPropForType(key, settings.prefetch_bytes);
+            if (typeof definedRes === 'number' && definedRes >= 0) {
+              this._prefetchBytes[key] = definedRes;
+            }
+          }
+        }
+      } else if (typeof settings.prefetch_bytes === 'number' && settings.prefetch_bytes >= 0) {
+        for (const key of FilePreviewProps.previewTypes) {
+          this._prefetchBytes[key] = settings.prefetch_bytes;
+        }
+      }
+    }
+
+    if (isObjectAndKeyExists(settings, 'prefetch_max_file_size')) {
+      if (isObjectAndNotNull(settings.prefetch_max_file_size)) {
+        for (const key of Object.keys(settings.prefetch_max_file_size)) {
+          if (FilePreviewProps.previewTypes.includes(key)) {
+            const definedRes = this._getPropForType(key, settings.prefetch_max_file_size);
+            if (typeof definedRes === 'number' && definedRes >= 0) {
+              this._prefetchMaxFileSize[key] = definedRes;
+            }
+          }
+        }
+      } else if (typeof settings.prefetch_max_file_size === 'number' && settings.prefetch_max_file_size >= 0) {
+        for (const key of FilePreviewProps.previewTypes) {
+          this._prefetchMaxFileSize[key] = settings.prefetch_max_file_size;
+        }
+      }
+    }
+
+    if (isObjectAndKeyExists(settings, 'filename_ext_mapping')) {
+      if (isObjectAndNotNull(settings.filename_ext_mapping)) {
+        for (const key of Object.keys(settings.filename_ext_mapping)) {
+          if (FilePreviewProps.previewTypes.includes(key)) {
+            const definedRes = this._getPropForType(key, settings.filename_ext_mapping);
+            if (typeof definedRes === 'number' && definedRes >= 0) {
+              this._prefetchMaxFileSize[key] = definedRes;
+            }
+          }
+        }
+      } else {
+        for (const key of FilePreviewProps.previewTypes) {
+          this._filenameExtMapping[key] = settings.filename_ext_mapping;
+        }
+      }
+    }
+  }
+
+  private _getPropForType(fileType: string, settings: any): any {
+    const DEFAULT_TYPE = '*';
+
+    let isDefined = false;
+    let res;
+    if (isObjectAndKeyExists(settings, fileType)) {
+      if (typeof settings[fileType] === 'string' && settings[fileType] in FilePreviewProps.previewTypes) {
+        res = this._getPropForType(settings[fileType], settings);
+      } else {
+        res = settings[fileType];
+      }
+
+      if (res !== null && res !== undefined) isDefined = true;
+    }
+
+    if (!isDefined && settings[DEFAULT_TYPE]) {
+      res = this._getPropForType(DEFAULT_TYPE, settings);
+      if (res !== null && res !== undefined) isDefined = true;
+    }
+
+    return isDefined ? res : null;
+  }
+
+  /**
+   * return the number of bytes to prefetch for previewing the file
+   */
+  getPrefetchBytes(isMarkdown: boolean, isCsv: boolean, isJSON: boolean): number | null {
+    if (isMarkdown) return this._prefetchBytes.markdown;
+    if (isCsv) return this._prefetchBytes.csv;
+    if (isJSON) return this._prefetchBytes.json;
+    return null;
+  }
+
+  /**
+   * return the max file size for previewing the file
+   */
+  getPrefetchMaxFileSize(isMarkdown: boolean, isCsv: boolean, isJSON: boolean): number | null {
+    if (isMarkdown) return this._prefetchMaxFileSize.markdown;
+    if (isCsv) return this._prefetchMaxFileSize.csv;
+    if (isJSON) return this._prefetchMaxFileSize.json;
+    return null;
+  }
+
+  /**
+   * check whether the given contentType or extension matches the file type
+   * @param fileType one of 'text', 'markdown', 'csv', or 'json'
+   * @param contentType the content type
+   * @param extension  the file extension
+   */
+  checkFileType(fileType: 'text' | 'markdown' | 'csv' | 'json', contentType?: string, extension?: string): boolean {
+    if (contentType && this._contentTypeMapping[fileType] && this._contentTypeMapping[fileType]!.includes(contentType)) {
+      return true;
+    }
+
+    if (extension && this._filenameExtMapping[fileType] && this._filenameExtMapping[fileType]!.includes(extension)) {
+      return true;
+    }
+
+    return false;
   }
 }
