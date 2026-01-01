@@ -63,11 +63,11 @@
   "devDependencies": {
     "@commitlint/cli": "^20.2.0",
     "@commitlint/config-conventional": "^20.2.0",
-    "@eslint/js": "^9.36.0",
+    "@eslint/js": "^9.39.2",
     "@isrd-isi-edu/ermrest-data-utils": "0.0.5",
     "@semantic-release/git": "^10.0.1",
     "@types/node": "^24.6.1",
-    "eslint": "^9.36.0",
+    "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
     "globals": "^16.4.0",
@@ -79,6 +79,6 @@
     "prettier": "^3.7.4",
     "require-reload": "^0.2.2",
     "rollup-plugin-visualizer": "^6.0.3",
-    "typescript-eslint": "^8.45.0"
+    "typescript-eslint": "^8.51.0"
   }
 }
