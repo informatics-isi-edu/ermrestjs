@@ -27,6 +27,11 @@ export const URL_PATH_LENGTH_LIMIT = 4000;
  */
 export const CONTEXT_HEADER_LENGTH_LIMIT = 6500;
 
+export const FILE_PREVIEW = {
+  PREFETCH_BYTES: 0.5 * 1024 * 1024,
+  MAX_FILE_SIZE: 1 * 1024 * 1024,
+};
+
 export enum _constraintTypes {
   KEY = 'k',
   FOREIGN_KEY = 'fk',
