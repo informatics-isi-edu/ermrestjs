@@ -3,20 +3,14 @@ import { ReferenceColumn, ReferenceColumnTypes } from '@isrd-isi-edu/ermrestjs/s
 import type SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-object-wrapper';
 import type { Reference, Tuple, VisibleColumn } from '@isrd-isi-edu/ermrestjs/src/models/reference';
 
+// services
+import { FilePreviewTypes } from '@isrd-isi-edu/ermrestjs/src/services/file-preview';
+
 // utils
 import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils';
 import { isDefinedAndNotNull, isObjectAndKeyExists, isObjectAndNotNull, isStringAndNotEmpty } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
 import { _annotations, _contexts, _classNames } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
-import {
-  checkIsCsvFile,
-  checkIsImageFile,
-  checkIsJSONFile,
-  checkIsMarkdownFile,
-  checkIsTextFile,
-  checkIsTsvFile,
-  getFilename,
-  getFilenameExtension,
-} from '@isrd-isi-edu/ermrestjs/src/utils/file-utils';
+import { getFilename } from '@isrd-isi-edu/ermrestjs/src/utils/file-utils';
 
 // legacy
 import { _getAnnotationValueByContext, _isEntryContext, _renderTemplate, _isSameHost } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
@@ -494,18 +488,8 @@ export class AssetPseudoColumn extends ReferenceColumn {
   }
 }
 
-// NOTE: order of values matters here. the least specific ones should come last.
-export enum FilePreviewTypes {
-  IMAGE = 'image',
-  MARKDOWN = 'markdown',
-  CSV = 'csv',
-  TSV = 'tsv',
-  JSON = 'json',
-  TEXT = 'text',
-}
-
-export class FilePreviewConfig {
-  static previewTypes = Object.values(FilePreviewTypes);
+class FilePreviewConfig {
+  private static previewTypes = Object.values(FilePreviewTypes);
 
   /**
    * whether we should show the CSV header or not
@@ -575,24 +559,44 @@ export class FilePreviewConfig {
    * return the number of bytes to prefetch for previewing the file
    */
   getPrefetchBytes(filePreviewType: FilePreviewTypes | null): number | null {
-    if (filePreviewType === FilePreviewTypes.IMAGE) return null;
-    if (filePreviewType === FilePreviewTypes.MARKDOWN) return this._prefetchBytes.markdown;
-    if (filePreviewType === FilePreviewTypes.CSV) return this._prefetchBytes.csv;
-    if (filePreviewType === FilePreviewTypes.TSV) return this._prefetchBytes.tsv;
-    if (filePreviewType === FilePreviewTypes.JSON) return this._prefetchBytes.json;
-    return this._prefetchBytes.text;
+    switch (filePreviewType) {
+      case FilePreviewTypes.IMAGE:
+        return this._prefetchBytes.image;
+      case FilePreviewTypes.MARKDOWN:
+        return this._prefetchBytes.markdown;
+      case FilePreviewTypes.CSV:
+        return this._prefetchBytes.csv;
+      case FilePreviewTypes.TSV:
+        return this._prefetchBytes.tsv;
+      case FilePreviewTypes.JSON:
+        return this._prefetchBytes.json;
+      case FilePreviewTypes.TEXT:
+        return this._prefetchBytes.text;
+      default:
+        return null;
+    }
   }
 
   /**
    * return the max file size for previewing the file
    */
   getPrefetchMaxFileSize(filePreviewType: FilePreviewTypes | null): number | null {
-    if (filePreviewType === FilePreviewTypes.IMAGE) return this._prefetchMaxFileSize.image;
-    if (filePreviewType === FilePreviewTypes.MARKDOWN) return this._prefetchMaxFileSize.markdown;
-    if (filePreviewType === FilePreviewTypes.CSV) return this._prefetchMaxFileSize.csv;
-    if (filePreviewType === FilePreviewTypes.TSV) return this._prefetchMaxFileSize.tsv;
-    if (filePreviewType === FilePreviewTypes.JSON) return this._prefetchMaxFileSize.json;
-    return this._prefetchMaxFileSize.text;
+    switch (filePreviewType) {
+      case FilePreviewTypes.IMAGE:
+        return this._prefetchMaxFileSize.image;
+      case FilePreviewTypes.MARKDOWN:
+        return this._prefetchMaxFileSize.markdown;
+      case FilePreviewTypes.CSV:
+        return this._prefetchMaxFileSize.csv;
+      case FilePreviewTypes.TSV:
+        return this._prefetchMaxFileSize.tsv;
+      case FilePreviewTypes.JSON:
+        return this._prefetchMaxFileSize.json;
+      case FilePreviewTypes.TEXT:
+        return this._prefetchMaxFileSize.text;
+      default:
+        return null;
+    }
   }
 
   /**
@@ -611,56 +615,6 @@ export class FilePreviewConfig {
     }
 
     return false;
-  }
-
-  /**
-   * Returns the preview type based on the given file properties and the column's file preview settings.
-   * @param url the file url
-   * @param column the asset column
-   * @param storedFilename the stored filename
-   * @param contentDisposition content-disposition header value
-   * @param contentType content-type header value
-   */
-  static getPreviewType(
-    url: string,
-    column?: AssetPseudoColumn,
-    storedFilename?: string,
-    contentDisposition?: string,
-    contentType?: string,
-  ): FilePreviewTypes | null {
-    const filename = storedFilename || getFilename(url, contentDisposition);
-    const extension = getFilenameExtension(filename, column?.filenameExtFilter, column?.filenameExtRegexp);
-
-    // based on annotation
-    const filePreviewProps = column ? column.filePreview : null;
-    if (filePreviewProps) {
-      for (const previewType of FilePreviewConfig.previewTypes) {
-        const res = filePreviewProps.checkFileType(previewType as FilePreviewTypes, contentType, extension);
-        if (res) return previewType;
-      }
-    }
-
-    // based on file properties
-    if (checkIsImageFile(contentType, extension)) {
-      return FilePreviewTypes.IMAGE;
-    }
-    if (checkIsMarkdownFile(contentType, extension)) {
-      return FilePreviewTypes.MARKDOWN;
-    }
-    if (checkIsCsvFile(contentType, extension)) {
-      return FilePreviewTypes.CSV;
-    }
-    if (checkIsTsvFile(contentType, extension)) {
-      return FilePreviewTypes.TSV;
-    }
-    if (checkIsJSONFile(contentType, extension)) {
-      return FilePreviewTypes.JSON;
-    }
-    if (checkIsTextFile(contentType, extension)) {
-      return FilePreviewTypes.TEXT;
-    }
-
-    return null;
   }
 
   /**

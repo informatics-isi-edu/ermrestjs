@@ -77,7 +77,7 @@ import HandlebarsService from '@isrd-isi-edu/ermrestjs/src/services/handlebars';
 import { Exporter } from '@isrd-isi-edu/ermrestjs/js/export';
 import validateJSONLD from '@isrd-isi-edu/ermrestjs/js/json_ld_validator.js';
 import HistoryService from '@isrd-isi-edu/ermrestjs/src/services/history';
-import { FilePreviewConfig } from '@isrd-isi-edu/ermrestjs/src/models/reference-column';
+import FilePreviewService from '@isrd-isi-edu/ermrestjs/src/services/file-preview';
 
 const logError = ErrorService.logError;
 const responseToError = ErrorService.responseToError;
@@ -112,9 +112,7 @@ export {
   AuthnService,
   Exporter,
   HistoryService,
-
-  // classes/models
-  FilePreviewConfig,
+  FilePreviewService,
 
   // constants
   contextHeaderName,
