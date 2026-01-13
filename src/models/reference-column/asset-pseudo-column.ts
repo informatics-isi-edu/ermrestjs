@@ -7,6 +7,16 @@ import type { Reference, Tuple, VisibleColumn } from '@isrd-isi-edu/ermrestjs/sr
 import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils';
 import { isDefinedAndNotNull, isObjectAndKeyExists, isObjectAndNotNull, isStringAndNotEmpty } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
 import { _annotations, _contexts, _classNames } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
+import {
+  checkIsCsvFile,
+  checkIsImageFile,
+  checkIsJSONFile,
+  checkIsMarkdownFile,
+  checkIsTextFile,
+  checkIsTsvFile,
+  getFilename,
+  getFilenameExtension,
+} from '@isrd-isi-edu/ermrestjs/src/utils/file-utils';
 
 // legacy
 import { _getAnnotationValueByContext, _isEntryContext, _renderTemplate, _isSameHost } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
@@ -70,7 +80,7 @@ export class AssetPseudoColumn extends ReferenceColumn {
   private _filenameExtFilter?: string[];
   private _filenameExtRegexp?: string[];
   private _displayImagePreview?: boolean;
-  private _filePreview?: FilePreviewProps | null;
+  private _filePreview?: FilePreviewConfig | null;
 
   constructor(reference: Reference, column: Column, sourceObjectWrapper?: SourceObjectWrapper, name?: string, mainTuple?: Tuple) {
     // call the parent constructor
@@ -168,17 +178,9 @@ export class AssetPseudoColumn extends ReferenceColumn {
 
     // if we're using the url as caption
     if (urlCaption) {
-      // if caption matches the expected format, just show the file name
-      // eslint-disable-next-line no-useless-escape
-      const parts = caption.match(/^\/hatrac\/([^\/]+\/)*([^\/:]+)(:[^:]+)?$/);
-      if (parts && parts.length === 4) {
-        caption = parts[2];
-      } else {
-        // otherwise return the last part of url
-        const newCaption = caption.split('/').pop();
-        if (newCaption && newCaption.length !== 0) {
-          caption = newCaption;
-        }
+      const newCaption = getFilename(caption);
+      if (newCaption && newCaption.length !== 0) {
+        caption = newCaption;
       }
     }
 
@@ -457,7 +459,7 @@ export class AssetPseudoColumn extends ReferenceColumn {
   /**
    * whether we should show the file preview or not
    */
-  get filePreview(): FilePreviewProps | null {
+  get filePreview(): FilePreviewConfig | null {
     if (this._filePreview === undefined) {
       const disp = this._annotation.display;
       const currDisplay = isObjectAndNotNull(disp) ? _getAnnotationValueByContext(this._context, disp) : null;
@@ -465,7 +467,7 @@ export class AssetPseudoColumn extends ReferenceColumn {
       if (settings === false) {
         this._filePreview = null;
       } else {
-        this._filePreview = new FilePreviewProps(settings);
+        this._filePreview = new FilePreviewConfig(settings);
       }
     }
     return this._filePreview;
@@ -492,107 +494,221 @@ export class AssetPseudoColumn extends ReferenceColumn {
   }
 }
 
-class FilePreviewProps {
-  static previewTypes = ['text', 'markdown', 'csv', 'json'];
+// NOTE: order of values matters here. the least specific ones should come last.
+export enum FilePreviewTypes {
+  IMAGE = 'image',
+  MARKDOWN = 'markdown',
+  CSV = 'csv',
+  TSV = 'tsv',
+  JSON = 'json',
+  TEXT = 'text',
+}
+
+export class FilePreviewConfig {
+  static previewTypes = Object.values(FilePreviewTypes);
 
   /**
    * whether we should show the CSV header or not
    * (default: false)
    */
-  showCSVHeader: boolean = false;
+  showCsvHeader: boolean = false;
 
   private _prefetchBytes: { [key: string]: number | null } = {
-    text: null,
+    image: null,
     markdown: null,
     csv: null,
+    tsv: null,
     json: null,
+    text: null,
   };
 
   private _prefetchMaxFileSize: { [key: string]: number | null } = {
-    text: null,
+    image: null,
     markdown: null,
     csv: null,
+    tsv: null,
     json: null,
+    text: null,
   };
 
   private _filenameExtMapping: { [key: string]: string[] | null } = {
-    text: null,
+    image: null,
     markdown: null,
     csv: null,
+    tsv: null,
     json: null,
+    text: null,
   };
 
   private _contentTypeMapping: { [key: string]: string[] | null } = {
-    text: null,
+    image: null,
     markdown: null,
     csv: null,
+    tsv: null,
     json: null,
+    text: null,
   };
 
   constructor(settings: any) {
     if (isObjectAndKeyExists(settings, 'show_csv_header') && typeof settings.show_csv_header === 'boolean') {
-      this.showCSVHeader = settings.show_csv_header;
+      this.showCsvHeader = settings.show_csv_header;
     }
 
-    if (isObjectAndKeyExists(settings, 'prefetch_bytes')) {
-      if (isObjectAndNotNull(settings.prefetch_bytes)) {
-        for (const key of Object.keys(settings.prefetch_bytes)) {
-          if (FilePreviewProps.previewTypes.includes(key)) {
-            const definedRes = this._getPropForType(key, settings.prefetch_bytes);
-            if (typeof definedRes === 'number' && definedRes >= 0) {
-              this._prefetchBytes[key] = definedRes;
-            }
-          }
-        }
-      } else if (typeof settings.prefetch_bytes === 'number' && settings.prefetch_bytes >= 0) {
-        for (const key of FilePreviewProps.previewTypes) {
-          this._prefetchBytes[key] = settings.prefetch_bytes;
-        }
-      }
-    }
+    this._prefetchBytes = this._populateProps<number>(settings, 'prefetch_bytes', (value: unknown) => {
+      return typeof value === 'number' && value >= 0;
+    });
 
-    if (isObjectAndKeyExists(settings, 'prefetch_max_file_size')) {
-      if (isObjectAndNotNull(settings.prefetch_max_file_size)) {
-        for (const key of Object.keys(settings.prefetch_max_file_size)) {
-          if (FilePreviewProps.previewTypes.includes(key)) {
-            const definedRes = this._getPropForType(key, settings.prefetch_max_file_size);
-            if (typeof definedRes === 'number' && definedRes >= 0) {
-              this._prefetchMaxFileSize[key] = definedRes;
-            }
-          }
-        }
-      } else if (typeof settings.prefetch_max_file_size === 'number' && settings.prefetch_max_file_size >= 0) {
-        for (const key of FilePreviewProps.previewTypes) {
-          this._prefetchMaxFileSize[key] = settings.prefetch_max_file_size;
-        }
-      }
-    }
+    this._prefetchMaxFileSize = this._populateProps<number>(settings, 'prefetch_max_file_size', (value: unknown) => {
+      return typeof value === 'number' && value >= 0;
+    });
 
-    if (isObjectAndKeyExists(settings, 'filename_ext_mapping')) {
-      if (isObjectAndNotNull(settings.filename_ext_mapping)) {
-        for (const key of Object.keys(settings.filename_ext_mapping)) {
-          if (FilePreviewProps.previewTypes.includes(key)) {
-            const definedRes = this._getPropForType(key, settings.filename_ext_mapping);
-            if (typeof definedRes === 'number' && definedRes >= 0) {
-              this._prefetchMaxFileSize[key] = definedRes;
-            }
-          }
-        }
-      } else {
-        for (const key of FilePreviewProps.previewTypes) {
-          this._filenameExtMapping[key] = settings.filename_ext_mapping;
-        }
-      }
-    }
+    this._contentTypeMapping = this._populateProps<string[]>(settings, 'content_type_mapping', (value: unknown) => {
+      return Array.isArray(value);
+    });
+
+    this._filenameExtMapping = this._populateProps<string[]>(settings, 'filename_ext_mapping', (value: unknown) => {
+      return Array.isArray(value);
+    });
   }
 
+  /**
+   * return the number of bytes to prefetch for previewing the file
+   */
+  getPrefetchBytes(filePreviewType: FilePreviewTypes | null): number | null {
+    if (filePreviewType === FilePreviewTypes.IMAGE) return null;
+    if (filePreviewType === FilePreviewTypes.MARKDOWN) return this._prefetchBytes.markdown;
+    if (filePreviewType === FilePreviewTypes.CSV) return this._prefetchBytes.csv;
+    if (filePreviewType === FilePreviewTypes.TSV) return this._prefetchBytes.tsv;
+    if (filePreviewType === FilePreviewTypes.JSON) return this._prefetchBytes.json;
+    return this._prefetchBytes.text;
+  }
+
+  /**
+   * return the max file size for previewing the file
+   */
+  getPrefetchMaxFileSize(filePreviewType: FilePreviewTypes | null): number | null {
+    if (filePreviewType === FilePreviewTypes.IMAGE) return this._prefetchMaxFileSize.image;
+    if (filePreviewType === FilePreviewTypes.MARKDOWN) return this._prefetchMaxFileSize.markdown;
+    if (filePreviewType === FilePreviewTypes.CSV) return this._prefetchMaxFileSize.csv;
+    if (filePreviewType === FilePreviewTypes.TSV) return this._prefetchMaxFileSize.tsv;
+    if (filePreviewType === FilePreviewTypes.JSON) return this._prefetchMaxFileSize.json;
+    return this._prefetchMaxFileSize.text;
+  }
+
+  /**
+   * check whether the given contentType or extension matches the file type
+   * @param fileType file preview type
+   * @param contentType the content type
+   * @param extension  the file extension
+   */
+  checkFileType(fileType: FilePreviewTypes, contentType?: string, extension?: string | null): boolean {
+    if (contentType && this._contentTypeMapping[fileType] && this._contentTypeMapping[fileType]!.includes(contentType)) {
+      return true;
+    }
+
+    if (extension && this._filenameExtMapping[fileType] && this._filenameExtMapping[fileType]!.includes(extension)) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Returns the preview type based on the given file properties and the column's file preview settings.
+   * @param url the file url
+   * @param column the asset column
+   * @param storedFilename the stored filename
+   * @param contentDisposition content-disposition header value
+   * @param contentType content-type header value
+   */
+  static getPreviewType(
+    url: string,
+    column?: AssetPseudoColumn,
+    storedFilename?: string,
+    contentDisposition?: string,
+    contentType?: string,
+  ): FilePreviewTypes | null {
+    const filename = storedFilename || getFilename(url, contentDisposition);
+    const extension = getFilenameExtension(filename, column?.filenameExtFilter, column?.filenameExtRegexp);
+
+    // based on annotation
+    const filePreviewProps = column ? column.filePreview : null;
+    if (filePreviewProps) {
+      for (const previewType of FilePreviewConfig.previewTypes) {
+        const res = filePreviewProps.checkFileType(previewType as FilePreviewTypes, contentType, extension);
+        if (res) return previewType;
+      }
+    }
+
+    // based on file properties
+    if (checkIsImageFile(contentType, extension)) {
+      return FilePreviewTypes.IMAGE;
+    }
+    if (checkIsMarkdownFile(contentType, extension)) {
+      return FilePreviewTypes.MARKDOWN;
+    }
+    if (checkIsCsvFile(contentType, extension)) {
+      return FilePreviewTypes.CSV;
+    }
+    if (checkIsTsvFile(contentType, extension)) {
+      return FilePreviewTypes.TSV;
+    }
+    if (checkIsJSONFile(contentType, extension)) {
+      return FilePreviewTypes.JSON;
+    }
+    if (checkIsTextFile(contentType, extension)) {
+      return FilePreviewTypes.TEXT;
+    }
+
+    return null;
+  }
+
+  /**
+   * The settings could be either just one value or an object with different values for each type.
+   * This function will populate the result object with the appropriate values for each type.
+   */
+  private _populateProps<T>(settings: any, propName: string, validate?: (value: unknown) => boolean): { [key: string]: T | null } {
+    const res: { [key: string]: T | null } = {
+      text: null,
+      markdown: null,
+      csv: null,
+      tsv: null,
+      json: null,
+    };
+    if (!isObjectAndKeyExists(settings, propName)) return res;
+
+    if (isObjectAndNotNull(settings[propName])) {
+      for (const key of Object.keys(settings[propName])) {
+        if (FilePreviewConfig.previewTypes.includes(key as FilePreviewTypes)) {
+          const definedRes = this._getPropForType(key, settings[propName]);
+          if (!validate || validate(definedRes)) {
+            res[key] = definedRes;
+          }
+        }
+      }
+    } else {
+      const definedRes = settings[propName];
+      if (!validate || validate(definedRes)) {
+        for (const key of FilePreviewConfig.previewTypes) {
+          res[key] = definedRes;
+        }
+      }
+    }
+
+    return res;
+  }
+
+  /**
+   * Get the property for a specific file type. If not defined, will try to get the default value (*).
+   * Otherwise returns null.
+   */
   private _getPropForType(fileType: string, settings: any): any {
     const DEFAULT_TYPE = '*';
 
     let isDefined = false;
     let res;
     if (isObjectAndKeyExists(settings, fileType)) {
-      if (typeof settings[fileType] === 'string' && settings[fileType] in FilePreviewProps.previewTypes) {
+      if (typeof settings[fileType] === 'string' && settings[fileType] in FilePreviewConfig.previewTypes) {
         res = this._getPropForType(settings[fileType], settings);
       } else {
         res = settings[fileType];
@@ -607,43 +723,5 @@ class FilePreviewProps {
     }
 
     return isDefined ? res : null;
-  }
-
-  /**
-   * return the number of bytes to prefetch for previewing the file
-   */
-  getPrefetchBytes(isMarkdown: boolean, isCsv: boolean, isJSON: boolean): number | null {
-    if (isMarkdown) return this._prefetchBytes.markdown;
-    if (isCsv) return this._prefetchBytes.csv;
-    if (isJSON) return this._prefetchBytes.json;
-    return null;
-  }
-
-  /**
-   * return the max file size for previewing the file
-   */
-  getPrefetchMaxFileSize(isMarkdown: boolean, isCsv: boolean, isJSON: boolean): number | null {
-    if (isMarkdown) return this._prefetchMaxFileSize.markdown;
-    if (isCsv) return this._prefetchMaxFileSize.csv;
-    if (isJSON) return this._prefetchMaxFileSize.json;
-    return null;
-  }
-
-  /**
-   * check whether the given contentType or extension matches the file type
-   * @param fileType one of 'text', 'markdown', 'csv', or 'json'
-   * @param contentType the content type
-   * @param extension  the file extension
-   */
-  checkFileType(fileType: 'text' | 'markdown' | 'csv' | 'json', contentType?: string, extension?: string): boolean {
-    if (contentType && this._contentTypeMapping[fileType] && this._contentTypeMapping[fileType]!.includes(contentType)) {
-      return true;
-    }
-
-    if (extension && this._filenameExtMapping[fileType] && this._filenameExtMapping[fileType]!.includes(extension)) {
-      return true;
-    }
-
-    return false;
   }
 }
