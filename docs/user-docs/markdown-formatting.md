@@ -5,54 +5,58 @@ Markdown is a plain text format for writing structured documents. We use [markdo
 For common markdown syntax please refer to [this reference sheet](http://commonmark.org/help/). The following content are mainly focused on more advanced features and/or features specific to ERMrestJS.
 
 ## Table of Contents
-  * [Inline Vs. Block](#inline-vs-block)
-  * [Attributes](#attributes)
-    + [Tooltip](#tooltip)
-    + [Classes](#classes)
+- [Markdown Formatting](#markdown-formatting)
+  - [Table of Contents](#table-of-contents)
+  - [Inline Vs. Block](#inline-vs-block)
+  - [Attributes](#attributes)
+    - [Tooltip](#tooltip)
+    - [Classes](#classes)
       - [Special Classes](#special-classes)
-  * [Examples](#examples)
-    + [1. Link (Anchor)](#1-link-anchor)
-    + [2. Download Button](#2-download-button)
-    + [3. Image](#3-image)
+  - [Examples](#examples)
+    - [1. Link (Anchor)](#1-link-anchor)
+    - [2. Download Button](#2-download-button)
+    - [3. Image](#3-image)
       - [3.1. Image with static width and height](#31-image-with-static-width-and-height)
       - [3.2. Image with maximum width and maximum height](#32-image-with-maximum-width-and-maximum-height)
       - [3.3. Preserving the aspect ratio of image](#33-preserving-the-aspect-ratio-of-image)
-    + [4. Thumbnail With Link To Original Image And A caption](#4-thumbnail-with-link-to-original-image-and-a-caption)
-    + [5. Image with zoom capabilties](#5-image-with-zoom-capabilties)
-    + [6. Iframe](#6-iframe)
+    - [4. Thumbnail With Link To Original Image And A caption](#4-thumbnail-with-link-to-original-image-and-a-caption)
+    - [5. Image with zoom capabilties](#5-image-with-zoom-capabilties)
+    - [6. Iframe](#6-iframe)
       - [a. Styling the Iframe](#a-styling-the-iframe)
-        - [a.1. Without any attributes](#a1-without-any-attributes)
-        - [a.2. With height and width defined](#a2-with-height-and-width-defined)
-        - [a.3. Invalid link](#a3-invalid-link)
-        - [a.4. Iframe without scrolling](#a4-iframe-without-scrolling)
-        - [a.5. Class and style attached to the iframe element](#a5-class-and-style-attached-to-the-iframe-element)
-        - [a.6. Iframe with figure class and style](#a6-iframe-with-figure-class-and-style)
-        - [a.7. Iframe with caption styles and figure styles](#a7-iframe-with-caption-styles-and-figure-styles)
+      - [a.1. Without any attributes](#a1-without-any-attributes)
+      - [a.2. With height and width defined](#a2-with-height-and-width-defined)
+      - [a.3. Invalid link](#a3-invalid-link)
+      - [a.4. Iframe without scrolling](#a4-iframe-without-scrolling)
+      - [a.5. Class and style attached to the iframe element](#a5-class-and-style-attached-to-the-iframe-element)
+      - [a.6. Iframe with figure class and style](#a6-iframe-with-figure-class-and-style)
+      - [a.7. Iframe with caption styles and figure styles](#a7-iframe-with-caption-styles-and-figure-styles)
       - [b. Captions](#b-captions)
-        - [b.1. Linkable caption](#b1-linkable-caption)
-        - [b.2. Download link caption](#b2-download-link-caption)
-        - [b.3. Caption positioned at the bottom](#b3-caption-positioned-at-the-bottom)
-        - [b.4. Caption class and style](#b4-caption-class-and-style)
-        - [b.5. Linkable caption open new tab](#b5-linkable-caption-open-new-tab)
+      - [b.1. Linkable caption](#b1-linkable-caption)
+      - [b.2. Download link caption](#b2-download-link-caption)
+      - [b.3. Caption positioned at the bottom](#b3-caption-positioned-at-the-bottom)
+      - [b.4. Caption class and style](#b4-caption-class-and-style)
+      - [b.5. Linkable caption open new tab](#b5-linkable-caption-open-new-tab)
       - [c. Responsiveness and Other Cases](#c-responsiveness-and-other-cases)
-        - [c.1. Stretch to height and width of parent container](#c1-stretch-to-height-and-width-of-parent-container)
-        - [c.2. Fill container with min-width](#c2-fill-container-with-min-width)
-        - [c.3. Fill container with min-width and min-height and max-height](#c3-fill-container-with-min-width-and-min-height-and-max-height)
-        - [c.4. Iframe with set height and responsive width](#c4-iframe-with-set-height-and-responsive-width)
-        - [c.5. Iframe with variable height based on viewport with bounds](#c5-Iframe-with-variable-height-based-on-viewport-with-bounds)
-        - [c.6. Iframe with fullscreen button hidden](#c6-iframe-with-fullscreen-button-hidden)
-        - [c.7. Iframe with fullscreen button open new tab](#c7-iframe-with-fullscreen-button-open-new-tab)
-    + [7. Dropdown download button](#7-dropdown-download-button)
-    + [8. Vocabulary](#8-vocabulary)
-    + [9. Youtube Video](#9-youtube-video)
-    + [10. Video](#10-video)
-    + [11. Subscript](#11-subscript)
-    + [12. Superscript](#12-superscript)
-    + [13. Span (Attach Attributes To Text)](#13-span-attach-attributes-to-text)
-    + [14. Escape markdown content](#14-escape-markdown-content)
-    + [15. RID link](#15-rid-link)
-    + [16. Table](#15-table)
-    + [Gene Sequence](#17-gene-sequence)
+      - [c.1. Stretch to height and width of parent container](#c1-stretch-to-height-and-width-of-parent-container)
+      - [c.2. Fill container with min-width](#c2-fill-container-with-min-width)
+      - [c.3. Fill container with min-width and min-height and max-height](#c3-fill-container-with-min-width-and-min-height-and-max-height)
+      - [c.4. Iframe with set height and responsive width](#c4-iframe-with-set-height-and-responsive-width)
+      - [c.5. Iframe with variable height based on viewport with bounds](#c5-iframe-with-variable-height-based-on-viewport-with-bounds)
+      - [c.6. Iframe with fullscreen button hidden](#c6-iframe-with-fullscreen-button-hidden)
+      - [c.7. Iframe with fullscreen button open new tab](#c7-iframe-with-fullscreen-button-open-new-tab)
+    - [7. Dropdown download button](#7-dropdown-download-button)
+    - [8. Vocabulary](#8-vocabulary)
+    - [9. Youtube Video](#9-youtube-video)
+    - [10. Video](#10-video)
+    - [11. Subscript](#11-subscript)
+    - [12. Superscript](#12-superscript)
+    - [13. Span (Attach Attributes To Text)](#13-span-attach-attributes-to-text)
+    - [14. Escape markdown content](#14-escape-markdown-content)
+    - [15. RID link](#15-rid-link)
+    - [16. Table](#16-table)
+    - [17. Gene Sequence](#17-gene-sequence)
+    - [18. File Preview](#18-file-preview)
+  - [Mixed with Other Markdown](#mixed-with-other-markdown)
 
 
 ## Inline Vs. Block
@@ -1114,7 +1118,7 @@ The table is broken at the first empty line, or beginning of another block eleme
 ### 17. Gene Sequence
 
 This is not part of commonMark specification and it will result in a [block](#inline-vs-block). You have to follow the syntax completely (notice the newline in the closing tag). The following is the basic syntax structure:
-```mkdn
+```
 ::: geneSequence SEQUENCE {<attribute>=<value>} \n:::
 ```
 **There must be a space before `\n:::`**.
@@ -1140,3 +1144,44 @@ This is not part of commonMark specification and it will result in a [block](#in
     ```
     ::: geneSequence {{{_sequence}}} {.chaise-gene-sequence-compact} \n:::
     ```
+
+
+### 18. File Preview
+
+This is not part of commonMark specification and it will result in a [block](#inline-vs-block). You have to follow the syntax completely (notice the newline in the closing tag). The following is the basic syntax structure:
+
+```
+::: filePreview [](https://example.com/files/sample.txt){<attribute>=<value>} \n:::
+```
+
+**There must be a space before `\n:::`**.
+
+
+**Examples**
+
+- Without any attributes:
+    ```
+    ::: filePreview [](https://example.com/files/sample.txt) \n:::
+    ```
+
+- Without any attributes as part of a `markdown_pattern` (assume `file_url` column returns the url):
+    ```
+    ::: filePreview []( {{{_file_url}}} ) \n:::
+    ```
+
+-
+
+::: filePreview [](https://example.com/files/data.csv){filename="my-data.csv"}
+:::
+
+## Mixed with Other Markdown
+
+**Bold text**, *italic text*, and [regular links](https://example.com).
+
+- List item 1
+- List item 2
+
+::: filePreview [](https://example.com/files/final.txt)
+:::
+
+End of document.

@@ -747,6 +747,77 @@ function _bindCustomMarkdownTags(md: typeof MarkdownIt) {
     },
   });
 
+  // Dependent on 'markdown-it-container' and 'markdown-it-attrs' plugins
+  // Injects `filePreview` tag that will be rendered as a React component in chaise
+  md.use(MarkdownItContainer, 'filePreview', {
+    /*
+     * Checks whether string matches format "::: filePreview [](URL){ATTR=VALUE .CLASSNAME}"
+     * String inside '{}' is Optional, specifies attributes to be applied to the element
+     */
+    validate: function (params: any) {
+      return params.trim().match(/^filePreview\s+(.*)$/i);
+    },
+
+    render: function (tokens: any, idx: any) {
+      // Get token string after regexp matching
+      const m = tokens[idx].info.trim().match(/^filePreview\s+(.*)$/i);
+
+      // If this is the opening tag i.e. starts with "::: filePreview "
+      if (tokens[idx].nesting === 1 && m && m.length > 0) {
+        // Extract remaining string and get its parsed markdown attributes
+        const attrs = md.parseInline(m[1], {});
+        let html = '';
+
+        if (attrs && attrs.length == 1 && attrs[0].children) {
+          // Check if the markdown is a link
+          if (attrs[0].children[0].type == 'link_open') {
+            const openingLink = attrs[0].children[0];
+            let fileUrl = '';
+            let filename = '';
+            let placeholderClass = '';
+            let placeholderAttrs = '';
+
+            // Extract attributes
+            openingLink!.attrs!.forEach(function (attr) {
+              switch (attr[0]) {
+                case 'href':
+                  fileUrl = attr[1];
+                  break;
+                case 'filename':
+                  filename = attr[1];
+                  break;
+                case 'class':
+                  placeholderClass = attr[1];
+                  break;
+                default:
+                  placeholderAttrs += ' ' + attr[0] + '="' + attr[1] + '"';
+                  break;
+              }
+            });
+
+            // Create a placeholder div that will be replaced with React component
+            html = [
+              '<div class="file-preview-placeholder ' + placeholderClass + '" ',
+              'data-chaise-file-preview="true" ',
+              'data-file-url="' + fileUrl + '"',
+            ].join('');
+
+            if (filename) {
+              html += ' data-filename="' + filename + '"';
+            }
+
+            html += placeholderAttrs + '></div>';
+          }
+        }
+
+        return html;
+      } else {
+        // closing tag
+        return '';
+      }
+    },
+  });
+
   // Note: Following how this was done in markdown-it-sub and markdown-it-span
   md.use(function rid_plugin(md) {
     // same as UNESCAPE_MD_RE plus a space
