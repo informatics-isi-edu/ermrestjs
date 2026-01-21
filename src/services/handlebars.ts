@@ -114,11 +114,14 @@ export default class HandlebarsService {
     _addErmrestVarsToTemplate(keyValues, catalog);
 
     // If no conditional handlebars statements of the form {{#if VARNAME}}{{/if}} or {{^if VARNAME}}{{/if}} or {{#unless VARNAME}}{{/unless}} or {{^unless VARNAME}}{{/unless}} not found then do direct null check
+    // codeql[js/polynomial-redos]
     if (!conditionalRegex.exec(template)) {
       // Grab all placeholders ({{PROP_NAME}}) in the template
+      // codeql[js/polynomial-redos]: template is not user input
       const placeholders = template.match(/\{\{([^\{\}\(\)\s]+)\}\}/gi);
 
       // These will match the placeholders that are encapsulated in square brackets {{[string with space]}} or {{{[string with space]}}}
+      // codeql[js/polynomial-redos]: template is not user input
       const specialPlaceholders = template.match(/\{\{((\[[^\{\}]+\])|(\{\[[^\{\}]+\]\}))\}\}/gi);
 
       // If there are any placeholders

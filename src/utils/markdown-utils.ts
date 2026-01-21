@@ -121,8 +121,7 @@ function _bindCustomMarkdownTags(md: typeof MarkdownIt) {
             openingLink!.attrs!.forEach(function (attr) {
               switch (attr[0]) {
                 case 'href':
-                  // eslint-disable-next-line no-useless-escape
-                  isYTlink = attr[1].match('^(http(s)?:\/\/)?((w){3}.)?youtu(be|.be)?(\.com)?\/.+') != null;
+                  isYTlink = attr[1].match('^(http(s)?://)?((w){3}.)?youtu(be|.be)?(.com)?/.+') != null;
                   iframeSrc = attr[1];
                   iframeHTML += ' src="' + attr[1] + '"';
                   videoText = 'Note: YouTube video ( ' + attr[1] + ' ) is hidden in print';

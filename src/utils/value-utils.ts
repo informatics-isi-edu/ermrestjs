@@ -70,7 +70,17 @@ export function stripTrailingSlash(str: string): string {
  * trim the slashes that might exist at the begining or end of the string
  */
 export function trimSlashes(str: string) {
-  return str.replace(/^\/+|\/+$/g, '');
+  let start = 0;
+  let end = str.length - 1;
+
+  while (start <= end && str[start] === '/') {
+    start++;
+  }
+  while (end >= start && str[end] === '/') {
+    end--;
+  }
+
+  return start <= end ? str.slice(start, end + 1) : '';
 }
 
 /**

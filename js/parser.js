@@ -227,7 +227,7 @@ import HistoryService from '@isrd-isi-edu/ermrestjs/src/services/history';
         this._compactUri = stripTrailingSlash(this._compactUri);
 
         // service
-        parts = uri.match(/(.*)\/catalog\/([^\/]*)\/(entity|attribute|aggregate|attributegroup)\/(.*)/);
+        parts = uri.match(/^([^?]+?)\/catalog\/([^\/]+)\/(entity|attribute|aggregate|attributegroup)\/(.+)$/);
         this._service = parts[1];
 
         // catalog id

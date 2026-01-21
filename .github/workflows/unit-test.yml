@@ -2,6 +2,9 @@ name: ERMrestJS tests
 
 on: [push]
 
+permissions:
+  contents: read
+
 jobs:
   install-and-test:
     runs-on: ubuntu-24.04
