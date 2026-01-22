@@ -188,6 +188,7 @@ export default class ErrorService {
       let msgTail;
       const keyValueMap: Record<string, string> = {};
       let duplicateReference = null;
+      // codeql[js/polynomial-redos]: Parsing structured database error messages
       const columnRegExp = /\(([^)]+)\)/,
         valueRegExp = /=\(([^)]+)\)/,
         matches = columnRegExp.exec(generatedErrMessage),

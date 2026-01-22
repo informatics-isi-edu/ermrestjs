@@ -317,15 +317,15 @@ export class UnsupportedFilters extends ERMrestError {
 
 const removePageCondition = (path?: string) => {
   if (path !== undefined) {
-    path = path.replace(/(@before\([^)]*\))/, '');
-    path = path.replace(/(@after\([^)]*\))/, '');
+    path = path.replace(/(@before\([^)@]*\))/, '');
+    path = path.replace(/(@after\([^)@]*\))/, '');
   }
   return path;
 };
 
 const removeSortCondition = (path?: string) => {
   if (path !== undefined) {
-    return path.replace(/(@sort\([^)]*\))/, '');
+    return path.replace(/(@sort\([^)@]*\))/, '');
   }
   return path;
 };
