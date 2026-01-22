@@ -228,7 +228,7 @@ import HistoryService from '@isrd-isi-edu/ermrestjs/src/services/history';
 
         // service
         // codeql[js/polynomial-redos]: URL input limited by browser length
-        parts = uri.match(/^([^?]+?)\/catalog\/([^\/]+)\/(entity|attribute|aggregate|attributegroup)\/(.+)$/);
+        parts = uri.match(/(.*)\/catalog\/([^\/]*)\/(entity|attribute|aggregate|attributegroup)\/(.*)/);
         this._service = parts[1];
 
         // catalog id
