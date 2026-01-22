@@ -169,6 +169,7 @@ export const checkIsJSONFile = (contentType?: string, extension?: string | null)
  * Checks for common image formats supported by HTML img tag
  */
 export const checkIsImageFile = (contentType?: string, extension?: string | null): boolean => {
+  // TODO this should be more specific based on supported image formats
   if (contentType && contentType.startsWith('image/')) {
     return true;
   }

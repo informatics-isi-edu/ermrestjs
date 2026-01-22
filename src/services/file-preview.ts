@@ -1,18 +1,12 @@
 import type { AssetPseudoColumn } from '@isrd-isi-edu/ermrestjs/src/models/reference-column';
 import { FILE_PREVIEW } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
 
-import {
-  checkIsCsvFile,
-  checkIsImageFile,
-  checkIsJSONFile,
-  checkIsMarkdownFile,
-  checkIsTextFile,
-  checkIsTsvFile,
-  getFilename,
-  getFilenameExtension,
-} from '@isrd-isi-edu/ermrestjs/src/utils/file-utils';
+import { getFilename, getFilenameExtension } from '@isrd-isi-edu/ermrestjs/src/utils/file-utils';
+import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
 
-// NOTE: order of values matters here. the least specific ones should come last.
+/**
+ * The supported file preview types
+ */
 export enum FilePreviewTypes {
   IMAGE = 'image',
   MARKDOWN = 'markdown',
@@ -21,6 +15,73 @@ export enum FilePreviewTypes {
   JSON = 'json',
   TEXT = 'text',
 }
+
+/**
+ * Type guard to check if a value is a FilePreviewTypes
+ */
+export const isFilePreviewType = (value: unknown): value is FilePreviewTypes => {
+  if (typeof value !== 'string') return false;
+  return Object.values(FilePreviewTypes).includes(value as FilePreviewTypes);
+};
+
+export const USE_EXT_MAPPING = 'use_ext_mapping';
+
+const DEFAULT_CONTENT_TYPE_MAPPING: { [key: string]: FilePreviewTypes | typeof USE_EXT_MAPPING | false } = {
+  // image:
+  'image/png': FilePreviewTypes.IMAGE,
+  'image/jpeg': FilePreviewTypes.IMAGE,
+  'image/jpg': FilePreviewTypes.IMAGE,
+  'image/gif': FilePreviewTypes.IMAGE,
+  'image/bmp': FilePreviewTypes.IMAGE,
+  'image/webp': FilePreviewTypes.IMAGE,
+  'image/svg+xml': FilePreviewTypes.IMAGE,
+  'image/x-icon': FilePreviewTypes.IMAGE,
+  'image/avif': FilePreviewTypes.IMAGE,
+  'image/apng': FilePreviewTypes.IMAGE,
+  // markdown:
+  'text/markdown': FilePreviewTypes.MARKDOWN,
+  // csv:
+  'text/csv': FilePreviewTypes.CSV,
+  // tsv:
+  'text/tab-separated-values': FilePreviewTypes.TSV,
+  // json:
+  'application/json': FilePreviewTypes.JSON,
+  // text:
+  'chemical/x-mmcif': FilePreviewTypes.TEXT,
+  'chemical/x-cif': FilePreviewTypes.TEXT,
+  // generic:
+  'text/plain': USE_EXT_MAPPING,
+  'application/octet-stream': USE_EXT_MAPPING,
+};
+
+const DEFAULT_EXTENSION_MAPPING: { [key: string]: FilePreviewTypes | false } = {
+  // image:
+  '.png': FilePreviewTypes.IMAGE,
+  '.jpeg': FilePreviewTypes.IMAGE,
+  '.jpg': FilePreviewTypes.IMAGE,
+  '.gif': FilePreviewTypes.IMAGE,
+  '.bmp': FilePreviewTypes.IMAGE,
+  '.webp': FilePreviewTypes.IMAGE,
+  '.svg': FilePreviewTypes.IMAGE,
+  '.ico': FilePreviewTypes.IMAGE,
+  '.avif': FilePreviewTypes.IMAGE,
+  '.apng': FilePreviewTypes.IMAGE,
+  // markdown:
+  '.md': FilePreviewTypes.MARKDOWN,
+  '.markdown': FilePreviewTypes.MARKDOWN,
+  // csv:
+  '.csv': FilePreviewTypes.CSV,
+  // tsv:
+  '.tsv': FilePreviewTypes.TSV,
+  // json:
+  '.json': FilePreviewTypes.JSON,
+  '.mvsj': FilePreviewTypes.JSON, // MolViewSpec JSON (mol* viewer)
+  // text:
+  '.txt': FilePreviewTypes.TEXT,
+  '.log': FilePreviewTypes.TEXT,
+  '.cif': FilePreviewTypes.TEXT,
+  '.pdb': FilePreviewTypes.TEXT,
+};
 
 export default class FilePreviewService {
   /**
@@ -48,13 +109,19 @@ export default class FilePreviewService {
 
     if (previewType !== null && column && column.filePreview) {
       prefetchBytes = column.filePreview.getPrefetchBytes(previewType);
-      if (typeof prefetchBytes !== 'number' || prefetchBytes < 0) {
-        prefetchBytes = FILE_PREVIEW.PREFETCH_BYTES;
-      }
       prefetchMaxFileSize = column.filePreview.getPrefetchMaxFileSize(previewType);
-      if (typeof prefetchMaxFileSize !== 'number' || prefetchMaxFileSize < 0) {
-        prefetchMaxFileSize = FILE_PREVIEW.MAX_FILE_SIZE;
-      }
+    }
+
+    if (typeof prefetchBytes !== 'number' || prefetchBytes < 0) {
+      prefetchBytes = FILE_PREVIEW.PREFETCH_BYTES;
+    }
+    if (typeof prefetchMaxFileSize !== 'number' || prefetchMaxFileSize < 0) {
+      prefetchMaxFileSize = FILE_PREVIEW.MAX_FILE_SIZE;
+    }
+
+    // if prefetchMaxFileSize is 0, we should not show the preview
+    if (prefetchMaxFileSize === 0) {
+      return { previewType: null, prefetchBytes, prefetchMaxFileSize };
     }
 
     return { previewType, prefetchBytes, prefetchMaxFileSize };
@@ -77,39 +144,78 @@ export default class FilePreviewService {
   ): FilePreviewTypes | null {
     const filename = storedFilename || getFilename(url, contentDisposition);
     const extension = getFilenameExtension(filename, column?.filenameExtFilter, column?.filenameExtRegexp);
+    let mappedFilePreviewType: FilePreviewTypes | typeof USE_EXT_MAPPING | false = USE_EXT_MAPPING;
 
-    // based on annotation
+    // extend the mappings based on the annotations
+    let annotExtensionMapping;
+    let annotContentTypeMapping;
     if (column && column.isAsset) {
-      const filePreviewProps = column ? column.filePreview : null;
       // if file_preview is false, then no preview is allowed
-      if (!filePreviewProps) return null;
-      // see if the file preview type is explicitly set
-      for (const previewType of Object.values(FilePreviewTypes)) {
-        const res = filePreviewProps.checkFileType(previewType as FilePreviewTypes, contentType, extension);
-        if (res) return previewType;
+      if (!column.filePreview) return null;
+      if (column.filePreview.contentTypeMapping) {
+        annotContentTypeMapping = column.filePreview.contentTypeMapping;
+      }
+      if (column.filePreview.filenameExtMapping) {
+        annotExtensionMapping = column.filePreview.filenameExtMapping;
       }
     }
 
-    // based on file properties
-    if (checkIsImageFile(contentType, extension)) {
-      return FilePreviewTypes.IMAGE;
-    }
-    if (checkIsMarkdownFile(contentType, extension)) {
-      return FilePreviewTypes.MARKDOWN;
-    }
-    if (checkIsCsvFile(contentType, extension)) {
-      return FilePreviewTypes.CSV;
-    }
-    if (checkIsTsvFile(contentType, extension)) {
-      return FilePreviewTypes.TSV;
-    }
-    if (checkIsJSONFile(contentType, extension)) {
-      return FilePreviewTypes.JSON;
-    }
-    if (checkIsTextFile(contentType, extension)) {
-      return FilePreviewTypes.TEXT;
+    // if content-type is available, we must get the type from it.
+    if (typeof contentType === 'string' && contentType.length > 0) {
+      // remove any extra info like charset
+      contentType = contentType.split(';')[0].trim().toLowerCase();
+      let matched = false;
+
+      // first match through annotation mapping
+      if (annotContentTypeMapping) {
+        // if the exact match is found, use it
+        if (annotContentTypeMapping.exactMatch && contentType in annotContentTypeMapping.exactMatch) {
+          mappedFilePreviewType = annotContentTypeMapping.exactMatch[contentType];
+          matched = true;
+        }
+        // if exact match not found, try prefix matching
+        else if (annotContentTypeMapping.prefixMatch) {
+          const match = Object.keys(annotContentTypeMapping.prefixMatch).find((prefix) => contentType!.startsWith(prefix));
+          if (match) {
+            mappedFilePreviewType = annotContentTypeMapping.prefixMatch[match];
+            matched = true;
+          }
+        }
+
+        // if still not matched, check for default mapping (`*` in annotation)
+        if (!matched && annotContentTypeMapping.default !== null) {
+          mappedFilePreviewType = annotContentTypeMapping.default;
+          matched = true;
+        }
+      }
+
+      // if no match found through annotation, try the default mapping
+      if (!matched && contentType in DEFAULT_CONTENT_TYPE_MAPPING) {
+        mappedFilePreviewType = DEFAULT_CONTENT_TYPE_MAPPING[contentType];
+        matched = true;
+      }
+
+      // if no match found, disable the preview
+      if (!matched) {
+        mappedFilePreviewType = false;
+      }
+
+      $log.debug(`FilePreviewService: Mapped content-type '${contentType}' to preview type '${mappedFilePreviewType}'`);
     }
 
-    return null;
+    // use extenstion mapping, if the content-type matching dictates so
+    if (mappedFilePreviewType === USE_EXT_MAPPING && typeof extension === 'string' && extension.length > 0) {
+      if (annotExtensionMapping && extension in annotExtensionMapping) {
+        mappedFilePreviewType = annotExtensionMapping[extension];
+      } else if (extension in DEFAULT_EXTENSION_MAPPING) {
+        mappedFilePreviewType = DEFAULT_EXTENSION_MAPPING[extension];
+      } else {
+        mappedFilePreviewType = false;
+      }
+
+      $log.debug(`FilePreviewService: Mapped extension '${extension}' to preview type '${mappedFilePreviewType}'`);
+    }
+
+    return isFilePreviewType(mappedFilePreviewType) ? mappedFilePreviewType : null;
   }
 }

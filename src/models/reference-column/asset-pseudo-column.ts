@@ -4,7 +4,7 @@ import type SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-
 import type { Reference, Tuple, VisibleColumn } from '@isrd-isi-edu/ermrestjs/src/models/reference';
 
 // services
-import { FilePreviewTypes } from '@isrd-isi-edu/ermrestjs/src/services/file-preview';
+import { FilePreviewTypes, isFilePreviewType, USE_EXT_MAPPING } from '@isrd-isi-edu/ermrestjs/src/services/file-preview';
 
 // utils
 import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils';
@@ -515,24 +515,26 @@ class FilePreviewConfig {
     text: null,
   };
 
-  private _filenameExtMapping: { [key: string]: string[] | null } = {
-    image: null,
-    markdown: null,
-    csv: null,
-    tsv: null,
-    json: null,
-    text: null,
-  };
+  filenameExtMapping: { [key: string]: FilePreviewTypes | false } | null = null;
 
-  private _contentTypeMapping: { [key: string]: string[] | null } = {
-    image: null,
-    markdown: null,
-    csv: null,
-    tsv: null,
-    json: null,
-    text: null,
-  };
+  contentTypeMapping: {
+    exactMatch: { [key: string]: FilePreviewTypes | typeof USE_EXT_MAPPING | false } | null;
+    prefixMatch: { [key: string]: FilePreviewTypes | typeof USE_EXT_MAPPING | false } | null;
+    default: FilePreviewTypes | typeof USE_EXT_MAPPING | false | null;
+  } | null = null;
 
+  disabledTypes: FilePreviewTypes[] = [];
+
+  /**
+   * populate the props based on the given annotation object.
+   * The supported annotation properties are:
+   * - show_csv_header
+   * - prefetch_bytes
+   * - prefetch_max_file_size
+   * - filename_ext_mapping
+   * - content_type_mapping
+   * - disabled
+   */
   constructor(settings: any) {
     if (isObjectAndKeyExists(settings, 'show_csv_header') && typeof settings.show_csv_header === 'boolean') {
       this.showCsvHeader = settings.show_csv_header;
@@ -546,13 +548,58 @@ class FilePreviewConfig {
       return typeof value === 'number' && value >= 0;
     });
 
-    this._contentTypeMapping = this._populateProps<string[]>(settings, 'content_type_mapping', (value: unknown) => {
-      return Array.isArray(value);
-    });
+    if (isObjectAndKeyExists(settings, 'filename_ext_mapping')) {
+      this.filenameExtMapping = {};
+      for (const [key, val] of Object.entries(settings.filename_ext_mapping)) {
+        if (val === false || (typeof val === 'string' && isFilePreviewType(val))) {
+          this.filenameExtMapping[key] = val;
+        }
+      }
+    }
 
-    this._filenameExtMapping = this._populateProps<string[]>(settings, 'filename_ext_mapping', (value: unknown) => {
-      return Array.isArray(value);
-    });
+    if (isObjectAndKeyExists(settings, 'content_type_mapping')) {
+      const exactMatch: { [key: string]: FilePreviewTypes | typeof USE_EXT_MAPPING | false } = {};
+      const prefixMatch: { [key: string]: FilePreviewTypes | typeof USE_EXT_MAPPING | false } = {};
+      let defaultMapping: FilePreviewTypes | typeof USE_EXT_MAPPING | false | null = null;
+      let hasExactMatch = false;
+      let hasPrefixMatch = false;
+      Object.keys(settings.content_type_mapping).forEach((key) => {
+        const val = settings.content_type_mapping[key];
+        const validValue = val === false || (typeof val === 'string' && (isFilePreviewType(val) || val === USE_EXT_MAPPING));
+        if (!validValue) return;
+        // * could be used for default mapping
+        if (key === '*') {
+          defaultMapping = val;
+          return;
+        }
+
+        // only type/ or type/subtype are valid
+        const parts = key.split('/');
+        if (parts.length !== 2 || parts[0].length === 0) return;
+
+        if (parts[1].length > 0) {
+          exactMatch[key] = val;
+          hasExactMatch = true;
+        } else {
+          prefixMatch[parts[0] + '/'] = val;
+          hasPrefixMatch = true;
+        }
+      });
+
+      if (hasPrefixMatch || hasExactMatch || defaultMapping !== null) {
+        this.contentTypeMapping = {
+          exactMatch: hasExactMatch ? exactMatch : null,
+          prefixMatch: hasPrefixMatch ? prefixMatch : null,
+          default: defaultMapping,
+        };
+      }
+    }
+
+    if (isObjectAndKeyExists(settings, 'disabled') && Array.isArray(settings.disabled)) {
+      this.disabledTypes = settings.disabled.filter(
+        (t: unknown) => typeof t === 'string' && FilePreviewConfig.previewTypes.includes(t as FilePreviewTypes),
+      );
+    }
   }
 
   /**
@@ -597,24 +644,6 @@ class FilePreviewConfig {
       default:
         return null;
     }
-  }
-
-  /**
-   * check whether the given contentType or extension matches the file type
-   * @param fileType file preview type
-   * @param contentType the content type
-   * @param extension  the file extension
-   */
-  checkFileType(fileType: FilePreviewTypes, contentType?: string, extension?: string | null): boolean {
-    if (contentType && this._contentTypeMapping[fileType] && this._contentTypeMapping[fileType]!.includes(contentType)) {
-      return true;
-    }
-
-    if (extension && this._filenameExtMapping[fileType] && this._filenameExtMapping[fileType]!.includes(extension)) {
-      return true;
-    }
-
-    return false;
   }
 
   /**
