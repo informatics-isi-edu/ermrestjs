@@ -22,7 +22,7 @@ import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
 
 // utils
 import { isObjectAndNotNull, isEmptyArray, isStringAndNotEmpty, isValidColorRGBHex } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
-import { fixedEncodeURIComponent, escapeHTML } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
+import { fixedEncodeURIComponent, escapeHTML, updateObject } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
 import {
   _annotations,
   _commentDisplayModes,
@@ -3238,11 +3238,12 @@ import {
         var defaultAnnotKey = _annotations.COLUMN_DEFAULTS;
         var ancestors = [this.table.schema.catalog, this.table.schema, this.table];
         // frist copy the by_type annots
+        // frist copy the by_type annots
         ancestors.forEach(function (el) {
             if (el.annotations.contains(defaultAnnotKey)) {
                 var tempAnnot = el.annotations.get(defaultAnnotKey).content;
                 if (isObjectAndNotNull(tempAnnot) && isObjectAndNotNull(tempAnnot.by_type) && isObjectAndNotNull(tempAnnot.by_type[jsonColumn.type.typename])) {
-                    Object.assign(annots, tempAnnot.by_type[jsonColumn.type.typename]);
+                    updateObject(annots, tempAnnot.by_type[jsonColumn.type.typename]);
                 }
             }
         });
@@ -3251,7 +3252,7 @@ import {
             if (el.annotations.contains(defaultAnnotKey)) {
                 var tempAnnot = el.annotations.get(defaultAnnotKey).content;
                 if (isObjectAndNotNull(tempAnnot) && isObjectAndNotNull(tempAnnot.by_name) && isObjectAndNotNull(tempAnnot.by_name[jsonColumn.name])) {
-                    Object.assign(annots, tempAnnot.by_name[jsonColumn.name]);
+                    updateObject(annots, tempAnnot.by_name[jsonColumn.name]);
                 }
             }
         });
@@ -3262,14 +3263,14 @@ import {
                 if (el.annotations.contains(defaultAnnotKey)) {
                     var tempAnnot = el.annotations.get(defaultAnnotKey).content;
                     if (isObjectAndNotNull(tempAnnot) && isObjectAndNotNull(tempAnnot.asset) && isObjectAndNotNull(tempAnnot.asset[assetCategory])) {
-                        Object.assign(annots, tempAnnot.asset[assetCategory]);
+                        updateObject(annots, tempAnnot.asset[assetCategory]);
                     }
                 }
             });
         }
 
         // then copy the existing annots on the column
-        Object.assign(annots, jsonColumn.annotations);
+        updateObject(annots, jsonColumn.annotations);
         for (var uri in annots) {
             var jsonAnnotation = annots[uri];
             this.annotations._push(new Annotation("column", uri, jsonAnnotation));

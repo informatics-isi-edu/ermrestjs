@@ -43,10 +43,12 @@
     "library"
   ],
   "dependencies": {
+    "@types/lodash-es": "^4.17.12",
     "@types/markdown-it": "^14.1.2",
     "@types/q": "^1.5.8",
     "axios": "1.13.2",
     "handlebars": "4.7.8",
+    "lodash-es": "^4.17.23",
     "lz-string": "^1.5.0",
     "markdown-it": "12.3.2",
     "moment": "2.29.4",
