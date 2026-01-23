@@ -1155,14 +1155,66 @@ For example,
 Notes:
 - `by_type` should match exactly with the `typename` of the column. So, for example, for array columns, we would have to use `"timestamp[]"`.
 - While determining annotations for a column, the more specific one will be used. Annotations defined on the column have the highest priority. Then `asset` is used if the column has asset annotation or is used as a metadata for another asset column. Then by the `by_name` annotations on table, schema, and catalog will be used. And after that, we will look at `by_type` annotations on the table, schema, and catalog.
-- To implement this feature, we start by creating an empty JSON payload. On each step, we will add the annotations to the object (and if the annotation key is already defined on the object, it will be overwritten by the new value). To be more precise, the following is how the `annotations` JSON payload for a column is created and used:
+- To implement this feature, we start by creating an empty JSON payload. On each step, we will add the annotations to the object (and if the annotation key is already defined on the object, it will be merged by the new value). To be more precise, the following is how the `annotations` JSON payload for a column is created and used:
 
   1. We start by looking at the applicable `by_type` property of the `column-defaults ` annotation defined on the catalog.
-  2. Then, the applicable `by_type` property on the schema will be added. And if any annotation key is already defined on both catalog and schema, the one in the schema will override it.
+  2. Then, the applicable `by_type` property on the schema will be added. And if any annotation property is already defined on both catalog and schema, we will try to merge them. If the same annotation property is used in both, the one in the schema will override it.
   3. The same step as above continues with the table.
-  4. We continue by looking at the matching `by_name` property of catalog, schema, and table in order. Just like in the previous steps, if the same annotation key is already defined in the created object, it will be overwritten by the new step.
-  5. If the column is an asset or is used in another asset column, the annotations under the appropriate `asset` of catalog, schema, and table will be used. Same as above, if the same annotation key is already defined in the created object, it will be overwritten by the new step.
+  4. We continue by looking at the matching `by_name` property of catalog, schema, and table in order. Just like in the previous steps, if the same annotation property is already defined in the created object, it will be overwritten by the new step.
+  5. If the column is an asset or is used in another asset column, the annotations under the appropriate `asset` of catalog, schema, and table will be used. Same as above, if the same annotation property is already defined in the created object, it will be overwritten by the new step.
   6. Any annotation defined directly on the column will override the annotations of the previous steps.
+  
+  For instance, if you have the following column-defaults on the schema
+  ```json
+  {
+    "tag:isrd.isi.edu,2023:column-defaults": {
+      "by_name": {
+        "my_column": {
+          "tag:isrd.isi.edu,2016:column-display": {
+            "*": {
+              "markdown_pattern": "all: {{{$_self}}}"
+            },
+            "compact": {
+              "markdown_pattern": "compact: ${{{$_self}}}"
+            }
+          },
+          "tag:isrd.isi.edu,2016:immutable": null
+        }
+      },
+    }
+  }
+  ```
+  And the following annotation on the column named `my_column`:
+  ```json
+  {
+    "tag:isrd.isi.edu,2016:column-display": {
+      "*": {
+        "markdown_pattern": "customized all: {{{$_self}}}"
+      },
+      "detailed": {
+        "markdown_pattern": "customized detailed: ${{{$_self}}}"
+      }
+    },
+  }
+  ```
+  The following annotations will be applied to the column:
+  ```json
+  {
+    "tag:isrd.isi.edu,2016:column-display": {
+      "*": {
+        "markdown_pattern": "customized all: {{{$_self}}}"
+      },
+      "compact": {
+        "markdown_pattern": "compact: ${{{$_self}}}"
+      },
+      "detailed": {
+        "markdown_pattern": "customized detailed: ${{{$_self}}}"
+      }
+    },
+    "tag:isrd.isi.edu,2016:immutable": null
+  }
+  ```
+
 
 ## Context Names
 
