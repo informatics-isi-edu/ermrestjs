@@ -1184,7 +1184,7 @@ Notes:
     }
   }
   ```
-  And the following annotation on the column itself:
+  And the following annotation on the column named `my_column`:
   ```json
   {
     "tag:isrd.isi.edu,2016:column-display": {

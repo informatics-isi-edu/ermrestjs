@@ -5,7 +5,8 @@
       "by_type": {
         "timestamptz": {
           "tag:isrd.isi.edu,2016:column-display": {
-            "defined_on": "schema_by_type"
+            "defined_on": "schema_by_type",
+            "defined_on_2": "schema_by_type"
           }
         }
       },
@@ -25,6 +26,21 @@
         "md5": {
           "tag:isrd.isi.edu,2016:column-display": {
             "defined_on": "schema_asset_md5"
+          }
+        },
+        "url": {
+          "tag:isrd.isi.edu,2017:asset": {
+            "display": {
+              "*": {
+                "file_preview": {
+                  "content_type_mapping": {
+                    "application/my-example": false,
+                    "image/png": false
+                  },
+                  "disabled": ["json"]
+                }
+              }
+            }
           }
         }
       }
@@ -110,7 +126,16 @@
               "filename_column": "asset_col_1_filename",
               "byte_count_column": "asset_col_1_byte_count",
               "md5": "asset_col_1_md5",
-              "sha256": "asset_col_1_sha256"
+              "sha256": "asset_col_1_sha256",
+              "display": {
+                "*": {
+                  "file_preview": {
+                    "content_type_mapping": {
+                      "image/png": "image"
+                    }
+                  }
+                }
+              }
             }
           }
         },
