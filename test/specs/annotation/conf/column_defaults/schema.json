@@ -162,6 +162,22 @@
           "type": {
             "typename": "int8"
           }
+        },
+        {
+          "name": "text_col_1",
+          "type": {
+            "typename": "text"
+          },
+          "annotations": {
+            "tag:isrd.isi.edu,2016:column-display": {
+              "*": {
+                "markdown_pattern": "customized all: {{{$_self}}}"
+              },
+              "detailed": {
+                "markdown_pattern": "customized detailed: ${{{$_self}}}"
+              }
+            }
+          }
         }
       ]
     },

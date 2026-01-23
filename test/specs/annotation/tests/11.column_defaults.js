@@ -17,7 +17,7 @@ const utils = require("../../../utils/utilities.js");
  *   level (catalog vs schema for example)
  *
  * catalog:
- *  by_name: RCT (display), RID (display), boolean_array_col_1 (both column-dsplay and display)
+ *  by_name: RCT (display), RID (display, generated), boolean_array_col_1 (both column-dsplay and display), text_col_1(column-display, immutable)
  *  by_type: boolean[] (column-display), timestamptz (column-display, display), int8 (column-display,display)
  *  asset: byte_count (column-display, display), url (column-display, asset), md5 (column-display)
  *    - column_defaults_schema:
@@ -29,7 +29,7 @@ const utils = require("../../../utils/utilities.js");
  *          by_type: boolean[] (display)
  *          asset: byte_count (column-display)
  *            - RID
- *              result: display from schema
+ *              result: display from schema, generated from catalog
  *            - RCT
  *              result: display from catalog
  *            - boolean_array_col_1 (boolean[])
@@ -48,9 +48,11 @@ const utils = require("../../../utils/utilities.js");
  *                result: column-display on table (asset.byte_count), display on catalog (asset.byte_count).
  *            - asset_col_1_md5 (int8)
  *                result: column-display on schema (asset.md5), display on catalog (int8)
+ *            - text_col_1 (has column-display)
+ *                result: column-display merged from catalog and itself, immutable from catalog
  *        - table_2
  *            - RID
- *              result: display from schema
+ *              result: display from schema, generated from catalog
  *            - RCT
  *              result: display from catalog
  *            - boolean_array_col_1 (boolean[])
@@ -81,7 +83,8 @@ exports.execute = function (options) {
           "RID": {
             "tag:misd.isi.edu,2015:display": {
               "defined_on": "catalog_by_name"
-            }
+            },
+            "tag:isrd.isi.edu,2016:generated": null,
           },
           "RCT": {
             "tag:misd.isi.edu,2015:display": {
@@ -95,6 +98,17 @@ exports.execute = function (options) {
             "tag:isrd.isi.edu,2016:column-display": {
               "defined_on": "catalog_by_name"
             }
+          },
+          "text_col_1": {
+            "tag:isrd.isi.edu,2016:column-display": {
+              "*": {
+                "markdown_pattern": "all: {{{$_self}}}"
+              },
+              "compact": {
+                "markdown_pattern": "compact: ${{{$_self}}}"
+              }
+            },
+            "tag:isrd.isi.edu,2016:immutable": null
           }
         },
         "by_type": {
@@ -163,7 +177,8 @@ exports.execute = function (options) {
         'RID': {
           "tag:misd.isi.edu,2015:display": {
             "defined_on": "schema_by_name"
-          }
+          },
+          "tag:isrd.isi.edu,2016:generated": null,
         },
         'RCT': {
           "tag:misd.isi.edu,2015:display": {
@@ -246,9 +261,34 @@ exports.execute = function (options) {
           "tag:isrd.isi.edu,2015:display": {
             "defined_on": "catalog_by_type"
           }
+        },
+        'text_col_1': {
+          "tag:isrd.isi.edu,2016:column-display": {
+            "*": {
+              "markdown_pattern": "customized all: {{{$_self}}}"
+            },
+            "compact": {
+              "markdown_pattern": "compact: ${{{$_self}}}"
+            },
+            "detailed": {
+              "markdown_pattern": "customized detailed: ${{{$_self}}}"
+            }
+          },
+          "tag:isrd.isi.edu,2016:immutable": null
         }
       },
       'table_2': {
+        'RID': {
+          "tag:misd.isi.edu,2015:display": {
+            "defined_on": "schema_by_name"
+          },
+          "tag:isrd.isi.edu,2016:generated": null,
+        },
+        'RCT': {
+          "tag:misd.isi.edu,2015:display": {
+            "defined_on": "catalog_by_name"
+          }
+        },
         'boolean_array_col_1': {
           "tag:isrd.isi.edu,2016:column-display": {
             "defined_on": "catalog_by_name"
