@@ -782,14 +782,16 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
 
         //get foreignkey data if available
         if (linkedData && typeof linkedData === "object" && table.sourceDefinitions.fkeys.length > 0) {
-            keyValues.$fkeys = {};
+            // use a prototype-less object to avoid prototype pollution via constraint names
+            keyValues.$fkeys = Object.create(null);
             table.sourceDefinitions.fkeys.forEach(function (fk) {
                 var p = _generateRowLinkProperties(fk.key, linkedData[fk.name], context);
                 if (!p) return;
 
                 cons = fk.constraint_names[0];
                 if (!keyValues.$fkeys[cons[0]]) {
-                    keyValues.$fkeys[cons[0]] = {};
+                    // per-schema map should also be prototype-less
+                    keyValues.$fkeys[cons[0]] = Object.create(null);
                 }
 
                 var fkTempVal = {

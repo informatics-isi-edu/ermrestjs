@@ -1,3 +1,5 @@
+import { isArray, mergeWith } from 'lodash-es';
+
 import { ENV_IS_NODE } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
 
 /**
@@ -70,7 +72,17 @@ export function stripTrailingSlash(str: string): string {
  * trim the slashes that might exist at the begining or end of the string
  */
 export function trimSlashes(str: string) {
-  return str.replace(/^\/+|\/+$/g, '');
+  let start = 0;
+  let end = str.length - 1;
+
+  while (start <= end && str[start] === '/') {
+    start++;
+  }
+  while (end >= start && str[end] === '/') {
+    end--;
+  }
+
+  return start <= end ? str.slice(start, end + 1) : '';
 }
 
 /**
@@ -124,4 +136,19 @@ export function shallowCopyExtras(copyTo: any, copyFrom: any, enforcedList: stri
  */
 export function simpleDeepCopy(source: object): any {
   return JSON.parse(JSON.stringify(source));
+}
+
+/**
+ * update the target object with the updates provided in the updates object.
+ * NOTE: this will mutate the target object.
+ */
+export function updateObject(target: any, updates: any) {
+  mergeWith(target, updates, (objValue: unknown, srcValue: unknown) => {
+    // by default lodash's mergeWith will concat arrays, we want to replace them instead.
+    if (isArray(objValue)) {
+      return srcValue;
+    }
+  });
+
+  return target;
 }
