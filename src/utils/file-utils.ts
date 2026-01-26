@@ -5,10 +5,23 @@
  */
 export const getFilename = (url: string, contentDisposition?: string): string => {
   if (contentDisposition) {
-    const prefix = "filename*=UTF-8''";
-    const filenameIndex = contentDisposition.indexOf(prefix) + prefix.length;
-    const filename = contentDisposition.substring(filenameIndex, contentDisposition.length);
-    if (filename) return filename;
+    // try UTF-8 encoded filename first
+    const prefixUTF8 = "filename*=UTF-8''";
+    let filenameIndex = contentDisposition.indexOf(prefixUTF8);
+    if (filenameIndex !== -1) {
+      const filename = contentDisposition.substring(filenameIndex + prefixUTF8.length);
+      if (filename) return filename.replace(/"/g, '');
+    }
+
+    // try standard filename=
+    const prefixStandard = 'filename=';
+    filenameIndex = contentDisposition.indexOf(prefixStandard);
+    if (filenameIndex !== -1) {
+      let filename = contentDisposition.substring(filenameIndex + prefixStandard.length);
+      // remove quotes and any trailing content after semicolon
+      filename = filename.split(';')[0].replace(/"/g, '').trim();
+      if (filename) return filename;
+    }
   }
 
   // hatrac files have a different format
@@ -18,7 +31,9 @@ export const getFilename = (url: string, contentDisposition?: string): string =>
     return parts[2];
   }
 
-  return url.split('/').pop() || '';
+  // strip query parameters and fragments from URL
+  const cleanUrl = url.split('?')[0].split('#')[0];
+  return cleanUrl.split('/').pop() || '';
 };
 
 /**
@@ -38,13 +53,14 @@ export const getFilenameExtension = function (filename: string, allowedExtension
     return null;
   }
 
-  // first find in the list of allowed extensions
+  // first find in the list of allowed extensions (case-insensitive)
   let res: string | null = null;
+  const filenameLower = filename.toLowerCase();
   const isInAllowed =
     Array.isArray(allowedExtensions) &&
     allowedExtensions.some((ext) => {
       res = ext;
-      return typeof ext === 'string' && ext.length > 0 && filename.endsWith(ext);
+      return typeof ext === 'string' && ext.length > 0 && filenameLower.endsWith(ext.toLowerCase());
     });
   if (isInAllowed) {
     return res;
@@ -73,7 +89,7 @@ export const getFilenameExtension = function (filename: string, allowedExtension
     const dotIndex = filename.lastIndexOf('.');
     // it's only a valid filename if there's some string after `.`
     if (dotIndex !== -1 && dotIndex !== filename.length - 1) {
-      res = filename.slice(dotIndex);
+      res = filename.slice(dotIndex).toLowerCase();
     }
   }
 

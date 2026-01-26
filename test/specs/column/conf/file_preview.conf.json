@@ -1,0 +1,11 @@
+{
+    "catalog": {},
+    "schema": {
+        "name": "file_preview_schema",
+        "createNew": true,
+        "path": "test/specs/column/conf/file_preview_schema/schema.json"
+    },
+    "tables": {
+        "createNew": true
+    }
+}

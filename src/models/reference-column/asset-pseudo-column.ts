@@ -497,6 +497,11 @@ class FilePreviewConfig {
    */
   showCsvHeader: boolean = false;
 
+  /**
+   * the height of the preview container
+   */
+  defaultHeight: number | null = null;
+
   private _prefetchBytes: { [key: string]: number | null } = {
     image: null,
     markdown: null,
@@ -529,6 +534,7 @@ class FilePreviewConfig {
    * populate the props based on the given annotation object.
    * The supported annotation properties are:
    * - show_csv_header
+   * - default_height
    * - prefetch_bytes
    * - prefetch_max_file_size
    * - filename_ext_mapping
@@ -538,6 +544,10 @@ class FilePreviewConfig {
   constructor(settings: any) {
     if (isObjectAndKeyExists(settings, 'show_csv_header') && typeof settings.show_csv_header === 'boolean') {
       this.showCsvHeader = settings.show_csv_header;
+    }
+
+    if (isObjectAndKeyExists(settings, 'default_height') && typeof settings.default_height === 'number' && settings.default_height >= 0) {
+      this.defaultHeight = settings.default_height;
     }
 
     this._prefetchBytes = this._populateProps<number>(settings, 'prefetch_bytes', (value: unknown) => {
@@ -657,16 +667,16 @@ class FilePreviewConfig {
       csv: null,
       tsv: null,
       json: null,
+      image: null,
     };
     if (!isObjectAndKeyExists(settings, propName)) return res;
 
     if (isObjectAndNotNull(settings[propName])) {
-      for (const key of Object.keys(settings[propName])) {
-        if (FilePreviewConfig.previewTypes.includes(key as FilePreviewTypes)) {
-          const definedRes = this._getPropForType(key, settings[propName]);
-          if (!validate || validate(definedRes)) {
-            res[key] = definedRes;
-          }
+      // for each preview type, try to get its value (which will fall back to * if not defined)
+      for (const key of FilePreviewConfig.previewTypes) {
+        const definedRes = this._getPropForType(key, settings[propName]);
+        if (!validate || validate(definedRes)) {
+          res[key] = definedRes;
         }
       }
     } else {

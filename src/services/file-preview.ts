@@ -103,11 +103,19 @@ export default class FilePreviewService {
     prefetchBytes: number | null;
     prefetchMaxFileSize: number | null;
   } {
+    const disabledValue = { previewType: null, prefetchBytes: null, prefetchMaxFileSize: null };
     const previewType = FilePreviewService.getFilePreviewType(url, column, storedFilename, contentDisposition, contentType);
     let prefetchBytes: number | null = null;
     let prefetchMaxFileSize: number | null = null;
 
-    if (previewType !== null && column && column.filePreview) {
+    if (previewType === null) {
+      return disabledValue;
+    }
+
+    if (column && column.filePreview) {
+      if (column.filePreview.disabledTypes.includes(previewType)) {
+        return disabledValue;
+      }
       prefetchBytes = column.filePreview.getPrefetchBytes(previewType);
       prefetchMaxFileSize = column.filePreview.getPrefetchMaxFileSize(previewType);
     }
@@ -121,7 +129,7 @@ export default class FilePreviewService {
 
     // if prefetchMaxFileSize is 0, we should not show the preview
     if (prefetchMaxFileSize === 0) {
-      return { previewType: null, prefetchBytes, prefetchMaxFileSize };
+      return disabledValue;
     }
 
     return { previewType, prefetchBytes, prefetchMaxFileSize };
