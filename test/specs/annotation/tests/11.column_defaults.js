@@ -146,7 +146,7 @@ exports.execute = function (options) {
                     "content_type_mapping": {
                       "image/": false
                     },
-                    "file_extension_mapping": {
+                    "filename_ext_mapping": {
                       ".customext": "text"
                     },
                     "disabled": ["csv", "markdown"]
@@ -237,7 +237,7 @@ exports.execute = function (options) {
                     "image/png": "image",
                     "application/my-example": false,
                   },
-                  "file_extension_mapping": {
+                  "filename_ext_mapping": {
                     ".customext": "text"
                   },
                   "disabled": ["json"]
@@ -320,7 +320,7 @@ exports.execute = function (options) {
                     "image/png": false,
                     "application/my-example": false,
                   },
-                  "file_extension_mapping": {
+                  "filename_ext_mapping": {
                     ".customext": "text"
                   },
                   "disabled": ["json"]

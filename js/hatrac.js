@@ -15,6 +15,7 @@ import ConfigService from '@isrd-isi-edu/ermrestjs/src/services/config';
 import { hexToBase64 } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
 import { isObject, isObjectAndNotNull } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
 import { contextHeaderName, ENV_IS_NODE } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
+import { getFilenameExtension } from '@isrd-isi-edu/ermrestjs/src/utils/file-utils';
 
 // legacy
 import { _validateTemplate, _renderTemplate, _getFormattedKeyValues, _parseUrl } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
@@ -136,65 +137,6 @@ const _generateContextHeader = function (contextHeaderParams) {
   var headers = {};
   headers[contextHeaderName] = contextHeaderParams;
   return headers;
-};
-
-/**
- * given a filename, will return the extension
- * By default, it will extract the last of the filename after the last `.`.
- * The second parameter can be used for passing a regular expression
- * if we want a different method of extracting the extension.
- * @param {string} filename
- * @param {string[]} allowedExtensions
- * @param {string[]} regexArr
- * @returns the filename extension string. if we cannot find any matches, it will return null
- * @private
- * @ignore
- */
-const _getFilenameExtension = function (filename, allowedExtensions, regexArr) {
-  if (typeof filename !== 'string' || filename.length === 0) {
-    return null;
-  }
-
-  // first find in the list of allowed extensions
-  var res = -1;
-  var isInAllowed =
-    Array.isArray(allowedExtensions) &&
-    allowedExtensions.some(function (ext) {
-      res = ext;
-      return typeof ext === 'string' && ext.length > 0 && filename.endsWith(ext);
-    });
-  if (isInAllowed) {
-    return res;
-  }
-
-  // we will return null if we cannot find anything
-  res = null;
-  // no matching allowed extension, try the regular expressions
-  if (Array.isArray(regexArr) && regexArr.length > 0) {
-    regexArr.some(function (regexp) {
-      // since regular expression comes from annotation, it might not be valid
-      try {
-        var matches = filename.match(new RegExp(regexp, 'g'));
-        if (matches && matches[0] && typeof matches[0] === 'string') {
-          res = matches[0];
-        } else {
-          res = null;
-        }
-        return res;
-      } catch {
-        res = null;
-        return false;
-      }
-    });
-  } else {
-    var dotIndex = filename.lastIndexOf('.');
-    // it's only a valid filename if there's some string after `.`
-    if (dotIndex !== -1 && dotIndex !== filename.length - 1) {
-      res = filename.slice(dotIndex);
-    }
-  }
-
-  return res;
 };
 
 /**
@@ -801,7 +743,7 @@ Upload.prototype._generateURL = function (row, linkedData, templateVariables) {
   row[this.column.name].md5_base64 = this.hash.md5_base64;
   row[this.column.name].sha256 = this.hash.sha256;
   row[this.column.name].filename = this.file.name;
-  var filename_ext = _getFilenameExtension(this.file.name, this.column.filenameExtFilter, this.column.filenameExtRegexp);
+  var filename_ext = getFilenameExtension(this.file.name, this.column.filenameExtFilter, this.column.filenameExtRegexp);
   row[this.column.name].filename_ext = filename_ext;
   // filename_basename is everything from the file name except the last ext
   // For example if we have a file named "file.tar.zip"

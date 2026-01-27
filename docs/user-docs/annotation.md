@@ -745,10 +745,26 @@ Supported _waitForList_ pattern:
 
 Supported display _displayoption_ JSON payload patterns:
 
-- `{`... `"image_preview": true` ... `}`: Display a preview of the selected image below the default presentation of the asset. Be mindful that the client will not do any extra checks whether the selected file is an image, and you should guard against it by using `filename_ext_filter`. Current implementation of Chaise only supports this property in `entry` contexts and defining this for other contexts will not have any effect on Chaise.
+- `{`... `"image_preview": true` ... `}`: Display a preview of the selected image below the default presentation of the asset on the recordedit page. Be mindful that the client will not do any extra checks whether the selected file is an image, and you should guard against it by using `filename_ext_filter`. Current implementation of Chaise only supports this property in `entry` contexts and defining this for other contexts will not have any effect on Chaise.
 
-- `{`... `"file_preview":` _filepreviewoption_ | `false` ... `}`: By default, Chaise will try to display the preview for CSV, TSV, markdown, JSON, and text files in `detailed` context. If `false`, Chaise will not display the file preview to users. The following are the supported _filepreviewoption_ JSON payload patterns:
+- `{`... `"file_preview":` _filepreviewoption_ | `false` ... `}`: By default, Chaise will try to display the preview for CSV, TSV, markdown, JSON, image and text files in `detailed` context. If `false`, Chaise will not display the file preview to users. The following are the supported _filepreviewoption_ JSON payload patterns:
   - `{` ... `"show_csv_header": true` ... `}`: Treat the first row of the CSV file as the header.
+  - `{` ... `"default_height": ` _defaultheight_ ... `}`: A number used for setting the default height of the preview container.
+  - `{` ... `"filename_ext_mapping": ` _fileextmapping_ ... `}`: Map other filename extensions to the supported preview types. _fileextmapping_ must be an object which can have any or all of the following properties:
+    - `"text"`: An array of filename extensions that you want to be previewed, e.g. `[".extension1", ".another.extension"]`.
+    - `"json"`: An array of filename extensions that you want to be treated as JSON and should be previewed, e.g. `[".extension1", ".another.extension"]`.
+    - `"markdown"`: An array of filename extensions that you want to be treated as markdown and should be previewed, e.g. `[".extension1", ".another.extension"]`.
+    - `"image"`: An array of filename extensions that you want to be treated as image and should be previewed, e.g. `[".extension1", ".another.extension"]`.
+    - `"csv"`: An array of filename extensions that you want to be treated as CSV and should be previewed, e.g. `[".extension1", ".another.extension"]`.
+  - `{` ... `"content_type_mapping": ` _contenttypemapping_ ... `}`: Map other content-types to the supported preview types. _contenttypemapping_ must have a similar structure to _fileextmapping_. The array values must represent content-types (in `type/subtype` format). For instance `["text/css", "application/example"]`. You can also specify only the type (without a subtype) to enable prefix matching, for example `["image/"]`.
+  - `{` ... `"prefetch_max_file_size": ` _prefetchmaxsize_ ... `}`: We must fetch the whole file if the server doesn't accept range requests. _prefetchmaxsize_ defines the maximum file size we should prefetch. If a file is bigger than this, Chaise won't offer a preview. _prefetchmaxsize_ could be just a number or an object which can have any or all of the following properties:
+    - `"*"`: Define the value for all preview types. It's value must be a number.
+    - `"text"`: The size that should be used for text preview.
+    - `"json"`: The size that should be used for JSON preview.
+    - `"markdown"`: The size that should be used for markdown preview.
+    - `"image"`: The size that should be used for image preview.
+    - `"csv"`: The size that should be used for CSV preview.
+  - `{` ... `"prefetch_bytes": ` _prefetchbytes_ ... `}`: how many bytes we should fetch for servers that support range requests. _prefetchbytes_ follows the same syntax as _prefetchmaxsize_. 
 
 Default heuristics:
 - The `2017 Asset` annotation explicitly indicates that the associated column is the asset location.
@@ -764,6 +780,8 @@ Default heuristics:
   - `filename_ext` for the file extension based on the filename. This value is derived based on the optionally defined `filename_ext_filter` and `filename_ext_regexp`. If these annotations are missing, the last part of the filename after the last dot will be returned (also includes the `.` e.g. `.png`).
     - If we cannot find matches, this property will return `null`. So make sure you're doing null checking while using this property (otherwise, the whole `url_pattern` might result in an empty string).
 - You may use `wait_for` to have access to data from other tables. Currently only paths that start with an outbound foreign-key are supported. For more information on how to access the `wait_for` values while writing the `url_pattern`, please refer to [this document](column-directive-template.md#column-directive-templating-variable-data-structure). For example if you define an all-outbound path called `all_outbound_fk_path`, you maye use `{{{all_outbound_fk_path.values.RID}}}` to access the RID value.
+- The default content-type and filename extension mapping can be found [here](https://github.com/informatics-isi-edu/ermrestjs/blob/master/src/services/file-preview.ts) (`DEFAULT_CONTENT_TYPE_MAPPING` and `DEFAULT_EXTENSION_MAPPING` variables). You may extend or change the behavior by utilizing `content_type_mapping` and `filename_ext_mapping` annotation properties.
+
 - Nothing may be inferred without additional payload patterns present.
 
 Protocol-specific metadata retrieval MAY be applied once an asset location is known. How to present or reconcile contradictions in metadata found in multiple sources is beyond the scope of this specification.
@@ -1145,6 +1163,24 @@ For example,
         "*": {
           "markdown_pattern": "{{humanizeBytes $_self mode='binary'}}",
           "template_engine": "handlebars"
+        }
+      }
+    },
+    "url": {
+      "tag:isrd.isi.edu,2017:asset": {
+        "display": {
+          "*": {
+            "file_preview": {
+              "content_type_mapping": {
+                "image/": false,
+                "image/png": "image"
+              },
+              "filename_ext_mapping": {
+                ".mycsv": "csv"
+              },
+              "disabled": ["markdown"]
+            }
+          }
         }
       }
     }

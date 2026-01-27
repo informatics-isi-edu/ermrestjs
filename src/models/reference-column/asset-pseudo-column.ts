@@ -3,10 +3,14 @@ import { ReferenceColumn, ReferenceColumnTypes } from '@isrd-isi-edu/ermrestjs/s
 import type SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-object-wrapper';
 import type { Reference, Tuple, VisibleColumn } from '@isrd-isi-edu/ermrestjs/src/models/reference';
 
+// services
+import { FilePreviewTypes, isFilePreviewType, USE_EXT_MAPPING } from '@isrd-isi-edu/ermrestjs/src/services/file-preview';
+
 // utils
 import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils';
 import { isDefinedAndNotNull, isObjectAndKeyExists, isObjectAndNotNull, isStringAndNotEmpty } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
 import { _annotations, _contexts, _classNames } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
+import { getFilename } from '@isrd-isi-edu/ermrestjs/src/utils/file-utils';
 
 // legacy
 import { _getAnnotationValueByContext, _isEntryContext, _renderTemplate, _isSameHost } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
@@ -70,7 +74,7 @@ export class AssetPseudoColumn extends ReferenceColumn {
   private _filenameExtFilter?: string[];
   private _filenameExtRegexp?: string[];
   private _displayImagePreview?: boolean;
-  private _filePreview?: null | { showCsvHeader: boolean };
+  private _filePreview?: FilePreviewConfig | null;
 
   constructor(reference: Reference, column: Column, sourceObjectWrapper?: SourceObjectWrapper, name?: string, mainTuple?: Tuple) {
     // call the parent constructor
@@ -168,17 +172,9 @@ export class AssetPseudoColumn extends ReferenceColumn {
 
     // if we're using the url as caption
     if (urlCaption) {
-      // if caption matches the expected format, just show the file name
-      // eslint-disable-next-line no-useless-escape
-      const parts = caption.match(/^\/hatrac\/([^\/]+\/)*([^\/:]+)(:[^:]+)?$/);
-      if (parts && parts.length === 4) {
-        caption = parts[2];
-      } else {
-        // otherwise return the last part of url
-        const newCaption = caption.split('/').pop();
-        if (newCaption && newCaption.length !== 0) {
-          caption = newCaption;
-        }
+      const newCaption = getFilename(caption);
+      if (newCaption && newCaption.length !== 0) {
+        caption = newCaption;
       }
     }
 
@@ -457,7 +453,7 @@ export class AssetPseudoColumn extends ReferenceColumn {
   /**
    * whether we should show the file preview or not
    */
-  get filePreview(): null | { showCsvHeader: boolean } {
+  get filePreview(): FilePreviewConfig | null {
     if (this._filePreview === undefined) {
       const disp = this._annotation.display;
       const currDisplay = isObjectAndNotNull(disp) ? _getAnnotationValueByContext(this._context, disp) : null;
@@ -465,12 +461,7 @@ export class AssetPseudoColumn extends ReferenceColumn {
       if (settings === false) {
         this._filePreview = null;
       } else {
-        // by default we're hiding the CSV header.
-        let showCsvHeader = false;
-        if (isObjectAndKeyExists(settings, 'show_csv_header') && typeof settings.show_csv_header === 'boolean') {
-          showCsvHeader = settings.show_csv_header;
-        }
-        this._filePreview = { showCsvHeader };
+        this._filePreview = new FilePreviewConfig(settings);
       }
     }
     return this._filePreview;
@@ -494,5 +485,236 @@ export class AssetPseudoColumn extends ReferenceColumn {
       }
     }
     return this._waitFor;
+  }
+}
+
+class FilePreviewConfig {
+  private static previewTypes = Object.values(FilePreviewTypes);
+
+  /**
+   * whether we should show the CSV header or not
+   * (default: false)
+   */
+  showCsvHeader: boolean = false;
+
+  /**
+   * the height of the preview container
+   */
+  defaultHeight: number | null = null;
+
+  private _prefetchBytes: { [key: string]: number | null } = {
+    image: null,
+    markdown: null,
+    csv: null,
+    tsv: null,
+    json: null,
+    text: null,
+  };
+
+  private _prefetchMaxFileSize: { [key: string]: number | null } = {
+    image: null,
+    markdown: null,
+    csv: null,
+    tsv: null,
+    json: null,
+    text: null,
+  };
+
+  filenameExtMapping: { [key: string]: FilePreviewTypes | false } | null = null;
+
+  contentTypeMapping: {
+    exactMatch: { [key: string]: FilePreviewTypes | typeof USE_EXT_MAPPING | false } | null;
+    prefixMatch: { [key: string]: FilePreviewTypes | typeof USE_EXT_MAPPING | false } | null;
+    default: FilePreviewTypes | typeof USE_EXT_MAPPING | false | null;
+  } | null = null;
+
+  disabledTypes: FilePreviewTypes[] = [];
+
+  /**
+   * populate the props based on the given annotation object.
+   * The supported annotation properties are:
+   * - show_csv_header
+   * - default_height
+   * - prefetch_bytes
+   * - prefetch_max_file_size
+   * - filename_ext_mapping
+   * - content_type_mapping
+   * - disabled
+   */
+  constructor(settings: any) {
+    if (isObjectAndKeyExists(settings, 'show_csv_header') && typeof settings.show_csv_header === 'boolean') {
+      this.showCsvHeader = settings.show_csv_header;
+    }
+
+    if (isObjectAndKeyExists(settings, 'default_height') && typeof settings.default_height === 'number' && settings.default_height >= 0) {
+      this.defaultHeight = settings.default_height;
+    }
+
+    this._prefetchBytes = this._populateProps<number>(settings, 'prefetch_bytes', (value: unknown) => {
+      return typeof value === 'number' && value >= 0;
+    });
+
+    this._prefetchMaxFileSize = this._populateProps<number>(settings, 'prefetch_max_file_size', (value: unknown) => {
+      return typeof value === 'number' && value >= 0;
+    });
+
+    if (isObjectAndKeyExists(settings, 'filename_ext_mapping')) {
+      this.filenameExtMapping = {};
+      for (const [key, val] of Object.entries(settings.filename_ext_mapping)) {
+        if (val === false || (typeof val === 'string' && isFilePreviewType(val))) {
+          this.filenameExtMapping[key] = val;
+        }
+      }
+    }
+
+    if (isObjectAndKeyExists(settings, 'content_type_mapping')) {
+      const exactMatch: { [key: string]: FilePreviewTypes | typeof USE_EXT_MAPPING | false } = {};
+      const prefixMatch: { [key: string]: FilePreviewTypes | typeof USE_EXT_MAPPING | false } = {};
+      let defaultMapping: FilePreviewTypes | typeof USE_EXT_MAPPING | false | null = null;
+      let hasExactMatch = false;
+      let hasPrefixMatch = false;
+      Object.keys(settings.content_type_mapping).forEach((key) => {
+        const val = settings.content_type_mapping[key];
+        const validValue = val === false || (typeof val === 'string' && (isFilePreviewType(val) || val === USE_EXT_MAPPING));
+        if (!validValue) return;
+        // * could be used for default mapping
+        if (key === '*') {
+          defaultMapping = val;
+          return;
+        }
+
+        // only type/ or type/subtype are valid
+        const parts = key.split('/');
+        if (parts.length !== 2 || parts[0].length === 0) return;
+
+        if (parts[1].length > 0) {
+          exactMatch[key] = val;
+          hasExactMatch = true;
+        } else {
+          prefixMatch[parts[0] + '/'] = val;
+          hasPrefixMatch = true;
+        }
+      });
+
+      if (hasPrefixMatch || hasExactMatch || defaultMapping !== null) {
+        this.contentTypeMapping = {
+          exactMatch: hasExactMatch ? exactMatch : null,
+          prefixMatch: hasPrefixMatch ? prefixMatch : null,
+          default: defaultMapping,
+        };
+      }
+    }
+
+    if (isObjectAndKeyExists(settings, 'disabled') && Array.isArray(settings.disabled)) {
+      this.disabledTypes = settings.disabled.filter(
+        (t: unknown) => typeof t === 'string' && FilePreviewConfig.previewTypes.includes(t as FilePreviewTypes),
+      );
+    }
+  }
+
+  /**
+   * return the number of bytes to prefetch for previewing the file
+   */
+  getPrefetchBytes(filePreviewType: FilePreviewTypes | null): number | null {
+    switch (filePreviewType) {
+      case FilePreviewTypes.IMAGE:
+        return this._prefetchBytes.image;
+      case FilePreviewTypes.MARKDOWN:
+        return this._prefetchBytes.markdown;
+      case FilePreviewTypes.CSV:
+        return this._prefetchBytes.csv;
+      case FilePreviewTypes.TSV:
+        return this._prefetchBytes.tsv;
+      case FilePreviewTypes.JSON:
+        return this._prefetchBytes.json;
+      case FilePreviewTypes.TEXT:
+        return this._prefetchBytes.text;
+      default:
+        return null;
+    }
+  }
+
+  /**
+   * return the max file size for previewing the file
+   */
+  getPrefetchMaxFileSize(filePreviewType: FilePreviewTypes | null): number | null {
+    switch (filePreviewType) {
+      case FilePreviewTypes.IMAGE:
+        return this._prefetchMaxFileSize.image;
+      case FilePreviewTypes.MARKDOWN:
+        return this._prefetchMaxFileSize.markdown;
+      case FilePreviewTypes.CSV:
+        return this._prefetchMaxFileSize.csv;
+      case FilePreviewTypes.TSV:
+        return this._prefetchMaxFileSize.tsv;
+      case FilePreviewTypes.JSON:
+        return this._prefetchMaxFileSize.json;
+      case FilePreviewTypes.TEXT:
+        return this._prefetchMaxFileSize.text;
+      default:
+        return null;
+    }
+  }
+
+  /**
+   * The settings could be either just one value or an object with different values for each type.
+   * This function will populate the result object with the appropriate values for each type.
+   */
+  private _populateProps<T>(settings: any, propName: string, validate?: (value: unknown) => boolean): { [key: string]: T | null } {
+    const res: { [key: string]: T | null } = {
+      text: null,
+      markdown: null,
+      csv: null,
+      tsv: null,
+      json: null,
+      image: null,
+    };
+    if (!isObjectAndKeyExists(settings, propName)) return res;
+
+    if (isObjectAndNotNull(settings[propName])) {
+      // for each preview type, try to get its value (which will fall back to * if not defined)
+      for (const key of FilePreviewConfig.previewTypes) {
+        const definedRes = this._getPropForType(key, settings[propName]);
+        if (!validate || validate(definedRes)) {
+          res[key] = definedRes;
+        }
+      }
+    } else {
+      const definedRes = settings[propName];
+      if (!validate || validate(definedRes)) {
+        for (const key of FilePreviewConfig.previewTypes) {
+          res[key] = definedRes;
+        }
+      }
+    }
+
+    return res;
+  }
+
+  /**
+   * Get the property for a specific file type. If not defined, will try to get the default value (*).
+   * Otherwise returns null.
+   */
+  private _getPropForType(fileType: string, settings: any): any {
+    const DEFAULT_TYPE = '*';
+
+    let isDefined = false;
+    let res;
+    if (isObjectAndKeyExists(settings, fileType)) {
+      if (typeof settings[fileType] === 'string' && settings[fileType] in FilePreviewConfig.previewTypes) {
+        res = this._getPropForType(settings[fileType], settings);
+      } else {
+        res = settings[fileType];
+      }
+
+      if (res !== null && res !== undefined) isDefined = true;
+    }
+
+    if (!isDefined && settings[DEFAULT_TYPE]) {
+      res = this._getPropForType(DEFAULT_TYPE, settings);
+      if (res !== null && res !== undefined) isDefined = true;
+    }
+
+    return isDefined ? res : null;
   }
 }

@@ -1320,17 +1320,15 @@ exports.execute = function (options) {
 
                 it ('if annotation has a proper object, should use it.', () => {
                     const val = assetRefCompactCols[8].filePreview;
-                    expect(val).toEqual({
-                        showCsvHeader: true
-                    });
+                    expect(val).toBeDefined();
+                    expect(val.showCsvHeader).toBe(true);
                 });
 
                 it ('otherwise should return an object with the default values', () => {
                     [0, 4, 6, 7].forEach((i) => {
                         const val = assetRefCompactCols[i].filePreview;
-                        expect(val).toEqual({
-                            showCsvHeader: false
-                        });
+                        expect(val).toBeDefined();
+                        expect(val.showCsvHeader).toBe(false);
                     });
                 });
             });
