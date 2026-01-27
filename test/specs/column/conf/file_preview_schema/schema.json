@@ -72,7 +72,8 @@
                     },
                     "prefetch_max_file_size": {
                       "text": 100000,
-                      "markdown": 200000
+                      "markdown": 200000,
+                      "tsv": 300000
                     }
                   }
                 }

@@ -189,6 +189,17 @@ exports.execute = function (options) {
               );
             });
 
+            it('should use per-type prefetchMaxFileSize when defined (tsv)', () => {
+              testFilePreview(
+                'http://example.com/file.tsv',
+                col_asset_per_type_config,
+                null,
+                null,
+                null,
+                { previewType: 'tsv', prefetchBytes: 20000, prefetchMaxFileSize: 300000 }
+              );
+            });
+
             it('should use default MAX_FILE_SIZE for types without specific prefetchMaxFileSize config', () => {
               testFilePreview(
                 'http://example.com/file.csv',
