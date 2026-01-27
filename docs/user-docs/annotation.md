@@ -750,21 +750,40 @@ Supported display _displayoption_ JSON payload patterns:
 - `{`... `"file_preview":` _filepreviewoption_ | `false` ... `}`: By default, Chaise will try to display the preview for CSV, TSV, markdown, JSON, image and text files in `detailed` context. If `false`, Chaise will not display the file preview to users. The following are the supported _filepreviewoption_ JSON payload patterns:
   - `{` ... `"show_csv_header": true` ... `}`: Treat the first row of the CSV file as the header.
   - `{` ... `"default_height": ` _defaultheight_ ... `}`: A number used for setting the default height of the preview container.
-  - `{` ... `"filename_ext_mapping": ` _fileextmapping_ ... `}`: Map other filename extensions to the supported preview types. _fileextmapping_ must be an object which can have any or all of the following properties:
-    - `"text"`: An array of filename extensions that you want to be previewed, e.g. `[".extension1", ".another.extension"]`.
-    - `"json"`: An array of filename extensions that you want to be treated as JSON and should be previewed, e.g. `[".extension1", ".another.extension"]`.
-    - `"markdown"`: An array of filename extensions that you want to be treated as markdown and should be previewed, e.g. `[".extension1", ".another.extension"]`.
-    - `"image"`: An array of filename extensions that you want to be treated as image and should be previewed, e.g. `[".extension1", ".another.extension"]`.
-    - `"csv"`: An array of filename extensions that you want to be treated as CSV and should be previewed, e.g. `[".extension1", ".another.extension"]`.
-  - `{` ... `"content_type_mapping": ` _contenttypemapping_ ... `}`: Map other content-types to the supported preview types. _contenttypemapping_ must have a similar structure to _fileextmapping_. The array values must represent content-types (in `type/subtype` format). For instance `["text/css", "application/example"]`. You can also specify only the type (without a subtype) to enable prefix matching, for example `["image/"]`.
-  - `{` ... `"prefetch_max_file_size": ` _prefetchmaxsize_ ... `}`: We must fetch the whole file if the server doesn't accept range requests. _prefetchmaxsize_ defines the maximum file size we should prefetch. If a file is bigger than this, Chaise won't offer a preview. _prefetchmaxsize_ could be just a number or an object which can have any or all of the following properties:
+  - `{` ... `"disabled": ` _filepreviewtypes_ ... `}`: An array of preview types that should not be allowed. The preview types are: `"text"`, `"json"`, `"markdown"`, `"image"`, `"csv"`, and `"tsv"`.
+  - `{` ... `"content_type_mapping": ` _contenttypemapping_ ... `}`: Map other content-types to the supported preview types. _contenttypemapping_ must be an object. The keys could either be the complete content-type value (in `type/subtype` format), or just the type without a subtype (`type/`) to enable prefix matching. For value, you could use any of the following values
+    - Your desired preview type (`"text"`, `"json"`, `"markdown"`, `"image"`, `"csv"`, `"tsv"`).
+    - `"use_ext_mapping"` to let filename extension mapping find the type.
+    - `false` to disable the preview for that given content-type.
+    
+    For instance:
+    ```json
+    {
+      "content_type_mapping": {
+        "image/": false,
+        "image/png": "image",
+        "application/my-custom-app": "use_ext_mapping"
+      }
+    }
+    ```
+  - `{` ... `"filename_ext_mapping": ` _fileextmapping_ ... `}`: Map other filename extensions to the supported preview types. _fileextmapping_ must be an object with the file extension as key and the desired preview type (`"text"`, `"json"`, `"markdown"`, `"image"`, `"csv"`, `"tsv"`) or `false` as its value. By using `false`, file preview will not be presented for that partictular file. 
+    ```json
+    {
+      "filename_ext_mapping": {
+        ".customtype": "text",
+        ".otherfile": false
+      }
+    }
+    ```
+  - `{` ... `"prefetch_max_file_size": ` _prefetchmaxsize_ ... `}`: We must fetch the whole file if the server doesn't accept range requests. _prefetchmaxsize_ defines the maximum file size we should prefetch. If a file is bigger than this, Chaise won't offer a preview. _prefetchmaxsize_ could be just a number or an object which can have any or all of the following properties (by default 1048576 or 1 MB will be used):
     - `"*"`: Define the value for all preview types. It's value must be a number.
     - `"text"`: The size that should be used for text preview.
     - `"json"`: The size that should be used for JSON preview.
     - `"markdown"`: The size that should be used for markdown preview.
     - `"image"`: The size that should be used for image preview.
     - `"csv"`: The size that should be used for CSV preview.
-  - `{` ... `"prefetch_bytes": ` _prefetchbytes_ ... `}`: how many bytes we should fetch for servers that support range requests. _prefetchbytes_ follows the same syntax as _prefetchmaxsize_. 
+    - `"tsv"`: The size that should be used for CSV preview.
+  - `{` ... `"prefetch_bytes": ` _prefetchbytes_ ... `}`: how many bytes we should fetch for servers that support range requests. _prefetchbytes_ follows the same syntax as _prefetchmaxsize_. By default 524288 or 512 KB will be used. 
 
 Default heuristics:
 - The `2017 Asset` annotation explicitly indicates that the associated column is the asset location.
