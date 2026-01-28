@@ -1,58 +1,61 @@
+<!-- omit in toc -->
 # Markdown Formatting
 
 Markdown is a plain text format for writing structured documents. We use [markdown-it](https://github.com/markdown-it/markdown-it) to parse markdown content which follows [commonMark specifications](https://spec.commonmark.org/0.30/).
 
 For common markdown syntax please refer to [this reference sheet](http://commonmark.org/help/). The following content are mainly focused on more advanced features and/or features specific to ERMrestJS.
 
+<!-- omit in toc -->
 ## Table of Contents
-  * [Inline Vs. Block](#inline-vs-block)
-  * [Attributes](#attributes)
-    + [Tooltip](#tooltip)
-    + [Classes](#classes)
-      - [Special Classes](#special-classes)
-  * [Examples](#examples)
-    + [1. Link (Anchor)](#1-link-anchor)
-    + [2. Download Button](#2-download-button)
-    + [3. Image](#3-image)
-      - [3.1. Image with static width and height](#31-image-with-static-width-and-height)
-      - [3.2. Image with maximum width and maximum height](#32-image-with-maximum-width-and-maximum-height)
-      - [3.3. Preserving the aspect ratio of image](#33-preserving-the-aspect-ratio-of-image)
-    + [4. Thumbnail With Link To Original Image And A caption](#4-thumbnail-with-link-to-original-image-and-a-caption)
-    + [5. Image with zoom capabilties](#5-image-with-zoom-capabilties)
-    + [6. Iframe](#6-iframe)
-      - [a. Styling the Iframe](#a-styling-the-iframe)
-        - [a.1. Without any attributes](#a1-without-any-attributes)
-        - [a.2. With height and width defined](#a2-with-height-and-width-defined)
-        - [a.3. Invalid link](#a3-invalid-link)
-        - [a.4. Iframe without scrolling](#a4-iframe-without-scrolling)
-        - [a.5. Class and style attached to the iframe element](#a5-class-and-style-attached-to-the-iframe-element)
-        - [a.6. Iframe with figure class and style](#a6-iframe-with-figure-class-and-style)
-        - [a.7. Iframe with caption styles and figure styles](#a7-iframe-with-caption-styles-and-figure-styles)
-      - [b. Captions](#b-captions)
-        - [b.1. Linkable caption](#b1-linkable-caption)
-        - [b.2. Download link caption](#b2-download-link-caption)
-        - [b.3. Caption positioned at the bottom](#b3-caption-positioned-at-the-bottom)
-        - [b.4. Caption class and style](#b4-caption-class-and-style)
-        - [b.5. Linkable caption open new tab](#b5-linkable-caption-open-new-tab)
-      - [c. Responsiveness and Other Cases](#c-responsiveness-and-other-cases)
-        - [c.1. Stretch to height and width of parent container](#c1-stretch-to-height-and-width-of-parent-container)
-        - [c.2. Fill container with min-width](#c2-fill-container-with-min-width)
-        - [c.3. Fill container with min-width and min-height and max-height](#c3-fill-container-with-min-width-and-min-height-and-max-height)
-        - [c.4. Iframe with set height and responsive width](#c4-iframe-with-set-height-and-responsive-width)
-        - [c.5. Iframe with variable height based on viewport with bounds](#c5-Iframe-with-variable-height-based-on-viewport-with-bounds)
-        - [c.6. Iframe with fullscreen button hidden](#c6-iframe-with-fullscreen-button-hidden)
-        - [c.7. Iframe with fullscreen button open new tab](#c7-iframe-with-fullscreen-button-open-new-tab)
-    + [7. Dropdown download button](#7-dropdown-download-button)
-    + [8. Vocabulary](#8-vocabulary)
-    + [9. Youtube Video](#9-youtube-video)
-    + [10. Video](#10-video)
-    + [11. Subscript](#11-subscript)
-    + [12. Superscript](#12-superscript)
-    + [13. Span (Attach Attributes To Text)](#13-span-attach-attributes-to-text)
-    + [14. Escape markdown content](#14-escape-markdown-content)
-    + [15. RID link](#15-rid-link)
-    + [16. Table](#15-table)
-    + [Gene Sequence](#17-gene-sequence)
+- [Inline Vs. Block](#inline-vs-block)
+- [Attributes](#attributes)
+  - [Tooltip](#tooltip)
+  - [Classes](#classes)
+    - [Special Classes](#special-classes)
+- [Examples](#examples)
+  - [1. Link (Anchor)](#1-link-anchor)
+  - [2. Download Button](#2-download-button)
+  - [3. Image](#3-image)
+    - [3.1. Image with static width and height](#31-image-with-static-width-and-height)
+    - [3.2. Image with maximum width and maximum height](#32-image-with-maximum-width-and-maximum-height)
+    - [3.3. Preserving the aspect ratio of image](#33-preserving-the-aspect-ratio-of-image)
+  - [4. Thumbnail With Link To Original Image And A caption](#4-thumbnail-with-link-to-original-image-and-a-caption)
+  - [5. Image with zoom capabilties](#5-image-with-zoom-capabilties)
+  - [6. Iframe](#6-iframe)
+    - [a. Styling the Iframe](#a-styling-the-iframe)
+    - [a.1. Without any attributes](#a1-without-any-attributes)
+    - [a.2. With height and width defined](#a2-with-height-and-width-defined)
+    - [a.3. Invalid link](#a3-invalid-link)
+    - [a.4. Iframe without scrolling](#a4-iframe-without-scrolling)
+    - [a.5. Class and style attached to the iframe element](#a5-class-and-style-attached-to-the-iframe-element)
+    - [a.6. Iframe with figure class and style](#a6-iframe-with-figure-class-and-style)
+    - [a.7. Iframe with caption styles and figure styles](#a7-iframe-with-caption-styles-and-figure-styles)
+    - [b. Captions](#b-captions)
+    - [b.1. Linkable caption](#b1-linkable-caption)
+    - [b.2. Download link caption](#b2-download-link-caption)
+    - [b.3. Caption positioned at the bottom](#b3-caption-positioned-at-the-bottom)
+    - [b.4. Caption class and style](#b4-caption-class-and-style)
+    - [b.5. Linkable caption open new tab](#b5-linkable-caption-open-new-tab)
+    - [c. Responsiveness and Other Cases](#c-responsiveness-and-other-cases)
+    - [c.1. Stretch to height and width of parent container](#c1-stretch-to-height-and-width-of-parent-container)
+    - [c.2. Fill container with min-width](#c2-fill-container-with-min-width)
+    - [c.3. Fill container with min-width and min-height and max-height](#c3-fill-container-with-min-width-and-min-height-and-max-height)
+    - [c.4. Iframe with set height and responsive width](#c4-iframe-with-set-height-and-responsive-width)
+    - [c.5. Iframe with variable height based on viewport with bounds](#c5-iframe-with-variable-height-based-on-viewport-with-bounds)
+    - [c.6. Iframe with fullscreen button hidden](#c6-iframe-with-fullscreen-button-hidden)
+    - [c.7. Iframe with fullscreen button open new tab](#c7-iframe-with-fullscreen-button-open-new-tab)
+  - [7. Dropdown download button](#7-dropdown-download-button)
+  - [8. Vocabulary](#8-vocabulary)
+  - [9. Youtube Video](#9-youtube-video)
+  - [10. Video](#10-video)
+  - [11. Subscript](#11-subscript)
+  - [12. Superscript](#12-superscript)
+  - [13. Span (Attach Attributes To Text)](#13-span-attach-attributes-to-text)
+  - [14. Escape markdown content](#14-escape-markdown-content)
+  - [15. RID link](#15-rid-link)
+  - [16. Table](#16-table)
+  - [17. Gene Sequence](#17-gene-sequence)
+  - [18. Div (Custom container)](#18-div-custom-container)
 
 
 ## Inline Vs. Block
@@ -1139,4 +1142,112 @@ This is not part of commonMark specification and it will result in a [block](#in
 - A compact version for `compact` contexts as part of a `markdown_pattern` (assume `sequence` column returns the gene sequence string):
     ```
     ::: geneSequence {{{_sequence}}} {.chaise-gene-sequence-compact} \n:::
+    ```
+
+
+### 18. Div (Custom container)
+
+This is not part of commonMark specification and it will result in a [block](#inline-vs-block). The `:::div` block allows you to create custom `<div>` containers with attributes and nested content, which is useful for creating complex layouts like Bootstrap cards or custom styled sections.
+
+**Basic Syntax**
+
+There are two syntax styles:
+
+1. **Single-line syntax** (content on the same line as opening tag):
+   ```
+   :::div content here {.class-name} \n:::
+   ```
+
+2. **Multi-line syntax** (attributes on opening tag, content on separate lines):
+   ```
+   :::div {.class-name attribute="value"}\ncontent here \n:::
+   ```
+
+**Nesting**
+
+You can nest divs by using more colons for inner divs or other custom blocks described above:
+- `:::div` - outer div (3 colons)
+- `::::div` - nested div (4 colons)
+- `:::::div` - deeper nested div (5 colons)
+
+**Paragraph Unwrapping**
+
+When a div contains only a single element (like an image, heading, or link), the wrapping `<p>` tag is automatically removed for cleaner HTML structure. This is especially useful for Bootstrap components.
+
+**Examples**
+
+- Simple div with class:
+    ```
+    :::div {.container}\nThis is content inside a div.\n:::
+    ```
+    Output:
+    ```html
+    <div class="container">
+      <p>This is content inside a div.</p>
+    </div>
+    ```
+
+- Div with multiple attributes:
+    ```
+    :::div {#my-section .highlight data-value="test"}\nHighlighted content\n:::
+    ```
+    Output:
+    ```html
+    <div id="my-section" class="highlight" data-value="test">
+      <p>Highlighted content</p>
+    </div>
+    ```
+
+- Nested divs:
+    ```
+    :::div {.outer}\n::::div {.inner}\nNested content\n::::\n:::
+    ```
+    Output:
+    ```html
+    <div class="outer">
+      <div class="inner">
+        <p>Nested content</p>
+      </div>
+    </div>
+    ```
+
+- Div with image (paragraph unwrapped):
+    ```
+    :::div {.image-container}\n![Alt text](https://example.com/image.jpg){.img-fluid}\n:::
+    ```
+    Output:
+    ```html
+    <div class="image-container">
+      <img src="https://example.com/image.jpg" alt="Alt text" class="img-fluid -chaise-post-load">
+    </div>
+    ```
+
+- Bootstrap card example:
+    ```
+    :::div {.card style="width: 18rem;"}\n![Card image](https://example.com/card.jpg){.card-img-top}\n::::div {.card-body}\n#### Card Title {.card-title}\nSome quick example text to build on the card title and make up the bulk of the card's content.\n[Go somewhere](https://example.com){.chaise-btn .chaise-btn-primary}\n::::\n:::
+    ```
+    Output:
+    ```html
+    <div class="card" style="width: 18rem;">
+      <img src="https://example.com/card.jpg" alt="Card image" class="card-img-top -chaise-post-load">
+      <div class="card-body">
+        <h4 class="card-title">Card Title</h4>
+        <p>Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+        <a href="https://example.com" class="chaise-btn chaise-btn-primary">Go somewhere</a>
+      </div>
+    </div>
+    ```
+
+    See how the inner div has four `:`s.
+
+- Div containing other custom blocks (iframe):
+    ```
+    :::div {.embed-container}\n:::: iframe [View Map](https://example.com/map){width=800 height=600}\n::::\n:::
+    ```
+
+    The inner blocks must have four `:`s.
+
+- Div with multiple elements:
+    ```
+    :::div {.section}\n## Section Title\n\nThis is a paragraph with some text.\n\n- List item 1\n- List item 2\n:::
     ```
