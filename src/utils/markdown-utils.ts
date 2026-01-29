@@ -5,6 +5,7 @@ import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
 
 // utils
 import { _classNames } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
+import { escapeHTML } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
 
 // vendor
 import markdownItSub from '@isrd-isi-edu/ermrestjs/vendor/markdown-it-sub.min';
@@ -774,8 +775,10 @@ function _bindCustomMarkdownTags(md: typeof MarkdownIt) {
             const openingLink = attrs[0].children[0];
             let fileUrl = '';
             let filename = '';
-            let placeholderClass = '';
-            let placeholderAttrs = '';
+            let classAttr = '';
+            let otherAttrs = '';
+            let noAlert = false;
+            let noDownloadBtn = false;
 
             // Extract attributes
             openingLink!.attrs!.forEach(function (attr) {
@@ -787,26 +790,37 @@ function _bindCustomMarkdownTags(md: typeof MarkdownIt) {
                   filename = attr[1];
                   break;
                 case 'class':
-                  placeholderClass = attr[1];
+                  classAttr = attr[1];
+                  break;
+                case 'no-alert':
+                  noAlert = true;
+                  break;
+                case 'no-download-btn':
+                  noDownloadBtn = true;
                   break;
                 default:
-                  placeholderAttrs += ' ' + attr[0] + '="' + attr[1] + '"';
+                  otherAttrs += ' ' + attr[0] + '="' + attr[1] + '"';
                   break;
               }
             });
 
-            // Create a placeholder div that will be replaced with React component
-            html = [
-              '<div class="file-preview-placeholder ' + placeholderClass + '" ',
-              'data-chaise-file-preview="true" ',
+            const props = [
+              `class="file-preview-placeholder ${classAttr}"`,
+              'data-chaise-file-preview="true"',
               'data-file-url="' + fileUrl + '"',
-            ].join('');
+              filename ? 'data-filename="' + filename + '"' : '',
+              noAlert ? 'data-no-alert="true"' : '',
+              otherAttrs,
+            ];
 
-            if (filename) {
-              html += ' data-filename="' + filename + '"';
+            if (!noDownloadBtn) {
+              // TODO add asset-permission class
+              // const btn = `<a href=${fileUrl} download>${filename ? filename : 'Download'}</a>`;
+              const btn = `[${filename ? filename : 'Download'}](${fileUrl}){download}`;
+              props.push(`data-download-btn="${escapeHTML(btn)}"`);
             }
 
-            html += placeholderAttrs + '></div>';
+            html = `<div ${props.join(' ')}></div>`;
           }
         }
 
