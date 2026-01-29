@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "engines": {
     "node": ">= 20.0.0",
-    "npm": ">=6.0.0"
+    "npm": ">= 7.0.0"
   },
   "main": "dist/ermrest.js",
   "module": "dist/ermrest.min.js",
@@ -42,6 +42,11 @@
     "postgresql",
     "library"
   ],
+  "overrides": {
+    "@microsoft/api-extractor": {
+      "typescript": "$typescript"
+    }
+  },
   "dependencies": {
     "@types/lodash-es": "^4.17.12",
     "@types/markdown-it": "^14.1.2",
