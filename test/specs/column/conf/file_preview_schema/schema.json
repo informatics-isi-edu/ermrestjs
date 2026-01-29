@@ -1,0 +1,165 @@
+{
+  "schema_name": "file_preview_schema",
+  "tables": {
+    "main": {
+      "table_name": "main",
+      "schema_name": "file_preview_schema",
+      "keys": [
+        {"unique_columns": ["id"]}
+      ],
+      "foreign_keys": [],
+      "column_definitions": [
+        {
+          "name": "id",
+          "type": { "typename": "int4" },
+          "nullok": false
+        },
+        {
+          "name": "asset_no_display",
+          "type": { "typename": "text" },
+          "annotations": {
+            "tag:isrd.isi.edu,2017:asset": {
+              "url_pattern":"/hatrac/js/ermrestjs/{{{_id}}}/{{{_asset_no_display.md5_hex}}}"
+            }
+          }
+        },
+        {
+          "name": "asset_disabled_preview",
+          "type": { "typename": "text" },
+          "annotations": {
+            "tag:isrd.isi.edu,2017:asset": { 
+              "url_pattern":"/hatrac/js/ermrestjs/{{{_id}}}/{{{_asset_disabled_preview.md5_hex}}}",
+              "display": {
+                "*": {
+                  "file_preview": false
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "asset_w_display_1",
+          "type": { "typename": "text" },
+          "annotations": {
+            "tag:isrd.isi.edu,2017:asset": {
+              "url_pattern":"/hatrac/js/ermrestjs/{{{_id}}}/{{{_asset_w_display_1.md5_hex}}}",
+              "display": {
+                "*": {
+                  "file_preview": {
+                    "show_csv_header": true,
+                    "default_height": 400,
+                    "prefetch_bytes": 10000,
+                    "prefetch_max_file_size": 5000000
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "asset_per_type_config",
+          "type": { "typename": "text" },
+          "annotations": {
+            "tag:isrd.isi.edu,2017:asset": {
+              "url_pattern":"/hatrac/js/ermrestjs/{{{_id}}}/{{{_asset_per_type_config.md5_hex}}}",
+              "display": {
+                "*": {
+                  "file_preview": {
+                    "prefetch_bytes": {
+                      "*": 20000,
+                      "csv": 30000,
+                      "json": 40000
+                    },
+                    "prefetch_max_file_size": {
+                      "text": 100000,
+                      "markdown": 200000,
+                      "tsv": 300000
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "asset_custom_ext_mapping",
+          "type": { "typename": "text" },
+          "annotations": {
+            "tag:isrd.isi.edu,2017:asset": {
+              "url_pattern":"/hatrac/js/ermrestjs/{{{_id}}}/{{{_asset_custom_ext_mapping.md5_hex}}}",
+              "display": {
+                "*": {
+                  "file_preview": {
+                    "filename_ext_mapping": {
+                      ".mycsv": "csv",
+                      ".mvsj": "json",
+                      ".custommd": "markdown",
+                      ".blocked": false
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "asset_custom_content_type",
+          "type": { "typename": "text" },
+          "annotations": {
+            "tag:isrd.isi.edu,2017:asset": {
+              "url_pattern":"/hatrac/js/ermrestjs/{{{_id}}}/{{{_asset_custom_content_type.md5_hex}}}",
+              "display": {
+                "*": {
+                  "file_preview": {
+                    "content_type_mapping": {
+                      "application/my-json": "json",
+                      "application/custom-csv": "csv",
+                      "application/": false,
+                      "text/my-markdown": "markdown",
+                      "vendor/x-special": "text",
+                      "*": "use_ext_mapping"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "asset_disabled_types",
+          "type": { "typename": "text" },
+          "annotations": {
+            "tag:isrd.isi.edu,2017:asset": {
+              "url_pattern":"/hatrac/js/ermrestjs/{{{_id}}}/{{{_asset_disabled_types.md5_hex}}}",
+              "display": {
+                "*": {
+                  "file_preview": {
+                    "disabled": ["image", "csv"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "asset_zero_max_file_size",
+          "type": { "typename": "text" },
+          "annotations": {
+            "tag:isrd.isi.edu,2017:asset": {
+              "url_pattern":"/hatrac/js/ermrestjs/{{{_id}}}/{{{_asset_zero_max_file_size.md5_hex}}}",
+              "display": {
+                "*": {
+                  "file_preview": {
+                    "prefetch_max_file_size": {
+                      "image": 0
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

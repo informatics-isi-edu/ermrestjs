@@ -227,6 +227,7 @@ import HistoryService from '@isrd-isi-edu/ermrestjs/src/services/history';
         this._compactUri = stripTrailingSlash(this._compactUri);
 
         // service
+        // codeql[js/polynomial-redos]: URL input limited by browser length
         parts = uri.match(/(.*)\/catalog\/([^\/]*)\/(entity|attribute|aggregate|attributegroup)\/(.*)/);
         this._service = parts[1];
 
@@ -263,11 +264,13 @@ import HistoryService from '@isrd-isi-edu/ermrestjs/src/services/history';
         // sort and paging
         if (modifiers) {
             if (modifiers.indexOf("@sort(") !== -1) {
+                // codeql[js/polynomial-redos]: URL input limited by browser length
                 this._sort = modifiers.match(/(@sort\([^\)]*\))/)[1];
             }
             // sort must specified to use @before and @after
             if (modifiers.indexOf("@before(") !== -1) {
                 if (this._sort) {
+                    // codeql[js/polynomial-redos]: URL input limited by browser length
                     this._before = modifiers.match(/(@before\([^\)]*\))/)[1];
                 } else {
                     throw new InvalidPageCriteria("Sort modifier is required with paging.", this._path);
@@ -276,6 +279,7 @@ import HistoryService from '@isrd-isi-edu/ermrestjs/src/services/history';
 
             if (modifiers.indexOf("@after(") !== -1) {
                 if (this._sort) {
+                    // codeql[js/polynomial-redos]: URL input limited by browser length
                     this._after = modifiers.match(/(@after\([^\)]*\))/)[1];
                 } else {
                     throw new InvalidPageCriteria("Sort modifier is required with paging.", this._path);
@@ -300,6 +304,7 @@ import HistoryService from '@isrd-isi-edu/ermrestjs/src/services/history';
         }
 
         // pathParts: <joins/facet/cfacet/filter/>
+        // codeql[js/polynomial-redos]: URL input limited by browser length
         var joinRegExp = /(?:left|right|full|^)\((.*)\)=\((.*:.*:.*)\)/,
             facetsRegExp = /\*::facets::(.+)/,
             customFacetsRegExp = /\*::cfacets::(.+)/;
@@ -1770,6 +1775,7 @@ import HistoryService from '@isrd-isi-edu/ermrestjs/src/services/history';
     function _createParsedJoinFromStr (linking, table, schema) {
         var fromSchemaTable = schema ? [schema,table].join(":") : table;
         var fromCols = linking[1].split(",");
+        // codeql[js/polynomial-redos]: URL input limited by browser length
         var toParts = linking[2].match(/([^:]*):([^:]*):([^\)]*)/);
         var toCols = toParts[3].split(",");
         var strReverse = "(" + toParts[3] + ")=(" + fromSchemaTable + ":" + linking[1] + ")";

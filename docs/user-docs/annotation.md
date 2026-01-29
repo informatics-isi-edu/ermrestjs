@@ -745,10 +745,45 @@ Supported _waitForList_ pattern:
 
 Supported display _displayoption_ JSON payload patterns:
 
-- `{`... `"image_preview": true` ... `}`: Display a preview of the selected image below the default presentation of the asset. Be mindful that the client will not do any extra checks whether the selected file is an image, and you should guard against it by using `filename_ext_filter`. Current implementation of Chaise only supports this property in `entry` contexts and defining this for other contexts will not have any effect on Chaise.
+- `{`... `"image_preview": true` ... `}`: Display a preview of the selected image below the default presentation of the asset on the recordedit page. Be mindful that the client will not do any extra checks whether the selected file is an image, and you should guard against it by using `filename_ext_filter`. Current implementation of Chaise only supports this property in `entry` contexts and defining this for other contexts will not have any effect on Chaise.
 
-- `{`... `"file_preview":` _filepreviewoption_ | `false` ... `}`: By default, Chaise will try to display the preview for CSV, TSV, markdown, JSON, and text files in `detailed` context. If `false`, Chaise will not display the file preview to users. The following are the supported _filepreviewoption_ JSON payload patterns:
+- `{`... `"file_preview":` _filepreviewoption_ | `false` ... `}`: By default, Chaise will try to display the preview for CSV, TSV, markdown, JSON, image and text files in `detailed` context. If `false`, Chaise will not display the file preview to users. The following are the supported _filepreviewoption_ JSON payload patterns:
   - `{` ... `"show_csv_header": true` ... `}`: Treat the first row of the CSV file as the header.
+  - `{` ... `"default_height": ` _defaultheight_ ... `}`: A number used for setting the default height of the preview container.
+  - `{` ... `"disabled": ` _filepreviewtypes_ ... `}`: An array of preview types that should not be allowed. The preview types are: `"text"`, `"json"`, `"markdown"`, `"image"`, `"csv"`, and `"tsv"`.
+  - `{` ... `"content_type_mapping": ` _contenttypemapping_ ... `}`: Map other content-types to the supported preview types. _contenttypemapping_ must be an object. The keys could either be the complete content-type value (in `type/subtype` format), or just the type without a subtype (`type/`) to enable prefix matching. For value, you could use any of the following values
+    - Your desired preview type (`"text"`, `"json"`, `"markdown"`, `"image"`, `"csv"`, `"tsv"`).
+    - `"use_ext_mapping"` to let filename extension mapping find the type.
+    - `false` to disable the preview for that given content-type.
+    
+    For instance:
+    ```json
+    {
+      "content_type_mapping": {
+        "image/": false,
+        "image/png": "image",
+        "application/my-custom-app": "use_ext_mapping"
+      }
+    }
+    ```
+  - `{` ... `"filename_ext_mapping": ` _fileextmapping_ ... `}`: Map other filename extensions to the supported preview types. _fileextmapping_ must be an object with the file extension as key and the desired preview type (`"text"`, `"json"`, `"markdown"`, `"image"`, `"csv"`, `"tsv"`) or `false` as its value. By using `false`, file preview will not be presented for that partictular file. 
+    ```json
+    {
+      "filename_ext_mapping": {
+        ".customtype": "text",
+        ".otherfile": false
+      }
+    }
+    ```
+  - `{` ... `"prefetch_max_file_size": ` _prefetchmaxsize_ ... `}`: We must fetch the whole file if the server doesn't accept range requests. _prefetchmaxsize_ defines the maximum file size we should prefetch. If a file is bigger than this, Chaise won't offer a preview. _prefetchmaxsize_ could be just a number or an object which can have any or all of the following properties (by default 1048576 or 1 MB will be used):
+    - `"*"`: Define the value for all preview types. It's value must be a number.
+    - `"text"`: The size that should be used for text preview.
+    - `"json"`: The size that should be used for JSON preview.
+    - `"markdown"`: The size that should be used for markdown preview.
+    - `"image"`: The size that should be used for image preview.
+    - `"csv"`: The size that should be used for CSV preview.
+    - `"tsv"`: The size that should be used for CSV preview.
+  - `{` ... `"prefetch_bytes": ` _prefetchbytes_ ... `}`: how many bytes we should fetch for servers that support range requests. _prefetchbytes_ follows the same syntax as _prefetchmaxsize_. By default 524288 or 512 KB will be used. 
 
 Default heuristics:
 - The `2017 Asset` annotation explicitly indicates that the associated column is the asset location.
@@ -764,6 +799,8 @@ Default heuristics:
   - `filename_ext` for the file extension based on the filename. This value is derived based on the optionally defined `filename_ext_filter` and `filename_ext_regexp`. If these annotations are missing, the last part of the filename after the last dot will be returned (also includes the `.` e.g. `.png`).
     - If we cannot find matches, this property will return `null`. So make sure you're doing null checking while using this property (otherwise, the whole `url_pattern` might result in an empty string).
 - You may use `wait_for` to have access to data from other tables. Currently only paths that start with an outbound foreign-key are supported. For more information on how to access the `wait_for` values while writing the `url_pattern`, please refer to [this document](column-directive-template.md#column-directive-templating-variable-data-structure). For example if you define an all-outbound path called `all_outbound_fk_path`, you maye use `{{{all_outbound_fk_path.values.RID}}}` to access the RID value.
+- The default content-type and filename extension mapping can be found [here](https://github.com/informatics-isi-edu/ermrestjs/blob/master/src/services/file-preview.ts) (`DEFAULT_CONTENT_TYPE_MAPPING` and `DEFAULT_EXTENSION_MAPPING` variables). You may extend or change the behavior by utilizing `content_type_mapping` and `filename_ext_mapping` annotation properties.
+
 - Nothing may be inferred without additional payload patterns present.
 
 Protocol-specific metadata retrieval MAY be applied once an asset location is known. How to present or reconcile contradictions in metadata found in multiple sources is beyond the scope of this specification.
@@ -1147,6 +1184,24 @@ For example,
           "template_engine": "handlebars"
         }
       }
+    },
+    "url": {
+      "tag:isrd.isi.edu,2017:asset": {
+        "display": {
+          "*": {
+            "file_preview": {
+              "content_type_mapping": {
+                "image/": false,
+                "image/png": "image"
+              },
+              "filename_ext_mapping": {
+                ".mycsv": "csv"
+              },
+              "disabled": ["markdown"]
+            }
+          }
+        }
+      }
     }
   }
 }
@@ -1155,14 +1210,66 @@ For example,
 Notes:
 - `by_type` should match exactly with the `typename` of the column. So, for example, for array columns, we would have to use `"timestamp[]"`.
 - While determining annotations for a column, the more specific one will be used. Annotations defined on the column have the highest priority. Then `asset` is used if the column has asset annotation or is used as a metadata for another asset column. Then by the `by_name` annotations on table, schema, and catalog will be used. And after that, we will look at `by_type` annotations on the table, schema, and catalog.
-- To implement this feature, we start by creating an empty JSON payload. On each step, we will add the annotations to the object (and if the annotation key is already defined on the object, it will be overwritten by the new value). To be more precise, the following is how the `annotations` JSON payload for a column is created and used:
+- To implement this feature, we start by creating an empty JSON payload. On each step, we will add the annotations to the object (and if the annotation key is already defined on the object, it will be merged by the new value). To be more precise, the following is how the `annotations` JSON payload for a column is created and used:
 
   1. We start by looking at the applicable `by_type` property of the `column-defaults ` annotation defined on the catalog.
-  2. Then, the applicable `by_type` property on the schema will be added. And if any annotation key is already defined on both catalog and schema, the one in the schema will override it.
+  2. Then, the applicable `by_type` property on the schema will be added. And if any annotation property is already defined on both catalog and schema, we will try to merge them. If the same annotation property is used in both, the one in the schema will override it.
   3. The same step as above continues with the table.
-  4. We continue by looking at the matching `by_name` property of catalog, schema, and table in order. Just like in the previous steps, if the same annotation key is already defined in the created object, it will be overwritten by the new step.
-  5. If the column is an asset or is used in another asset column, the annotations under the appropriate `asset` of catalog, schema, and table will be used. Same as above, if the same annotation key is already defined in the created object, it will be overwritten by the new step.
+  4. We continue by looking at the matching `by_name` property of catalog, schema, and table in order. Just like in the previous steps, if the same annotation property is already defined in the created object, it will be overwritten by the new step.
+  5. If the column is an asset or is used in another asset column, the annotations under the appropriate `asset` of catalog, schema, and table will be used. Same as above, if the same annotation property is already defined in the created object, it will be overwritten by the new step.
   6. Any annotation defined directly on the column will override the annotations of the previous steps.
+  
+  For instance, if you have the following column-defaults on the schema
+  ```json
+  {
+    "tag:isrd.isi.edu,2023:column-defaults": {
+      "by_name": {
+        "my_column": {
+          "tag:isrd.isi.edu,2016:column-display": {
+            "*": {
+              "markdown_pattern": "all: {{{$_self}}}"
+            },
+            "compact": {
+              "markdown_pattern": "compact: ${{{$_self}}}"
+            }
+          },
+          "tag:isrd.isi.edu,2016:immutable": null
+        }
+      },
+    }
+  }
+  ```
+  And the following annotation on the column named `my_column`:
+  ```json
+  {
+    "tag:isrd.isi.edu,2016:column-display": {
+      "*": {
+        "markdown_pattern": "customized all: {{{$_self}}}"
+      },
+      "detailed": {
+        "markdown_pattern": "customized detailed: ${{{$_self}}}"
+      }
+    },
+  }
+  ```
+  The following annotations will be applied to the column:
+  ```json
+  {
+    "tag:isrd.isi.edu,2016:column-display": {
+      "*": {
+        "markdown_pattern": "customized all: {{{$_self}}}"
+      },
+      "compact": {
+        "markdown_pattern": "compact: ${{{$_self}}}"
+      },
+      "detailed": {
+        "markdown_pattern": "customized detailed: ${{{$_self}}}"
+      }
+    },
+    "tag:isrd.isi.edu,2016:immutable": null
+  }
+  ```
+
 
 ## Context Names
 

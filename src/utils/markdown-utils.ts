@@ -5,6 +5,7 @@ import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
 
 // utils
 import { _classNames } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
+import { markdownDivBlock } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-div-block';
 import { escapeHTML } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
 
 // vendor
@@ -122,8 +123,7 @@ function _bindCustomMarkdownTags(md: typeof MarkdownIt) {
             openingLink!.attrs!.forEach(function (attr) {
               switch (attr[0]) {
                 case 'href':
-                  // eslint-disable-next-line no-useless-escape
-                  isYTlink = attr[1].match('^(http(s)?:\/\/)?((w){3}.)?youtu(be|.be)?(\.com)?\/.+') != null;
+                  isYTlink = attr[1].match('^(http(s)?://)?((w){3}.)?youtu(be|.be)?(.com)?/.+') != null;
                   iframeSrc = attr[1];
                   iframeHTML += ' src="' + attr[1] + '"';
                   videoText = 'Note: YouTube video ( ' + attr[1] + ' ) is hidden in print';
@@ -659,38 +659,8 @@ function _bindCustomMarkdownTags(md: typeof MarkdownIt) {
     },
   });
 
-  md.use(MarkdownItContainer, 'div', {
-    /*
-     * Checks whether string matches format ":::div CONTENT \n:::"
-     * string inside `{}` is optional, specifies attributes to be applied to element
-     */
-    validate: function (params: any) {
-      return params.trim().match(/^div\s+(.*)$/i);
-    },
-
-    render: function (tokens: any, idx: any) {
-      const m = tokens[idx].info.trim().match(/^div\s+(.*)$/i);
-
-      // opening tag
-      if (tokens[idx].nesting === 1) {
-        // if the next tag is a paragraph, we can change the paragraph into a div
-        const attrs = md.parse(m[1], {});
-        if (attrs && attrs.length > 0 && attrs[0].type === 'paragraph_open') {
-          const html = md.render(m[1]).trim();
-
-          // this will remove the closing and opening p tag.
-          return '<div' + html.slice(2, html.length - 4);
-        }
-
-        // otherwise just add the div tag
-        return '<div>\n' + md.render(m[1]).trim();
-      }
-      // the closing tag
-      else {
-        return '</div>\n';
-      }
-    },
-  });
+  // Use custom div block implementation
+  md.use(markdownDivBlock);
 
   md.use(MarkdownItContainer, 'geneSequence', {
     validate: function (params: any) {

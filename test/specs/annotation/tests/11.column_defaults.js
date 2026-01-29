@@ -11,23 +11,25 @@ const utils = require("../../../utils/utilities.js");
  * The following are the scenarios that it's testing:
  * - column-level annotations have priority over everything else.
  * - we should mix and match annotation. so for example column-display might come
- *  from the catalog and the display from the column itself.
+ *   from the catalog and the display from the column itself. Also the values are properly merged.
+ *   The primitive values (and arrays) are replaced, while objects are merged.
  * - by_name has always priority over by_type even if it's defined on a more general
  *   level (catalog vs schema for example)
  *
  * catalog:
- *  by_name: RCT (display), RID (display), boolean_array_col_1 (both column-dsplay and display)
+ *  by_name: RCT (display), RID (display, generated), boolean_array_col_1 (both column-dsplay and display), text_col_1(column-display, immutable)
  *  by_type: boolean[] (column-display), timestamptz (column-display, display), int8 (column-display,display)
- *  asset: byte_count (column-display, display), url (column-display), md5 (column-display)
+ *  asset: byte_count (column-display, display), url (column-display, asset), md5 (column-display)
  *    - column_defaults_schema:
  *      by_type: timestamptz(column-display)
  *      by_name: RID  (display), asset_col_1_md5 (column-display)
  *      asset: md5 (column-display)
+ *      asset: url (asset)
  *        - table_1
  *          by_type: boolean[] (display)
  *          asset: byte_count (column-display)
  *            - RID
- *              result: display from schema
+ *              result: display from schema, generated from catalog
  *            - RCT
  *              result: display from catalog
  *            - boolean_array_col_1 (boolean[])
@@ -41,13 +43,16 @@ const utils = require("../../../utils/utilities.js");
  *                result: column-display on schema, display on catalog
  *            - asset_col_1
  *                result: column-display on catalog (asset.url)
+ *                        mix of asset on itself, catalog, and schema
  *            - asset_col_1_byte_count (int8)
  *                result: column-display on table (asset.byte_count), display on catalog (asset.byte_count).
  *            - asset_col_1_md5 (int8)
  *                result: column-display on schema (asset.md5), display on catalog (int8)
+ *            - text_col_1 (has column-display)
+ *                result: column-display merged from catalog and itself, immutable from catalog
  *        - table_2
  *            - RID
- *              result: display from schema
+ *              result: display from schema, generated from catalog
  *            - RCT
  *              result: display from catalog
  *            - boolean_array_col_1 (boolean[])
@@ -59,6 +64,7 @@ const utils = require("../../../utils/utilities.js");
  *            - asset_col_1
  *              with column-display
  *                result: column-display on itself
+ *                        mix of asset on itself, catalog, and schema
  *            - asset_col_1_byte_count (int8)
  *              with column-display
  *                 result: column-display on itself, display on catalog (int8).
@@ -77,7 +83,8 @@ exports.execute = function (options) {
           "RID": {
             "tag:misd.isi.edu,2015:display": {
               "defined_on": "catalog_by_name"
-            }
+            },
+            "tag:isrd.isi.edu,2016:generated": null,
           },
           "RCT": {
             "tag:misd.isi.edu,2015:display": {
@@ -91,6 +98,17 @@ exports.execute = function (options) {
             "tag:isrd.isi.edu,2016:column-display": {
               "defined_on": "catalog_by_name"
             }
+          },
+          "text_col_1": {
+            "tag:isrd.isi.edu,2016:column-display": {
+              "*": {
+                "markdown_pattern": "all: {{{$_self}}}"
+              },
+              "compact": {
+                "markdown_pattern": "compact: ${{{$_self}}}"
+              }
+            },
+            "tag:isrd.isi.edu,2016:immutable": null
           }
         },
         "by_type": {
@@ -120,7 +138,22 @@ exports.execute = function (options) {
           "url": {
             "tag:isrd.isi.edu,2016:column-display": {
               "defined_on": "catalog_asset_url"
-            }
+            },
+            "tag:isrd.isi.edu,2017:asset": {
+              "display": {
+                "*": {
+                  "file_preview": {
+                    "content_type_mapping": {
+                      "image/": false
+                    },
+                    "filename_ext_mapping": {
+                      ".customext": "text"
+                    },
+                    "disabled": ["csv", "markdown"]
+                  }
+                }
+              },
+            },
           },
           "byte_count": {
             "tag:isrd.isi.edu,2015:display": {
@@ -144,7 +177,8 @@ exports.execute = function (options) {
         'RID': {
           "tag:misd.isi.edu,2015:display": {
             "defined_on": "schema_by_name"
-          }
+          },
+          "tag:isrd.isi.edu,2016:generated": null,
         },
         'RCT': {
           "tag:misd.isi.edu,2015:display": {
@@ -169,7 +203,8 @@ exports.execute = function (options) {
         },
         'timestamptz_col_1': {
           "tag:isrd.isi.edu,2016:column-display": {
-            "defined_on": "timestamptz_col_1"
+            "defined_on": "timestamptz_col_1",
+            "defined_on_2": "schema_by_type"
           },
           "tag:isrd.isi.edu,2015:display": {
             "defined_on": "catalog_by_type"
@@ -177,7 +212,8 @@ exports.execute = function (options) {
         },
         'timestamptz_col_2': {
           "tag:isrd.isi.edu,2016:column-display": {
-            "defined_on": "schema_by_type"
+            "defined_on": "schema_by_type",
+            "defined_on_2": "schema_by_type"
           },
           "tag:isrd.isi.edu,2015:display": {
             "defined_on": "catalog_by_type"
@@ -192,7 +228,22 @@ exports.execute = function (options) {
             "filename_column": "asset_col_1_filename",
             "byte_count_column": "asset_col_1_byte_count",
             "md5": "asset_col_1_md5",
-            "sha256": "asset_col_1_sha256"
+            "sha256": "asset_col_1_sha256",
+            "display": {
+              "*": {
+                "file_preview": {
+                  "content_type_mapping": {
+                    "image/": false,
+                    "image/png": "image",
+                    "application/my-example": false,
+                  },
+                  "filename_ext_mapping": {
+                    ".customext": "text"
+                  },
+                  "disabled": ["json"]
+                }
+              }
+            }
           }
         },
         'asset_col_1_byte_count': {
@@ -210,9 +261,34 @@ exports.execute = function (options) {
           "tag:isrd.isi.edu,2015:display": {
             "defined_on": "catalog_by_type"
           }
+        },
+        'text_col_1': {
+          "tag:isrd.isi.edu,2016:column-display": {
+            "*": {
+              "markdown_pattern": "customized all: {{{$_self}}}"
+            },
+            "compact": {
+              "markdown_pattern": "compact: ${{{$_self}}}"
+            },
+            "detailed": {
+              "markdown_pattern": "customized detailed: ${{{$_self}}}"
+            }
+          },
+          "tag:isrd.isi.edu,2016:immutable": null
         }
       },
       'table_2': {
+        'RID': {
+          "tag:misd.isi.edu,2015:display": {
+            "defined_on": "schema_by_name"
+          },
+          "tag:isrd.isi.edu,2016:generated": null,
+        },
+        'RCT': {
+          "tag:misd.isi.edu,2015:display": {
+            "defined_on": "catalog_by_name"
+          }
+        },
         'boolean_array_col_1': {
           "tag:isrd.isi.edu,2016:column-display": {
             "defined_on": "catalog_by_name"
@@ -235,7 +311,22 @@ exports.execute = function (options) {
             "filename_column": "asset_col_1_filename",
             "byte_count_column": "asset_col_1_byte_count",
             "md5": "asset_col_1_md5",
-            "sha256": "asset_col_1_sha256"
+            "sha256": "asset_col_1_sha256",
+            "display": {
+              "*": {
+                "file_preview": {
+                  "content_type_mapping": {
+                    "image/": false,
+                    "image/png": false,
+                    "application/my-example": false,
+                  },
+                  "filename_ext_mapping": {
+                    ".customext": "text"
+                  },
+                  "disabled": ["json"]
+                }
+              }
+            }
           }
         },
         'asset_col_1_byte_count': {
