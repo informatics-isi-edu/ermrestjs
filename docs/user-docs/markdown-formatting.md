@@ -56,6 +56,8 @@ For common markdown syntax please refer to [this reference sheet](http://commonm
   - [16. Table](#16-table)
   - [17. Gene Sequence](#17-gene-sequence)
   - [18. Div (Custom container)](#18-div-custom-container)
+  - [19. File Preview](#19-file-preview)
+- [Mixed with Other Markdown](#mixed-with-other-markdown)
 
 
 ## Inline Vs. Block
@@ -1117,7 +1119,7 @@ The table is broken at the first empty line, or beginning of another block eleme
 ### 17. Gene Sequence
 
 This is not part of commonMark specification and it will result in a [block](#inline-vs-block). You have to follow the syntax completely (notice the newline in the closing tag). The following is the basic syntax structure:
-```mkdn
+```
 ::: geneSequence SEQUENCE {<attribute>=<value>} \n:::
 ```
 **There must be a space before `\n:::`**.
@@ -1251,3 +1253,43 @@ When a div contains only a single element (like an image, heading, or link), the
     ```
     :::div {.section}\n## Section Title\n\nThis is a paragraph with some text.\n\n- List item 1\n- List item 2\n:::
     ```
+
+### 19. File Preview
+
+This is not part of commonMark specification and it will result in a [block](#inline-vs-block). You have to follow the syntax completely (notice the newline in the closing tag). The following is the basic syntax structure:
+
+```
+::: filePreview [](https://example.com/files/sample.txt){<attribute>=<value>} \n:::
+```
+
+**There must be a space before `\n:::`**.
+
+
+**Examples**
+
+- Without any attributes:
+    ```
+    ::: filePreview [](https://example.com/files/sample.txt) \n:::
+    ```
+
+- Without any attributes as part of a `markdown_pattern` (assume `file_url` column returns the url):
+    ```
+    ::: filePreview []( {{{_file_url}}} ) \n:::
+    ```
+
+-
+
+::: filePreview [](https://example.com/files/data.csv){filename="my-data.csv"}
+:::
+
+## Mixed with Other Markdown
+
+**Bold text**, *italic text*, and [regular links](https://example.com).
+
+- List item 1
+- List item 2
+
+::: filePreview [](https://example.com/files/final.txt)
+:::
+
+

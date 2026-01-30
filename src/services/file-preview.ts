@@ -98,13 +98,18 @@ export default class FilePreviewService {
     storedFilename?: string,
     contentDisposition?: string,
     contentType?: string,
+    forcedPreviewType?: FilePreviewTypes,
+    forcedPrefetchBytes?: number,
+    forcedPrefetchMaxFileSize?: number,
   ): {
     previewType: FilePreviewTypes | null;
     prefetchBytes: number | null;
     prefetchMaxFileSize: number | null;
+    filename: string;
   } {
-    const disabledValue = { previewType: null, prefetchBytes: null, prefetchMaxFileSize: null };
-    const previewType = FilePreviewService.getFilePreviewType(url, column, storedFilename, contentDisposition, contentType);
+    const disabledValue = { previewType: null, prefetchBytes: null, prefetchMaxFileSize: null, filename: '' };
+    const filename = storedFilename || getFilename(url, contentDisposition);
+    const previewType = forcedPreviewType ? forcedPreviewType : FilePreviewService.getFilePreviewType(url, filename, column, contentType);
     let prefetchBytes: number | null = null;
     let prefetchMaxFileSize: number | null = null;
 
@@ -127,30 +132,31 @@ export default class FilePreviewService {
       prefetchMaxFileSize = FILE_PREVIEW.MAX_FILE_SIZE;
     }
 
+    // the forced (manual) setting cannot exceed the column/default settings
+    if (typeof forcedPrefetchBytes === 'number' && forcedPrefetchBytes >= 0 && forcedPrefetchBytes < prefetchBytes) {
+      prefetchBytes = forcedPrefetchBytes;
+    }
+    if (typeof forcedPrefetchMaxFileSize === 'number' && forcedPrefetchMaxFileSize >= 0 && forcedPrefetchMaxFileSize < prefetchMaxFileSize) {
+      prefetchMaxFileSize = forcedPrefetchMaxFileSize;
+    }
+
     // if prefetchMaxFileSize is 0, we should not show the preview
     if (prefetchMaxFileSize === 0) {
       return disabledValue;
     }
 
-    return { previewType, prefetchBytes, prefetchMaxFileSize };
+    return { previewType, prefetchBytes, prefetchMaxFileSize, filename };
   }
 
   /**
    * Returns the preview type based on the given file properties and the column's file preview settings.
    * @param url the file url
    * @param column the asset column
-   * @param storedFilename the stored filename
+   * @param filename the filename (either stored filename or from content-disposition or url)
    * @param contentDisposition content-disposition header value
    * @param contentType content-type header value
    */
-  private static getFilePreviewType(
-    url: string,
-    column?: AssetPseudoColumn,
-    storedFilename?: string,
-    contentDisposition?: string,
-    contentType?: string,
-  ): FilePreviewTypes | null {
-    const filename = storedFilename || getFilename(url, contentDisposition);
+  private static getFilePreviewType(url: string, filename: string, column?: AssetPseudoColumn, contentType?: string): FilePreviewTypes | null {
     const extension = getFilenameExtension(filename, column?.filenameExtFilter, column?.filenameExtRegexp);
     let mappedFilePreviewType: FilePreviewTypes | typeof USE_EXT_MAPPING | false = USE_EXT_MAPPING;
 
