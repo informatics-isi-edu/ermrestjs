@@ -6,7 +6,6 @@ import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
 // utils
 import { _classNames } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
 import { markdownDivBlock } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-div-block';
-import { escapeHTML } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
 
 // vendor
 import markdownItSub from '@isrd-isi-edu/ermrestjs/vendor/markdown-it-sub.min';
@@ -747,8 +746,11 @@ function _bindCustomMarkdownTags(md: typeof MarkdownIt) {
             let filename = '';
             let classAttr = '';
             let otherAttrs = '';
-            let noAlert = false;
-            let noDownloadBtn = false;
+            let hideDownloadBtn = false;
+            let downloadBtnClass = '';
+            let previewType = '';
+            let prefetchBytes = '';
+            let prefetchMaxFileSize = '';
 
             // Extract attributes
             openingLink!.attrs!.forEach(function (attr) {
@@ -762,11 +764,20 @@ function _bindCustomMarkdownTags(md: typeof MarkdownIt) {
                 case 'class':
                   classAttr = attr[1];
                   break;
-                case 'no-alert':
-                  noAlert = true;
+                case 'preview-type':
+                  previewType = attr[1];
                   break;
-                case 'no-download-btn':
-                  noDownloadBtn = true;
+                case 'prefetch-bytes':
+                  prefetchBytes = attr[1];
+                  break;
+                case 'prefetch-max-file-size':
+                  prefetchMaxFileSize = attr[1];
+                  break;
+                case 'hide-download-btn':
+                  hideDownloadBtn = true;
+                  break;
+                case 'download-btn-class':
+                  downloadBtnClass = attr[1];
                   break;
                 default:
                   otherAttrs += ' ' + attr[0] + '="' + attr[1] + '"';
@@ -779,16 +790,13 @@ function _bindCustomMarkdownTags(md: typeof MarkdownIt) {
               'data-chaise-file-preview="true"',
               'data-file-url="' + fileUrl + '"',
               filename ? 'data-filename="' + filename + '"' : '',
-              noAlert ? 'data-no-alert="true"' : '',
               otherAttrs,
+              previewType ? 'data-preview-type="' + previewType + '"' : '',
+              hideDownloadBtn ? 'data-hide-download-btn="true"' : '',
+              downloadBtnClass ? 'data-download-btn-class="' + downloadBtnClass + '"' : '',
+              prefetchBytes ? 'data-prefetch-bytes="' + prefetchBytes + '"' : '',
+              prefetchMaxFileSize ? 'data-prefetch-max-file-size="' + prefetchMaxFileSize + '"' : '',
             ];
-
-            if (!noDownloadBtn) {
-              // TODO add asset-permission class
-              // const btn = `<a href=${fileUrl} download>${filename ? filename : 'Download'}</a>`;
-              const btn = `[${filename ? filename : 'Download'}](${fileUrl}){download}`;
-              props.push(`data-download-btn="${escapeHTML(btn)}"`);
-            }
 
             html = `<div ${props.join(' ')}></div>`;
           }
