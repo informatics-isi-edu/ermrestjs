@@ -77,7 +77,7 @@ exports.execute = function (options) {
 
       it('should return default values when not configured', () => {
         const columnsWithDefaults = [col_asset_no_display, col_asset_per_type_config];
-        
+
         columnsWithDefaults.forEach((column) => {
           expect(column.filePreview).not.toBe(null);
           expect(column.filePreview.showCsvHeader).toBe(false);
@@ -104,7 +104,7 @@ exports.execute = function (options) {
             null,
             null,
             'image/png',
-            { previewType: null, prefetchBytes: null, prefetchMaxFileSize: null }
+            { previewType: null, prefetchBytes: null, prefetchMaxFileSize: null, filename: '' }
           );
         });
 
@@ -115,7 +115,7 @@ exports.execute = function (options) {
             null,
             null,
             'image/png',
-            { previewType: 'image', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE }
+            { previewType: 'image', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file.png' }
           );
         });
 
@@ -128,7 +128,7 @@ exports.execute = function (options) {
               null,
               null,
               'image/png',
-              { previewType: 'image', prefetchBytes: 10000, prefetchMaxFileSize: 5000000 }
+              { previewType: 'image', prefetchBytes: 10000, prefetchMaxFileSize: 5000000, filename: 'file.png' }
             );
           });
 
@@ -141,7 +141,7 @@ exports.execute = function (options) {
                 null,
                 null,
                 'text/csv',
-                { previewType: 'csv', prefetchBytes: 30000, prefetchMaxFileSize: MAX_FILE_SIZE }
+                { previewType: 'csv', prefetchBytes: 30000, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file.csv' }
               );
             });
 
@@ -152,7 +152,7 @@ exports.execute = function (options) {
                 null,
                 null,
                 'application/json',
-                { previewType: 'json', prefetchBytes: 40000, prefetchMaxFileSize: MAX_FILE_SIZE }
+                { previewType: 'json', prefetchBytes: 40000, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file.json' }
               );
             });
 
@@ -163,7 +163,7 @@ exports.execute = function (options) {
                 null,
                 null,
                 'image/png',
-                { previewType: 'image', prefetchBytes: 20000, prefetchMaxFileSize: MAX_FILE_SIZE }
+                { previewType: 'image', prefetchBytes: 20000, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file.png' }
               );
             });
 
@@ -174,7 +174,7 @@ exports.execute = function (options) {
                 null,
                 null,
                 'text/plain',
-                { previewType: 'text', prefetchBytes: 20000, prefetchMaxFileSize: 100000 }
+                { previewType: 'text', prefetchBytes: 20000, prefetchMaxFileSize: 100000, filename: 'file.txt' }
               );
             });
 
@@ -185,7 +185,7 @@ exports.execute = function (options) {
                 null,
                 null,
                 'text/markdown',
-                { previewType: 'markdown', prefetchBytes: 20000, prefetchMaxFileSize: 200000 }
+                { previewType: 'markdown', prefetchBytes: 20000, prefetchMaxFileSize: 200000, filename: 'file.md' }
               );
             });
 
@@ -196,7 +196,7 @@ exports.execute = function (options) {
                 null,
                 null,
                 null,
-                { previewType: 'tsv', prefetchBytes: 20000, prefetchMaxFileSize: 300000 }
+                { previewType: 'tsv', prefetchBytes: 20000, prefetchMaxFileSize: 300000, filename: 'file.tsv' }
               );
             });
 
@@ -207,7 +207,7 @@ exports.execute = function (options) {
                 null,
                 null,
                 'text/csv',
-                { previewType: 'csv', prefetchBytes: 30000, prefetchMaxFileSize: MAX_FILE_SIZE }
+                { previewType: 'csv', prefetchBytes: 30000, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file.csv' }
               );
             });
 
@@ -220,31 +220,31 @@ exports.execute = function (options) {
                 description: 'should map .mycsv to csv type',
                 url: 'http://example.com/file.mycsv',
                 contentType: 'text/plain',
-                expected: { previewType: 'csv', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE }
+                expected: { previewType: 'csv', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file.mycsv' }
               },
               {
                 description: 'should map .mvsj to json type',
                 url: 'http://example.com/file.mvsj',
                 contentType: 'application/octet-stream',
-                expected: { previewType: 'json', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE }
+                expected: { previewType: 'json', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file.mvsj' }
               },
               {
                 description: 'should map .custommd to markdown type',
                 url: 'http://example.com/file.custommd',
                 contentType: 'text/plain',
-                expected: { previewType: 'markdown', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE }
+                expected: { previewType: 'markdown', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file.custommd' }
               },
               {
                 description: 'should block .blocked extension (return null)',
                 url: 'http://example.com/file.blocked',
                 contentType: 'text/plain',
-                expected: { previewType: null, prefetchBytes: null, prefetchMaxFileSize: null }
+                expected: { previewType: null, prefetchBytes: null, prefetchMaxFileSize: null, filename: '' }
               },
               {
                 description: 'should still use default mappings for non-custom extensions',
                 url: 'http://example.com/file.png',
                 contentType: 'text/plain',
-                expected: { previewType: 'image', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE }
+                expected: { previewType: 'image', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file.png' }
               }
             ];
 
@@ -270,44 +270,44 @@ exports.execute = function (options) {
                 description: 'should map custom content-type to json (exact match)',
                 url: 'http://example.com/file',
                 contentType: 'application/my-json',
-                expected: { previewType: 'json', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE }
+                expected: { previewType: 'json', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file' },
               },
               {
                 description: 'should map custom content-type to csv (exact match)',
                 url: 'http://example.com/file',
                 contentType: 'application/custom-csv',
-                expected: { previewType: 'csv', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE }
+                expected: { previewType: 'csv', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file' },
               },
               {
                 description: 'should map custom content-type to markdown',
                 url: 'http://example.com/file',
                 contentType: 'text/my-markdown',
-                expected: { previewType: 'markdown', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE }
+                expected: { previewType: 'markdown', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file' },
               },
               {
                 description: 'should map vendor content-type to text',
                 url: 'http://example.com/file',
                 contentType: 'vendor/x-special',
-                expected: { previewType: 'text', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE }
+                expected: { previewType: 'text', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file' },
               },
               {
                 description: 'should block all application/ types with prefix match (except explicit matches)',
                 url: 'http://example.com/file',
                 contentType: 'application/unknown',
-                expected: { previewType: null, prefetchBytes: null, prefetchMaxFileSize: null }
+                expected: { previewType: null, prefetchBytes: null, prefetchMaxFileSize: null, filename: '' },
               },
               {
                 description: 'should use extension mapping when content-type maps to use_ext_mapping (via * default)',
                 url: 'http://example.com/file.csv',
                 contentType: 'text/unknown',
-                expected: { previewType: 'csv', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE }
+                expected: { previewType: 'csv', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file.csv' },
               },
               {
                 description: 'should still allow explicitly defined application/ types',
                 url: 'http://example.com/file',
                 contentType: 'application/my-json',
-                expected: { previewType: 'json', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE }
-              }
+                expected: { previewType: 'json', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file' },
+              },
             ];
 
             customContentTypeTests.forEach((testCase) => {
@@ -332,25 +332,25 @@ exports.execute = function (options) {
                 description: 'should disable image preview even with valid image content-type',
                 url: 'http://example.com/file.png',
                 contentType: 'image/png',
-                expected: { previewType: null, prefetchBytes: null, prefetchMaxFileSize: null }
+                expected: { previewType: null, prefetchBytes: null, prefetchMaxFileSize: null, filename: '' }
               },
               {
                 description: 'should disable csv preview even with valid csv content-type',
                 url: 'http://example.com/file.csv',
                 contentType: 'text/csv',
-                expected: { previewType: null, prefetchBytes: null, prefetchMaxFileSize: null }
+                expected: { previewType: null, prefetchBytes: null, prefetchMaxFileSize: null, filename: '' }
               },
               {
                 description: 'should still allow non-disabled types (json)',
                 url: 'http://example.com/file.json',
                 contentType: 'application/json',
-                expected: { previewType: 'json', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE }
+                expected: { previewType: 'json', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file.json' }
               },
               {
                 description: 'should still allow non-disabled types (markdown)',
                 url: 'http://example.com/file.md',
                 contentType: 'text/markdown',
-                expected: { previewType: 'markdown', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE }
+                expected: { previewType: 'markdown', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file.md' }
               }
             ];
 
@@ -376,7 +376,7 @@ exports.execute = function (options) {
               null,
               null,
               'image/png',
-              { previewType: null, prefetchBytes: null, prefetchMaxFileSize: null }
+              { previewType: null, prefetchBytes: null, prefetchMaxFileSize: null, filename: '' }
             );
           });
 
@@ -387,7 +387,7 @@ exports.execute = function (options) {
               null,
               null,
               'text/csv',
-              { previewType: 'csv', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE }
+              { previewType: 'csv', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file.csv' }
             );
           });
 
@@ -435,7 +435,7 @@ exports.execute = function (options) {
               null,
               null,
               'image/png',
-              { previewType: null, prefetchBytes: null, prefetchMaxFileSize: null }
+              { previewType: null, prefetchBytes: null, prefetchMaxFileSize: null, filename: '' }
             );
 
             testFilePreview(
@@ -444,7 +444,7 @@ exports.execute = function (options) {
               null,
               null,
               'text/json',
-              { previewType: null, prefetchBytes: null, prefetchMaxFileSize: null }
+              { previewType: null, prefetchBytes: null, prefetchMaxFileSize: null, filename: '' }
             );
 
             testFilePreview(
@@ -453,7 +453,7 @@ exports.execute = function (options) {
               null,
               null,
               'image/jpeg',
-              { previewType: 'image', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE }
+              { previewType: 'image', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file.jpg' }
             );
 
             testFilePreview(
@@ -462,7 +462,7 @@ exports.execute = function (options) {
               null,
               null,
               'text/plain',
-              { previewType: 'csv', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE }
+              { previewType: 'csv', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file.mycsv' }
             );
 
 
@@ -472,7 +472,7 @@ exports.execute = function (options) {
               null,
               null,
               'image/png',
-              { previewType: null, prefetchBytes: null, prefetchMaxFileSize: null }
+              { previewType: null, prefetchBytes: null, prefetchMaxFileSize: null, filename: '' }
             );
 
             testFilePreview(
@@ -481,7 +481,7 @@ exports.execute = function (options) {
               null,
               null,
               'image/jpeg',
-              { previewType: 'image', prefetchBytes: 20000, prefetchMaxFileSize: MAX_FILE_SIZE }
+              { previewType: 'image', prefetchBytes: 20000, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file.jpg' }
             );
 
             // remove the annotation
@@ -500,31 +500,31 @@ exports.execute = function (options) {
           const contentTypeTests = [
             ...imageContentTypes.map(ct => ({
               contentType: ct,
-              expected: { previewType: 'image', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE }
+              expected: { previewType: 'image', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file' }
             })),
             {
               contentType: 'text/markdown',
-              expected: { previewType: 'markdown', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE }
+              expected: { previewType: 'markdown', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file' }
             },
             {
               contentType: 'text/csv',
-              expected: { previewType: 'csv', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE }
+              expected: { previewType: 'csv', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file' }
             },
             {
               contentType: 'text/tab-separated-values',
-              expected: { previewType: 'tsv', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE }
+              expected: { previewType: 'tsv', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file' }
             },
             {
               contentType: 'application/json',
-              expected: { previewType: 'json', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE }
+              expected: { previewType: 'json', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file' }
             },
             {
               contentType: 'chemical/x-mmcif',
-              expected: { previewType: 'text', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE }
+              expected: { previewType: 'text', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file' }
             },
             {
               contentType: 'chemical/x-cif',
-              expected: { previewType: 'text', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE }
+              expected: { previewType: 'text', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file' }
             }
           ];
 
@@ -545,7 +545,7 @@ exports.execute = function (options) {
               null,
               null,
               'text/csv; charset=utf-8',
-              { previewType: 'csv', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE }
+              { previewType: 'csv', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file' }
             );
           });
 
@@ -556,7 +556,7 @@ exports.execute = function (options) {
               null,
               null,
               'application/json; charset=utf-8; boundary=something',
-              { previewType: 'json', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE }
+              { previewType: 'json', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file' }
             );
           });
 
@@ -567,7 +567,7 @@ exports.execute = function (options) {
               null,
               null,
               'application/unknown',
-              { previewType: null, prefetchBytes: null, prefetchMaxFileSize: null }
+              { previewType: null, prefetchBytes: null, prefetchMaxFileSize: null, filename: '' }
             );
           });
 
@@ -605,7 +605,7 @@ exports.execute = function (options) {
                 extensionTests.map(tc => ({
                   url: `http://example.com/file${tc.extension}`,
                   contentType: contentType,
-                  expected: { previewType: tc.previewType, prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE },
+                  expected: { previewType: tc.previewType, prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: `file${tc.extension}` },
                   description: `should detect ${tc.previewType} for ${tc.extension}`
                 }))
               );
@@ -619,7 +619,7 @@ exports.execute = function (options) {
               null,
               null,
               'text/plain',
-              { previewType: null, prefetchBytes: null, prefetchMaxFileSize: null }
+              { previewType: null, prefetchBytes: null, prefetchMaxFileSize: null, filename: '' }
             );
           });
 
@@ -632,27 +632,27 @@ exports.execute = function (options) {
               description: 'should extract extension from URL when no storedFilename is provided',
               url: 'http://example.com/folder/test-file.png',
               contentType: 'text/plain',
-              expected: { previewType: 'image', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE }
+              expected: { previewType: 'image', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'test-file.png' }
             },
             {
               description: 'should extract extension from storedFilename when provided',
               url: 'http://example.com/file',
               storedFilename: 'my-stored-file.csv',
               contentType: 'text/plain',
-              expected: { previewType: 'csv', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE }
+              expected: { previewType: 'csv', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'my-stored-file.csv' }
             },
             {
               description: 'should extract extension from contentDisposition when provided',
               url: 'http://example.com/file',
               contentDisposition: "filename*=UTF-8''example.png",
-              expected: { previewType: 'image', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE }
+              expected: { previewType: 'image', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'example.png' }
             },
             {
               description: 'should prioritize storedFilename over URL for extension extraction',
               url: 'http://example.com/file.txt',
               storedFilename: 'overridden.png',
               contentType: 'text/plain',
-              expected: { previewType: 'image', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE }
+              expected: { previewType: 'image', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'overridden.png' }
             },
             {
               description: 'should prioritize storedFilename over contentDisposition',
@@ -660,7 +660,7 @@ exports.execute = function (options) {
               storedFilename: 'stored.csv',
               contentDisposition: 'attachment; filename="disposition.json"',
               contentType: 'text/plain',
-              expected: { previewType: 'csv', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE }
+              expected: { previewType: 'csv', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'stored.csv' }
             }
           ];
 
@@ -674,23 +674,23 @@ exports.execute = function (options) {
             {
               description: 'should use extension from URL',
               url: 'http://example.com/file.png',
-              expected: { previewType: 'image', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE }
+              expected: { previewType: 'image', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file.png' }
             },
             {
               description: 'should use extension from hatrac url',
               url: '/hatrac/js/test/b9901b86a536f14ee79cf8679f1ac968/test.tsv:2ETE72GKFFNIITMNBMCTDUYSTE',
-              expected: { previewType: 'tsv', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE }
+              expected: { previewType: 'tsv', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'test.tsv' }
             },
             {
               description: 'should use extension from storedFilename',
               url: 'http://example.com/file',
               storedFilename: 'stored.csv',
-              expected: { previewType: 'csv', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE }
+              expected: { previewType: 'csv', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'stored.csv' }
             },
             {
               description: 'should return null when no extension can be determined',
               url: 'http://example.com/file',
-              expected: { previewType: null, prefetchBytes: null, prefetchMaxFileSize: null }
+              expected: { previewType: null, prefetchBytes: null, prefetchMaxFileSize: null, filename: '' }
             }
           ];
 
@@ -704,24 +704,24 @@ exports.execute = function (options) {
             {
               description: 'should handle URLs with query parameters',
               url: 'http://example.com/file.png?v=1&query=test',
-              expected: { previewType: 'image', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE }
+              expected: { previewType: 'image', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file.png' }
             },
             {
               description: 'should handle URLs with fragments',
               url: 'http://example.com/file.json#section',
-              expected: { previewType: 'json', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE }
+              expected: { previewType: 'json', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file.json' }
             },
             {
               description: 'should handle case-insensitive content-type',
               url: 'http://example.com/file',
               contentType: 'IMAGE/PNG',
-              expected: { previewType: 'image', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE }
+              expected: { previewType: 'image', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file' }
             },
             {
               description: 'should handle empty string content-type',
               url: 'http://example.com/file.csv',
               contentType: '',
-              expected: { previewType: 'csv', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE }
+              expected: { previewType: 'csv', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file.csv' }
             }
           ];
 
@@ -734,7 +734,7 @@ exports.execute = function (options) {
               null,
               null,
               '  image/png  ',
-              { previewType: 'image', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE }
+              { previewType: 'image', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file' }
             );
           });
 
@@ -745,7 +745,7 @@ exports.execute = function (options) {
               null,
               null,
               'text/plain',
-              { previewType: 'image', prefetchBytes: 524288, prefetchMaxFileSize: 1048576 }
+              { previewType: 'image', prefetchBytes: 524288, prefetchMaxFileSize: 1048576, filename: 'file.PNG' }
             );
           });
 

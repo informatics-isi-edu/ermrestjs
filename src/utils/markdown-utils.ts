@@ -785,8 +785,24 @@ function _bindCustomMarkdownTags(md: typeof MarkdownIt) {
               }
             });
 
+            let caption = '';
+
+            // Extract caption as plain text (no HTML parsing)
+            if (attrs[0].children[1].type != 'link_close') {
+              for (let i = 1; i < attrs[0].children.length; i++) {
+                if (attrs[0].children[i].type == 'text') {
+                  caption += attrs[0].children[i].content;
+                } else if (attrs[0].children[i].type !== 'link_close') {
+                  // Skip non-text tokens (caption must be plain text only)
+                  continue;
+                } else {
+                  break;
+                }
+              }
+            }
+
             const props = [
-              `class="file-preview-placeholder ${classAttr}"`,
+              `class="file-preview-placeholder${classAttr ? ' ' + classAttr : ''}"`,
               'data-chaise-file-preview="true"',
               'data-file-url="' + fileUrl + '"',
               filename ? 'data-filename="' + filename + '"' : '',
@@ -794,9 +810,10 @@ function _bindCustomMarkdownTags(md: typeof MarkdownIt) {
               previewType ? 'data-preview-type="' + previewType + '"' : '',
               hideDownloadBtn ? 'data-hide-download-btn="true"' : '',
               downloadBtnClass ? 'data-download-btn-class="' + downloadBtnClass + '"' : '',
+              caption ? 'data-download-btn-caption="' + caption + '"' : '',
               prefetchBytes ? 'data-prefetch-bytes="' + prefetchBytes + '"' : '',
               prefetchMaxFileSize ? 'data-prefetch-max-file-size="' + prefetchMaxFileSize + '"' : '',
-            ];
+            ].filter(Boolean);
 
             html = `<div ${props.join(' ')}></div>`;
           }

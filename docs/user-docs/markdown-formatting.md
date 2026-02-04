@@ -57,7 +57,6 @@ For common markdown syntax please refer to [this reference sheet](http://commonm
   - [17. Gene Sequence](#17-gene-sequence)
   - [18. Div (Custom container)](#18-div-custom-container)
   - [19. File Preview](#19-file-preview)
-- [Mixed with Other Markdown](#mixed-with-other-markdown)
 
 
 ## Inline Vs. Block
@@ -1259,11 +1258,21 @@ When a div contains only a single element (like an image, heading, or link), the
 This is not part of commonMark specification and it will result in a [block](#inline-vs-block). You have to follow the syntax completely (notice the newline in the closing tag). The following is the basic syntax structure:
 
 ```
-::: filePreview [](https://example.com/files/sample.txt){<attribute>=<value>} \n:::
+::: filePreview [CAPTION](https://example.com/files/sample.txt){<attribute>=<value>} \n:::
 ```
 
 **There must be a space before `\n:::`**.
 
+- **CAPTION**: Optional plain text caption (no HTML allowed). If provided, it will be displayed as-is.
+- **URL**: The file URL to preview/download
+- **attribute list**: Supported attributes:
+  - `filename`: Specify the filename for download
+  - `class`: CSS classes to attach to the preview container
+  - `preview-type`: Specify the type of preview to use. Otherwise the type will be determined by looking at the file content, filename and/or url.
+  - `prefetch-bytes`: Number of bytes to prefetch for preview. Cannot be more than the default value (524288).
+  - `prefetch-max-file-size`: Maximum file size to prefetch. Cannot be more than the default value (1048576).
+  - `hide-download-btn`: Hide the download button (boolean)
+  - `download-btn-class`: CSS classes for the download button
 
 **Examples**
 
@@ -1272,24 +1281,32 @@ This is not part of commonMark specification and it will result in a [block](#in
     ::: filePreview [](https://example.com/files/sample.txt) \n:::
     ```
 
-- Without any attributes as part of a `markdown_pattern` (assume `file_url` column returns the url):
+- With caption:
     ```
-    ::: filePreview []( {{{_file_url}}} ) \n:::
+    ::: filePreview [Click to download the sample data](https://example.com/files/sample.txt) \n:::
     ```
 
--
+- As part of a `markdown_pattern` (assume `file_url` column returns the url):
+    ```
+    ::: filePreview []({{{_file_url}}}) \n:::
+    ```
 
-::: filePreview [](https://example.com/files/data.csv){filename="my-data.csv"}
-:::
+- With filename attribute:
+    ```
+    ::: filePreview [](https://example.com/files/data.csv){filename="my-data.csv"} \n:::
+    ```
 
-## Mixed with Other Markdown
+- With multiple attributes:
+    ```
+    ::: filePreview [Sample File](https://example.com/files/data.txt){filename="data.txt" class="custom-preview" preview-type="text"} \n:::
+    ```
 
-**Bold text**, *italic text*, and [regular links](https://example.com).
+- Hide download button:
+    ```
+    ::: filePreview [](https://example.com/files/sample.txt){hide-download-btn} \n:::
+    ```
 
-- List item 1
-- List item 2
-
-::: filePreview [](https://example.com/files/final.txt)
-:::
-
-
+- With download button styling:
+    ```
+    ::: filePreview [](https://example.com/files/report.pdf){download-btn-class="chaise-btn-primary"} \n:::
+    ```
