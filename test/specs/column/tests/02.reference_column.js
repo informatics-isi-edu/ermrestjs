@@ -1313,22 +1313,24 @@ exports.execute = function (options) {
             });
 
             describe('.filePreview', () => {
-                it ('if annotation sets it to false, should return null.', () => {
+                it ('if annotation sets it to false, return null.', () => {
                     const val = assetRefCompactCols[10].filePreview;
                     expect(val).toEqual(null);
                 });
 
-                it ('if annotation has a proper object, should use it.', () => {
+                it ('if column has column has markdown-pattern, return null.', () => {
                     const val = assetRefCompactCols[8].filePreview;
-                    expect(val).toBeDefined();
-                    expect(val.showCsvHeader).toBe(true);
+                    expect(val).toEqual(null);
+
+                    const val2 = assetRefCompactCols[7].filePreview;
+                    expect(val2).toEqual(null);
                 });
 
                 it ('otherwise should return an object with the default values', () => {
-                    [0, 4, 6, 7].forEach((i) => {
+                    [0, 4, 6].forEach((i) => {
                         const val = assetRefCompactCols[i].filePreview;
-                        expect(val).toBeDefined();
-                        expect(val.showCsvHeader).toBe(false);
+                        expect(val).toBeDefined(`filePreview should be defined for index=${i}`);
+                        expect(val.showCsvHeader).toBe(false, `showCsvHeader missmatch for index=${i}`);
                     });
                 });
             });

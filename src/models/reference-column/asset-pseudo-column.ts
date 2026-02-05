@@ -455,13 +455,18 @@ export class AssetPseudoColumn extends ReferenceColumn {
    */
   get filePreview(): FilePreviewConfig | null {
     if (this._filePreview === undefined) {
-      const disp = this._annotation.display;
-      const currDisplay = isObjectAndNotNull(disp) ? _getAnnotationValueByContext(this._context, disp) : null;
-      const settings = isObjectAndKeyExists(currDisplay, 'file_preview') ? currDisplay.file_preview : {};
-      if (settings === false) {
+      // if the colum has markdown-pattern, don't show the file preview
+      if (this.display.sourceMarkdownPattern || this._baseCol.getDisplay(this._context).isMarkdownPattern) {
         this._filePreview = null;
       } else {
-        this._filePreview = new FilePreviewConfig(settings);
+        const disp = this._annotation.display;
+        const currDisplay = isObjectAndNotNull(disp) ? _getAnnotationValueByContext(this._context, disp) : null;
+        const settings = isObjectAndKeyExists(currDisplay, 'file_preview') ? currDisplay.file_preview : {};
+        if (settings === false) {
+          this._filePreview = null;
+        } else {
+          this._filePreview = new FilePreviewConfig(settings);
+        }
       }
     }
     return this._filePreview;
