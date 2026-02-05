@@ -56,6 +56,7 @@ For common markdown syntax please refer to [this reference sheet](http://commonm
   - [16. Table](#16-table)
   - [17. Gene Sequence](#17-gene-sequence)
   - [18. Div (Custom container)](#18-div-custom-container)
+  - [19. File Preview](#19-file-preview)
 
 
 ## Inline Vs. Block
@@ -1117,7 +1118,7 @@ The table is broken at the first empty line, or beginning of another block eleme
 ### 17. Gene Sequence
 
 This is not part of commonMark specification and it will result in a [block](#inline-vs-block). You have to follow the syntax completely (notice the newline in the closing tag). The following is the basic syntax structure:
-```mkdn
+```
 ::: geneSequence SEQUENCE {<attribute>=<value>} \n:::
 ```
 **There must be a space before `\n:::`**.
@@ -1250,4 +1251,62 @@ When a div contains only a single element (like an image, heading, or link), the
 - Div with multiple elements:
     ```
     :::div {.section}\n## Section Title\n\nThis is a paragraph with some text.\n\n- List item 1\n- List item 2\n:::
+    ```
+
+### 19. File Preview
+
+This is not part of commonMark specification and it will result in a [block](#inline-vs-block). You have to follow the syntax completely (notice the newline in the closing tag). The following is the basic syntax structure:
+
+```
+::: filePreview [CAPTION](https://example.com/files/sample.txt){<attribute>=<value>} \n:::
+```
+
+**There must be a space before `\n:::`**.
+
+- **CAPTION**: Optional plain text caption (no HTML allowed). If provided, it will be displayed as-is.
+- **URL**: The file URL to preview/download
+- **attribute list**: Supported attributes:
+  - `filename`: Specify the filename for download
+  - `class`: CSS classes to attach to the preview container
+  - `preview-type`: Specify the type of preview to use. Otherwise the type will be determined by looking at the file content, filename and/or url.
+  - `prefetch-bytes`: Number of bytes to prefetch for preview. Cannot be more than the default value (524288).
+  - `prefetch-max-file-size`: Maximum file size to prefetch. Cannot be more than the default value (1048576).
+  - `hide-download-btn`: Hide the download button (boolean)
+  - `download-btn-class`: CSS classes for the download button
+
+**Examples**
+
+- Without any attributes:
+    ```
+    ::: filePreview [](https://example.com/files/sample.txt) \n:::
+    ```
+
+- With caption:
+    ```
+    ::: filePreview [Click to download the sample data](https://example.com/files/sample.txt) \n:::
+    ```
+
+- As part of a `markdown_pattern` (assume `file_url` column returns the url):
+    ```
+    ::: filePreview []({{{_file_url}}}) \n:::
+    ```
+
+- With filename attribute:
+    ```
+    ::: filePreview [](https://example.com/files/data.csv){filename="my-data.csv"} \n:::
+    ```
+
+- With multiple attributes:
+    ```
+    ::: filePreview [Sample File](https://example.com/files/data.txt){filename="data.txt" class="custom-preview" preview-type="text"} \n:::
+    ```
+
+- Hide download button:
+    ```
+    ::: filePreview [](https://example.com/files/sample.txt){hide-download-btn} \n:::
+    ```
+
+- With download button styling:
+    ```
+    ::: filePreview [](https://example.com/files/report.pdf){download-btn-class="chaise-btn-primary"} \n:::
     ```

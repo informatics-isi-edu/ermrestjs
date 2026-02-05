@@ -375,31 +375,31 @@ export function execute (options) {
         // Single-line syntax with class
         testPrintMarkdown(':::div value \n:::', '<div>value</div>\n', false, 'single-line without attributes');
         testPrintMarkdown(':::div value{.class-name} \n:::', '<div class="class-name">value</div>\n', false, 'single-line with class');
-        
+
         // Multi-line syntax with attributes
         testPrintMarkdown(':::div {.outer-class}\nContent here\n:::', '<div class="outer-class"><p>Content here</p>\n</div>\n', false, 'multi-line with class');
         testPrintMarkdown(':::div {#my-id .my-class}\nSome text\n:::', '<div id="my-id" class="my-class"><p>Some text</p>\n</div>\n', false, 'multi-line with id and class');
         testPrintMarkdown(':::div {.card data-value="test"}\nCard content\n:::', '<div class="card" data-value="test"><p>Card content</p>\n</div>\n', false, 'multi-line with multiple attributes');
-        
+
         // Nested divs
         testPrintMarkdown(':::div {.outer}\n::::div {.inner}\nNested content\n::::\n:::', '<div class="outer"><div class="inner"><p>Nested content</p>\n</div>\n</div>\n', false, 'nested divs');
         testPrintMarkdown(':::div {.level1}\n::::div {.level2}\n:::::div {.level3}\nDeeply nested\n:::::\n::::\n:::', '<div class="level1"><div class="level2"><div class="level3"><p>Deeply nested</p>\n</div>\n</div>\n</div>\n', false, 'triple nested divs');
-        
+
         // Div with markdown content (paragraph tags should be unwrapped for single elements)
         testPrintMarkdown(':::div {.container}\n![image](https://example.com/img.jpg){.img-fluid}\n:::', '<div class="container"><img src="https://example.com/img.jpg" alt="image" class="img-fluid -chaise-post-load">\n</div>\n', false, 'div with image (p tag unwrapped)');
         testPrintMarkdown(':::div {.wrapper}\n# Heading\n:::', '<div class="wrapper"><h1>Heading</h1>\n</div>\n', false, 'div with heading (p tag unwrapped)');
         testPrintMarkdown(':::div {.link-container}\n[Link text](https://example.com){.btn}\n:::', '<div class="link-container"><a href="https://example.com" class="btn">Link text</a>\n</div>\n', false, 'div with single link (p tag unwrapped)');
-        
+
         // Bootstrap card structure
         const cardMarkdown = ':::div {.card style="width:200px;"}\n![Card image](https://example.com/card.jpg){.card-img-top}\n::::div {.card-body}\n#### [Card Title](https://example.com){.card-title}\n[seqFISH](https://example.com/seqfish){.vocab}\n::::\n:::';
         const cardHTML = '<div class="card" style="width:200px;"><img src="https://example.com/card.jpg" alt="Card image" class="card-img-top -chaise-post-load">\n<div class="card-body"><h4><a href="https://example.com" class="card-title">Card Title</a></h4>\n<a href="https://example.com/seqfish" class="vocab">seqFISH</a>\n</div>\n</div>\n';
         testPrintMarkdown(cardMarkdown, cardHTML, false, 'bootstrap card with image and nested body');
-        
+
         // Card with just text in body
         const cardTextMarkdown = ':::div {.card}\n::::div {.card-body}\nSome quick example text to build on the card title and make up the bulk of the card content.\n::::\n:::';
         const cardTextHTML = '<div class="card"><div class="card-body"><p>Some quick example text to build on the card title and make up the bulk of the card content.</p>\n</div>\n</div>\n';
         testPrintMarkdown(cardTextMarkdown, cardTextHTML, false, 'card with text paragraph in body');
-        
+
         // Div with iframe and image blocks
         const divWithIframeMarkdown = ':::div {.iframe-container}\n::::image [caption](http:://example.com/image.png){width=500 height=400} \n::::\n:::: iframe [View Map](https://example.com/map){width=800 height=600 .embed-responsive} \n::::\n:::';
         const divWithIframeHTML = [
@@ -423,7 +423,7 @@ export function execute (options) {
           '</div>\n'
         ].join('');
         testPrintMarkdown(divWithIframeMarkdown, divWithIframeHTML, false, 'div containing iframe block');
-        
+
         // Div with video block
         const divWithVideoMarkdown = ':::div {.video-wrapper}\n:::: video [Video Title](https://example.com/video.mp4){width=640 height=480}\n::::\n:::';
         const divWithVideoHTML = [
@@ -440,7 +440,7 @@ export function execute (options) {
           '</div>\n'
         ].join('');
         testPrintMarkdown(divWithVideoMarkdown, divWithVideoHTML, false, 'div containing video block');
-        
+
         // Div with multiple elements
         const divMultiMarkdown = ':::div {.section}\n## Section Title\n\nThis is a paragraph.\n\n- List item 1\n- List item 2\n:::'
         const divMultiHTML = '<div class="section"><h2>Section Title</h2>\n<p>This is a paragraph.</p>\n<ul>\n<li>List item 1</li>\n<li>List item 2</li>\n</ul>\n</div>\n';
@@ -624,6 +624,73 @@ export function execute (options) {
           'test 03',
         );
       });
+
+      it ('should support :::filePreview', () => {
+        // Without any attributes
+        testPrintMarkdown(
+          '::: filePreview [](https://example.com/files/sample.txt) \n:::',
+          '<div class="file-preview-placeholder" data-chaise-file-preview="true" data-file-url="https://example.com/files/sample.txt"></div>',
+          false,
+          'without any attributes'
+        );
+
+        // With caption
+        testPrintMarkdown(
+          '::: filePreview [Sample Data](https://example.com/files/sample.txt) \n:::',
+          '<div class="file-preview-placeholder" data-chaise-file-preview="true" data-file-url="https://example.com/files/sample.txt" data-download-btn-caption="Sample Data"></div>',
+          false,
+          'with caption',
+        );
+
+        // With filename attribute
+        testPrintMarkdown(
+          '::: filePreview [](https://example.com/files/data.csv){filename="my-data.csv"} \n:::',
+          '<div class="file-preview-placeholder" data-chaise-file-preview="true" data-file-url="https://example.com/files/data.csv" data-filename="my-data.csv"></div>',
+          false,
+          'with filename attribute'
+        );
+
+        // With multiple attributes
+        testPrintMarkdown(
+          '::: filePreview [Data File](https://example.com/files/data.txt){filename="data.txt" class="custom-preview" preview-type="text"} \n:::',
+          [
+            '<div class="file-preview-placeholder custom-preview" data-chaise-file-preview="true" ',
+            'data-file-url="https://example.com/files/data.txt" data-filename="data.txt" ',
+            'data-preview-type="text" ',
+            'data-download-btn-caption="Data File"></div>',
+          ].join(''),
+          false,
+          'with multiple attributes',
+        );
+
+        // With hide-download-btn
+        testPrintMarkdown(
+          '::: filePreview [](https://example.com/files/sample.txt){hide-download-btn} \n:::',
+          '<div class="file-preview-placeholder" data-chaise-file-preview="true" data-file-url="https://example.com/files/sample.txt" data-hide-download-btn="true"></div>',
+          false,
+          'with hide-download-btn'
+        );
+
+        // With download-btn-class
+        testPrintMarkdown(
+          '::: filePreview [](https://example.com/files/report.pdf){download-btn-class="chaise-btn-primary"} \n:::',
+          '<div class="file-preview-placeholder" data-chaise-file-preview="true" data-file-url="https://example.com/files/report.pdf" data-download-btn-class="chaise-btn-primary"></div>',
+          false,
+          'with download-btn-class'
+        );
+
+        // With prefetch attributes
+        testPrintMarkdown(
+          '::: filePreview [](https://example.com/files/large.txt){prefetch-bytes="1024" prefetch-max-file-size="5000"} \n:::',
+          [
+            '<div class="file-preview-placeholder" data-chaise-file-preview="true" ',
+            'data-file-url="https://example.com/files/large.txt" data-prefetch-bytes="1024" ',
+            'data-prefetch-max-file-size="5000"></div>',
+          ].join(''),
+          false,
+          'with prefetch attributes'
+        );
+      })
     });
 
     it('printGeneSeq() should format gene sequences correctly.', function () {
@@ -1021,7 +1088,7 @@ export function execute (options) {
         runTest("{{datetimeToSnapshot '2025-01-01T00:00:00.000+01:00'}}", {}, '32N-673F-2Y00', 'test 08');
         runTest("{{datetimeToSnapshot '2025-01-01T00:00:00.000-07:00'}}", {}, '32N-7WR2-QE00', 'test 09');
         runTest("{{datetimeToSnapshot '2025-01-01T00:00:00.000-09:30'}}", {}, '32N-8DGG-VV00', 'test 10');
-        
+
         // since we're not setting timezone for these, the client timezone will be used
         // so we cannot hardcode the expected snapshot value
         runTestPartial('2025-08-02', 'test 11');
