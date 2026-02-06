@@ -198,6 +198,26 @@ The following is the list of special class names that you can use:
 
 - `.chaise-gene-sequence-compact`: When applied to a [Gene Sequence](#17-gene-sequence) block, it will ensure showing a more compact version. This is recommended for `compact` contexts.
 
+- **Record status**: The following classes can be used to display the record status. The non-compact versions add a background with an appropriate color to the text, while the compact versions display a colored circle to the left of the content:
+  - `.chaise-record-status-default`, `.chaise-record-status-success`, `.chaise-record-status-warning`, `.chaise-record-status-danger`
+  - `.chaise-record-status-compact-default`, `.chaise-record-status-compact-success`, `.chaise-record-status-compact-warning`, `.chaise-record-status-compact-danger`
+
+You can use the [`span`](#13-span-attach-attributes-to-text) block to attach these classes to the displayed values. For instance, assuming your "Curation Status" table has a column called `name`, you could define the following `row_name`:
+
+
+  ```json
+  {
+    "tag:isrd.isi.edu,2016:table-display": {
+        "row_name/detailed": {
+            "row_markdown_pattern": ":span:{{{name}}}:/span:{ {{#if (eq name 'Under review')}}.chaise-record-status-warning{{else if (eq name 'Reviewed')}}.chaise-record-status-success{{else}}.chaise-record-status-default{{/if}} }"
+        },
+        "row_name/compact": {
+            "row_markdown_pattern": ":span:{{{name}}}:/span:{ {{#if (eq name 'Under review')}}.chaise-record-status-compact-warning{{else if (eq name 'Reviewed')}}.chaise-record-status-compact-success{{else}}.chaise-record-status-compact-default{{/if}} }"
+        }
+    }
+  }
+  ```
+
 
 ## Examples
 
