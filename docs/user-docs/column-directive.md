@@ -1,3 +1,4 @@
+<!-- omit in toc -->
 # Column Directive
 
 Column directive allows instruction of a data source and modification of its presentation. Column directives are defined relative to the table that they are part of. They can be used in `visible-columns` or a `visible-foreign-keys` annotation.
@@ -7,6 +8,7 @@ Column directive allows instruction of a data source and modification of its pre
 - Using [Properties](#properties) section you can find all the available properties in column directive.
 - Please Find the examples in [this section](#examples).
 
+<!-- omit in toc -->
 ## Table of contents
 
 - [Overall structure](#overall-structure)
@@ -23,7 +25,7 @@ Column directive allows instruction of a data source and modification of its pre
   - [2. Presentation properties](#2-presentation-properties)
     - [markdown\_name](#markdown_name)
     - [comment](#comment)
-    - [comment\_render\_markdown](#comment-render-markdown)
+    - [comment\_render\_markdown](#comment_render_markdown)
     - [comment\_display](#comment_display)
     - [hide\_column\_header](#hide_column_header)
     - [self-link](#self-link)
@@ -384,7 +386,7 @@ By default Chaise will display `comment` as a tooltip. Set this value to `inline
 `inline` comments are only supported in the following scenarios:
 
 - `visible-foreign-keys` annotation in `detailed` context (related entities).
-- `visible-columns` annotation in `detailed` context only for inline related entities.
+- `visible-columns` annotation in `detailed` context.
 - `visible-columns` annotation in `entry` contexts.
 
 #### hide_column_header
