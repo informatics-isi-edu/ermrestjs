@@ -502,6 +502,23 @@ exports.execute = function (options) {
               contentType: ct,
               expected: { previewType: 'image', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file' }
             })),
+            // YAML content-types
+            {
+              contentType: 'text/yaml',
+              expected: { previewType: 'text', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file' }
+            },
+            {
+              contentType: 'text/x-yaml',
+              expected: { previewType: 'text', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file' }
+            },
+            {
+              contentType: 'application/yaml',
+              expected: { previewType: 'text', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file' }
+            },
+            {
+              contentType: 'application/x-yaml',
+              expected: { previewType: 'text', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file' }
+            },
             {
               contentType: 'text/markdown',
               expected: { previewType: 'markdown', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file' }
@@ -584,6 +601,9 @@ exports.execute = function (options) {
             // Markdown
             { extension: '.md', previewType: 'markdown' },
             { extension: '.markdown', previewType: 'markdown' },
+            // YAML
+            { extension: '.yml', previewType: 'text' },
+            { extension: '.yaml', previewType: 'text' },
             // CSV/TSV
             { extension: '.csv', previewType: 'csv' },
             { extension: '.tsv', previewType: 'tsv' },
@@ -675,6 +695,16 @@ exports.execute = function (options) {
               description: 'should use extension from URL',
               url: 'http://example.com/file.png',
               expected: { previewType: 'image', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file.png' }
+            },
+            {
+              description: 'should use .yml extension from URL',
+              url: 'http://example.com/file.yml',
+              expected: { previewType: 'text', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file.yml' }
+            },
+            {
+              description: 'should use .yaml extension from URL',
+              url: 'http://example.com/file.yaml',
+              expected: { previewType: 'text', prefetchBytes: PREFETCH_BYTES, prefetchMaxFileSize: MAX_FILE_SIZE, filename: 'file.yaml' }
             },
             {
               description: 'should use extension from hatrac url',

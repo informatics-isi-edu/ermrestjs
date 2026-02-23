@@ -49,6 +49,10 @@ const DEFAULT_CONTENT_TYPE_MAPPING: { [key: string]: FilePreviewTypes | typeof U
   // text:
   'chemical/x-mmcif': FilePreviewTypes.TEXT,
   'chemical/x-cif': FilePreviewTypes.TEXT,
+  'text/yaml': FilePreviewTypes.TEXT,
+  'text/x-yaml': FilePreviewTypes.TEXT,
+  'application/yaml': FilePreviewTypes.TEXT,
+  'application/x-yaml': FilePreviewTypes.TEXT,
   // generic:
   'text/plain': USE_EXT_MAPPING,
   'application/octet-stream': USE_EXT_MAPPING,
@@ -78,6 +82,8 @@ const DEFAULT_EXTENSION_MAPPING: { [key: string]: FilePreviewTypes | false } = {
   '.mvsj': FilePreviewTypes.JSON, // MolViewSpec JSON (mol* viewer)
   // text:
   '.txt': FilePreviewTypes.TEXT,
+  '.yml': FilePreviewTypes.TEXT,
+  '.yaml': FilePreviewTypes.TEXT,
   '.log': FilePreviewTypes.TEXT,
   '.cif': FilePreviewTypes.TEXT,
   '.pdb': FilePreviewTypes.TEXT,
