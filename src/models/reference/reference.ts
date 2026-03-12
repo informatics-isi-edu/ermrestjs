@@ -148,6 +148,71 @@ export const _createPage = (reference: Reference, etag: string, data: any, hasPr
   return new Page(reference, etag, data, hasPrevious, hasNext);
 };
 
+type ActiveListRequestObject = {
+  /**
+   * The index of the object in the column's values array
+   */
+  index?: number;
+  /**
+   * whether this is for a visible column
+   */
+  column?: boolean;
+  /**
+   * whether this is for a related entity
+   */
+  related?: boolean;
+  /**
+   * whether this is for an inline related entity
+   */
+  inline?: boolean;
+  /**
+   * whether this is for the citation
+   */
+  citation?: boolean;
+
+  isWaitFor: boolean;
+};
+
+type ActiveListRequest = {
+  column: VisibleColumn;
+
+  /**
+   * whether the request is "first outbound" type.
+   * These booleans are used for figuring out how the data should be fetched.
+   */
+  firstOutbound?: boolean;
+  /**
+   * whether the request is for an aggregate column.
+   * This is used for figuring out how the data should be fetched.
+   */
+  aggregate?: boolean;
+  entity?: boolean;
+  /**
+   * whether the request is an entityset.
+   * This is used for figuring out how the data should be fetched.
+   */
+  entityset?: boolean;
+
+  /**
+   * where this request is needed.
+   */
+  objects: Array<ActiveListRequestObject>;
+};
+
+type ActiveListRelatedEntityRequest = {
+  /**
+   * whether the request is for an inline related entity.
+   * the .index indicated which related entity it is
+   */
+  inline?: boolean;
+  /**
+   * whether the request is for a related entity.
+   * the .index indicated which related entity it is
+   */
+  related?: boolean;
+  index: number;
+};
+
 type ActiveList = {
   // TODO
   // requests: {
@@ -159,7 +224,7 @@ type ActiveList = {
   //   related?: boolean;
   //   citation?: boolean;
   // };
-  requests: any[];
+  requests: Array<ActiveListRequest | ActiveListRelatedEntityRequest>;
   allOutBounds: Array<ForeignKeyPseudoColumn | PseudoColumn>;
   selfLinks: Array<KeyPseudoColumn>;
 };
@@ -239,7 +304,7 @@ export class Reference {
   private _related?: Array<RelatedReference>;
   private _facetColumns?: Array<FacetColumn>;
   private _facetColumnsStructure?: Array<number | FacetGroup>;
-  private _activeList?: any;
+  private _activeList?: ActiveList;
   private _citation?: Citation | null;
   private _googleDatasetMetadata?: GoogleDatasetMetadata | null;
 
@@ -849,7 +914,7 @@ export class Reference {
     if (this._activeList === undefined) {
       this.generateActiveList();
     }
-    return this._activeList;
+    return this._activeList!;
   }
 
   /**
@@ -880,7 +945,7 @@ export class Reference {
   generateActiveList(tuple?: Tuple): ActiveList {
     // VARIABLES:
     const allOutBounds: Array<PseudoColumn | ForeignKeyPseudoColumn> = [];
-    const requests: any[] = [];
+    const requests: Array<ActiveListRequest | ActiveListRelatedEntityRequest> = [];
     const selfLinks: Array<KeyPseudoColumn> = [];
     const consideredUniqueFiltered: { [key: string]: number } = {};
     const consideredSets: { [key: string]: number } = {};
@@ -897,10 +962,12 @@ export class Reference {
     // the waitfors will be used in chaise instead prior to submission.
     const isEntry = _isEntryContext(this._context);
 
-    const COLUMN_TYPE = 'column';
-    const RELATED_TYPE = 'related';
-    const CITATION_TYPE = 'citation';
-    const INLINE_TYPE = 'inline';
+    enum ActiveListRequestTypes {
+      COLUMN = 'column',
+      RELATED = 'related',
+      INLINE = 'inline',
+      CITATION = 'citation',
+    }
 
     // FUNCTIONS:
     const hasAggregate = (col: VisibleColumn) => {
@@ -911,8 +978,8 @@ export class Reference {
     // isWaitFor: whether it was part of waitFor or just visible
     // type: where in the page it belongs to
     // index: the container index (column index, or related index) (optional)
-    const addColToActiveList = (col: VisibleColumn, isWaitFor: boolean, type: string, index?: number) => {
-      const obj: any = { isWaitFor: isWaitFor };
+    const addColToActiveList = (col: VisibleColumn, isWaitFor: boolean, type: ActiveListRequestTypes, index?: number) => {
+      const obj: ActiveListRequestObject = { isWaitFor: isWaitFor };
 
       // add the type
       obj[type] = true;
@@ -924,7 +991,7 @@ export class Reference {
 
       if (isWaitFor && isEntry) {
         if (col.name in consideredEntryWaitFors) {
-          requests[consideredEntryWaitFors[col.name]].objects.push(obj);
+          (requests[consideredEntryWaitFors[col.name]] as ActiveListRequest).objects.push(obj);
           return;
         }
         consideredEntryWaitFors[col.name] = requests.length;
@@ -938,7 +1005,7 @@ export class Reference {
       if ((col as PseudoColumn).sourceObjectWrapper?.isUniqueFiltered) {
         // duplicate
         if (col.name in consideredUniqueFiltered) {
-          requests[consideredUniqueFiltered[col.name]].objects.push(obj);
+          (requests[consideredUniqueFiltered[col.name]] as ActiveListRequest).objects.push(obj);
           return;
         }
 
@@ -952,7 +1019,7 @@ export class Reference {
       if ((col as PseudoColumn).isPathColumn && (col as PseudoColumn).hasAggregate) {
         // duplicate
         if (col.name in consideredAggregates) {
-          requests[consideredAggregates[col.name]].objects.push(obj);
+          (requests[consideredAggregates[col.name]] as ActiveListRequest).objects.push(obj);
           return;
         }
 
@@ -969,7 +1036,7 @@ export class Reference {
         }
 
         if (col.name in consideredSets) {
-          requests[consideredSets[col.name]].objects.push(obj);
+          (requests[consideredSets[col.name]] as ActiveListRequest).objects.push(obj);
           return;
         }
 
@@ -996,11 +1063,11 @@ export class Reference {
       if (isRelatedColumn(col)) {
         requests.push({ inline: true, index: i });
       } else {
-        addColToActiveList(col, false, COLUMN_TYPE, i);
+        addColToActiveList(col, false, ActiveListRequestTypes.COLUMN, i);
       }
 
       col.waitFor.forEach((wf: any) => {
-        addColToActiveList(wf, true, isRelatedColumn(col) ? INLINE_TYPE : COLUMN_TYPE, i);
+        addColToActiveList(wf, true, isRelatedColumn(col) ? ActiveListRequestTypes.INLINE : ActiveListRequestTypes.COLUMN, i);
       });
     };
 
@@ -1010,7 +1077,7 @@ export class Reference {
     // citation
     if (isDetailed && this.citation) {
       this.citation.waitFor.forEach((col) => {
-        addColToActiveList(col, true, CITATION_TYPE);
+        addColToActiveList(col, true, ActiveListRequestTypes.CITATION);
       });
     }
 
@@ -1035,7 +1102,7 @@ export class Reference {
 
         if (rel.pseudoColumn) {
           rel.pseudoColumn.waitFor.forEach((wf) => {
-            addColToActiveList(wf, true, RELATED_TYPE, i);
+            addColToActiveList(wf, true, ActiveListRequestTypes.RELATED, i);
           });
         }
       });
