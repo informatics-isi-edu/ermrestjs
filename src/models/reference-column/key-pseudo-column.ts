@@ -95,7 +95,7 @@ export class KeyPseudoColumn extends ReferenceColumn {
       unformatted: this._getNullValue(context!),
     };
 
-    if (this.hasWaitFor && !options.skipWaitFor) {
+    if ((this.hasWaitFor || this.hasCondition) && !options.skipWaitFor) {
       return nullValue;
     }
 

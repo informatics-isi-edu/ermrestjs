@@ -148,7 +148,7 @@ export class PseudoColumn extends ReferenceColumn {
       return nullValue;
     }
 
-    if (this.hasWaitFor && !options.skipWaitFor) {
+    if ((this.hasWaitFor || this.hasCondition) && !options.skipWaitFor) {
       return nullValue;
     }
 

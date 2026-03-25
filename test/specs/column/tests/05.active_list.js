@@ -103,6 +103,9 @@ exports.execute = function (options) {
         "entity_set_i7": "VEu1Crxy0bkExWQzrm6vvA",
         "all_outbound_entity_o1_o1_o1": "nTVhVgmnwDAdAScCUP5qwA",
         "path_to_outbound1_inbound1_array_d": "foYSV-qV86Kqb62X9sZlbQ",
+        "min_i3": "cVT7HCiuMShqBDIm54k-JA",
+        "max_i3": "8JxsvVi1yPJXQHDsoyPrHw",
+        "min_i4": "JXPgemxZLAlobnG6xDvLHQ",
     };
     var reverseColumnMapping = Object.keys(columnMapping).reduce(function (ret, key) {
         ret[columnMapping[key]] = key;
@@ -157,7 +160,7 @@ exports.execute = function (options) {
 
             // TODO add a test case for this too
             it ("should return the proper wait_fors (entry).", function () {
-                const expectedCreateColumns = Array.from({length: 9}, (_, i) => {
+                const expectedCreateColumns = Array.from({length: 10}, (_, i) => {
                     let waitFor = [];
 
                     if (i === 7) { // asset_col_1
@@ -202,11 +205,82 @@ exports.execute = function (options) {
             // more in depth test can be found in citation spec and chaise
         });
 
+        describe("Table.sourceDefinitions.conditions, ", function () {
+            var sds;
+            beforeAll(function () {
+                sds = mainRef.table.sourceDefinitions;
+            });
+
+            it ("should parse valid conditions from the annotation.", function () {
+                var cond = sds.getCondition("cond_has_inbound1");
+                expect(cond).toBeDefined("cond_has_inbound1 not found");
+                expect(cond.sourcekey).toBe("cnt_i1", "sourcekey missmatch");
+                expect(cond.on_empty).toBe("hide", "on_empty missmatch");
+                expect(cond.condition_pattern).toBeUndefined("condition_pattern should be undefined");
+            });
+
+            it ("should parse on_empty='show' correctly.", function () {
+                var cond = sds.getCondition("cond_has_inbound1_show");
+                expect(cond).toBeDefined("cond_has_inbound1_show not found");
+                expect(cond.sourcekey).toBe("cnt_i1", "sourcekey missmatch");
+                expect(cond.on_empty).toBe("show", "on_empty missmatch");
+            });
+
+            it ("should parse condition_pattern correctly.", function () {
+                var cond = sds.getCondition("cond_with_pattern");
+                expect(cond).toBeDefined("cond_with_pattern not found");
+                expect(cond.condition_pattern).toBe("{{#if $self}}show{{/if}}", "condition_pattern missmatch");
+            });
+
+            it ("should not parse invalid conditions (missing source/sourcekey).", function () {
+                var cond = sds.getCondition("cond_invalid_no_source");
+                expect(cond).toBeUndefined("invalid condition should not be parsed");
+            });
+
+            it ("should return undefined for non-existent condition keys.", function () {
+                var cond = sds.getCondition("non_existent_condition");
+                expect(cond).toBeUndefined("non-existent condition should return undefined");
+            });
+        });
+
+        describe("SourceObjectWrapper.condition, ", function () {
+            it ("should parse inline condition on a column.", function () {
+                // conditioned_col_inline in detailed context
+                var col = detailedColumns[31];
+                expect(col.displayname.value).toContain("conditioned_col_inline", "wrong column at index 31");
+                var sow = col.sourceObjectWrapper;
+                expect(sow).toBeDefined("sourceObjectWrapper not defined");
+                expect(sow.condition).toBeDefined("condition not defined");
+                expect(sow.condition.sourcekey).toBe("cnt_i1", "sourcekey missmatch");
+                expect(sow.condition.on_empty).toBe("hide", "on_empty missmatch");
+            });
+
+            it ("should resolve condition_key on a column.", function () {
+                // conditioned_col_key in detailed context
+                var col = detailedColumns[32];
+                expect(col.displayname.value).toContain("conditioned_col_key", "wrong column at index 32");
+                // condition_key is resolved in generateActiveList, but the _conditionKey marker should be set
+                var sow = col.sourceObjectWrapper;
+                expect(sow).toBeDefined("sourceObjectWrapper not defined");
+            });
+
+            it ("should parse condition on columns in non-detailed context too.", function () {
+                // conditions are parsed on the sourceObjectWrapper regardless of context
+                var col = compactColumns[28];
+                expect(col.displayname.value).toContain("conditioned_col_inline", "wrong column at index 28");
+                var sow = col.sourceObjectWrapper;
+                if (sow) {
+                    expect(sow.condition).toBeDefined("condition should still be parsed on sourceObjectWrapper");
+                }
+            });
+        });
+
         describe("Reference.sourceWaitFor", function () {
             it ("should be properly defined on related entities.", function () {
                 var expectedRelatedEntitiesWaitFor = [
                     {"waitFor": ["array_d_entity_i4", "array_d_entity_i5"], "hasWaitFor": true},
                     {"waitFor": ["entity_set_i5", "all_outbound_entity_o3_o1_o1"], "hasWaitFor": true},
+                    {"waitFor": [], "hasWaitFor": false},
                     {"waitFor": [], "hasWaitFor": false}
                 ];
                 var related = mainRefDetailed.related;
@@ -269,6 +343,68 @@ exports.execute = function (options) {
 
                 it ("should return the selfLinks properly.", function () {
                     testNameList(createActiveList.selfLinks, expectedCreateActiveList.selfLinks);
+                });
+            });
+
+            describe("conditionalGroups, ", function () {
+                it ("should be empty for compact (non-detailed) context.", function () {
+                    expect(compactActiveList.conditionalGroups).toBeDefined("conditionalGroups not defined");
+                    expect(compactActiveList.conditionalGroups.length).toBe(0, "should be empty for compact");
+                });
+
+                it ("should be empty for entry/create context.", function () {
+                    expect(createActiveList.conditionalGroups).toBeDefined("conditionalGroups not defined");
+                    expect(createActiveList.conditionalGroups.length).toBe(0, "should be empty for create");
+                });
+
+                it ("should return the correct number of conditional groups for detailed context.", function () {
+                    expect(detailedActiveList.conditionalGroups).toBeDefined("conditionalGroups not defined");
+                    // 3 groups: conditioned_col_inline (inline condition), conditioned_col_key (condition_key),
+                    // conditioned_col_pattern (inline w/ pattern), plus conditioned related entity_set_i5
+                    // conditioned_col_outbound uses all-outbound condition source, so evaluated synchronously — no group
+                    expect(detailedActiveList.conditionalGroups.length).toBe(4,
+                        "should have 4 conditional groups (3 columns + 1 related with async conditions)");
+                });
+
+                it ("each group should have a condition with the correct column.", function () {
+                    var groups = detailedActiveList.conditionalGroups;
+                    // all three column conditions use cnt_i1 as condition source
+                    groups.forEach(function (g, i) {
+                        expect(g.condition).toBeDefined("condition not defined for group index=" + i);
+                        expect(g.condition.column).toBeDefined("condition.column not defined for group index=" + i);
+                        expect(g.condition.column.name).toBe(
+                            columnMapping["cnt_i1"],
+                            "condition column name missmatch for group index=" + i
+                        );
+                    });
+                });
+
+                it ("each group should have the correct onEmpty value.", function () {
+                    var groups = detailedActiveList.conditionalGroups;
+                    expect(groups[0].condition.onEmpty).toBe("hide", "group 0 onEmpty");
+                    expect(groups[1].condition.onEmpty).toBe("show", "group 1 onEmpty (condition_key cond_has_inbound1_show)");
+                    expect(groups[2].condition.onEmpty).toBe("hide", "group 2 onEmpty");
+                    expect(groups[3].condition.onEmpty).toBe("hide", "group 3 onEmpty (related)");
+                });
+
+                it ("should have conditionPattern when specified.", function () {
+                    var groups = detailedActiveList.conditionalGroups;
+                    expect(groups[0].conditionPattern).toBeUndefined("group 0 should not have conditionPattern");
+                    expect(groups[1].conditionPattern).toBeUndefined("group 1 should not have conditionPattern");
+                    expect(groups[2].condition.conditionPattern).toBe(
+                        "{{#if $self}}show{{/if}}",
+                        "group 2 conditionPattern missmatch"
+                    );
+                });
+
+                it ("each group should have dependentRequests.", function () {
+                    var groups = detailedActiveList.conditionalGroups;
+                    groups.forEach(function (g, i) {
+                        expect(Array.isArray(g.dependentRequests)).toBe(true,
+                            "dependentRequests not an array for group index=" + i);
+                        expect(g.dependentRequests.length).toBeGreaterThan(0,
+                            "dependentRequests should not be empty for group index=" + i);
+                    });
                 });
             });
         });
@@ -381,6 +517,41 @@ exports.execute = function (options) {
             });
         });
 
+        describe("ActiveListCondition.evaluateCondition, ", function () {
+            it ("should return shouldShow=false when condition source is empty and on_empty='hide'.", function () {
+                var groups = detailedActiveList.conditionalGroups;
+                // group 0: condition source=cnt_i1, on_empty=hide
+                var condition = groups[0].condition;
+                var result = condition.evaluateCondition({}, null, null);
+                expect(result.shouldShow).toBe(false, "should hide when empty and on_empty=hide");
+            });
+
+            it ("should return shouldShow=true when condition source is empty and on_empty='show'.", function () {
+                var groups = detailedActiveList.conditionalGroups;
+                // group 1: condition source=cnt_i1, on_empty=show
+                var condition = groups[1].condition;
+                var result = condition.evaluateCondition({}, null, null);
+                expect(result.shouldShow).toBe(true, "should show when empty and on_empty=show");
+            });
+
+            it ("should return shouldShow=true when condition source has data and on_empty='hide'.", function () {
+                var groups = detailedActiveList.conditionalGroups;
+                // group 0: on_empty=hide → show when NOT empty
+                var condition = groups[0].condition;
+                // simulate aggregate result with value
+                var result = condition.evaluateCondition({}, [{value: "5", isHTML: false, templateVariables: {$self: "5"}}], null);
+                expect(result.shouldShow).toBe(true, "should show when has data and on_empty=hide");
+            });
+
+            it ("should return shouldShow=false when condition source has data and on_empty='show'.", function () {
+                var groups = detailedActiveList.conditionalGroups;
+                // group 1: on_empty=show → hide when NOT empty
+                var condition = groups[1].condition;
+                var result = condition.evaluateCondition({}, [{value: "5", isHTML: false, templateVariables: {$self: "5"}}], null);
+                expect(result.shouldShow).toBe(false, "should hide when has data and on_empty=show");
+            });
+        });
+
         afterAll(function () {
             options.ermRest.setClientConfig({});
         });
@@ -400,6 +571,9 @@ exports.execute = function (options) {
                 })), "wait_for missmatch" + message);
             }
             expect(list[index].hasWaitFor).toBe(col.hasWaitFor, "hasWaitFor missmatch" + message);
+            if (col.hasCondition !== undefined) {
+                expect(list[index].hasCondition).toBe(col.hasCondition, "hasCondition missmatch" + message);
+            }
         });
     }
 
@@ -617,6 +791,34 @@ exports.execute = function (options) {
                 "waitFor": ["max_i2", "array_d_entity_i1"],
                 "hasWaitFor": true,
                 "value": ""
+            },
+            {
+                "title": "conditioned_col_inline",
+                "waitFor": [],
+                "hasWaitFor": false,
+                "hasCondition": false,
+                "value": ""
+            },
+            {
+                "title": "conditioned_col_key",
+                "waitFor": [],
+                "hasWaitFor": false,
+                "hasCondition": false,
+                "value": ""
+            },
+            {
+                "title": "conditioned_col_pattern",
+                "waitFor": [],
+                "hasWaitFor": false,
+                "hasCondition": false,
+                "value": ""
+            },
+            {
+                "title": "conditioned_col_outbound",
+                "waitFor": [],
+                "hasWaitFor": false,
+                "hasCondition": false,
+                "value": "1,234,531"
             }
         ];
 
@@ -806,6 +1008,34 @@ exports.execute = function (options) {
                 "waitFor": ["max_i2", "array_d_entity_i1"],
                 "hasWaitFor": true,
                 "value": ""
+            },
+            {
+                "title": "conditioned_col_inline",
+                "waitFor": [],
+                "hasWaitFor": false,
+                "hasCondition": true,
+                "value": ""
+            },
+            {
+                "title": "conditioned_col_key",
+                "waitFor": [],
+                "hasWaitFor": false,
+                "hasCondition": true,
+                "value": ""
+            },
+            {
+                "title": "conditioned_col_pattern",
+                "waitFor": [],
+                "hasWaitFor": false,
+                "hasCondition": true,
+                "value": ""
+            },
+            {
+                "title": "conditioned_col_outbound",
+                "waitFor": [],
+                "hasWaitFor": false,
+                "hasCondition": false,
+                "value": "1,234,531"
             }
         ];
 
@@ -934,6 +1164,27 @@ exports.execute = function (options) {
                     "objects": [
                         {"index": 22, "isWaitFor": false, "column": true}
                     ]
+                },
+                {
+                    "column": "min_i3",
+                    "aggregate": true,
+                    "objects": [
+                        {"index": 28, "isWaitFor": false, "column": true}
+                    ]
+                },
+                {
+                    "column": "min_i4",
+                    "aggregate": true,
+                    "objects": [
+                        {"index": 29, "isWaitFor": false, "column": true}
+                    ]
+                },
+                {
+                    "column": "max_i3",
+                    "aggregate": true,
+                    "objects": [
+                        {"index": 30, "isWaitFor": false, "column": true}
+                    ]
                 }
             ],
             allOutBounds: [
@@ -1009,7 +1260,11 @@ exports.execute = function (options) {
                         {"index": 7, "isWaitFor": true, "column": true},
                         {"index": 20, "isWaitFor": false, "column": true},
                         {"index": 21, "isWaitFor": true, "column": true},
-                        {"index": 23, "isWaitFor": true, "column": true}
+                        {"index": 23, "isWaitFor": true, "column": true},
+                        {"isWaitFor": true, "column": true},
+                        {"isWaitFor": true, "column": true},
+                        {"isWaitFor": true, "column": true},
+                        {"isWaitFor": true, "column": true}
                     ]
                 },
                 {

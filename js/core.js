@@ -1549,7 +1549,7 @@ import {
             var self = this;
             var sd = _annotations.SOURCE_DEFINITIONS;
             var hasAnnot = self.annotations.contains(sd);
-            var res = {columns: [], fkeys: [], sources: {}, sourceMapping: {}, sourceDependencies: {}};
+            var res = {columns: [], fkeys: [], sources: {}, sourceMapping: {}, sourceDependencies: {}, conditions: {}};
             var addedCols = {}, addedFks = {}, processedSources = {};
             var allColumns = self.columns.all(),
                 allForeignKeys = self.foreignKeys.all();
@@ -1693,7 +1693,7 @@ import {
             if (!hasAnnot) {
                 res.columns = allColumns;
                 res.fkeys = allForeignKeys;
-                self._sourceDefinitions = new TableSourceDefinitions(this, res.columns, res.fkeys, res.sources, res.sourceMapping, res.sourceDependencies);
+                self._sourceDefinitions = new TableSourceDefinitions(this, res.columns, res.fkeys, res.sources, res.sourceMapping, res.sourceDependencies, res.conditions);
                 return;
             }
 
@@ -1731,7 +1731,35 @@ import {
                 }
             }
 
-            self._sourceDefinitions = new TableSourceDefinitions(this, res.columns, res.fkeys, res.sources, res.sourceMapping, res.sourceDependencies);
+            // conditions
+            if (annot.conditions && typeof annot.conditions === "object") {
+                for (var cKey in annot.conditions) {
+                    if (!Object.prototype.hasOwnProperty.call(annot.conditions, cKey)) continue;
+                    var condDef = annot.conditions[cKey];
+                    if (typeof condDef !== "object" || condDef === null) {
+                        $log.info("source definition, table =" + self.name + ", condition=" + cKey + ": must be an object.");
+                        continue;
+                    }
+                    // must have source or sourcekey
+                    if (!condDef.source && !isStringAndNotEmpty(condDef.sourcekey)) {
+                        $log.info("source definition, table =" + self.name + ", condition=" + cKey + ": must have `source` or `sourcekey`.");
+                        continue;
+                    }
+                    // if sourcekey, it must exist in the sources map
+                    if (isStringAndNotEmpty(condDef.sourcekey) && !(condDef.sourcekey in res.sources)) {
+                        $log.info("source definition, table =" + self.name + ", condition=" + cKey + ": sourcekey `" + condDef.sourcekey + "` not found in sources.");
+                        continue;
+                    }
+                    res.conditions[cKey] = {
+                        sourcekey: isStringAndNotEmpty(condDef.sourcekey) ? condDef.sourcekey : undefined,
+                        source: condDef.source || undefined,
+                        on_empty: condDef.on_empty === "show" ? "show" : "hide",
+                        condition_pattern: isStringAndNotEmpty(condDef.condition_pattern) ? condDef.condition_pattern : undefined
+                    };
+                }
+            }
+
+            self._sourceDefinitions = new TableSourceDefinitions(this, res.columns, res.fkeys, res.sources, res.sourceMapping, res.sourceDependencies, res.conditions);
         },
 
         /**

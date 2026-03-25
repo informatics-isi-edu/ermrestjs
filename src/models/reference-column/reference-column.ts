@@ -5,8 +5,10 @@ import { CommentType } from '@isrd-isi-edu/ermrestjs/src/models/comment';
 import { DisplayName } from '@isrd-isi-edu/ermrestjs/src/models/display-name';
 import { ColumnAggregateFn, ColumnGroupAggregateFn } from '@isrd-isi-edu/ermrestjs/src/models/reference-column';
 import { Tuple, Reference } from '@isrd-isi-edu/ermrestjs/src/models/reference';
+import type { ConditionDefinition } from '@isrd-isi-edu/ermrestjs/src/models/table-source-definitions';
 
 // services
+import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
 
 // utils
 import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils';
@@ -43,6 +45,15 @@ export enum ReferenceColumnTypes {
 // function isAggregatePseudoColumn(column: unknown): column is PseudoColumn {
 //   return (column as PseudoColumn).referenceColumnType === ReferenceColumnTypes.PSEUDO && (column as PseudoColumn).hasAggregate;
 // }
+
+export interface ResolvedCondition {
+  /** The resolved condition definition */
+  conditionDef: ConditionDefinition;
+  /** The SourceObjectWrapper for the condition source */
+  sourceWrapper: SourceObjectWrapper;
+  /** Whether the condition source requires a secondary request (has inbound path or aggregate) */
+  isAsync: boolean;
+}
 
 /**
  * Constructor for ReferenceColumn. This class is a wrapper for Column.
@@ -122,6 +133,8 @@ export class ReferenceColumn {
   protected _hasWaitFor?: boolean;
   protected _hasWaitForAggregate?: boolean;
   protected _waitFor?: ReferenceColumn[];
+  protected _hasCondition?: boolean;
+  protected _resolvedCondition?: ResolvedCondition | null;
   /**
    * the reference that this column is defined on
    */
@@ -442,6 +455,87 @@ export class ReferenceColumn {
   }
 
   /**
+   * Whether the column has an async condition that requires a secondary request.
+   * Only true in detailed context for conditions whose source has an inbound path or aggregate.
+   */
+  get hasCondition(): boolean {
+    if (this._hasCondition === undefined) {
+      // triggers resolution
+      void this.resolvedCondition;
+    }
+    return this._hasCondition!;
+  }
+
+  /**
+   * The resolved condition for this column, or null if no condition or not applicable.
+   */
+  get resolvedCondition(): ResolvedCondition | null {
+    if (this._resolvedCondition === undefined) {
+      this._resolvedCondition = this._resolveCondition();
+      this._hasCondition = this._resolvedCondition?.isAsync ?? false;
+    }
+    return this._resolvedCondition;
+  }
+
+  /**
+   * Resolve the condition definition and source for this column.
+   */
+  protected _resolveCondition(): ResolvedCondition | null {
+    // only applicable in detailed context
+    if (this._context !== _contexts.DETAILED) {
+      return null;
+    }
+
+    if (!this.sourceObjectWrapper) {
+      return null;
+    }
+
+    // get condition def: inline condition or condition_key
+    let condDef: ConditionDefinition | undefined;
+    if (this.sourceObjectWrapper.condition) {
+      condDef = this.sourceObjectWrapper.condition;
+    } else {
+      const conditionKey = (this.sourceObjectWrapper as any)._conditionKey;
+      if (conditionKey) {
+        condDef = this._currentTable.sourceDefinitions.getCondition(conditionKey);
+        if (!condDef) {
+          $log.info('condition_key `' + conditionKey + '` not found in source-definitions conditions.');
+          return null;
+        }
+      }
+    }
+
+    if (!condDef) {
+      return null;
+    }
+
+    // resolve the condition source SourceObjectWrapper
+    let sourceWrapper: SourceObjectWrapper | undefined;
+    try {
+      if (condDef.sourcekey) {
+        sourceWrapper = this._currentTable.sourceDefinitions.getSource(condDef.sourcekey) ?? undefined;
+        if (!sourceWrapper) {
+          $log.info('condition sourcekey `' + condDef.sourcekey + '` could not be resolved.');
+          return null;
+        }
+      } else if (condDef.source) {
+        sourceWrapper = new SourceObjectWrapper({ source: condDef.source }, this._currentTable, false, undefined);
+      }
+    } catch (e: unknown) {
+      $log.info('failed to resolve condition source: ' + (e instanceof Error ? e.message : String(e)));
+      return null;
+    }
+
+    if (!sourceWrapper) {
+      return null;
+    }
+
+    const isAsync = sourceWrapper.hasInbound || sourceWrapper.hasAggregate;
+
+    return { conditionDef: condDef, sourceWrapper, isAsync };
+  }
+
+  /**
    * Formats a value corresponding to this reference-column definition.
    */
   formatvalue(data: any, context?: string, options?: any): string | string[] {
@@ -465,8 +559,8 @@ export class ReferenceColumn {
       context = this._context;
     }
 
-    // if there's wait_for, this should return null.
-    if (this.hasWaitFor && !options.skipWaitFor) {
+    // if there's wait_for or async condition, this should return null.
+    if ((this.hasWaitFor || this.hasCondition) && !options.skipWaitFor) {
       return {
         isHTML: false,
         value: this._getNullValue(context!),

@@ -323,8 +323,8 @@ export class ForeignKeyPseudoColumn extends ReferenceColumn {
       unformatted: this._getNullValue(context!),
     };
 
-    // if there's wait_for, this should return null.
-    if (this.hasWaitFor && !options.skipWaitFor) {
+    // if there's wait_for or async condition, this should return null.
+    if ((this.hasWaitFor || this.hasCondition) && !options.skipWaitFor) {
       return nullValue;
     }
 

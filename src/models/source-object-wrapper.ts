@@ -5,6 +5,7 @@ import type SourceObjectNode from '@isrd-isi-edu/ermrestjs/src/models/source-obj
 import type { ReferenceColumn } from '@isrd-isi-edu/ermrestjs/src/models/reference-column';
 import type { Tuple, Reference } from '@isrd-isi-edu/ermrestjs/src/models/reference';
 import type { DisplayName } from '@isrd-isi-edu/ermrestjs/src/models/display-name';
+import type { ConditionDefinition } from '@isrd-isi-edu/ermrestjs/src/models/table-source-definitions';
 
 // services
 import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
@@ -144,6 +145,12 @@ export default class SourceObjectWrapper {
   public sourceObjectNodes: SourceObjectNode[] = [];
   public isInputIframe = false;
   public inputIframeProps?: InputIframePropsType;
+
+  /**
+   * the condition definition that controls visibility of this column/related entity.
+   * Only used in detailed context.
+   */
+  public condition?: ConditionDefinition;
 
   /**
    * used for facets
@@ -368,6 +375,27 @@ export default class SourceObjectWrapper {
     }
 
     this.sourceObjectNodes = sourceObjectNodes;
+
+    // parse condition / condition_key
+    if (isObjectAndNotNull(sourceObject.condition)) {
+      const condObj = sourceObject.condition as Record<string, unknown>;
+      // inline condition must have source or sourcekey
+      if (condObj.source || isStringAndNotEmpty(condObj.sourcekey as string)) {
+        this.condition = {
+          sourcekey: isStringAndNotEmpty(condObj.sourcekey as string) ? (condObj.sourcekey as string) : undefined,
+          source: condObj.source || undefined,
+          on_empty: condObj.on_empty === 'show' ? 'show' : 'hide',
+          condition_pattern: isStringAndNotEmpty(condObj.condition_pattern as string) ? (condObj.condition_pattern as string) : undefined,
+        };
+      } else {
+        $log.info('condition on column `' + this.name + '` is missing `source` or `sourcekey`.');
+      }
+    } else if (isStringAndNotEmpty(sourceObject.condition_key as string)) {
+      // condition_key references a reusable condition from source-definitions
+      // resolution happens later when table.sourceDefinitions is available
+      // store it as a marker; generateActiveList will resolve it
+      (this as any)._conditionKey = sourceObject.condition_key;
+    }
 
     return true;
   }

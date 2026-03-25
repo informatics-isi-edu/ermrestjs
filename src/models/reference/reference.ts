@@ -81,6 +81,9 @@ import { _compressFacetObject, _sourceColumnHelpers } from '@isrd-isi-edu/ermres
 
 import type { CommentType } from '@isrd-isi-edu/ermrestjs/src/models/comment';
 import type { DisplayName } from '@isrd-isi-edu/ermrestjs/src/models/display-name';
+import ActiveListCondition from '@isrd-isi-edu/ermrestjs/src/models/active-list-condition';
+import type { ConditionDefinition } from '@isrd-isi-edu/ermrestjs/src/models/table-source-definitions';
+import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-object-wrapper';
 import { _exportHelpers, _getDefaultExportTemplate, _referenceExportOutput, validateExportTemplate } from '@isrd-isi-edu/ermrestjs/js/export';
 
 /**
@@ -213,18 +216,16 @@ type ActiveListRelatedEntityRequest = {
   index: number;
 };
 
+type ActiveListConditionalGroup = {
+  /** The condition object (class with evaluateCondition method) */
+  condition: ActiveListCondition;
+  /** Requests gated behind this condition (main content + its wait-fors) */
+  dependentRequests: Array<ActiveListRequest | ActiveListRelatedEntityRequest>;
+};
+
 type ActiveList = {
-  // TODO
-  // requests: {
-  //   column: ReferenceColumn;
-  //   objects: Array<{ index: number; column?: boolean; related?: boolean; inline?: boolean; citation?: boolean }>;
-  //   type: 'column' | 'related' | 'inline' | 'citation';
-  //   // TODO backwards compatibility:
-  //   inline?: boolean;
-  //   related?: boolean;
-  //   citation?: boolean;
-  // };
   requests: Array<ActiveListRequest | ActiveListRelatedEntityRequest>;
+  conditionalGroups: ActiveListConditionalGroup[];
   allOutBounds: Array<ForeignKeyPseudoColumn | PseudoColumn>;
   selfLinks: Array<KeyPseudoColumn>;
 };
@@ -947,6 +948,7 @@ export class Reference {
     const allOutBounds: Array<PseudoColumn | ForeignKeyPseudoColumn> = [];
     const requests: Array<ActiveListRequest | ActiveListRelatedEntityRequest> = [];
     const selfLinks: Array<KeyPseudoColumn> = [];
+    const conditionalGroups: ActiveListConditionalGroup[] = [];
     const consideredUniqueFiltered: { [key: string]: number } = {};
     const consideredSets: { [key: string]: number } = {};
     const consideredOutbounds: { [key: string]: boolean } = {};
@@ -1059,6 +1061,92 @@ export class Reference {
       }
     };
 
+    /**
+     * Same as addColToActiveList, but adds to a dependent requests array
+     * instead of the main requests array. Used for conditional groups.
+     */
+    const addColToDependentList = (
+      dependentRequests: Array<ActiveListRequest | ActiveListRelatedEntityRequest>,
+      col: VisibleColumn,
+      isWaitFor: boolean,
+      type: ActiveListRequestTypes,
+      index?: number,
+    ) => {
+      const obj: ActiveListRequestObject = { isWaitFor: isWaitFor };
+      obj[type] = true;
+      if (Number.isInteger(index)) {
+        obj.index = index;
+      }
+
+      // aggregates
+      if ((col as PseudoColumn).isPathColumn && (col as PseudoColumn).hasAggregate) {
+        // check if already in dependentRequests
+        const existing = dependentRequests.find((r) => (r as ActiveListRequest).column?.name === col.name && (r as ActiveListRequest).aggregate) as
+          | ActiveListRequest
+          | undefined;
+        if (existing) {
+          existing.objects.push(obj);
+          return;
+        }
+        dependentRequests.push({ aggregate: true, column: col, objects: [obj] });
+        return;
+      }
+
+      // entitysets
+      if (isRelatedColumn(col)) {
+        const existing = dependentRequests.find((r) => (r as ActiveListRequest).column?.name === col.name && (r as ActiveListRequest).entityset) as
+          | ActiveListRequest
+          | undefined;
+        if (existing) {
+          existing.objects.push(obj);
+          return;
+        }
+        dependentRequests.push({ entityset: true, column: col, objects: [obj] });
+        return;
+      }
+
+      // all outbounds — still add to main allOutBounds
+      if (isAllOutboundColumn(col)) {
+        if (!(col.name in consideredOutbounds)) {
+          consideredOutbounds[col.name] = true;
+          allOutBounds.push(col as PseudoColumn | ForeignKeyPseudoColumn);
+        }
+      }
+
+      // self-links — still add to main selfLinks
+      if ((col as KeyPseudoColumn).isKey) {
+        if (!(col.name in consideredSelfLinks)) {
+          consideredSelfLinks[col.name] = true;
+          selfLinks.push(col as KeyPseudoColumn);
+        }
+      }
+    };
+
+    /**
+     * Create a PseudoColumn for a condition source definition.
+     */
+    const createConditionColumn = (condDef: ConditionDefinition): VisibleColumn | undefined => {
+      try {
+        let condSourceWrapper: SourceObjectWrapper;
+        if (condDef.sourcekey) {
+          const sd = sds.getSource(condDef.sourcekey, tuple);
+          if (!sd) {
+            $log.info('condition sourcekey `' + condDef.sourcekey + '` could not be resolved.');
+            return undefined;
+          }
+          condSourceWrapper = sd.clone({}, this.table, false, tuple);
+        } else if (condDef.source) {
+          condSourceWrapper = new SourceObjectWrapper({ source: condDef.source }, this.table, false, undefined, tuple);
+        } else {
+          return undefined;
+        }
+        return createPseudoColumn(this, condSourceWrapper, tuple);
+      } catch (e: unknown) {
+        $log.info('failed to create condition column: ' + (e instanceof Error ? e.message : String(e)));
+        return undefined;
+      }
+    };
+
     const addInlineColumn = (col: VisibleColumn, i: number) => {
       if (isRelatedColumn(col)) {
         requests.push({ inline: true, index: i });
@@ -1069,6 +1157,66 @@ export class Reference {
       col.waitFor.forEach((wf: any) => {
         addColToActiveList(wf, true, isRelatedColumn(col) ? ActiveListRequestTypes.INLINE : ActiveListRequestTypes.COLUMN, i);
       });
+    };
+
+    /**
+     * Same as addInlineColumn but adds to dependent requests in a conditional group
+     */
+    const addInlineColumnToDependent = (
+      dependentRequests: Array<ActiveListRequest | ActiveListRelatedEntityRequest>,
+      col: VisibleColumn,
+      i: number,
+    ) => {
+      if (isRelatedColumn(col)) {
+        dependentRequests.push({ inline: true, index: i });
+      } else {
+        addColToDependentList(dependentRequests, col, false, ActiveListRequestTypes.COLUMN, i);
+      }
+
+      col.waitFor.forEach((wf: any) => {
+        addColToDependentList(dependentRequests, wf, true, isRelatedColumn(col) ? ActiveListRequestTypes.INLINE : ActiveListRequestTypes.COLUMN, i);
+      });
+    };
+
+    /**
+     * Process a column or related entity that has a condition.
+     * Returns true if the item was handled (either added to a conditional group or skipped).
+     * Returns false if it should be processed normally (condition evaluated synchronously to show).
+     */
+    const processConditionedItem = (
+      condDef: ConditionDefinition,
+      addToDependent: (dependentRequests: Array<ActiveListRequest | ActiveListRelatedEntityRequest>) => void,
+    ): boolean => {
+      const condCol = createConditionColumn(condDef);
+      if (!condCol) return false; // invalid condition, process normally
+
+      // if condition source is all-outbound (no secondary request needed), evaluate synchronously
+      if (isAllOutboundColumn(condCol)) {
+        if (tuple) {
+          const condition = new ActiveListCondition(condCol, condDef.on_empty || 'hide', condDef.condition_pattern);
+          const result = condition.evaluateCondition({}, null, tuple);
+          return !result.shouldShow; // return true if we should skip (hide)
+        }
+        return false; // no tuple, can't evaluate — process normally
+      }
+
+      // condition source needs a secondary request
+      const condition = new ActiveListCondition(condCol, condDef.on_empty || 'hide', condDef.condition_pattern);
+
+      // add condition source to main requests (deduplication via consideredSets/consideredAggregates)
+      addColToActiveList(condCol, true, ActiveListRequestTypes.COLUMN);
+
+      // create dependent requests
+      const dependentRequests: Array<ActiveListRequest | ActiveListRelatedEntityRequest> = [];
+      addToDependent(dependentRequests);
+
+      // create the conditional group
+      conditionalGroups.push({
+        condition,
+        dependentRequests,
+      });
+
+      return true; // handled
     };
 
     // THE CODE STARTS HERE:
@@ -1083,21 +1231,57 @@ export class Reference {
 
     // columns without aggregate
     columns.forEach((col, i: number) => {
-      if (!hasAggregate(col)) {
-        addInlineColumn(col, i);
+      if (hasAggregate(col)) return;
+
+      // check for condition (only in detailed context)
+      if (isDetailed) {
+        const rc = (col as ReferenceColumn).resolvedCondition;
+        if (rc) {
+          const handled = processConditionedItem(rc.conditionDef, (depReqs) => {
+            addInlineColumnToDependent(depReqs, col, i);
+          });
+          if (handled) return;
+        }
       }
+
+      addInlineColumn(col, i);
     });
 
     // columns with aggregate
     columns.forEach((col, i: number) => {
-      if (hasAggregate(col)) {
-        addInlineColumn(col, i);
+      if (!hasAggregate(col)) return;
+
+      // check for condition (only in detailed context)
+      if (isDetailed) {
+        const rc = (col as ReferenceColumn).resolvedCondition;
+        if (rc) {
+          const handled = processConditionedItem(rc.conditionDef, (depReqs) => {
+            addInlineColumnToDependent(depReqs, col, i);
+          });
+          if (handled) return;
+        }
       }
+
+      addInlineColumn(col, i);
     });
 
     // related tables
     if (isDetailed) {
       this.generateRelatedList(tuple).forEach((rel, i) => {
+        // check for condition on related entity
+        const rc = rel.pseudoColumn?.resolvedCondition;
+        if (rc) {
+          const handled = processConditionedItem(rc.conditionDef, (depReqs) => {
+            depReqs.push({ related: true, index: i });
+            if (rel.pseudoColumn) {
+              rel.pseudoColumn.waitFor.forEach((wf: any) => {
+                addColToDependentList(depReqs, wf, true, ActiveListRequestTypes.RELATED, i);
+              });
+            }
+          });
+          if (handled) return;
+        }
+
         requests.push({ related: true, index: i });
 
         if (rel.pseudoColumn) {
@@ -1117,6 +1301,7 @@ export class Reference {
 
     this._activeList = {
       requests: requests,
+      conditionalGroups: conditionalGroups,
       allOutBounds: allOutBounds,
       selfLinks: selfLinks,
     };

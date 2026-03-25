@@ -9,6 +9,22 @@ import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
 import { Column, ForeignKeyRef, Table } from '@isrd-isi-edu/ermrestjs/js/core';
 
 /**
+ * Defines a condition that controls visibility of a column or related entity.
+ * Used in source-definitions annotation under the `conditions` key, or inline
+ * on a column-directive via `condition` / `condition_key`.
+ */
+export type ConditionDefinition = {
+  /** reference to an existing sourcekey whose data determines the condition */
+  sourcekey?: string;
+  /** inline source path (alternative to sourcekey) */
+  source?: unknown;
+  /** behavior when condition source returns empty: "hide" (default) or "show" */
+  on_empty?: 'show' | 'hide';
+  /** optional Mustache template — evaluated with $self, no markdown rendering */
+  condition_pattern?: string;
+};
+
+/**
  * Result of Table.sourceDefinitions
  */
 class TableSourceDefinitions {
@@ -39,6 +55,10 @@ class TableSourceDefinitions {
    * this has been added because of path prefix where a sourcekey might rely on other sourcekeys
    */
   sourceDependencies: Record<string, string[]> = {};
+  /**
+   * reusable condition definitions defined in the source-definitions annotation
+   */
+  private conditions: Record<string, ConditionDefinition> = {};
 
   constructor(
     table: Table,
@@ -47,6 +67,7 @@ class TableSourceDefinitions {
     sources: Record<string, SourceObjectWrapper>,
     sourceMapping: Record<string, string[]>,
     sourceDependencies: Record<string, string[]>,
+    conditions: Record<string, ConditionDefinition> = {},
   ) {
     this.table = table;
     this.columns = columns;
@@ -54,6 +75,16 @@ class TableSourceDefinitions {
     this.sources = sources;
     this.sourceMapping = sourceMapping;
     this.sourceDependencies = sourceDependencies;
+    this.conditions = conditions;
+  }
+
+  /**
+   * Get a condition definition by its key.
+   * @param key The key of the condition definition.
+   * @returns The condition definition or undefined if not found.
+   */
+  getCondition(key: string): ConditionDefinition | undefined {
+    return this.conditions[key];
   }
 
   /**
