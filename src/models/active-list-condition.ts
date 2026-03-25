@@ -14,13 +14,16 @@ export default class ActiveListCondition {
   column: VisibleColumn;
   /** "show" or "hide" (default "hide") */
   onEmpty: 'show' | 'hide';
-  /** Optional Mustache template (like url_pattern, no markdown rendering) */
+  /** Optional template (no markdown rendering) */
   conditionPattern?: string;
+  /** Template engine for condition_pattern: "mustache" (default) or "handlebars" */
+  templateEngine?: string;
 
-  constructor(column: VisibleColumn, onEmpty: 'show' | 'hide', conditionPattern?: string) {
+  constructor(column: VisibleColumn, onEmpty: 'show' | 'hide', conditionPattern?: string, templateEngine?: string) {
     this.column = column;
     this.onEmpty = onEmpty;
     this.conditionPattern = conditionPattern;
+    this.templateEngine = templateEngine;
   }
 
   /**
@@ -40,9 +43,11 @@ export default class ActiveListCondition {
       const keyValues: any = {};
       Object.assign(keyValues, templateVariables, selfTemplateVariables);
 
-      // Evaluate Mustache template (no markdown rendering)
+      // Evaluate template (no markdown rendering)
       const col = this.column as PseudoColumn;
-      const rendered = _renderTemplate(this.conditionPattern, keyValues, col.table.schema.catalog, {});
+      const rendered = _renderTemplate(this.conditionPattern, keyValues, col.table.schema.catalog, {
+        templateEngine: this.templateEngine,
+      });
       isEmpty = !rendered || rendered.trim() === '';
     } else {
       // No pattern — check if condition source returned data

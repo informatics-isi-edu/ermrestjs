@@ -1193,7 +1193,7 @@ export class Reference {
       // if condition source is all-outbound (no secondary request needed), evaluate synchronously
       if (isAllOutboundColumn(condCol)) {
         if (tuple) {
-          const condition = new ActiveListCondition(condCol, condDef.on_empty || 'hide', condDef.condition_pattern);
+          const condition = new ActiveListCondition(condCol, condDef.on_empty || 'hide', condDef.condition_pattern, condDef.template_engine);
           const result = condition.evaluateCondition({}, null, tuple);
           return !result.shouldShow; // return true if we should skip (hide)
         }
@@ -1201,7 +1201,7 @@ export class Reference {
       }
 
       // condition source needs a secondary request
-      const condition = new ActiveListCondition(condCol, condDef.on_empty || 'hide', condDef.condition_pattern);
+      const condition = new ActiveListCondition(condCol, condDef.on_empty || 'hide', condDef.condition_pattern, condDef.template_engine);
 
       // add condition source to main requests (deduplication via consideredSets/consideredAggregates)
       addColToActiveList(condCol, true, ActiveListRequestTypes.COLUMN);

@@ -20,8 +20,10 @@ export type ConditionDefinition = {
   source?: unknown;
   /** behavior when condition source returns empty: "hide" (default) or "show" */
   on_empty?: 'show' | 'hide';
-  /** optional Mustache template — evaluated with $self, no markdown rendering */
+  /** optional template evaluated with $self, no markdown rendering */
   condition_pattern?: string;
+  /** template engine for condition_pattern: "mustache" (default) or "handlebars" */
+  template_engine?: string;
 };
 
 /**

@@ -386,6 +386,7 @@ export default class SourceObjectWrapper {
           source: condObj.source || undefined,
           on_empty: condObj.on_empty === 'show' ? 'show' : 'hide',
           condition_pattern: isStringAndNotEmpty(condObj.condition_pattern as string) ? (condObj.condition_pattern as string) : undefined,
+          template_engine: isStringAndNotEmpty(condObj.template_engine as string) ? (condObj.template_engine as string) : undefined,
         };
       } else {
         $log.info('condition on column `' + this.name + '` is missing `source` or `sourcekey`.');

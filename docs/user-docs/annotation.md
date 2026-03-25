@@ -930,6 +930,17 @@ Example:
             ]
         }
     },
+    "conditions": {
+        "has_related_data": {
+            "sourcekey": "source-1",
+            "on_empty": "hide"
+        },
+        "custom_check": {
+            "source": [{"inbound": ["schema", "fk3"]}, "RID"],
+            "on_empty": "hide",
+            "condition_pattern": "{{#if $self}}show{{/if}}"
+        }
+    },
     "search-box": {
         "or": [
             {"source": "column1", "markdown_name": "another name"},
@@ -945,10 +956,15 @@ Example:
 Supported JSON payload patterns:
 
 - `{` ... `"sources":` _sourcedefinitions_ `,` ... `}`: the source definitions that will allow you to refer to them by just using the defined _sourcekey_.
+- `{` ... `"conditions":` _conditiondefinitions_ `,` ... `}`: reusable condition definitions that can be referenced by column directives via `condition_key`. See [condition and condition_key](column-directive.md#condition) for more information.
 - `{` ... `"search-box": { "or": [` _searchcolumn_ `,` ... `]} }`: Configure list of search columns.
 - `{` ... `"fkeys":` _fkeylist_  `,` ... `}`: Array of foreign key constraints that will be mapped into `$fkey_schema_contraint` key in templating environments.
 - `{` ... `"columns":` _columns_  `,` ... `}`: Array of column names that their data will be available in templating environments.
 
+
+Supported _conditiondefinitions_ patterns:
+
+- `{` ... `"` _conditionkey_ `":` _conditionobject_ ... `}`: where _conditionkey_ is a name that will be used to refer to the defined condition. Each _conditionobject_ must have either `source` or `sourcekey` to identify the data that will be used for evaluating the condition. See the [condition documentation](column-directive.md#condition) for the full list of properties.
 
 Supported _sourcedefinitions_ patterns:
 
@@ -1468,3 +1484,5 @@ The following attributes can be used to manipulate the presentation settings of 
     - `order`: An alternative sort method to apply when a client wants to semantically sort by key values. It follows the same syntax as `column_order`. In scalar array aggregate, you cannot sort based on other columns values, you can only sort based on the scalar value of the column.
     - `max_length`: `<number>` A number that defines the maximum number of elements that should be displayed.
 - `input_iframe`: Applicaple only to entry contexts. A JSON object that describes the settings for showing "input iframe" in entry apps. Please refer to the [input iframe document](input-iframe.md) for more information about this property.
+- `condition`: Applicable only to `detailed` context. A JSON object that defines a condition controlling whether this column or related entity is displayed. The condition references a data source whose result determines visibility. Please refer to the [condition documentation](column-directive.md#condition) for more information.
+- `condition_key`: Applicable only to `detailed` context. A string that references a reusable condition defined in the [`conditions`](#tag-2019-source-definitions) section of the `source-definitions` annotation. If both `condition` and `condition_key` are defined, `condition` takes precedence.
