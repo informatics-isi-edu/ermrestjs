@@ -82,7 +82,7 @@
     "nock": "13.5.4",
     "prettier": "^3.8.1",
     "require-reload": "^0.2.2",
-    "rollup-plugin-visualizer": "^6.0.3",
+    "rollup-plugin-visualizer": "^7.0.1",
     "typescript-eslint": "^8.51.0"
   }
 }
