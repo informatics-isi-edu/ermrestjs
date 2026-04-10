@@ -243,34 +243,32 @@ exports.execute = function (options) {
             });
         });
 
-        describe("SourceObjectWrapper.condition, ", function () {
-            it ("should parse inline condition on a column.", function () {
+        describe("SourceObjectWrapper condition sourceObject, ", function () {
+            it ("should have inline condition on the sourceObject.", function () {
                 // conditioned_col_inline in detailed context
                 var col = detailedColumns[31];
                 expect(col.displayname.value).toContain("conditioned_col_inline", "wrong column at index 31");
                 var sow = col.sourceObjectWrapper;
                 expect(sow).toBeDefined("sourceObjectWrapper not defined");
-                expect(sow.condition).toBeDefined("condition not defined");
-                expect(sow.condition.sourcekey).toBe("cnt_i1", "sourcekey missmatch");
-                expect(sow.condition.on_empty).toBe("hide", "on_empty missmatch");
+                expect(sow.sourceObject.condition).toBeDefined("condition not defined on sourceObject");
+                expect(sow.sourceObject.condition.sourcekey).toBe("cnt_i1", "sourcekey missmatch");
             });
 
-            it ("should resolve condition_key on a column.", function () {
+            it ("should have condition_key on the sourceObject.", function () {
                 // conditioned_col_key in detailed context
                 var col = detailedColumns[32];
                 expect(col.displayname.value).toContain("conditioned_col_key", "wrong column at index 32");
-                // condition_key is resolved in generateActiveList, but the _conditionKey marker should be set
                 var sow = col.sourceObjectWrapper;
                 expect(sow).toBeDefined("sourceObjectWrapper not defined");
+                expect(sow.sourceObject.condition_key).toBeDefined("condition_key not defined on sourceObject");
             });
 
-            it ("should parse condition on columns in non-detailed context too.", function () {
-                // conditions are parsed on the sourceObjectWrapper regardless of context
+            it ("should have condition on sourceObject in non-detailed context too.", function () {
                 var col = compactColumns[28];
                 expect(col.displayname.value).toContain("conditioned_col_inline", "wrong column at index 28");
                 var sow = col.sourceObjectWrapper;
                 if (sow) {
-                    expect(sow.condition).toBeDefined("condition should still be parsed on sourceObjectWrapper");
+                    expect(sow.sourceObject.condition).toBeDefined("condition should be on sourceObject");
                 }
             });
         });

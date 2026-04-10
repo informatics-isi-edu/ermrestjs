@@ -81,7 +81,7 @@ import {
      * @memberof ERMrest
      * @function
      * @param {string} uri URI of the ERMrest service.
-     * @param {Object} [contextHeaderParams={cid:'null'}] An optional server header parameters for context logging
+     * @param {any} [contextHeaderParams={cid:'null'}] An optional server header parameters for context logging
      * appended to the end of any request to the server.
      * @return {Server} Returns a server instance.
      * @throws {InvalidInputError} URI is missing

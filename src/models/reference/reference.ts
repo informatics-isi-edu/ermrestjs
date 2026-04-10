@@ -41,7 +41,7 @@ import ErrorService from '@isrd-isi-edu/ermrestjs/src/services/error';
 import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
 
 // utils
-import { createPseudoColumn, isAllOutboundColumn, isRelatedColumn } from '@isrd-isi-edu/ermrestjs/src/utils/column-utils';
+import { createPseudoColumn, isRelatedColumn } from '@isrd-isi-edu/ermrestjs/src/utils/column-utils';
 import {
   computeReadPath,
   generateFacetColumns,
@@ -71,7 +71,6 @@ import { onload } from '@isrd-isi-edu/ermrestjs/js/setup/node';
 import {
   _getPagingValues,
   _getRecursiveAnnotationValue,
-  _isEntryContext,
   _isValidForeignKeyName,
   _isValidSortElement,
   compareColumnPositions,
@@ -81,9 +80,14 @@ import { _compressFacetObject, _sourceColumnHelpers } from '@isrd-isi-edu/ermres
 
 import type { CommentType } from '@isrd-isi-edu/ermrestjs/src/models/comment';
 import type { DisplayName } from '@isrd-isi-edu/ermrestjs/src/models/display-name';
-import ActiveListCondition from '@isrd-isi-edu/ermrestjs/src/models/active-list-condition';
+import {
+  ActiveListBuilder,
+  ActiveListRequestTypes,
+  type ActiveList,
+  type ActiveListRequest,
+  type ActiveListRelatedEntityRequest,
+} from '@isrd-isi-edu/ermrestjs/src/services/active-list';
 import type { ConditionDefinition } from '@isrd-isi-edu/ermrestjs/src/models/table-source-definitions';
-import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-object-wrapper';
 import { _exportHelpers, _getDefaultExportTemplate, _referenceExportOutput, validateExportTemplate } from '@isrd-isi-edu/ermrestjs/js/export';
 
 /**
@@ -120,7 +124,7 @@ import { _exportHelpers, _getDefaultExportTemplate, _referenceExportOutput, vali
  * @return Promise when resolved passes the
  * {@link Reference} object. If rejected, passes one of the ermrest errors
  */
-export const resolve = async (uri: string, contextHeaderParams?: any): Promise<Reference> => {
+export const resolve = async (uri: string, contextHeaderParams?: unknown): Promise<Reference> => {
   verify(uri, "'uri' must be specified");
   // make sure all the dependencies are loaded
   await onload();
@@ -149,85 +153,6 @@ export const _createReference = (location: Location, catalog: Catalog): Referenc
 // NOTE: This function is only being used in unit tests.
 export const _createPage = (reference: Reference, etag: string, data: any, hasPrevious: boolean, hasNext: boolean): Page => {
   return new Page(reference, etag, data, hasPrevious, hasNext);
-};
-
-type ActiveListRequestObject = {
-  /**
-   * The index of the object in the column's values array
-   */
-  index?: number;
-  /**
-   * whether this is for a visible column
-   */
-  column?: boolean;
-  /**
-   * whether this is for a related entity
-   */
-  related?: boolean;
-  /**
-   * whether this is for an inline related entity
-   */
-  inline?: boolean;
-  /**
-   * whether this is for the citation
-   */
-  citation?: boolean;
-
-  isWaitFor: boolean;
-};
-
-type ActiveListRequest = {
-  column: VisibleColumn;
-
-  /**
-   * whether the request is "first outbound" type.
-   * These booleans are used for figuring out how the data should be fetched.
-   */
-  firstOutbound?: boolean;
-  /**
-   * whether the request is for an aggregate column.
-   * This is used for figuring out how the data should be fetched.
-   */
-  aggregate?: boolean;
-  entity?: boolean;
-  /**
-   * whether the request is an entityset.
-   * This is used for figuring out how the data should be fetched.
-   */
-  entityset?: boolean;
-
-  /**
-   * where this request is needed.
-   */
-  objects: Array<ActiveListRequestObject>;
-};
-
-type ActiveListRelatedEntityRequest = {
-  /**
-   * whether the request is for an inline related entity.
-   * the .index indicated which related entity it is
-   */
-  inline?: boolean;
-  /**
-   * whether the request is for a related entity.
-   * the .index indicated which related entity it is
-   */
-  related?: boolean;
-  index: number;
-};
-
-type ActiveListConditionalGroup = {
-  /** The condition object (class with evaluateCondition method) */
-  condition: ActiveListCondition;
-  /** Requests gated behind this condition (main content + its wait-fors) */
-  dependentRequests: Array<ActiveListRequest | ActiveListRelatedEntityRequest>;
-};
-
-type ActiveList = {
-  requests: Array<ActiveListRequest | ActiveListRelatedEntityRequest>;
-  conditionalGroups: ActiveListConditionalGroup[];
-  allOutBounds: Array<ForeignKeyPseudoColumn | PseudoColumn>;
-  selfLinks: Array<KeyPseudoColumn>;
 };
 
 export type VisibleColumn =
@@ -295,9 +220,9 @@ export class Reference {
   private _canUseTRS?: boolean;
   private _canUseTCRS?: boolean;
   private _readPath?: string;
-  private _readAttributeGroupPathProps_cached?: any;
+  private _readAttributeGroupPathProps_cached?: unknown;
   private _display?: ReferenceDisplay;
-  private _defaultExportTemplate?: any;
+  private _defaultExportTemplate?: unknown;
   private _csvDownloadLink?: string | null;
   private _searchColumns?: Array<VisibleColumn> | false;
   private _cascadingDeletedItems?: Array<Table | RelatedReference | Reference>;
@@ -394,6 +319,10 @@ export class Reference {
     return this._pseudoColumn;
   }
 
+  /**
+   * The column-directive that is used for creating this reference.
+   * Allows access to props defined on the column-directive (display props, condition, waitFor, etc)
+   */
   setPseudoColumn(value: VisibleColumn) {
     this._pseudoColumn = value;
   }
@@ -670,7 +599,7 @@ export class Reference {
   /**
    * Generate the list of columns for this reference based on context and annotations
    */
-  generateColumnsList(tuple?: Tuple, columnsList?: any[], dontChangeReference?: boolean, skipLog?: boolean): ReferenceColumn[] {
+  generateColumnsList(tuple?: Tuple, columnsList?: Array<unknown>, dontChangeReference?: boolean, skipLog?: boolean): ReferenceColumn[] {
     const resultColumns = generateColumnsList(this, tuple, columnsList, skipLog);
 
     if (!dontChangeReference) {
@@ -944,368 +873,78 @@ export class Reference {
    * @private
    */
   generateActiveList(tuple?: Tuple): ActiveList {
-    // VARIABLES:
-    const allOutBounds: Array<PseudoColumn | ForeignKeyPseudoColumn> = [];
-    const requests: Array<ActiveListRequest | ActiveListRelatedEntityRequest> = [];
-    const selfLinks: Array<KeyPseudoColumn> = [];
-    const conditionalGroups: ActiveListConditionalGroup[] = [];
-    const consideredUniqueFiltered: { [key: string]: number } = {};
-    const consideredSets: { [key: string]: number } = {};
-    const consideredOutbounds: { [key: string]: boolean } = {};
-    const consideredAggregates: { [key: string]: number } = {};
-    const consideredSelfLinks: { [key: string]: boolean } = {};
-    const consideredEntryWaitFors: { [key: string]: number } = {};
-
-    const sds = this.table.sourceDefinitions;
-
-    // in detailed, we want related and citation
     const isDetailed = this._context === _contexts.DETAILED;
-    // in entry, don't include waitfors in the activelist used for loading the page.
-    // the waitfors will be used in chaise instead prior to submission.
-    const isEntry = _isEntryContext(this._context);
-
-    enum ActiveListRequestTypes {
-      COLUMN = 'column',
-      RELATED = 'related',
-      INLINE = 'inline',
-      CITATION = 'citation',
-    }
-
-    // FUNCTIONS:
-    const hasAggregate = (col: VisibleColumn) => {
-      return col.hasWaitForAggregate || ((col as PseudoColumn).isPathColumn && (col as PseudoColumn).hasAggregate);
-    };
-
-    // col: the column that we need its data
-    // isWaitFor: whether it was part of waitFor or just visible
-    // type: where in the page it belongs to
-    // index: the container index (column index, or related index) (optional)
-    const addColToActiveList = (col: VisibleColumn, isWaitFor: boolean, type: ActiveListRequestTypes, index?: number) => {
-      const obj: ActiveListRequestObject = { isWaitFor: isWaitFor };
-
-      // add the type
-      obj[type] = true;
-
-      // add index if available (not available in citation)
-      if (Number.isInteger(index)) {
-        obj.index = index;
-      }
-
-      if (isWaitFor && isEntry) {
-        if (col.name in consideredEntryWaitFors) {
-          (requests[consideredEntryWaitFors[col.name]] as ActiveListRequest).objects.push(obj);
-          return;
-        }
-        consideredEntryWaitFors[col.name] = requests.length;
-        requests.push({ firstOutbound: true, column: col, objects: [obj] });
-        return;
-      }
-
-      // unique filtered
-      // TODO FILTER_IN_SOURCE chaise should use this type of column as well?
-      // TODO FILTER_IN_SOURCE should be added to documentation as well
-      if ((col as PseudoColumn).sourceObjectWrapper?.isUniqueFiltered) {
-        // duplicate
-        if (col.name in consideredUniqueFiltered) {
-          (requests[consideredUniqueFiltered[col.name]] as ActiveListRequest).objects.push(obj);
-          return;
-        }
-
-        // new
-        consideredUniqueFiltered[col.name] = requests.length;
-        requests.push({ entity: true, column: col, objects: [obj] });
-        return;
-      }
-
-      // aggregates
-      if ((col as PseudoColumn).isPathColumn && (col as PseudoColumn).hasAggregate) {
-        // duplicate
-        if (col.name in consideredAggregates) {
-          (requests[consideredAggregates[col.name]] as ActiveListRequest).objects.push(obj);
-          return;
-        }
-
-        // new
-        consideredAggregates[col.name] = requests.length;
-        requests.push({ aggregate: true, column: col, objects: [obj] });
-        return;
-      }
-
-      //entitysets
-      if (isRelatedColumn(col)) {
-        if (!isDetailed) {
-          return; // only acceptable in detailed
-        }
-
-        if (col.name in consideredSets) {
-          (requests[consideredSets[col.name]] as ActiveListRequest).objects.push(obj);
-          return;
-        }
-
-        consideredSets[col.name] = requests.length;
-        requests.push({ entityset: true, column: col, objects: [obj] });
-      }
-
-      // all outbounds
-      if (isAllOutboundColumn(col)) {
-        if (col.name in consideredOutbounds) return;
-        consideredOutbounds[col.name] = true;
-        allOutBounds.push(col as PseudoColumn | ForeignKeyPseudoColumn);
-      }
-
-      // self-links
-      if ((col as KeyPseudoColumn).isKey) {
-        if (col.name in consideredSelfLinks) return;
-        consideredSelfLinks[col.name] = true;
-        selfLinks.push(col as KeyPseudoColumn);
-      }
-    };
+    const builder = new ActiveListBuilder(this, tuple, isDetailed);
 
     /**
-     * Same as addColToActiveList, but adds to a dependent requests array
-     * instead of the main requests array. Used for conditional groups.
+     * helper for the condition branch shared across columns/related loops
+     * Returns,
+     * - true, if the condition was valid and so we should just capture the dependencies
+     *   and not add them directly to the active list.
+     * - false, if condition missing/invalid/synchronous,
+     *   so we should just add the column/related directly to the active list.
      */
-    const addColToDependentList = (
-      dependentRequests: Array<ActiveListRequest | ActiveListRelatedEntityRequest>,
-      col: VisibleColumn,
-      isWaitFor: boolean,
-      type: ActiveListRequestTypes,
-      index?: number,
-    ) => {
-      const obj: ActiveListRequestObject = { isWaitFor: isWaitFor };
-      obj[type] = true;
-      if (Number.isInteger(index)) {
-        obj.index = index;
-      }
-
-      // aggregates
-      if ((col as PseudoColumn).isPathColumn && (col as PseudoColumn).hasAggregate) {
-        // check if already in dependentRequests
-        const existing = dependentRequests.find((r) => (r as ActiveListRequest).column?.name === col.name && (r as ActiveListRequest).aggregate) as
-          | ActiveListRequest
-          | undefined;
-        if (existing) {
-          existing.objects.push(obj);
-          return;
-        }
-        dependentRequests.push({ aggregate: true, column: col, objects: [obj] });
-        return;
-      }
-
-      // entitysets
-      if (isRelatedColumn(col)) {
-        const existing = dependentRequests.find((r) => (r as ActiveListRequest).column?.name === col.name && (r as ActiveListRequest).entityset) as
-          | ActiveListRequest
-          | undefined;
-        if (existing) {
-          existing.objects.push(obj);
-          return;
-        }
-        dependentRequests.push({ entityset: true, column: col, objects: [obj] });
-        return;
-      }
-
-      // all outbounds — still add to main allOutBounds
-      if (isAllOutboundColumn(col)) {
-        if (!(col.name in consideredOutbounds)) {
-          consideredOutbounds[col.name] = true;
-          allOutBounds.push(col as PseudoColumn | ForeignKeyPseudoColumn);
-        }
-      }
-
-      // self-links — still add to main selfLinks
-      if ((col as KeyPseudoColumn).isKey) {
-        if (!(col.name in consideredSelfLinks)) {
-          consideredSelfLinks[col.name] = true;
-          selfLinks.push(col as KeyPseudoColumn);
-        }
-      }
-    };
-
-    /**
-     * Create a PseudoColumn for a condition source definition.
-     */
-    const createConditionColumn = (condDef: ConditionDefinition): VisibleColumn | undefined => {
-      try {
-        let condSourceWrapper: SourceObjectWrapper;
-        if (condDef.sourcekey) {
-          const sd = sds.getSource(condDef.sourcekey, tuple);
-          if (!sd) {
-            $log.info('condition sourcekey `' + condDef.sourcekey + '` could not be resolved.');
-            return undefined;
-          }
-          condSourceWrapper = sd.clone({}, this.table, false, tuple);
-        } else if (condDef.source) {
-          condSourceWrapper = new SourceObjectWrapper({ source: condDef.source }, this.table, false, undefined, tuple);
-        } else {
-          return undefined;
-        }
-        return createPseudoColumn(this, condSourceWrapper, tuple);
-      } catch (e: unknown) {
-        $log.info('failed to create condition column: ' + (e instanceof Error ? e.message : String(e)));
-        return undefined;
-      }
-    };
-
-    const addInlineColumn = (col: VisibleColumn, i: number) => {
-      if (isRelatedColumn(col)) {
-        requests.push({ inline: true, index: i });
-      } else {
-        addColToActiveList(col, false, ActiveListRequestTypes.COLUMN, i);
-      }
-
-      col.waitFor.forEach((wf: any) => {
-        addColToActiveList(wf, true, isRelatedColumn(col) ? ActiveListRequestTypes.INLINE : ActiveListRequestTypes.COLUMN, i);
-      });
-    };
-
-    /**
-     * Same as addInlineColumn but adds to dependent requests in a conditional group
-     */
-    const addInlineColumnToDependent = (
-      dependentRequests: Array<ActiveListRequest | ActiveListRelatedEntityRequest>,
-      col: VisibleColumn,
-      i: number,
-    ) => {
-      if (isRelatedColumn(col)) {
-        dependentRequests.push({ inline: true, index: i });
-      } else {
-        addColToDependentList(dependentRequests, col, false, ActiveListRequestTypes.COLUMN, i);
-      }
-
-      col.waitFor.forEach((wf: any) => {
-        addColToDependentList(dependentRequests, wf, true, isRelatedColumn(col) ? ActiveListRequestTypes.INLINE : ActiveListRequestTypes.COLUMN, i);
-      });
-    };
-
-    /**
-     * Process a column or related entity that has a condition.
-     * Returns true if the item was handled (either added to a conditional group or skipped).
-     * Returns false if it should be processed normally (condition evaluated synchronously to show).
-     */
-    const processConditionedItem = (
-      condDef: ConditionDefinition,
-      addToDependent: (dependentRequests: Array<ActiveListRequest | ActiveListRelatedEntityRequest>) => void,
+    const tryCondition = (
+      condDef: ConditionDefinition | undefined,
+      addToDeps: (deps: Array<ActiveListRequest | ActiveListRelatedEntityRequest>) => void,
     ): boolean => {
-      const condCol = createConditionColumn(condDef);
-      if (!condCol) return false; // invalid condition, process normally
-
-      // if condition source is all-outbound (no secondary request needed), evaluate synchronously
-      if (isAllOutboundColumn(condCol)) {
-        if (tuple) {
-          const condition = new ActiveListCondition(condCol, condDef.on_empty || 'hide', condDef.condition_pattern, condDef.template_engine);
-          const result = condition.evaluateCondition({}, null, tuple);
-          return !result.shouldShow; // return true if we should skip (hide)
-        }
-        return false; // no tuple, can't evaluate — process normally
-      }
-
-      // condition source needs a secondary request
-      const condition = new ActiveListCondition(condCol, condDef.on_empty || 'hide', condDef.condition_pattern, condDef.template_engine);
-
-      // add condition source to main requests (deduplication via consideredSets/consideredAggregates)
-      addColToActiveList(condCol, true, ActiveListRequestTypes.COLUMN);
-
-      // create dependent requests
-      const dependentRequests: Array<ActiveListRequest | ActiveListRelatedEntityRequest> = [];
-      addToDependent(dependentRequests);
-
-      // create the conditional group
-      conditionalGroups.push({
-        condition,
-        dependentRequests,
-      });
-
-      return true; // handled
+      if (!isDetailed || !condDef) return false;
+      return builder.processConditionedItem(condDef, addToDeps);
     };
 
-    // THE CODE STARTS HERE:
     const columns = this.generateColumnsList(tuple);
 
     // citation
     if (isDetailed && this.citation) {
       this.citation.waitFor.forEach((col) => {
-        addColToActiveList(col, true, ActiveListRequestTypes.CITATION);
+        builder.addCol(col, true, ActiveListRequestTypes.CITATION);
       });
     }
 
     // columns without aggregate
     columns.forEach((col, i: number) => {
-      if (hasAggregate(col)) return;
-
-      // check for condition (only in detailed context)
-      if (isDetailed) {
-        const rc = (col as ReferenceColumn).resolvedCondition;
-        if (rc) {
-          const handled = processConditionedItem(rc.conditionDef, (depReqs) => {
-            addInlineColumnToDependent(depReqs, col, i);
-          });
-          if (handled) return;
-        }
-      }
-
-      addInlineColumn(col, i);
+      if (builder.hasAggregate(col)) return;
+      const rc = col.resolvedCondition;
+      if (tryCondition(rc?.conditionDef, (deps) => builder.addInlineToDependent(deps, col, i))) return;
+      builder.addInline(col, i);
     });
 
     // columns with aggregate
     columns.forEach((col, i: number) => {
-      if (!hasAggregate(col)) return;
-
-      // check for condition (only in detailed context)
-      if (isDetailed) {
-        const rc = (col as ReferenceColumn).resolvedCondition;
-        if (rc) {
-          const handled = processConditionedItem(rc.conditionDef, (depReqs) => {
-            addInlineColumnToDependent(depReqs, col, i);
-          });
-          if (handled) return;
-        }
-      }
-
-      addInlineColumn(col, i);
+      if (!builder.hasAggregate(col)) return;
+      const rc = col.resolvedCondition;
+      if (tryCondition(rc?.conditionDef, (deps) => builder.addInlineToDependent(deps, col, i))) return;
+      builder.addInline(col, i);
     });
 
     // related tables
     if (isDetailed) {
       this.generateRelatedList(tuple).forEach((rel, i) => {
-        // check for condition on related entity
         const rc = rel.pseudoColumn?.resolvedCondition;
-        if (rc) {
-          const handled = processConditionedItem(rc.conditionDef, (depReqs) => {
-            depReqs.push({ related: true, index: i });
-            if (rel.pseudoColumn) {
-              rel.pseudoColumn.waitFor.forEach((wf: any) => {
-                addColToDependentList(depReqs, wf, true, ActiveListRequestTypes.RELATED, i);
-              });
-            }
+        /**
+         * if there's a condition, we have to capture the requests generated for the related entity as its dependencies.
+         * So when the condition is evaludated, we can decide whether to run those requests or not.
+         */
+        const addRelatedToDeps = (deps: Array<ActiveListRequest | ActiveListRelatedEntityRequest>) => {
+          deps.push({ related: true, index: i });
+          rel.pseudoColumn?.waitFor.forEach((wf) => {
+            builder.addColToDependent(deps, wf, true, ActiveListRequestTypes.RELATED, i);
           });
-          if (handled) return;
-        }
-
-        requests.push({ related: true, index: i });
-
-        if (rel.pseudoColumn) {
-          rel.pseudoColumn.waitFor.forEach((wf) => {
-            addColToActiveList(wf, true, ActiveListRequestTypes.RELATED, i);
-          });
-        }
+        };
+        if (tryCondition(rc?.conditionDef, addRelatedToDeps)) return;
+        builder.requests.push({ related: true, index: i });
+        rel.pseudoColumn?.waitFor.forEach((wf) => {
+          builder.addCol(wf, true, ActiveListRequestTypes.RELATED, i);
+        });
       });
     }
 
-    //fkeys
-    sds.fkeys.forEach((fk) => {
-      if (fk.name in consideredOutbounds) return;
-      consideredOutbounds[fk.name] = true;
-      allOutBounds.push(new ForeignKeyPseudoColumn(this, fk));
+    // fkeys
+    this.table.sourceDefinitions.fkeys.forEach((fk) => {
+      builder.addFkey(new ForeignKeyPseudoColumn(this, fk));
     });
 
-    this._activeList = {
-      requests: requests,
-      conditionalGroups: conditionalGroups,
-      allOutBounds: allOutBounds,
-      selfLinks: selfLinks,
-    };
-
+    this._activeList = builder.build();
     return this._activeList;
   }
 
@@ -1340,6 +979,7 @@ export class Reference {
 
     // annotation is missing
     if (!Array.isArray(templates)) {
+      // eslint-disable-next-line eqeqeq
       const canUseDefault = useDefault && this.context === _contexts.DETAILED && this.defaultExportTemplate != null;
 
       return canUseDefault ? [this.defaultExportTemplate] : [];
@@ -1380,7 +1020,7 @@ export class Reference {
    */
   getColumnByName(name: string): VisibleColumn {
     // given an array of columns, find column by name
-    const findCol = (list: any[]): any => {
+    const findCol = (list: Array<VisibleColumn | Column>): VisibleColumn | Column | false => {
       for (let i = 0; i < list.length; i++) {
         if (list[i].name === name) {
           return list[i];
@@ -1392,13 +1032,13 @@ export class Reference {
     // search in visible columns
     let c = findCol(this.columns);
     if (c) {
-      return c;
+      return c as VisibleColumn;
     }
 
     // search in table columns
     c = findCol(this.table.columns.all());
     if (c) {
-      return new ReferenceColumn(this, [c]);
+      return new ReferenceColumn(this, [c as Column]);
     }
 
     // backward compatibility, look at fks and keys using constraint name

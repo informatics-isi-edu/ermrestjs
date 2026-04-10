@@ -82,7 +82,7 @@ export const _exportHelpers = {
   /**
    * Return the export fragments that should be used with export annotation.
    * @param {Table} table
-   * @param {Object} defaultExportTemplate
+   * @param {any} defaultExportTemplate
    * @returns An object that can be used in combination with export annotation
    * @private
    * @ignore

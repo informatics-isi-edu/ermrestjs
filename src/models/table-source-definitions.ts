@@ -19,7 +19,7 @@ export type ConditionDefinition = {
   /** inline source path (alternative to sourcekey) */
   source?: unknown;
   /** behavior when condition source returns empty: "hide" (default) or "show" */
-  on_empty?: 'show' | 'hide';
+  on_empty: 'show' | 'hide';
   /** optional template evaluated with $self, no markdown rendering */
   condition_pattern?: string;
   /** template engine for condition_pattern: "mustache" (default) or "handlebars" */
