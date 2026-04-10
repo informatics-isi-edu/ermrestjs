@@ -84,6 +84,7 @@ class TableSourceDefinitions {
 
   /**
    * Get a condition definition by its key.
+   * NOTE: the returned definition is not processed and might be invalid.
    * @param key The key of the condition definition.
    * @returns The condition definition or undefined if not found.
    */

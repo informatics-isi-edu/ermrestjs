@@ -22,6 +22,7 @@ import {
   type PseudoColumn,
   type ColumnAggregateFn,
 } from '@isrd-isi-edu/ermrestjs/src/models/reference-column';
+import type { ResolvedCondition } from '@isrd-isi-edu/ermrestjs/src/models/reference-column/reference-column';
 import {
   Citation,
   Page,
@@ -87,7 +88,7 @@ import {
   type ActiveListRequest,
   type ActiveListRelatedEntityRequest,
 } from '@isrd-isi-edu/ermrestjs/src/services/active-list';
-import type { ConditionDefinition } from '@isrd-isi-edu/ermrestjs/src/models/table-source-definitions';
+
 import { _exportHelpers, _getDefaultExportTemplate, _referenceExportOutput, validateExportTemplate } from '@isrd-isi-edu/ermrestjs/js/export';
 
 /**
@@ -885,11 +886,11 @@ export class Reference {
      *   so we should just add the column/related directly to the active list.
      */
     const tryCondition = (
-      condDef: ConditionDefinition | undefined,
+      rc: ResolvedCondition | null | undefined,
       addToDeps: (deps: Array<ActiveListRequest | ActiveListRelatedEntityRequest>) => void,
     ): boolean => {
-      if (!isDetailed || !condDef) return false;
-      return builder.processConditionedItem(condDef, addToDeps);
+      if (!isDetailed || !rc) return false;
+      return builder.processConditionedItem(rc, addToDeps);
     };
 
     const columns = this.generateColumnsList(tuple);
@@ -905,7 +906,7 @@ export class Reference {
     columns.forEach((col, i: number) => {
       if (builder.hasAggregate(col)) return;
       const rc = col.resolvedCondition;
-      if (tryCondition(rc?.conditionDef, (deps) => builder.addInlineToDependent(deps, col, i))) return;
+      if (tryCondition(rc, (deps) => builder.addInlineToDependent(deps, col, i))) return;
       builder.addInline(col, i);
     });
 
@@ -913,7 +914,7 @@ export class Reference {
     columns.forEach((col, i: number) => {
       if (!builder.hasAggregate(col)) return;
       const rc = col.resolvedCondition;
-      if (tryCondition(rc?.conditionDef, (deps) => builder.addInlineToDependent(deps, col, i))) return;
+      if (tryCondition(rc, (deps) => builder.addInlineToDependent(deps, col, i))) return;
       builder.addInline(col, i);
     });
 
@@ -931,7 +932,7 @@ export class Reference {
             builder.addColToDependent(deps, wf, true, ActiveListRequestTypes.RELATED, i);
           });
         };
-        if (tryCondition(rc?.conditionDef, addRelatedToDeps)) return;
+        if (tryCondition(rc, addRelatedToDeps)) return;
         builder.requests.push({ related: true, index: i });
         rel.pseudoColumn?.waitFor.forEach((wf) => {
           builder.addCol(wf, true, ActiveListRequestTypes.RELATED, i);
@@ -941,7 +942,7 @@ export class Reference {
 
     // fkeys
     this.table.sourceDefinitions.fkeys.forEach((fk) => {
-      builder.addFkey(new ForeignKeyPseudoColumn(this, fk));
+      builder.addAllOutBound(new ForeignKeyPseudoColumn(this, fk));
     });
 
     this._activeList = builder.build();

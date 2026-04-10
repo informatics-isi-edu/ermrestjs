@@ -5,6 +5,7 @@ import type { Reference, VisibleColumn } from '@isrd-isi-edu/ermrestjs/src/model
 import type { Tuple } from '@isrd-isi-edu/ermrestjs/src/models/reference';
 import type { PseudoColumn, ForeignKeyPseudoColumn, KeyPseudoColumn } from '@isrd-isi-edu/ermrestjs/src/models/reference-column';
 import type { ConditionDefinition } from '@isrd-isi-edu/ermrestjs/src/models/table-source-definitions';
+import type { ResolvedCondition } from '@isrd-isi-edu/ermrestjs/src/models/reference-column/reference-column';
 
 // services
 import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
@@ -356,23 +357,16 @@ export class ActiveListBuilder {
    * Returns false if it should be processed normally (condition evaluated synchronously to show or no valid condition found).
    */
   processConditionedItem(
-    condDef: ConditionDefinition,
+    resolvedCondition: ResolvedCondition,
     addToDependent: (dependentRequests: Array<ActiveListRequest | ActiveListRelatedEntityRequest>) => void,
   ): boolean {
-    const condCol = this.createConditionColumn(condDef);
+    const condCol = this.createConditionColumn(resolvedCondition.conditionDef);
     if (!condCol) return false; // invalid condition, process normally
 
-    const condition = new ActiveListCondition(condDef, condCol, this.reference, this.tuple);
+    const condition = new ActiveListCondition(resolvedCondition.conditionDef, condCol, this.reference, this.tuple);
 
-    // if condition source is all-outbound (no secondary request needed)
-    // AND there are no async wait_fors, evaluate synchronously
-    if (isAllOutboundColumn(condCol) && !condition.hasWaitFor) {
-      if (this.tuple) {
-        const result = condition.evaluateCondition(this.tuple.templateVariables, null, this.tuple);
-        return !result.shouldShow; // return true if we should skip (hide)
-      }
-      return false; // no tuple, can't evaluate -- process normally
-    }
+    // synchronous condition already evaluated in _resolveCondition
+    if (resolvedCondition.conditionHide) return true;
 
     // condition source needs a secondary request (or has async wait_fors)
     const conditionIndex = this.conditionalGroups.length;
@@ -399,7 +393,7 @@ export class ActiveListBuilder {
   }
 
   /** Add a fkey from sourceDefinitions to allOutBounds (with dedup). */
-  addFkey(fkCol: ForeignKeyPseudoColumn): void {
+  addAllOutBound(fkCol: ForeignKeyPseudoColumn): void {
     if (fkCol.name in this.consideredOutbounds) return;
     this.consideredOutbounds[fkCol.name] = true;
     this.allOutBounds.push(fkCol);

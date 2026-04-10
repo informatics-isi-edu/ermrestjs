@@ -77,7 +77,7 @@ export type InputIframePropsType = {
  */
 export default class SourceObjectWrapper {
   /**
-   * the source object
+   * the raw source object (column-directive object)
    */
   public sourceObject: Record<string, unknown>;
   /**

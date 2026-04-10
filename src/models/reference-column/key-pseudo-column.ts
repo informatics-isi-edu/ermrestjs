@@ -8,6 +8,7 @@ import { Reference, Tuple } from '@isrd-isi-edu/ermrestjs/src/models/reference';
 // utils
 import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils';
 import { isStringAndNotEmpty } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
+import { buildSelfTemplateVariables } from '@isrd-isi-edu/ermrestjs/src/utils/template-utils';
 
 // legacy
 import { Key, Table } from '@isrd-isi-edu/ermrestjs/js/core';
@@ -118,9 +119,7 @@ export class KeyPseudoColumn extends ReferenceColumn {
     const context = this._context;
 
     if (this.display.sourceMarkdownPattern) {
-      const selfTemplateVariables = {
-        $self: _getRowTemplateVariables(this.table, context, mainTuple.data),
-      };
+      const selfTemplateVariables = buildSelfTemplateVariables(this, mainTuple, columnValue);
 
       const keyValues = {};
       Object.assign(keyValues, templateVariables, selfTemplateVariables);

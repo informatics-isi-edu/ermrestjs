@@ -14,6 +14,9 @@ import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
 import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils';
 import { isObjectAndKeyExists, isObjectAndNotNull, isStringAndNotEmpty } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
 import { _annotations, _contexts } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
+import { buildSelfTemplateVariables } from '@isrd-isi-edu/ermrestjs/src/utils/template-utils';
+import { createPseudoColumn, isAllOutboundColumn } from '@isrd-isi-edu/ermrestjs/src/utils/column-utils';
+import ActiveListCondition from '@isrd-isi-edu/ermrestjs/src/models/active-list-condition';
 
 // legacy
 import { Column, Table, Type } from '@isrd-isi-edu/ermrestjs/js/core';
@@ -53,6 +56,11 @@ export interface ResolvedCondition {
   sourceWrapper: SourceObjectWrapper;
   /** Whether the condition source requires a secondary request (has inbound path or aggregate) */
   isAsync: boolean;
+  /**
+   * For synchronous conditions (all-outbound, no wait_for): whether the condition evaluated to hide.
+   * undefined for async conditions (evaluation happens later on the client).
+   */
+  conditionHide?: boolean;
 }
 
 /**
@@ -523,7 +531,7 @@ export class ReferenceColumn {
     let sourceWrapper: SourceObjectWrapper | undefined;
     try {
       if (condDef.sourcekey) {
-        sourceWrapper = this._currentTable.sourceDefinitions.getSource(condDef.sourcekey) ?? undefined;
+        sourceWrapper = this._currentTable.sourceDefinitions.getSource(condDef.sourcekey, this._mainTuple) ?? undefined;
         if (!sourceWrapper) {
           $log.info('condition sourcekey `' + condDef.sourcekey + '` could not be resolved.');
           return null;
@@ -542,7 +550,22 @@ export class ReferenceColumn {
 
     const isAsync = sourceWrapper.hasInbound || sourceWrapper.hasAggregate;
 
-    return { conditionDef: condDef, sourceWrapper, isAsync };
+    // for synchronous conditions, evaluate now and store the result
+    let conditionHide: boolean | undefined;
+    if (!isAsync && this._mainTuple) {
+      try {
+        const condCol = createPseudoColumn(this._baseReference, sourceWrapper.clone({}, this._currentTable, false, this._mainTuple), this._mainTuple);
+        const condition = new ActiveListCondition(condDef, condCol, this._baseReference, this._mainTuple);
+        if (!condition.hasWaitFor) {
+          const result = condition.evaluateCondition(this._mainTuple.templateVariables, null, this._mainTuple);
+          conditionHide = !result.shouldShow;
+        }
+      } catch (e: unknown) {
+        $log.info('failed to evaluate synchronous condition: ' + (e instanceof Error ? e.message : String(e)));
+      }
+    }
+
+    return { conditionDef: condDef, sourceWrapper, isAsync, conditionHide };
   }
 
   /**
@@ -712,17 +735,13 @@ export class ReferenceColumn {
   }
 
   sourceFormatPresentation(templateVariables: any, columnValue: any, mainTuple: Tuple): any {
-    const baseCol = this.baseColumns[0];
     const context = this._context;
 
     if (this.display.sourceMarkdownPattern) {
       let selfTemplateVariables = {};
-      // children pseudo-column have already set the $self and $_self
-      if (!this.isPseudo && baseCol) {
-        selfTemplateVariables = {
-          $self: baseCol.formatvalue(mainTuple.data[baseCol.name], context),
-          $_self: mainTuple.data[baseCol.name],
-        };
+      // children pseudo-columns build $self in their own override via buildSelfTemplateVariables
+      if (!this.isPseudo) {
+        selfTemplateVariables = buildSelfTemplateVariables(this, mainTuple, columnValue);
       }
 
       const keyValues = {};

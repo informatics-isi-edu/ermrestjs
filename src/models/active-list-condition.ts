@@ -1,10 +1,13 @@
 // models
 import type { Reference, VisibleColumn, Tuple } from '@isrd-isi-edu/ermrestjs/src/models/reference';
-import type { PseudoColumn, ReferenceColumn } from '@isrd-isi-edu/ermrestjs/src/models/reference-column';
+import type { ReferenceColumn } from '@isrd-isi-edu/ermrestjs/src/models/reference-column';
 import type { ConditionDefinition } from '@isrd-isi-edu/ermrestjs/src/models/table-source-definitions';
 
+// utils
+import { buildSelfTemplateVariables } from '@isrd-isi-edu/ermrestjs/src/utils/template-utils';
+
 // legacy
-import { _renderTemplate, _getRowTemplateVariables } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
+import { _renderTemplate } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
 import { _processWaitForList } from '@isrd-isi-edu/ermrestjs/js/utils/pseudocolumn_helpers';
 
 /**
@@ -86,19 +89,17 @@ export default class ActiveListCondition {
     let isEmpty: boolean;
 
     if (this.conditionPattern) {
-      // Build $self/$_self based on column type (mirroring sourceFormatPresentation logic)
-      const selfTemplateVariables = this._buildSelfVariables(conditionValue, mainTuple);
+      const selfTemplateVariables = buildSelfTemplateVariables(this.column as ReferenceColumn, mainTuple, conditionValue);
       const keyValues: any = {};
       Object.assign(keyValues, templateVariables, selfTemplateVariables);
 
-      // Evaluate template (no markdown rendering)
-      const col = this.column as PseudoColumn;
-      const rendered = _renderTemplate(this.conditionPattern, keyValues, col.table.schema.catalog, {
+      // evaluate template (no markdown rendering)
+      const rendered = _renderTemplate(this.conditionPattern, keyValues, this.column.table.schema.catalog, {
         templateEngine: this.templateEngine,
       });
       isEmpty = !rendered || rendered.trim() === '';
     } else {
-      // No pattern -- check if condition source returned data
+      // no pattern: check if condition source returned data
       isEmpty = this._isConditionValueEmpty(conditionValue);
     }
 
@@ -106,54 +107,6 @@ export default class ActiveListCondition {
     // on_empty: "show" -> show when empty -> hide when NOT empty
     const shouldShow = this.onEmpty === 'show' ? isEmpty : !isEmpty;
     return { shouldShow };
-  }
-
-  /**
-   * Build $self/$_self template variables based on column type.
-   * Mirrors PseudoColumn.sourceFormatPresentation logic.
-   */
-  private _buildSelfVariables(conditionValue: any, mainTuple: Tuple): any {
-    const col = this.column as PseudoColumn;
-    const context = (col as any)._context;
-
-    // aggregate: use precomputed templateVariables
-    if (col.hasAggregate && conditionValue) {
-      return conditionValue.templateVariables || {};
-    }
-
-    // all-outbound (isUnique): use mainTuple.linkedData
-    if (col.hasPath && col.isUnique) {
-      if (!mainTuple.linkedData[col.name]) {
-        return {};
-      }
-      // scalar
-      if (!col.isEntityMode) {
-        const baseCol = col.baseColumn;
-        return {
-          $self: baseCol.formatvalue(mainTuple.linkedData[col.name][baseCol.name], context),
-          $_self: mainTuple.linkedData[col.name][baseCol.name],
-        };
-      }
-      // entity
-      return {
-        $self: _getRowTemplateVariables(col.table, context, mainTuple.linkedData[col.name]),
-      };
-    }
-
-    // entityset: use conditionValue.templateVariables (page)
-    if (conditionValue && conditionValue.templateVariables) {
-      return conditionValue.templateVariables;
-    }
-
-    // scalar column
-    if (col.baseColumn) {
-      return {
-        $self: col.baseColumn.formatvalue(mainTuple.data[col.baseColumn.name], context),
-        $_self: mainTuple.data[col.baseColumn.name],
-      };
-    }
-
-    return {};
   }
 
   /**
