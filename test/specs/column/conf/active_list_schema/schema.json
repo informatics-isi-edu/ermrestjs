@@ -437,7 +437,8 @@
                             "condition": {
                                 "sourcekey": "cnt_i1",
                                 "on_empty": "hide",
-                                "condition_pattern": "{{#if $self}}show{{/if}}"
+                                "condition_pattern": "{{#if cnt_i2}}show{{/if}}",
+                                "wait_for": ["cnt_i2"]
                             }
                         },
                         {
@@ -757,7 +758,8 @@
                         },
                         "cond_has_inbound1_show": {
                             "sourcekey": "cnt_i1",
-                            "on_empty": "show"
+                            "on_empty": "show",
+                            "wait_for": ["cnt_i2"]
                         },
                         "cond_with_pattern": {
                             "sourcekey": "cnt_i1",
@@ -766,6 +768,12 @@
                         },
                         "cond_invalid_no_source": {
                             "on_empty": "hide"
+                        },
+                        "cond_with_wait_for": {
+                            "sourcekey": "cnt_i1",
+                            "on_empty": "hide",
+                            "condition_pattern": "{{#if cnt_i2}}show{{/if}}",
+                            "wait_for": ["cnt_i2"]
                         }
                     }
                 }

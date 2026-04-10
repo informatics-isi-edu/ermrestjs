@@ -91,7 +91,8 @@ In this category, you use the [`source`](#source) property to define the data so
     "sourcekey": <source key for condition data>,
     "source": <source path for condition data>,
     "on_empty": <"show" or "hide">,
-    "condition_pattern": <pattern>
+    "condition_pattern": <pattern>,
+    "wait_for": <wait_for list>
   },
   "condition_key": <condition key>
 }
@@ -130,7 +131,8 @@ In this category, the [`sourcekey`](#sourcekey) proprety is used to refer to one
     "sourcekey": <source key for condition data>,
     "source": <source path for condition data>,
     "on_empty": <"show" or "hide">,
-    "condition_pattern": <pattern>
+    "condition_pattern": <pattern>,
+    "wait_for": <wait_for list>
   },
   "condition_key": <condition key>
 }
@@ -582,6 +584,7 @@ A JSON object that defines an inline condition controlling whether this column o
   - `"hide"` (default): Hide the column when the condition source is empty.
   - `"show"`: Show the column when the condition source is empty (and hide it when data is present).
 - `condition_pattern`: _(optional)_ A Mustache template that is evaluated using the condition source data. When provided, the condition is based on whether the rendered template produces a non-empty string, rather than whether the condition source returned data. The template has access to `$self` (the condition source value) and the same templating environment as `markdown_pattern`. No markdown rendering is applied to the result; only emptiness is checked.
+- `wait_for`: _(optional)_ An array of source key strings (referencing sources defined in `source-definitions`). These sources are fetched alongside the condition source, and their data is available in the templating environment when `condition_pattern` is evaluated. This allows the condition to reference data from multiple sources. The condition is not evaluated until all `wait_for` sources have completed.
 
 ```json
 {
@@ -589,6 +592,20 @@ A JSON object that defines an inline condition controlling whether this column o
   "condition": {
     "sourcekey": "has_related_items",
     "on_empty": "hide"
+  }
+}
+```
+
+**Example with `wait_for`:**
+
+```json
+{
+  "source": "some_column",
+  "condition": {
+    "sourcekey": "count_of_items",
+    "wait_for": ["count_of_other_items"],
+    "condition_pattern": "{{#if (and count_of_other_items count_of_items)}}show{{/if}}",
+    "template_engine": "handlebars"
   }
 }
 ```
@@ -632,8 +649,7 @@ Where `has_related_data` is defined in the source-definitions annotation:
   },
   "conditions": {
     "has_related_data": {
-      "sourcekey": "cnt_related",
-      "on_empty": "hide"
+      "sourcekey": "cnt_related"
     }
   }
 }

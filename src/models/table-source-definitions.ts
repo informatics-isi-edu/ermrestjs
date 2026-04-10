@@ -24,6 +24,8 @@ export type ConditionDefinition = {
   condition_pattern?: string;
   /** template engine for condition_pattern: "mustache" (default) or "handlebars" */
   template_engine?: string;
+  /** optional list of sourcekeys whose data should be available when evaluating condition_pattern */
+  wait_for?: string[];
 };
 
 /**

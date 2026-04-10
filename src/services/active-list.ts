@@ -30,6 +30,8 @@ export type ActiveListRequestObject = {
   inline?: boolean;
   /** whether this is for the citation */
   citation?: boolean;
+  /** whether this is for a condition evaluation (index refers to the conditionalGroups index) */
+  condition?: boolean;
 
   isWaitFor: boolean;
 };
@@ -95,6 +97,7 @@ export enum ActiveListRequestTypes {
   RELATED = 'related',
   INLINE = 'inline',
   CITATION = 'citation',
+  CONDITION = 'condition',
 }
 
 // ============================================================================
@@ -359,21 +362,28 @@ export class ActiveListBuilder {
     const condCol = this.createConditionColumn(condDef);
     if (!condCol) return false; // invalid condition, process normally
 
-    // if condition source is all-outbound (no secondary request needed), evaluate synchronously
-    if (isAllOutboundColumn(condCol)) {
+    const condition = new ActiveListCondition(condDef, condCol, this.reference, this.tuple);
+
+    // if condition source is all-outbound (no secondary request needed)
+    // AND there are no async wait_fors, evaluate synchronously
+    if (isAllOutboundColumn(condCol) && !condition.hasWaitFor) {
       if (this.tuple) {
-        const condition = new ActiveListCondition(condCol, condDef.on_empty || 'hide', condDef.condition_pattern, condDef.template_engine);
         const result = condition.evaluateCondition(this.tuple.templateVariables, null, this.tuple);
         return !result.shouldShow; // return true if we should skip (hide)
       }
-      return false; // no tuple, can't evaluate — process normally
+      return false; // no tuple, can't evaluate -- process normally
     }
 
-    // condition source needs a secondary request
-    const condition = new ActiveListCondition(condCol, condDef.on_empty || 'hide', condDef.condition_pattern, condDef.template_engine);
+    // condition source needs a secondary request (or has async wait_fors)
+    const conditionIndex = this.conditionalGroups.length;
 
-    // add condition source to main requests (deduplication via consideredSets/consideredAggregates)
-    this.addCol(condCol, true, ActiveListRequestTypes.COLUMN);
+    // add condition source to main requests
+    this.addCol(condCol, true, ActiveListRequestTypes.CONDITION, conditionIndex);
+
+    // add condition wait_for columns to main requests
+    condition.waitFor.forEach((wf) => {
+      this.addCol(wf, true, ActiveListRequestTypes.CONDITION, conditionIndex);
+    });
 
     // create dependent requests
     const dependentRequests: Array<ActiveListRequest | ActiveListRelatedEntityRequest> = [];

@@ -241,6 +241,16 @@ exports.execute = function (options) {
                 var cond = sds.getCondition("non_existent_condition");
                 expect(cond).toBeUndefined("non-existent condition should return undefined");
             });
+
+            it ("should parse wait_for in condition definitions.", function () {
+                var cond = sds.getCondition("cond_with_wait_for");
+                expect(cond).toBeDefined("cond_with_wait_for not found");
+                expect(cond.sourcekey).toBe("cnt_i1", "sourcekey missmatch");
+                expect(cond.condition_pattern).toBe("{{#if cnt_i2}}show{{/if}}", "condition_pattern missmatch");
+                expect(Array.isArray(cond.wait_for)).toBe(true, "wait_for should be an array");
+                expect(cond.wait_for.length).toBe(1, "wait_for length missmatch");
+                expect(cond.wait_for[0]).toBe("cnt_i2", "wait_for[0] missmatch");
+            });
         });
 
         describe("SourceObjectWrapper condition sourceObject, ", function () {
@@ -357,8 +367,9 @@ exports.execute = function (options) {
 
                 it ("should return the correct number of conditional groups for detailed context.", function () {
                     expect(detailedActiveList.conditionalGroups).toBeDefined("conditionalGroups not defined");
-                    // 3 groups: conditioned_col_inline (inline condition), conditioned_col_key (condition_key),
-                    // conditioned_col_pattern (inline w/ pattern), plus conditioned related entity_set_i5
+                    // 3 column groups: conditioned_col_inline, conditioned_col_key (with wait_for),
+                    // conditioned_col_pattern (with wait_for)
+                    // plus 1 related: conditioned entity_set_i5
                     // conditioned_col_outbound uses all-outbound condition source, so evaluated synchronously — no group
                     expect(detailedActiveList.conditionalGroups.length).toBe(4,
                         "should have 4 conditional groups (3 columns + 1 related with async conditions)");
@@ -387,12 +398,13 @@ exports.execute = function (options) {
 
                 it ("should have conditionPattern when specified.", function () {
                     var groups = detailedActiveList.conditionalGroups;
-                    expect(groups[0].conditionPattern).toBeUndefined("group 0 should not have conditionPattern");
-                    expect(groups[1].conditionPattern).toBeUndefined("group 1 should not have conditionPattern");
+                    expect(groups[0].condition.conditionPattern).toBeUndefined("group 0 should not have conditionPattern");
+                    expect(groups[1].condition.conditionPattern).toBeUndefined("group 1 should not have conditionPattern");
                     expect(groups[2].condition.conditionPattern).toBe(
-                        "{{#if $self}}show{{/if}}",
+                        "{{#if cnt_i2}}show{{/if}}",
                         "group 2 conditionPattern missmatch"
                     );
+                    expect(groups[3].condition.conditionPattern).toBeUndefined("group 3 should not have conditionPattern (related)");
                 });
 
                 it ("each group should have dependentRequests.", function () {
@@ -403,6 +415,46 @@ exports.execute = function (options) {
                         expect(g.dependentRequests.length).toBeGreaterThan(0,
                             "dependentRequests should not be empty for group index=" + i);
                     });
+                });
+
+                it ("conditions without wait_for should have empty waitFor list.", function () {
+                    var groups = detailedActiveList.conditionalGroups;
+                    expect(groups[0].condition.hasWaitFor).toBe(false, "group 0 should not have waitFor");
+                    expect(groups[0].condition.waitFor.length).toBe(0, "group 0 waitFor length");
+                    expect(groups[3].condition.hasWaitFor).toBe(false, "group 3 should not have waitFor");
+                    expect(groups[3].condition.waitFor.length).toBe(0, "group 3 waitFor length");
+                });
+
+                it ("conditions with wait_for should have populated waitFor list.", function () {
+                    var groups = detailedActiveList.conditionalGroups;
+                    // group 1 (cond_has_inbound1_show with wait_for) and group 2 (conditioned_col_pattern inline with wait_for)
+                    expect(groups[1].condition.hasWaitFor).toBe(true, "group 1 should have waitFor");
+                    expect(groups[1].condition.waitFor.length).toBe(1, "group 1 waitFor length");
+                    expect(groups[1].condition.waitFor[0].name).toBe(
+                        columnMapping["cnt_i2"],
+                        "group 1 waitFor[0] should be cnt_i2"
+                    );
+
+                    expect(groups[2].condition.hasWaitFor).toBe(true, "group 2 should have waitFor");
+                    expect(groups[2].condition.waitFor.length).toBe(1, "group 2 waitFor length");
+                    expect(groups[2].condition.waitFor[0].name).toBe(
+                        columnMapping["cnt_i2"],
+                        "group 2 waitFor[0] should be cnt_i2"
+                    );
+                });
+
+                it ("condition wait_for columns should appear in main requests with condition objects.", function () {
+                    // cnt_i2 should have condition objects for groups 1 and 2 (wait_for)
+                    var cnt_i2_req = detailedActiveList.requests.find(function (r) {
+                        return r.column && r.column.name === columnMapping["cnt_i2"];
+                    });
+                    expect(cnt_i2_req).toBeDefined("cnt_i2 should be in requests");
+                    var condObjects = cnt_i2_req.objects.filter(function (obj) {
+                        return obj.condition;
+                    });
+                    expect(condObjects.length).toBe(2, "cnt_i2 should have 2 condition objects");
+                    expect(condObjects[0].index).toBe(1, "first condition object should be for group 1");
+                    expect(condObjects[1].index).toBe(2, "second condition object should be for group 2");
                 });
             });
         });
@@ -599,6 +651,7 @@ exports.execute = function (options) {
                     expect(obj.index).toBe(expObj.index, "index missmatch" + message + " obj index=" + objIndex);
                     expect(obj.isWaitFor).toBe(expObj.isWaitFor, "isWaitFor missmatch" + message + " obj index=" + objIndex);
                     expect(obj.column).toBe(expObj.column, "column missmatch" + message + " obj index=" + objIndex);
+                    expect(obj.condition).toBe(expObj.condition, "condition missmatch" + message + " obj index=" + objIndex);
                 });
             }
 
@@ -1259,10 +1312,10 @@ exports.execute = function (options) {
                         {"index": 20, "isWaitFor": false, "column": true},
                         {"index": 21, "isWaitFor": true, "column": true},
                         {"index": 23, "isWaitFor": true, "column": true},
-                        {"isWaitFor": true, "column": true},
-                        {"isWaitFor": true, "column": true},
-                        {"isWaitFor": true, "column": true},
-                        {"isWaitFor": true, "column": true}
+                        {"isWaitFor": true, "condition": true, "index": 0},
+                        {"isWaitFor": true, "condition": true, "index": 1},
+                        {"isWaitFor": true, "condition": true, "index": 2},
+                        {"isWaitFor": true, "condition": true, "index": 3}
                     ]
                 },
                 {
@@ -1323,7 +1376,9 @@ exports.execute = function (options) {
                     "objects": [
                         {"index": 21, "isWaitFor": false,"column": true},
                         {"index": 23, "isWaitFor": true, "column": true},
-                        {"index": 25, "isWaitFor": true, "column": true}
+                        {"index": 25, "isWaitFor": true, "column": true},
+                        {"isWaitFor": true, "condition": true, "index": 1},
+                        {"isWaitFor": true, "condition": true, "index": 2}
                     ]
                 },
                 {

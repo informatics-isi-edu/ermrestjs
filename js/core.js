@@ -1755,7 +1755,8 @@ import {
                         source: condDef.source || undefined,
                         on_empty: condDef.on_empty === "show" ? "show" : "hide",
                         condition_pattern: isStringAndNotEmpty(condDef.condition_pattern) ? condDef.condition_pattern : undefined,
-                        template_engine: isStringAndNotEmpty(condDef.template_engine) ? condDef.template_engine : undefined
+                        template_engine: isStringAndNotEmpty(condDef.template_engine) ? condDef.template_engine : undefined,
+                        wait_for: Array.isArray(condDef.wait_for) ? condDef.wait_for : undefined
                     };
                 }
             }
