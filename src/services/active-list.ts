@@ -368,6 +368,10 @@ export class ActiveListBuilder {
     // synchronous condition already evaluated in _resolveCondition
     if (resolvedCondition.conditionHide) return true;
 
+    // synchronous conditions (all-outbound source) without async wait_for
+    // don't need a conditional group — they'll be evaluated when main data arrives
+    if (!resolvedCondition.isAsync && !condition.hasWaitFor) return false;
+
     // condition source needs a secondary request (or has async wait_fors)
     const conditionIndex = this.conditionalGroups.length;
 
