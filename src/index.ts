@@ -64,6 +64,7 @@ import {
   processMarkdownPattern,
   renderMustacheTemplate,
   _validateMustacheTemplate,
+  generateKeyValueFilters,
 } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
 import {
   AttributeGroupColumn,
@@ -137,6 +138,7 @@ export {
   setHTTP401Handler,
   getElapsedTime,
   onload,
+  generateKeyValueFilters,
 
   // markdown/template/print
   processMarkdownPattern,

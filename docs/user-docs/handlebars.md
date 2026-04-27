@@ -598,7 +598,7 @@ Keep in mind that `printf` doesn't check the validity of the given values. So fo
 
 ### formatDatetime helper
 
-> :loudspeaker: This helped used to be called `formatDate` but was changed to the more accurate  `formatDatetime` name. While both work, you should stop using `formatDate`.
+> :loudspeaker: This helper used to be called `formatDate` but was changed to the more accurate `formatDatetime` name. While both work, you should stop using `formatDate`.
 
 You can use the `formatDatetime` helper to take any `date`, `timestamp`, or `timestamptz` value and format it according to the [Pre Format Guide](pre-format.md#syntax-for-dates-and-timestamps).
 
