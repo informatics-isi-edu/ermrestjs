@@ -15,7 +15,6 @@ import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils
 import { isObjectAndKeyExists, isObjectAndNotNull, isStringAndNotEmpty } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
 import { _annotations, _contexts } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
 import { buildSelfTemplateVariables } from '@isrd-isi-edu/ermrestjs/src/utils/template-utils';
-import { createPseudoColumn, isAllOutboundColumn } from '@isrd-isi-edu/ermrestjs/src/utils/column-utils';
 import ActiveListCondition from '@isrd-isi-edu/ermrestjs/src/models/active-list-condition';
 
 // legacy
@@ -48,20 +47,6 @@ export enum ReferenceColumnTypes {
 // function isAggregatePseudoColumn(column: unknown): column is PseudoColumn {
 //   return (column as PseudoColumn).referenceColumnType === ReferenceColumnTypes.PSEUDO && (column as PseudoColumn).hasAggregate;
 // }
-
-export interface ResolvedCondition {
-  /** The resolved condition definition */
-  conditionDef: ConditionDefinition;
-  /** The SourceObjectWrapper for the condition source */
-  sourceWrapper: SourceObjectWrapper;
-  /** Whether the condition source requires a secondary request (has inbound path or aggregate) */
-  isAsync: boolean;
-  /**
-   * For synchronous conditions (all-outbound, no wait_for): whether the condition evaluated to hide.
-   * undefined for async conditions (evaluation happens later on the client).
-   */
-  conditionHide?: boolean;
-}
 
 /**
  * Constructor for ReferenceColumn. This class is a wrapper for Column.
@@ -142,7 +127,7 @@ export class ReferenceColumn {
   protected _hasWaitForAggregate?: boolean;
   protected _waitFor?: ReferenceColumn[];
   protected _hasCondition?: boolean;
-  protected _resolvedCondition?: ResolvedCondition | null;
+  protected _resolvedCondition?: ActiveListCondition | null;
   /**
    * the reference that this column is defined on
    */
@@ -477,7 +462,7 @@ export class ReferenceColumn {
   /**
    * The resolved condition for this column, or null if no condition or not applicable.
    */
-  get resolvedCondition(): ResolvedCondition | null {
+  get resolvedCondition(): ActiveListCondition | null {
     if (this._resolvedCondition === undefined) {
       this._resolvedCondition = this._resolveCondition();
       this._hasCondition = this._resolvedCondition?.isAsync ?? false;
@@ -488,7 +473,7 @@ export class ReferenceColumn {
   /**
    * Resolve the condition definition and source for this column.
    */
-  protected _resolveCondition(): ResolvedCondition | null {
+  protected _resolveCondition(): ActiveListCondition | null {
     // only applicable in detailed context
     if (this._context !== _contexts.DETAILED) {
       return null;
@@ -499,73 +484,30 @@ export class ReferenceColumn {
     }
 
     // get condition def: inline condition or condition_key
-    let condDef: ConditionDefinition | undefined;
+    let condDef: ConditionDefinition | undefined, condKey: string | undefined;
     const sourceObject = this.sourceObjectWrapper.sourceObject;
-    if (isObjectAndNotNull(sourceObject.condition)) {
-      const condObj = sourceObject.condition as Record<string, unknown>;
-      if (condObj.source || isStringAndNotEmpty(condObj.sourcekey)) {
-        condDef = {
-          sourcekey: isStringAndNotEmpty(condObj.sourcekey) ? (condObj.sourcekey as string) : undefined,
-          source: condObj.source || undefined,
-          on_empty: condObj.on_empty === 'show' ? 'show' : 'hide',
-          condition_pattern: isStringAndNotEmpty(condObj.condition_pattern) ? (condObj.condition_pattern as string) : undefined,
-          template_engine: isStringAndNotEmpty(condObj.template_engine) ? (condObj.template_engine as string) : undefined,
-          wait_for: Array.isArray(condObj.wait_for) ? (condObj.wait_for as string[]) : undefined,
-        };
-      } else {
-        $log.info('condition on column `' + this.sourceObjectWrapper.name + '` is missing `source` or `sourcekey`.');
-      }
-    } else if (isStringAndNotEmpty(sourceObject.condition_key)) {
-      condDef = this._currentTable.sourceDefinitions.getCondition(sourceObject.condition_key as string);
+    if (isStringAndNotEmpty(sourceObject.condition_key)) {
+      condKey = sourceObject.condition_key as string;
+      condDef = this._currentTable.sourceDefinitions.getCondition(condKey);
       if (!condDef) {
-        $log.info('condition_key `' + sourceObject.condition_key + '` not found in source-definitions conditions.');
+        $log.info('condition_key `' + condKey + '` not found in source-definitions conditions.');
         return null;
       }
-    }
-
-    if (!condDef) {
+    } else if (isObjectAndNotNull(sourceObject.condition)) {
+      condDef = sourceObject.condition as Record<string, unknown>;
+    } else if (!condDef) {
       return null;
     }
 
-    // resolve the condition source SourceObjectWrapper
-    let sourceWrapper: SourceObjectWrapper | undefined;
+    let condition: ActiveListCondition;
     try {
-      if (condDef.sourcekey) {
-        sourceWrapper = this._currentTable.sourceDefinitions.getSource(condDef.sourcekey, this._mainTuple) ?? undefined;
-        if (!sourceWrapper) {
-          $log.info('condition sourcekey `' + condDef.sourcekey + '` could not be resolved.');
-          return null;
-        }
-      } else if (condDef.source) {
-        sourceWrapper = new SourceObjectWrapper({ source: condDef.source }, this._currentTable, false, undefined, this._mainTuple);
-      }
+      condition = new ActiveListCondition(condDef, this._baseReference, this._mainTuple, condKey);
     } catch (e: unknown) {
-      $log.info('failed to resolve condition source: ' + (e instanceof Error ? e.message : String(e)));
+      $log.warn(e instanceof Error ? e.message : String(e));
       return null;
     }
 
-    if (!sourceWrapper) {
-      return null;
-    }
-
-    const isAsync = sourceWrapper.hasInbound || sourceWrapper.hasAggregate;
-
-    // for synchronous conditions, evaluate now and store the result
-    let conditionHide: boolean | undefined;
-    if (!isAsync && this._mainTuple) {
-      try {
-        const condCol = createPseudoColumn(this._baseReference, sourceWrapper.clone({}, this._currentTable, false, this._mainTuple), this._mainTuple);
-        const condition = new ActiveListCondition(condDef, condCol, this._baseReference, this._mainTuple);
-        if (!condition.hasWaitFor) {
-          const result = condition.evaluateCondition(this._mainTuple.templateVariables, null, this._mainTuple);
-          conditionHide = !result.shouldShow;
-        }
-      } catch (e: unknown) {
-        $log.info('failed to evaluate synchronous condition: ' + (e instanceof Error ? e.message : String(e)));
-      }
-    }
-
-    return { conditionDef: condDef, sourceWrapper, isAsync, conditionHide };
+    return condition;
   }
 
   /**

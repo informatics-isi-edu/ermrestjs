@@ -1,17 +1,13 @@
 // models
 import ActiveListCondition from '@isrd-isi-edu/ermrestjs/src/models/active-list-condition';
-import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-object-wrapper';
 import type { Reference, VisibleColumn } from '@isrd-isi-edu/ermrestjs/src/models/reference/reference';
 import type { Tuple } from '@isrd-isi-edu/ermrestjs/src/models/reference';
 import type { PseudoColumn, ForeignKeyPseudoColumn, KeyPseudoColumn } from '@isrd-isi-edu/ermrestjs/src/models/reference-column';
-import type { ConditionDefinition } from '@isrd-isi-edu/ermrestjs/src/models/table-source-definitions';
-import type { ResolvedCondition } from '@isrd-isi-edu/ermrestjs/src/models/reference-column/reference-column';
 
 // services
-import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
 
 // utils
-import { createPseudoColumn, isAllOutboundColumn, isRelatedColumn } from '@isrd-isi-edu/ermrestjs/src/utils/column-utils';
+import { isAllOutboundColumn, isRelatedColumn } from '@isrd-isi-edu/ermrestjs/src/utils/column-utils';
 
 // legacy
 import { _isEntryContext } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
@@ -168,6 +164,7 @@ export class ActiveListBuilder {
       obj.index = index;
     }
 
+    // entry wait_fors (asset wait_for)
     if (isWaitFor && this.isEntry) {
       if (col.name in this.consideredEntryWaitFors) {
         (this.requests[this.consideredEntryWaitFors[col.name]] as ActiveListRequest).objects.push(obj);
@@ -327,56 +324,38 @@ export class ActiveListBuilder {
     });
   }
 
-  /** Create a PseudoColumn for a condition source definition. */
-  private createConditionColumn(condDef: ConditionDefinition): VisibleColumn | undefined {
-    try {
-      const sds = this.reference.table.sourceDefinitions;
-      let condSourceWrapper: SourceObjectWrapper;
-      if (condDef.sourcekey) {
-        const sd = sds.getSource(condDef.sourcekey, this.tuple);
-        if (!sd) {
-          $log.info('condition sourcekey `' + condDef.sourcekey + '` could not be resolved.');
-          return undefined;
-        }
-        condSourceWrapper = sd.clone({}, this.reference.table, false, this.tuple);
-      } else if (condDef.source) {
-        condSourceWrapper = new SourceObjectWrapper({ source: condDef.source }, this.reference.table, false, undefined, this.tuple);
-      } else {
-        return undefined;
-      }
-      return createPseudoColumn(this.reference, condSourceWrapper, this.tuple);
-    } catch (e: unknown) {
-      $log.info('failed to create condition column: ' + (e instanceof Error ? e.message : String(e)));
-      return undefined;
-    }
-  }
-
   /**
    * Process a column or related entity that has a condition.
    * Returns true if the item was handled (either added to a conditional group or skipped).
    * Returns false if it should be processed normally (condition evaluated synchronously to show or no valid condition found).
    */
   processConditionedItem(
-    resolvedCondition: ResolvedCondition,
+    condition: ActiveListCondition,
     addToDependent: (dependentRequests: Array<ActiveListRequest | ActiveListRelatedEntityRequest>) => void,
   ): boolean {
-    const condCol = this.createConditionColumn(resolvedCondition.conditionDef);
-    if (!condCol) return false; // invalid condition, process normally
-
-    const condition = new ActiveListCondition(resolvedCondition.conditionDef, condCol, this.reference, this.tuple);
-
-    // synchronous condition already evaluated in _resolveCondition
-    if (resolvedCondition.conditionHide) return true;
+    // synchronous condition already evaluated to hide
+    if (condition.conditionHide) return true;
 
     // synchronous conditions (all-outbound source) without async wait_for
     // don't need a conditional group — they'll be evaluated when main data arrives
-    if (!resolvedCondition.isAsync && !condition.hasWaitFor) return false;
+    // or already handled using the conditionHide above
+    if (!condition.isAsync && !condition.hasWaitFor) return false;
+
+    // if the condition was already evaluated as part of another column/entity's condition group,
+    // we can reuse that group instead of creating a new one
+    if (condition.conditonKey) {
+      const existingGroup = this.conditionalGroups.find((g) => g.condition.conditonKey === condition.conditonKey);
+      if (existingGroup) {
+        addToDependent(existingGroup.dependentRequests);
+        return true;
+      }
+    }
 
     // condition source needs a secondary request (or has async wait_fors)
     const conditionIndex = this.conditionalGroups.length;
 
     // add condition source to main requests
-    this.addCol(condCol, true, ActiveListRequestTypes.CONDITION, conditionIndex);
+    this.addCol(condition.column, true, ActiveListRequestTypes.CONDITION, conditionIndex);
 
     // add condition wait_for columns to main requests
     condition.waitFor.forEach((wf) => {

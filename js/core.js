@@ -1532,6 +1532,7 @@ import {
          * Returns an object with
          * - fkeys: array of ForeignKeyRef objects
          * - columns: Array of columns
+         * - conditions: hash-map of sourcekey to the condition's unprocessed column-directive.
          * - sources: hash-map of name to the SourceObjectWrapper object.
          * - sourceMapping: hashname to all the names
          * - sourceDependencies: for each sourcekey, what are the other sourcekeys that it depends on (includes self as well)
@@ -1737,27 +1738,22 @@ import {
                     if (!Object.prototype.hasOwnProperty.call(annot.conditions, cKey)) continue;
                     var condDef = annot.conditions[cKey];
                     if (typeof condDef !== "object" || condDef === null) {
-                        $log.info("source definition, table =" + self.name + ", condition=" + cKey + ": must be an object.");
+                        $log.info("condition definition, table =" + self.name + ", condition=" + cKey + ": must be an object.");
                         continue;
                     }
                     // must have source or sourcekey
                     if (!condDef.source && !isStringAndNotEmpty(condDef.sourcekey)) {
-                        $log.info("source definition, table =" + self.name + ", condition=" + cKey + ": must have `source` or `sourcekey`.");
+                        $log.info("condition definition, table =" + self.name + ", condition=" + cKey + ": must have `source` or `sourcekey`.");
                         continue;
                     }
                     // if sourcekey, it must exist in the sources map
                     if (isStringAndNotEmpty(condDef.sourcekey) && !(condDef.sourcekey in res.sources)) {
-                        $log.info("source definition, table =" + self.name + ", condition=" + cKey + ": sourcekey `" + condDef.sourcekey + "` not found in sources.");
+                        $log.info("condition definition, table =" + self.name + ", condition=" + cKey + ": sourcekey `" + condDef.sourcekey + "` not found in sources.");
                         continue;
                     }
-                    res.conditions[cKey] = {
-                        sourcekey: isStringAndNotEmpty(condDef.sourcekey) ? condDef.sourcekey : undefined,
-                        source: condDef.source || undefined,
-                        on_empty: condDef.on_empty === "show" ? "show" : "hide",
-                        condition_pattern: isStringAndNotEmpty(condDef.condition_pattern) ? condDef.condition_pattern : undefined,
-                        template_engine: isStringAndNotEmpty(condDef.template_engine) ? condDef.template_engine : undefined,
-                        wait_for: Array.isArray(condDef.wait_for) ? condDef.wait_for : undefined
-                    };
+                    // just capture and don't process
+                    // we have to reprocess these again anyways because they might rely on tuple.
+                    res.conditions[cKey] = condDef;
                 }
             }
 

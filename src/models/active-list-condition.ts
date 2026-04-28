@@ -2,9 +2,13 @@
 import type { Reference, VisibleColumn, Tuple } from '@isrd-isi-edu/ermrestjs/src/models/reference';
 import type { ReferenceColumn } from '@isrd-isi-edu/ermrestjs/src/models/reference-column';
 import type { ConditionDefinition } from '@isrd-isi-edu/ermrestjs/src/models/table-source-definitions';
+import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-object-wrapper';
 
 // utils
 import { buildSelfTemplateVariables } from '@isrd-isi-edu/ermrestjs/src/utils/template-utils';
+import { isStringAndNotEmpty } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
+import { _warningMessages } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
+import { createPseudoColumn } from '@isrd-isi-edu/ermrestjs/src/utils/column-utils';
 
 // legacy
 import { _renderTemplate } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
@@ -17,12 +21,21 @@ import { _processWaitForList } from '@isrd-isi-edu/ermrestjs/js/utils/pseudocolu
 export default class ActiveListCondition {
   /** The PseudoColumn for fetching condition data */
   column: VisibleColumn;
-  /** "show" or "hide" (default "hide") */
-  onEmpty: 'show' | 'hide';
-  /** Optional template (no markdown rendering) */
-  conditionPattern?: string;
-  /** Template engine for condition_pattern: "mustache" (default) or "handlebars" */
-  templateEngine?: string;
+
+  /** Whether the condition source requires a secondary request (has inbound path or aggregate) */
+  isAsync: boolean;
+
+  /**
+   * For synchronous conditions (all-outbound, no wait_for): whether the condition evaluated to hide.
+   * undefined for async conditions (evaluation happens later on the client).
+   */
+  conditionHide?: boolean;
+
+  /**
+   * if the condition definition is shared across multiple columns/entities,
+   * this key can be used to link them together for efficient evaluation.
+   */
+  conditonKey?: string;
 
   private _condDef: ConditionDefinition;
   private _reference: Reference;
@@ -32,15 +45,46 @@ export default class ActiveListCondition {
   private _hasWaitFor?: boolean;
   private _hasWaitForAggregate?: boolean;
 
-  constructor(condDef: ConditionDefinition, column: VisibleColumn, reference: Reference, tuple?: Tuple) {
+  constructor(condDef: ConditionDefinition, reference: Reference, tuple?: Tuple, conditonKey?: string) {
     this._condDef = condDef;
-    this.column = column;
     this._reference = reference;
     this._tuple = tuple;
+    this.conditonKey = conditonKey;
 
-    this.onEmpty = condDef.on_empty || 'hide';
-    this.conditionPattern = condDef.condition_pattern;
-    this.templateEngine = condDef.template_engine;
+    const wm = _warningMessages;
+
+    if (typeof condDef !== 'object' || (!condDef.source && !isStringAndNotEmpty(condDef.sourcekey))) {
+      throw new Error(wm.CONDITION.INVALID_SOURCE);
+    }
+
+    let condSourceWrapper: SourceObjectWrapper;
+    try {
+      const sds = this._reference.table.sourceDefinitions;
+      if (condDef.sourcekey) {
+        const sd = sds.getSource(condDef.sourcekey as string);
+        if (!sd) {
+          throw new Error('condition sourcekey `' + condDef.sourcekey + '` could not be resolved.');
+        }
+        condSourceWrapper = sd.clone(condDef, this._reference.table, false, this._tuple);
+      } else {
+        condSourceWrapper = new SourceObjectWrapper(condDef, this._reference.table, false, undefined, this._tuple);
+      }
+      this.column = createPseudoColumn(this._reference, condSourceWrapper!, this._tuple);
+    } catch (e: unknown) {
+      throw new Error('failed to create condition column: ' + (e instanceof Error ? e.message : String(e)));
+    }
+
+    const isAsync = condSourceWrapper.hasInbound || condSourceWrapper.hasAggregate;
+
+    // for synchronous conditions, evaluate now and store the result
+    let conditionHide: boolean | undefined;
+    if (!isAsync && this._tuple && !this.hasWaitFor) {
+      const result = this.evaluateCondition(this._tuple.templateVariables, null, this._tuple);
+      conditionHide = !result.shouldShow;
+    }
+
+    this.conditionHide = conditionHide;
+    this.isAsync = isAsync;
   }
 
   /**
@@ -69,7 +113,7 @@ export default class ActiveListCondition {
    */
   get waitFor(): ReferenceColumn[] {
     if (this._waitFor === undefined) {
-      const res = _processWaitForList(this._condDef.wait_for || [], this._reference, this._reference.table, null, this._tuple, 'condition');
+      const res = _processWaitForList(this._condDef.wait_for, this._reference, this._reference.table, null, this._tuple, 'condition');
       this._waitFor = res.waitForList;
       this._hasWaitFor = res.hasWaitFor;
       this._hasWaitForAggregate = res.hasWaitForAggregate;
@@ -87,15 +131,16 @@ export default class ActiveListCondition {
    */
   evaluateCondition(templateVariables: any, conditionValue: any, mainTuple: Tuple): { shouldShow: boolean } {
     let isEmpty: boolean;
+    const condDef = this._condDef;
 
-    if (this.conditionPattern) {
+    if (condDef.condition_pattern) {
       const selfTemplateVariables = buildSelfTemplateVariables(this.column as ReferenceColumn, mainTuple, conditionValue);
       const keyValues: any = {};
       Object.assign(keyValues, templateVariables, selfTemplateVariables);
 
       // evaluate template (no markdown rendering)
-      const rendered = _renderTemplate(this.conditionPattern, keyValues, this.column.table.schema.catalog, {
-        templateEngine: this.templateEngine,
+      const rendered = _renderTemplate(condDef.condition_pattern as string, keyValues, this.column.table.schema.catalog, {
+        templateEngine: condDef.template_engine,
       });
       isEmpty = !rendered || rendered.trim() === '';
     } else {
@@ -105,7 +150,7 @@ export default class ActiveListCondition {
 
     // on_empty: "hide" (default) -> hide when empty -> show when NOT empty
     // on_empty: "show" -> show when empty -> hide when NOT empty
-    const shouldShow = this.onEmpty === 'show' ? isEmpty : !isEmpty;
+    const shouldShow = condDef.on_empty === 'show' ? isEmpty : !isEmpty;
     return { shouldShow };
   }
 

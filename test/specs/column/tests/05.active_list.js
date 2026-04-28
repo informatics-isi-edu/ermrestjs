@@ -388,25 +388,6 @@ exports.execute = function (options) {
                     });
                 });
 
-                it ("each group should have the correct onEmpty value.", function () {
-                    var groups = detailedActiveList.conditionalGroups;
-                    expect(groups[0].condition.onEmpty).toBe("hide", "group 0 onEmpty");
-                    expect(groups[1].condition.onEmpty).toBe("show", "group 1 onEmpty (condition_key cond_has_inbound1_show)");
-                    expect(groups[2].condition.onEmpty).toBe("hide", "group 2 onEmpty");
-                    expect(groups[3].condition.onEmpty).toBe("hide", "group 3 onEmpty (related)");
-                });
-
-                it ("should have conditionPattern when specified.", function () {
-                    var groups = detailedActiveList.conditionalGroups;
-                    expect(groups[0].condition.conditionPattern).toBeUndefined("group 0 should not have conditionPattern");
-                    expect(groups[1].condition.conditionPattern).toBeUndefined("group 1 should not have conditionPattern");
-                    expect(groups[2].condition.conditionPattern).toBe(
-                        "{{#if cnt_i2}}show{{/if}}",
-                        "group 2 conditionPattern missmatch"
-                    );
-                    expect(groups[3].condition.conditionPattern).toBeUndefined("group 3 should not have conditionPattern (related)");
-                });
-
                 it ("each group should have dependentRequests.", function () {
                     var groups = detailedActiveList.conditionalGroups;
                     groups.forEach(function (g, i) {

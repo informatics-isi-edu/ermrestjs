@@ -22,7 +22,6 @@ import {
   type PseudoColumn,
   type ColumnAggregateFn,
 } from '@isrd-isi-edu/ermrestjs/src/models/reference-column';
-import type { ResolvedCondition } from '@isrd-isi-edu/ermrestjs/src/models/reference-column/reference-column';
 import {
   Citation,
   Page,
@@ -34,6 +33,7 @@ import {
   RelatedReference,
   BulkCreateForeignKeyObject,
 } from '@isrd-isi-edu/ermrestjs/src/models/reference';
+import ActiveListCondition from '@isrd-isi-edu/ermrestjs/src/models/active-list-condition';
 
 // services
 import ConfigService from '@isrd-isi-edu/ermrestjs/src/services/config';
@@ -886,11 +886,11 @@ export class Reference {
      *   so we should just add the column/related directly to the active list.
      */
     const tryCondition = (
-      rc: ResolvedCondition | null | undefined,
+      condition: ActiveListCondition | null | undefined,
       addToDeps: (deps: Array<ActiveListRequest | ActiveListRelatedEntityRequest>) => void,
     ): boolean => {
-      if (!isDetailed || !rc) return false;
-      return builder.processConditionedItem(rc, addToDeps);
+      if (!isDetailed || !condition) return false;
+      return builder.processConditionedItem(condition, addToDeps);
     };
 
     const columns = this.generateColumnsList(tuple);
@@ -966,7 +966,7 @@ export class Reference {
   }
 
   /**
-   * Will return the expor templates that are available for this reference.
+   * Will return the export templates that are available for this reference.
    * It will validate the templates that are defined in annotations.
    * If its `detailed` context and annotation was missing,
    * it will return the default export template.

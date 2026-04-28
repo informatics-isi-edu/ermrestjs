@@ -405,6 +405,9 @@ export const _warningMessages = Object.freeze({
   FILTER_NOT_ALLOWED: 'filter in source is only supported in `filter` context of visible-columns',
   FILTER_NO_PATH_NOT_ALLOWED: 'filter in source is not supported with local columns or all-outbound paths.',
   USED_IN_IFRAME_INPUT: 'the column already used in another column mapping.',
+  CONDITION: {
+    INVALID_SOURCE: 'condition definition is invalid. `source` or `sourcekey` is required and must be valid.',
+  },
 });
 
 export const _permissionMessages = Object.freeze({

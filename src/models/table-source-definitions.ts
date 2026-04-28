@@ -13,20 +13,21 @@ import { Column, ForeignKeyRef, Table } from '@isrd-isi-edu/ermrestjs/js/core';
  * Used in source-definitions annotation under the `conditions` key, or inline
  * on a column-directive via `condition` / `condition_key`.
  */
-export type ConditionDefinition = {
-  /** reference to an existing sourcekey whose data determines the condition */
-  sourcekey?: string;
-  /** inline source path (alternative to sourcekey) */
-  source?: unknown;
-  /** behavior when condition source returns empty: "hide" (default) or "show" */
-  on_empty: 'show' | 'hide';
-  /** optional template evaluated with $self, no markdown rendering */
-  condition_pattern?: string;
-  /** template engine for condition_pattern: "mustache" (default) or "handlebars" */
-  template_engine?: string;
-  /** optional list of sourcekeys whose data should be available when evaluating condition_pattern */
-  wait_for?: string[];
-};
+// export type ConditionDefinition = {
+//   /** reference to an existing sourcekey whose data determines the condition */
+//   sourcekey?: string;
+//   /** inline source path (alternative to sourcekey) */
+//   source?: unknown;
+//   /** behavior when condition source returns empty: "hide" (default) or "show" */
+//   on_empty: 'show' | 'hide';
+//   /** optional template evaluated with $self, no markdown rendering */
+//   condition_pattern?: string;
+//   /** template engine for condition_pattern: "mustache" (default) or "handlebars" */
+//   template_engine?: string;
+//   /** optional list of sourcekeys whose data should be available when evaluating condition_pattern */
+//   wait_for?: string[];
+// };
+export type ConditionDefinition = Record<string, unknown>;
 
 /**
  * Result of Table.sourceDefinitions
