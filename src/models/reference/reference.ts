@@ -878,19 +878,19 @@ export class Reference {
     const builder = new ActiveListBuilder(this, tuple, isDetailed);
 
     /**
-     * helper for the condition branch shared across columns/related loops
-     * Returns,
-     * - true, if the condition was valid and so we should just capture the dependencies
-     *   and not add them directly to the active list.
-     * - false, if condition missing/invalid/synchronous,
-     *   so we should just add the column/related directly to the active list.
+     * Helper for the condition branch shared across the columns / related loops.
+     * Returns true if the column was routed through a conditional group (so the
+     * caller should NOT add the column directly), false if there was no
+     * applicable condition (caller adds normally).
      */
     const tryCondition = (
       condition: ActiveListCondition | null | undefined,
+      conditionedItem: { column?: boolean; inline?: boolean; related?: boolean; index: number },
       addToDeps: (deps: Array<ActiveListRequest | ActiveListRelatedEntityRequest>) => void,
     ): boolean => {
       if (!isDetailed || !condition) return false;
-      return builder.processConditionedItem(condition, addToDeps);
+      builder.processConditionedItem(condition, conditionedItem, addToDeps);
+      return true;
     };
 
     const columns = this.generateColumnsList(tuple);
@@ -906,7 +906,8 @@ export class Reference {
     columns.forEach((col, i: number) => {
       if (builder.hasAggregate(col)) return;
       const rc = col.resolvedCondition;
-      if (tryCondition(rc, (deps) => builder.addInlineToDependent(deps, col, i))) return;
+      const item = isRelatedColumn(col) ? { inline: true, index: i } : { column: true, index: i };
+      if (tryCondition(rc, item, (deps) => builder.addInlineToDependent(deps, col, i))) return;
       builder.addInline(col, i);
     });
 
@@ -914,7 +915,8 @@ export class Reference {
     columns.forEach((col, i: number) => {
       if (!builder.hasAggregate(col)) return;
       const rc = col.resolvedCondition;
-      if (tryCondition(rc, (deps) => builder.addInlineToDependent(deps, col, i))) return;
+      const item = isRelatedColumn(col) ? { inline: true, index: i } : { column: true, index: i };
+      if (tryCondition(rc, item, (deps) => builder.addInlineToDependent(deps, col, i))) return;
       builder.addInline(col, i);
     });
 
@@ -932,7 +934,7 @@ export class Reference {
             builder.addColToDependent(deps, wf, true, ActiveListRequestTypes.RELATED, i);
           });
         };
-        if (tryCondition(rc, addRelatedToDeps)) return;
+        if (tryCondition(rc, { related: true, index: i }, addRelatedToDeps)) return;
         builder.requests.push({ related: true, index: i });
         rel.pseudoColumn?.waitFor.forEach((wf) => {
           builder.addCol(wf, true, ActiveListRequestTypes.RELATED, i);

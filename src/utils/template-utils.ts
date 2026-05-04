@@ -9,16 +9,34 @@ import type { KeyPseudoColumn } from '@isrd-isi-edu/ermrestjs/src/models/referen
 import { _getRowTemplateVariables } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
 
 /**
- * Build the $self and $_self template variables for a given column and tuple.
+ * Build the `$self` (and where applicable `$_self`) template variables for a
+ * given column and tuple. Consolidates the derivation logic that used to be
+ * duplicated across `sourceFormatPresentation` in `ReferenceColumn`,
+ * `PseudoColumn`, `ForeignKeyPseudoColumn`, `KeyPseudoColumn`, and
+ * `ActiveListCondition`.
  *
- * This consolidates the logic that was duplicated across
- * sourceFormatPresentation in ReferenceColumn, PseudoColumn,
- * ForeignKeyPseudoColumn, KeyPseudoColumn, and ActiveListCondition.
+ * The returned shape varies with the column:
+ * - scalar sources (local column, all-outbound scalar) ⇒ `{ $self, $_self }`
+ *   where `$_self` is the raw value and `$self` is `formatvalue(...)`'d.
+ * - entity-mode sources (key, foreign-key, all-outbound entity, entityset) ⇒
+ *   `{ $self }` only, where `$self` is the row template (`{ values, rowName, uri, ... }`).
+ * - aggregates ⇒ `columnValue.templateVariables` directly (already contains
+ *   `$self`/`$_self`).
+ * - missing data (entity row didn't load, etc.) ⇒ `{}`.
  *
- * @param column - the column whose $self we are building
- * @param mainTuple - the main record tuple
- * @param columnValue - the fetched value for async columns (aggregate result or page for entitysets)
- * @returns an object with $self and optionally $_self, suitable for merging into template variables
+ * @param column - the column whose `$self` we are building.
+ * @param mainTuple - the main record tuple. Used to source `$self`/`$_self`
+ *   for any path that doesn't require an async fetch (local columns,
+ *   all-outbound, key, foreign-key).
+ * @param columnValue - the fetched value, only meaningful for async sources:
+ *   - **entityset** (Reference.read result): a {@link Page} — `templateVariables`
+ *     is read from it.
+ *   - **aggregate** (column.getAggregatedValue result, unwrapped first row):
+ *     `{ value, templateVariables }` — `templateVariables` is read from it.
+ *   - **null/undefined** for sync sources, or before the fetch has completed
+ *     (sync paths ignore it; async paths return `{}`).
+ * @returns the `$self`/`$_self` slice ready to be merged into the
+ *   accumulated template variables.
  */
 export function buildSelfTemplateVariables(column: ReferenceColumn, mainTuple: Tuple, columnValue?: any): Record<string, any> {
   const context = (column as any)._context as string;

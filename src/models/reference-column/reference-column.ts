@@ -534,8 +534,14 @@ export class ReferenceColumn {
       context = this._context;
     }
 
-    // if there's wait_for or async condition, this should return null.
-    if ((this.hasWaitFor || this.hasCondition) && !options.skipWaitFor) {
+    // wait_for placeholder: the column depends on data that isn't ready, so
+    // return a null placeholder. Note: hasCondition is intentionally NOT in
+    // this check — the column's value is independent of the condition; the
+    // condition only controls *visibility* (chaise's `conditionHide` flag).
+    // Returning null here for an async-conditioned local column would
+    // permanently blank it, since there's no secondary fetch to flip the
+    // value back in chaise.
+    if (this.hasWaitFor && !options.skipWaitFor) {
       return {
         isHTML: false,
         value: this._getNullValue(context!),

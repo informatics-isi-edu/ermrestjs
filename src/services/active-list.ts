@@ -70,9 +70,30 @@ export type ActiveListRelatedEntityRequest = {
   index: number;
 };
 
+/**
+ * Identifies a single conditioned item: the column/inline-related column/related-entity
+ * whose visibility is gated by the group's condition. Multiple items share a group when
+ * they reference the same `condition_key`.
+ */
+export type ActiveListConditionedItem = {
+  column?: boolean;
+  inline?: boolean;
+  related?: boolean;
+  index: number;
+};
+
 export type ActiveListConditionalGroup = {
   /** The condition object (class with evaluateCondition method) */
   condition: ActiveListCondition;
+  /**
+   * The column / inline / related entries gated by this condition. Used by chaise to
+   * mark the user's columns/related-models as conditioned (and to flip their hide flag
+   * when the condition resolves).
+   * Distinct from `dependentRequests`: `conditionedItems` covers EVERY conditioned
+   * item — including sync scalar columns whose `dependentRequests` entry is a no-op —
+   * while `dependentRequests` is just the secondary fetches gated behind the condition.
+   */
+  conditionedItems: ActiveListConditionedItem[];
   /** Requests gated behind this condition (main content + its wait-fors) */
   dependentRequests: Array<ActiveListRequest | ActiveListRelatedEntityRequest>;
 };
@@ -325,54 +346,58 @@ export class ActiveListBuilder {
   }
 
   /**
-   * Process a column or related entity that has a condition.
-   * Returns true if the item was handled (either added to a conditional group or skipped).
-   * Returns false if it should be processed normally (condition evaluated synchronously to show or no valid condition found).
+   * Add a column / related entity that has a condition into a conditional group.
+   * Always handles the item via the group flow (regardless of whether the
+   * condition source is sync or async). The caller does NOT add the user's
+   * column directly — its identity goes into the group's `conditionedItems` so
+   * chaise knows to gate its visibility, and any secondary fetches go into
+   * `dependentRequests`.
+   *
+   * For sync sources, `addCol` is a no-op on `requests` (sync sources are
+   * not entityset/aggregate by construction), so the source isn't fetched —
+   * but its all-outbound joins / self-link keys still get registered into
+   * `allOutBounds` / `selfLinks`. Chaise evaluates the condition immediately
+   * after the main entity is read.
+   *
+   * For async sources, `addCol` pushes the source (and any async wait-fors)
+   * into `requests`, tagged with `condition: true` so chaise can dispatch
+   * `evaluateCondition` once the data lands.
    */
   processConditionedItem(
     condition: ActiveListCondition,
+    conditionedItem: ActiveListConditionedItem,
     addToDependent: (dependentRequests: Array<ActiveListRequest | ActiveListRelatedEntityRequest>) => void,
-  ): boolean {
-    // synchronous condition already evaluated to hide
-    if (condition.conditionHide) return true;
-
-    // synchronous conditions (all-outbound source) without async wait_for
-    // don't need a conditional group — they'll be evaluated when main data arrives
-    // or already handled using the conditionHide above
-    if (!condition.isAsync && !condition.hasWaitFor) return false;
-
-    // if the condition was already evaluated as part of another column/entity's condition group,
-    // we can reuse that group instead of creating a new one
-    if (condition.conditonKey) {
-      const existingGroup = this.conditionalGroups.find((g) => g.condition.conditonKey === condition.conditonKey);
+  ): void {
+    // dedup: if this condition was already grouped (via condition_key), reuse
+    // that group's dependent list and add this item to its conditionedItems list.
+    if (condition.conditionKey) {
+      const existingGroup = this.conditionalGroups.find((g) => g.condition.conditionKey === condition.conditionKey);
       if (existingGroup) {
         addToDependent(existingGroup.dependentRequests);
-        return true;
+        existingGroup.conditionedItems.push(conditionedItem);
+        return;
       }
     }
 
-    // condition source needs a secondary request (or has async wait_fors)
     const conditionIndex = this.conditionalGroups.length;
 
-    // add condition source to main requests
-    this.addCol(condition.column, true, ActiveListRequestTypes.CONDITION, conditionIndex);
-
-    // add condition wait_for columns to main requests
+    // register the condition's own column and its wait-fors. For async sources
+    // this populates `requests` (with `condition: true, index: conditionIndex`
+    // so chaise routes the completion to evaluateCondition); for sync sources
+    // it's a no-op on `requests` but still populates `allOutBounds` / `selfLinks`.
+    this.addCol(condition.column, false, ActiveListRequestTypes.CONDITION, conditionIndex);
     condition.waitFor.forEach((wf) => {
       this.addCol(wf, true, ActiveListRequestTypes.CONDITION, conditionIndex);
     });
 
-    // create dependent requests
+    // build the dependent list and stash the new group.
     const dependentRequests: Array<ActiveListRequest | ActiveListRelatedEntityRequest> = [];
     addToDependent(dependentRequests);
-
-    // create the conditional group
     this.conditionalGroups.push({
       condition,
+      conditionedItems: [conditionedItem],
       dependentRequests,
     });
-
-    return true; // handled
   }
 
   /** Add a fkey from sourceDefinitions to allOutBounds (with dedup). */

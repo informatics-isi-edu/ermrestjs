@@ -26,16 +26,10 @@ export default class ActiveListCondition {
   isAsync: boolean;
 
   /**
-   * For synchronous conditions (all-outbound, no wait_for): whether the condition evaluated to hide.
-   * undefined for async conditions (evaluation happens later on the client).
-   */
-  conditionHide?: boolean;
-
-  /**
    * if the condition definition is shared across multiple columns/entities,
    * this key can be used to link them together for efficient evaluation.
    */
-  conditonKey?: string;
+  conditionKey?: string;
 
   private _condDef: ConditionDefinition;
   private _reference: Reference;
@@ -45,11 +39,11 @@ export default class ActiveListCondition {
   private _hasWaitFor?: boolean;
   private _hasWaitForAggregate?: boolean;
 
-  constructor(condDef: ConditionDefinition, reference: Reference, tuple?: Tuple, conditonKey?: string) {
+  constructor(condDef: ConditionDefinition, reference: Reference, tuple?: Tuple, conditionKey?: string) {
     this._condDef = condDef;
     this._reference = reference;
     this._tuple = tuple;
-    this.conditonKey = conditonKey;
+    this.conditionKey = conditionKey;
 
     const wm = _warningMessages;
 
@@ -65,7 +59,11 @@ export default class ActiveListCondition {
         if (!sd) {
           throw new Error('condition sourcekey `' + condDef.sourcekey + '` could not be resolved.');
         }
-        condSourceWrapper = sd.clone(condDef, this._reference.table, false, this._tuple);
+        // SourceObjectWrapper.clone mutates its first argument (deletes `source`,
+        // copies in keys from the resolved source). condDef may be the shared
+        // object stored in TableSourceDefinitions.conditions (for condition_key
+        // references), so pass a shallow copy to avoid corrupting the shared def.
+        condSourceWrapper = sd.clone({ ...condDef }, this._reference.table, false, this._tuple);
       } else {
         condSourceWrapper = new SourceObjectWrapper(condDef, this._reference.table, false, undefined, this._tuple);
       }
@@ -74,17 +72,7 @@ export default class ActiveListCondition {
       throw new Error('failed to create condition column: ' + (e instanceof Error ? e.message : String(e)));
     }
 
-    const isAsync = condSourceWrapper.hasInbound || condSourceWrapper.hasAggregate;
-
-    // for synchronous conditions, evaluate now and store the result
-    let conditionHide: boolean | undefined;
-    if (!isAsync && this._tuple && !this.hasWaitFor) {
-      const result = this.evaluateCondition(this._tuple.templateVariables, null, this._tuple);
-      conditionHide = !result.shouldShow;
-    }
-
-    this.conditionHide = conditionHide;
-    this.isAsync = isAsync;
+    this.isAsync = condSourceWrapper.hasInbound || condSourceWrapper.hasAggregate;
   }
 
   /**
@@ -122,12 +110,41 @@ export default class ActiveListCondition {
   }
 
   /**
-   * Evaluate the condition given fetched data.
+   * Decide whether the conditioned content should be shown.
    *
-   * @param templateVariables - the accumulated template variables
-   * @param conditionValue - the fetched value (aggregate result or page for entityset)
-   * @param mainTuple - the main record tuple
-   * @returns whether the conditioned content should be shown
+   * Three internal paths, dispatched on `condition_pattern` and `this.isAsync`:
+   *
+   * 1. **`condition_pattern` set.** Render the pattern. `$self` / `$_self` come
+   *    from {@link buildSelfTemplateVariables}, which sources from `mainTuple`
+   *    for sync sources and from `conditionValue` for async sources. Blank
+   *    rendered output ⇒ empty.
+   * 2. **No pattern + `isAsync === true`.** Caller already fetched the data;
+   *    emptiness is computed from `conditionValue` by {@link _isConditionValueEmpty}.
+   * 3. **No pattern + `isAsync === false`.** `conditionValue` is ignored (sync
+   *    sources have no fetched value). The raw value is pulled from `mainTuple`
+   *    via {@link buildSelfTemplateVariables}: scalar sources are empty when
+   *    `$_self` is `null`/`undefined`/`''`; entity-mode sources are empty when
+   *    `$self` is undefined (the joined row didn't load).
+   *
+   * The `on_empty` flag then maps `isEmpty` to "show": `"hide"` (default) shows
+   * when not empty; `"show"` shows when empty.
+   *
+   * @param templateVariables - accumulated `$x`/`$_x` template variables for
+   *   every other source (only consulted by the pattern branch).
+   * @param conditionValue - the fetched value for an async source.
+   *   - **entityset** (Reference.read result): a {@link Page} object — has
+   *     `length` (used by `_isConditionValueEmpty`) and `templateVariables`
+   *     (used by `buildSelfTemplateVariables` when there is a pattern).
+   *   - **aggregate** (column.getAggregatedValue result): the unwrapped first
+   *     element, shaped `{ value, templateVariables }` — `value` is the
+   *     scalar; `templateVariables` carries `$self`/`$_self`.
+   *   - **null** if the request failed or there's no fetched value (treated
+   *     as empty).
+   *   Ignored entirely for sync sources (path 3).
+   * @param mainTuple - the main record tuple. Always required: the pattern
+   *   branch and the sync no-pattern branch both look up `$self`/`$_self`
+   *   from it.
+   * @returns whether the conditioned content should be shown.
    */
   evaluateCondition(templateVariables: any, conditionValue: any, mainTuple: Tuple): { shouldShow: boolean } {
     let isEmpty: boolean;
@@ -143,9 +160,22 @@ export default class ActiveListCondition {
         templateEngine: condDef.template_engine,
       });
       isEmpty = !rendered || rendered.trim() === '';
-    } else {
-      // no pattern: check if condition source returned data
+    } else if (this.isAsync) {
+      // no pattern, async: caller fetched the value
       isEmpty = this._isConditionValueEmpty(conditionValue);
+    } else {
+      // no pattern, sync: derive the raw value from the tuple via the same
+      // helper sourceFormatPresentation uses, then decide emptiness directly.
+      const selfVars = buildSelfTemplateVariables(this.column as ReferenceColumn, mainTuple, null);
+      if ('$_self' in selfVars) {
+        // scalar source (local column or all-outbound scalar)
+        const v = selfVars.$_self;
+        isEmpty = v === null || v === undefined || v === '';
+      } else {
+        // entity-mode source (key, foreign-key, all-outbound entity):
+        // the row exists iff buildSelfTemplateVariables returned a $self.
+        isEmpty = selfVars.$self === undefined;
+      }
     }
 
     // on_empty: "hide" (default) -> hide when empty -> show when NOT empty
@@ -155,30 +185,30 @@ export default class ActiveListCondition {
   }
 
   /**
-   * Check if the condition value is "empty" (no data returned).
+   * Check if a fetched async condition value is "empty".
+   * Only called from the no-pattern async branch of evaluateCondition; expects
+   * one of the shapes produced by Chaise's secondary-fetch:
+   * - page object (entityset)            — empty iff `length === 0`
+   * - `{ value, templateVariables }`     — empty iff `value` is null/''/0
+   * - `null`/`undefined`                 — empty (request failed / missing)
    */
   private _isConditionValueEmpty(conditionValue: any): boolean {
     if (conditionValue === null || conditionValue === undefined) {
       return true;
     }
 
-    // aggregate result: check if the value is null/empty
-    if (Array.isArray(conditionValue)) {
-      if (conditionValue.length === 0) return true;
-      const val = conditionValue[0];
-      return val === null || val === undefined || val.value === '' || val.value === null;
-    }
-
-    // page object (entityset): check if length is 0
+    // page object (entityset)
     if (typeof conditionValue.length === 'number') {
       return conditionValue.length === 0;
     }
 
-    // aggregate single value
+    // aggregate single value: { value, templateVariables }
     if (typeof conditionValue === 'object') {
-      if (conditionValue.value === null || conditionValue.value === '' || conditionValue.value === undefined) {
-        return true;
-      }
+      const inner = (conditionValue as { value?: unknown }).value;
+      if (inner === null || inner === undefined || inner === '') return true;
+      // count-style aggregates may serialize as a numeric string ("0"); coerce.
+      const num = typeof inner === 'number' ? inner : Number(inner);
+      return !isNaN(num) && num === 0;
     }
 
     return false;
