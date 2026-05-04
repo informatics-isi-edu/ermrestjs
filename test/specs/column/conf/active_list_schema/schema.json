@@ -448,6 +448,11 @@
                                 "sourcekey": "outbound_entity_o1",
                                 "on_empty": "hide"
                             }
+                        },
+                        {
+                            "sourcekey": "array_d_entity_i3",
+                            "markdown_name": "conditioned_col_shared_w_fk",
+                            "condition_key": "cond_has_inbound1"
                         }
                     ]
                 },
