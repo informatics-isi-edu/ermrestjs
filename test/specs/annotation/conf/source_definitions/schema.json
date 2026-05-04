@@ -459,6 +459,42 @@
                               "RID"
                           ]
                       }
+                  },
+                  "conditions": {
+                      "cond_local_col":          {"sourcekey": "new_col"},
+                      "cond_outbound_entity":    {"sourcekey": "fk1_col_entity"},
+                      "cond_outbound_scalar":    {"sourcekey": "fk1_col_scalar"},
+                      "cond_all_outbound":       {"sourcekey": "all_outbound_col"},
+                      "cond_inbound_entity":     {"sourcekey": "inbound1_col"},
+                      "cond_agg_cnt":            {"sourcekey": "agg1_cnt"},
+                      "cond_agg_cnt_d":          {"sourcekey": "agg1_cnt_d"},
+                      "cond_agg_min":            {"sourcekey": "agg1_min"},
+                      "cond_agg_max":            {"sourcekey": "agg1_max"},
+                      "cond_agg_array":          {"sourcekey": "agg1_array"},
+                      "cond_agg_array_d":        {"sourcekey": "agg1_array_d"},
+                      "cond_path_w_prefix":      {"sourcekey": "path_to_outbound2_outbound1_inbound1_w_prefix"},
+
+                      "cond_inline_col":         {"source": "col"},
+                      "cond_inline_path":        {"source": [{"outbound": ["source_definitions_schema", "main_fk1"]}, "RID"], "entity": true},
+                      "cond_inline_aggregate":   {"source": [{"inbound": ["source_definitions_schema", "inbound1_fk1"]}, "RID"], "entity": true, "aggregate": "cnt"},
+
+                      "cond_default_on_empty":   {"sourcekey": "agg1_cnt"},
+                      "cond_on_empty_hide":      {"sourcekey": "agg1_cnt", "on_empty": "hide"},
+                      "cond_on_empty_show":      {"sourcekey": "agg1_cnt", "on_empty": "show"},
+
+                      "cond_pattern_default":    {"sourcekey": "agg1_cnt", "condition_pattern": "{{#if $self}}show{{/if}}"},
+                      "cond_pattern_handlebars": {"sourcekey": "agg1_cnt", "condition_pattern": "{{#if $self}}show{{/if}}", "template_engine": "handlebars"},
+
+                      "cond_wait_for_empty":     {"sourcekey": "agg1_cnt", "wait_for": []},
+                      "cond_wait_for_single":    {"sourcekey": "agg1_cnt", "wait_for": ["agg1_cnt_d"]},
+                      "cond_wait_for_multiple":  {"sourcekey": "agg1_cnt", "wait_for": ["agg1_cnt_d", "agg1_min"]},
+
+                      "cond_both_source_and_sourcekey": {"sourcekey": "agg1_cnt", "source": "col"},
+
+                      "cond_invalid_neither":         {"on_empty": "hide"},
+                      "cond_invalid_dangling_key":    {"sourcekey": "does_not_exist"},
+                      "cond_invalid_empty_sourcekey": {"sourcekey": ""},
+                      "cond_invalid_null":            null
                   }
               }
           }
