@@ -932,13 +932,11 @@ Example:
     },
     "conditions": {
         "has_related_data": {
-            "sourcekey": "source-1",
-            "on_empty": "hide"
+            "sourcekey": "source-1"
         },
         "custom_check": {
             "source": [{"inbound": ["schema", "fk3"]}, "RID"],
-            "on_empty": "hide",
-            "condition_pattern": "{{#if $self}}show{{/if}}"
+            "condition_pattern": "{{#each $self}}{{#with this.values}}{{#if (eq _name 'some-value')}}true{{/if}}{{/with}}{{/each}}"
         }
     },
     "search-box": {

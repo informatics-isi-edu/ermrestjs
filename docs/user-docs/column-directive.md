@@ -92,6 +92,7 @@ In this category, you use the [`source`](#source) property to define the data so
     "source": <source path for condition data>,
     "on_empty": <"show" or "hide">,
     "condition_pattern": <pattern>,
+    "template_engine": <handlebars or mustache>,
     "wait_for": <wait_for list>
   },
   "condition_key": <condition key>
@@ -132,6 +133,7 @@ In this category, the [`sourcekey`](#sourcekey) proprety is used to refer to one
     "source": <source path for condition data>,
     "on_empty": <"show" or "hide">,
     "condition_pattern": <pattern>,
+    "template_engine": <handlebars or mustache>,
     "wait_for": <wait_for list>
   },
   "condition_key": <condition key>
@@ -583,7 +585,7 @@ A JSON object that defines an inline condition controlling whether this column o
 - `on_empty`: _(optional)_ Controls what happens when the condition source returns no data. Accepted values:
   - `"hide"` (default): Hide the column when the condition source is empty.
   - `"show"`: Show the column when the condition source is empty (and hide it when data is present).
-- `condition_pattern`: _(optional)_ A Mustache template that is evaluated using the condition source data. When provided, the condition is based on whether the rendered template produces a non-empty string, rather than whether the condition source returned data. The template has access to `$self` (the condition source value) and the same templating environment as `markdown_pattern`. No markdown rendering is applied to the result; only emptiness is checked.
+- `condition_pattern`: _(optional)_ A template that is evaluated using the condition source data. When provided, the condition is based on whether the rendered template produces a non-empty string, rather than whether the condition source returned data. The template has access to `$self` (the condition source value) and the same templating environment as `markdown_pattern`. No markdown rendering is applied to the result; only emptiness is checked.
 - `wait_for`: _(optional)_ An array of source key strings (referencing sources defined in `source-definitions`). These sources are fetched alongside the condition source, and their data is available in the templating environment when `condition_pattern` is evaluated. This allows the condition to reference data from multiple sources. The condition is not evaluated until all `wait_for` sources have completed.
 
 ```json
@@ -628,7 +630,7 @@ A JSON object that defines an inline condition controlling whether this column o
 
 A string that references a reusable condition defined in the `conditions` section of the [`source-definitions`](annotation.md#tag-2019-source-definitions) annotation. This allows you to define a condition once and apply it to multiple columns or related entities.
 
-If both `condition` and `condition_key` are defined on the same column directive, `condition` takes precedence and `condition_key` is ignored.
+If both `condition` and `condition_key` are defined on the same column directive, `condition_key` takes precedence and `condition` is ignored.
 
 ```json
 {
