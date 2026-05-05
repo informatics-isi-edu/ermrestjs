@@ -39,7 +39,12 @@
     "database",
     "rest",
     "postgresql",
-    "library"
+    "library",
+    "javascript",
+    "typescript",
+    "client",
+    "ermrest",
+    "ermrestjs"
   ],
   "overrides": {
     "@microsoft/api-extractor": {
