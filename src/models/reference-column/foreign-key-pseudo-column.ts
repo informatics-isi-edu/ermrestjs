@@ -14,6 +14,7 @@ import { isObjectAndNotNull, isStringAndNotEmpty, isObjectAndKeyExists } from '@
 import { fixedEncodeURIComponent } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
 import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils';
 import { _annotations, _foreignKeyInputModes } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
+import { buildSelfTemplateVariables } from '@isrd-isi-edu/ermrestjs/src/utils/template-utils';
 import { Reference } from '@isrd-isi-edu/ermrestjs/src/models/reference';
 
 // legacy
@@ -323,8 +324,8 @@ export class ForeignKeyPseudoColumn extends ReferenceColumn {
       unformatted: this._getNullValue(context!),
     };
 
-    // if there's wait_for, this should return null.
-    if (this.hasWaitFor && !options.skipWaitFor) {
+    // if there's wait_for or async condition, this should return null.
+    if ((this.hasWaitFor || this.hasCondition) && !options.skipWaitFor) {
       return nullValue;
     }
 
@@ -347,12 +348,7 @@ export class ForeignKeyPseudoColumn extends ReferenceColumn {
     const context = this._context;
 
     if (this.display.sourceMarkdownPattern) {
-      let selfTemplateVariables = {};
-      if (mainTuple.linkedData[this.name]) {
-        selfTemplateVariables = {
-          $self: _getRowTemplateVariables(this.table, context, mainTuple.linkedData[this.name]),
-        };
-      }
+      const selfTemplateVariables = buildSelfTemplateVariables(this, mainTuple, columnValue);
 
       const keyValues = {};
       Object.assign(keyValues, templateVariables, selfTemplateVariables);

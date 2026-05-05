@@ -81,7 +81,7 @@ import {
      * @memberof ERMrest
      * @function
      * @param {string} uri URI of the ERMrest service.
-     * @param {Object} [contextHeaderParams={cid:'null'}] An optional server header parameters for context logging
+     * @param {any} [contextHeaderParams={cid:'null'}] An optional server header parameters for context logging
      * appended to the end of any request to the server.
      * @return {Server} Returns a server instance.
      * @throws {InvalidInputError} URI is missing
@@ -1532,6 +1532,7 @@ import {
          * Returns an object with
          * - fkeys: array of ForeignKeyRef objects
          * - columns: Array of columns
+         * - conditions: hash-map of sourcekey to the condition's unprocessed column-directive.
          * - sources: hash-map of name to the SourceObjectWrapper object.
          * - sourceMapping: hashname to all the names
          * - sourceDependencies: for each sourcekey, what are the other sourcekeys that it depends on (includes self as well)
@@ -1549,7 +1550,7 @@ import {
             var self = this;
             var sd = _annotations.SOURCE_DEFINITIONS;
             var hasAnnot = self.annotations.contains(sd);
-            var res = {columns: [], fkeys: [], sources: {}, sourceMapping: {}, sourceDependencies: {}};
+            var res = {columns: [], fkeys: [], sources: {}, sourceMapping: {}, sourceDependencies: {}, conditions: {}};
             var addedCols = {}, addedFks = {}, processedSources = {};
             var allColumns = self.columns.all(),
                 allForeignKeys = self.foreignKeys.all();
@@ -1693,7 +1694,7 @@ import {
             if (!hasAnnot) {
                 res.columns = allColumns;
                 res.fkeys = allForeignKeys;
-                self._sourceDefinitions = new TableSourceDefinitions(this, res.columns, res.fkeys, res.sources, res.sourceMapping, res.sourceDependencies);
+                self._sourceDefinitions = new TableSourceDefinitions(this, res.columns, res.fkeys, res.sources, res.sourceMapping, res.sourceDependencies, res.conditions);
                 return;
             }
 
@@ -1731,7 +1732,32 @@ import {
                 }
             }
 
-            self._sourceDefinitions = new TableSourceDefinitions(this, res.columns, res.fkeys, res.sources, res.sourceMapping, res.sourceDependencies);
+            // conditions
+            if (annot.conditions && typeof annot.conditions === "object") {
+                for (var cKey in annot.conditions) {
+                    if (!Object.prototype.hasOwnProperty.call(annot.conditions, cKey)) continue;
+                    var condDef = annot.conditions[cKey];
+                    if (typeof condDef !== "object" || condDef === null) {
+                        $log.info("condition definition, table =" + self.name + ", condition=" + cKey + ": must be an object.");
+                        continue;
+                    }
+                    // must have source or sourcekey
+                    if (!condDef.source && !isStringAndNotEmpty(condDef.sourcekey)) {
+                        $log.info("condition definition, table =" + self.name + ", condition=" + cKey + ": must have `source` or `sourcekey`.");
+                        continue;
+                    }
+                    // if sourcekey, it must exist in the sources map
+                    if (isStringAndNotEmpty(condDef.sourcekey) && !(condDef.sourcekey in res.sources)) {
+                        $log.info("condition definition, table =" + self.name + ", condition=" + cKey + ": sourcekey `" + condDef.sourcekey + "` not found in sources.");
+                        continue;
+                    }
+                    // just capture and don't process
+                    // we have to reprocess these again anyways because they might rely on tuple.
+                    res.conditions[cKey] = condDef;
+                }
+            }
+
+            self._sourceDefinitions = new TableSourceDefinitions(this, res.columns, res.fkeys, res.sources, res.sourceMapping, res.sourceDependencies, res.conditions);
         },
 
         /**

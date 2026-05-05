@@ -141,6 +141,10 @@
                     "type": {"typename": "int4"}
                 },
                 {
+                    "name": "int_col_4",
+                    "type": {"typename": "int4"}
+                },
+                {
                     "name": "fk1_col1",
                     "type": {
                         "typename": "text"
@@ -413,6 +417,42 @@
                                 "markdown_pattern": "{{max_i2}}",
                                 "wait_for": ["max_i2", "array_d_entity_i1"]
                             }
+                        },
+                        {
+                            "sourcekey": "min_i3",
+                            "markdown_name": "conditioned_col_inline",
+                            "condition": {
+                                "sourcekey": "cnt_i1",
+                                "on_empty": "hide"
+                            }
+                        },
+                        {
+                            "sourcekey": "min_i4",
+                            "markdown_name": "conditioned_col_key",
+                            "condition_key": "cond_has_inbound1_show"
+                        },
+                        {
+                            "sourcekey": "max_i3",
+                            "markdown_name": "conditioned_col_pattern",
+                            "condition": {
+                                "sourcekey": "cnt_i1",
+                                "on_empty": "hide",
+                                "condition_pattern": "{{#if cnt_i2}}show{{/if}}",
+                                "wait_for": ["cnt_i2"]
+                            }
+                        },
+                        {
+                            "source": "int_col_4",
+                            "markdown_name": "conditioned_col_outbound",
+                            "condition": {
+                                "sourcekey": "outbound_entity_o1",
+                                "on_empty": "hide"
+                            }
+                        },
+                        {
+                            "sourcekey": "array_d_entity_i3",
+                            "markdown_name": "conditioned_col_shared_w_fk",
+                            "condition_key": "cond_has_inbound1"
                         }
                     ]
                 },
@@ -435,7 +475,11 @@
                                 "wait_for": ["entity_set_i5", "all_outbound_entity_o3_o1_o1"]
                             }
                         },
-                        {"sourcekey": "entity_set_i7"}
+                        {"sourcekey": "entity_set_i7"},
+                        {
+                            "sourcekey": "entity_set_i5",
+                            "condition_key": "cond_has_inbound1"
+                        }
                     ]
                 },
                 "tag:isrd.isi.edu,2018:citation": {
@@ -638,6 +682,18 @@
                             "source": [{"inbound": ["active_list_schema", "inbound2_fk1"]}, "int_col"],
                             "aggregate": "max"
                         },
+                        "min_i3": {
+                            "source": [{"inbound": ["active_list_schema", "inbound3_fk1"]}, "int_col"],
+                            "aggregate": "min"
+                        },
+                        "max_i3": {
+                            "source": [{"inbound": ["active_list_schema", "inbound3_fk1"]}, "int_col"],
+                            "aggregate": "max"
+                        },
+                        "min_i4": {
+                            "source": [{"inbound": ["active_list_schema", "inbound4_fk1"]}, "int_col"],
+                            "aggregate": "min"
+                        },
                         "entity_set_i1": {
                             "source": [{"inbound": ["active_list_schema", "inbound1_fk1"]}, "inbound1_id"]
                         },
@@ -698,6 +754,31 @@
                             ],
                             "entity": true,
                             "aggregate": "array_d"
+                        }
+                    },
+                    "conditions": {
+                        "cond_has_inbound1": {
+                            "sourcekey": "cnt_i1",
+                            "on_empty": "hide"
+                        },
+                        "cond_has_inbound1_show": {
+                            "sourcekey": "cnt_i1",
+                            "on_empty": "show",
+                            "wait_for": ["cnt_i2"]
+                        },
+                        "cond_with_pattern": {
+                            "sourcekey": "cnt_i1",
+                            "on_empty": "hide",
+                            "condition_pattern": "{{#if $self}}show{{/if}}"
+                        },
+                        "cond_invalid_no_source": {
+                            "on_empty": "hide"
+                        },
+                        "cond_with_wait_for": {
+                            "sourcekey": "cnt_i1",
+                            "on_empty": "hide",
+                            "condition_pattern": "{{#if cnt_i2}}show{{/if}}",
+                            "wait_for": ["cnt_i2"]
                         }
                     }
                 }

@@ -507,7 +507,12 @@ export function computeReadPath(
 /**
  * Generate the list of columns for this reference based on context and annotations
  */
-export function generateColumnsList(reference: Reference | RelatedReference, tuple?: Tuple, columnsList?: any[], skipLog?: boolean): VisibleColumn[] {
+export function generateColumnsList(
+  reference: Reference | RelatedReference,
+  tuple?: Tuple,
+  columnsList?: Array<unknown>,
+  skipLog?: boolean,
+): VisibleColumn[] {
   const resultColumns: VisibleColumn[] = [];
   const consideredColumns: { [key: string]: boolean } = {}; // to avoid duplicate pseudo columns
   const tableColumns: { [key: string]: boolean } = {}; // to make sure the hashes we generate are not clashing with table column names

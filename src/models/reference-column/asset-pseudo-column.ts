@@ -232,7 +232,7 @@ export class AssetPseudoColumn extends ReferenceColumn {
       return { isHTML: false, value: data[this._baseCol.name], unformatted: data[this._baseCol.name] };
     }
 
-    if (this.hasWaitFor && !options.skipWaitFor) {
+    if ((this.hasWaitFor || this.hasCondition) && !options.skipWaitFor) {
       return nullValue;
     }
 

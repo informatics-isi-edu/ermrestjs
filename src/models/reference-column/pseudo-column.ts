@@ -15,6 +15,7 @@ import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils
 import { isDefinedAndNotNull, isObject, isObjectAndNotNull, isStringAndNotEmpty, verify } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
 import { fixedEncodeURIComponent } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
 import { processAggregateValue } from '@isrd-isi-edu/ermrestjs/src/utils/column-utils';
+import { buildSelfTemplateVariables } from '@isrd-isi-edu/ermrestjs/src/utils/template-utils';
 import {
   _pseudoColAggregateFns,
   _pseudoColEntityAggregateFns,
@@ -148,7 +149,7 @@ export class PseudoColumn extends ReferenceColumn {
       return nullValue;
     }
 
-    if (this.hasWaitFor && !options.skipWaitFor) {
+    if ((this.hasWaitFor || this.hasCondition) && !options.skipWaitFor) {
       return nullValue;
     }
 
@@ -193,42 +194,10 @@ export class PseudoColumn extends ReferenceColumn {
   }
 
   sourceFormatPresentation(templateVariables: any, columnValue: any, mainTuple: Tuple) {
-    const baseCol = this.baseColumn;
     const context = this._context;
-    let selfTemplateVariables: any = {};
 
     if (this.display.sourceMarkdownPattern) {
-      // for aggregate, the columnValue has the value precomputed
-      if (this.hasAggregate && columnValue) {
-        selfTemplateVariables = columnValue.templateVariables;
-      }
-      // all-outbound paths
-      else if (this.hasPath && this.isUnique) {
-        // use the linked data if exists
-        if (!mainTuple.linkedData[this.name]) {
-          selfTemplateVariables = {};
-        }
-        // scalar default
-        else if (!this.isEntityMode) {
-          selfTemplateVariables = {
-            $self: baseCol.formatvalue(mainTuple.linkedData[this.name][baseCol.name], context),
-            $_self: mainTuple.linkedData[this.name][baseCol.name],
-          };
-        }
-        // entity default
-        else {
-          selfTemplateVariables = {
-            $self: _getRowTemplateVariables(this.table, context, mainTuple.linkedData[this.name]),
-          };
-        }
-      }
-      // any other paths
-      else if (baseCol) {
-        selfTemplateVariables = {
-          $self: baseCol.formatvalue(mainTuple.data[baseCol.name], context),
-          $_self: mainTuple.data[baseCol.name],
-        };
-      }
+      const selfTemplateVariables = buildSelfTemplateVariables(this, mainTuple, columnValue);
 
       const keyValues = {};
       Object.assign(keyValues, templateVariables, selfTemplateVariables);

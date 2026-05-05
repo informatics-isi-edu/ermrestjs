@@ -33,6 +33,7 @@ import {
   RelatedReference,
   BulkCreateForeignKeyObject,
 } from '@isrd-isi-edu/ermrestjs/src/models/reference';
+import ActiveListCondition from '@isrd-isi-edu/ermrestjs/src/models/active-list-condition';
 
 // services
 import ConfigService from '@isrd-isi-edu/ermrestjs/src/services/config';
@@ -41,7 +42,7 @@ import ErrorService from '@isrd-isi-edu/ermrestjs/src/services/error';
 import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
 
 // utils
-import { createPseudoColumn, isAllOutboundColumn, isRelatedColumn } from '@isrd-isi-edu/ermrestjs/src/utils/column-utils';
+import { createPseudoColumn, isRelatedColumn } from '@isrd-isi-edu/ermrestjs/src/utils/column-utils';
 import {
   computeReadPath,
   generateFacetColumns,
@@ -71,7 +72,6 @@ import { onload } from '@isrd-isi-edu/ermrestjs/js/setup/node';
 import {
   _getPagingValues,
   _getRecursiveAnnotationValue,
-  _isEntryContext,
   _isValidForeignKeyName,
   _isValidSortElement,
   compareColumnPositions,
@@ -81,6 +81,14 @@ import { _compressFacetObject, _sourceColumnHelpers } from '@isrd-isi-edu/ermres
 
 import type { CommentType } from '@isrd-isi-edu/ermrestjs/src/models/comment';
 import type { DisplayName } from '@isrd-isi-edu/ermrestjs/src/models/display-name';
+import {
+  ActiveListBuilder,
+  ActiveListRequestTypes,
+  type ActiveList,
+  type ActiveListRequest,
+  type ActiveListRelatedEntityRequest,
+} from '@isrd-isi-edu/ermrestjs/src/services/active-list';
+
 import { _exportHelpers, _getDefaultExportTemplate, _referenceExportOutput, validateExportTemplate } from '@isrd-isi-edu/ermrestjs/js/export';
 
 /**
@@ -117,7 +125,7 @@ import { _exportHelpers, _getDefaultExportTemplate, _referenceExportOutput, vali
  * @return Promise when resolved passes the
  * {@link Reference} object. If rejected, passes one of the ermrest errors
  */
-export const resolve = async (uri: string, contextHeaderParams?: any): Promise<Reference> => {
+export const resolve = async (uri: string, contextHeaderParams?: unknown): Promise<Reference> => {
   verify(uri, "'uri' must be specified");
   // make sure all the dependencies are loaded
   await onload();
@@ -146,22 +154,6 @@ export const _createReference = (location: Location, catalog: Catalog): Referenc
 // NOTE: This function is only being used in unit tests.
 export const _createPage = (reference: Reference, etag: string, data: any, hasPrevious: boolean, hasNext: boolean): Page => {
   return new Page(reference, etag, data, hasPrevious, hasNext);
-};
-
-type ActiveList = {
-  // TODO
-  // requests: {
-  //   column: ReferenceColumn;
-  //   objects: Array<{ index: number; column?: boolean; related?: boolean; inline?: boolean; citation?: boolean }>;
-  //   type: 'column' | 'related' | 'inline' | 'citation';
-  //   // TODO backwards compatibility:
-  //   inline?: boolean;
-  //   related?: boolean;
-  //   citation?: boolean;
-  // };
-  requests: any[];
-  allOutBounds: Array<ForeignKeyPseudoColumn | PseudoColumn>;
-  selfLinks: Array<KeyPseudoColumn>;
 };
 
 export type VisibleColumn =
@@ -229,9 +221,9 @@ export class Reference {
   private _canUseTRS?: boolean;
   private _canUseTCRS?: boolean;
   private _readPath?: string;
-  private _readAttributeGroupPathProps_cached?: any;
+  private _readAttributeGroupPathProps_cached?: unknown;
   private _display?: ReferenceDisplay;
-  private _defaultExportTemplate?: any;
+  private _defaultExportTemplate?: unknown;
   private _csvDownloadLink?: string | null;
   private _searchColumns?: Array<VisibleColumn> | false;
   private _cascadingDeletedItems?: Array<Table | RelatedReference | Reference>;
@@ -239,7 +231,7 @@ export class Reference {
   private _related?: Array<RelatedReference>;
   private _facetColumns?: Array<FacetColumn>;
   private _facetColumnsStructure?: Array<number | FacetGroup>;
-  private _activeList?: any;
+  private _activeList?: ActiveList;
   private _citation?: Citation | null;
   private _googleDatasetMetadata?: GoogleDatasetMetadata | null;
 
@@ -328,6 +320,10 @@ export class Reference {
     return this._pseudoColumn;
   }
 
+  /**
+   * The column-directive that is used for creating this reference.
+   * Allows access to props defined on the column-directive (display props, condition, waitFor, etc)
+   */
   setPseudoColumn(value: VisibleColumn) {
     this._pseudoColumn = value;
   }
@@ -604,7 +600,7 @@ export class Reference {
   /**
    * Generate the list of columns for this reference based on context and annotations
    */
-  generateColumnsList(tuple?: Tuple, columnsList?: any[], dontChangeReference?: boolean, skipLog?: boolean): ReferenceColumn[] {
+  generateColumnsList(tuple?: Tuple, columnsList?: Array<unknown>, dontChangeReference?: boolean, skipLog?: boolean): ReferenceColumn[] {
     const resultColumns = generateColumnsList(this, tuple, columnsList, skipLog);
 
     if (!dontChangeReference) {
@@ -849,7 +845,7 @@ export class Reference {
     if (this._activeList === undefined) {
       this.generateActiveList();
     }
-    return this._activeList;
+    return this._activeList!;
   }
 
   /**
@@ -878,182 +874,80 @@ export class Reference {
    * @private
    */
   generateActiveList(tuple?: Tuple): ActiveList {
-    // VARIABLES:
-    const allOutBounds: Array<PseudoColumn | ForeignKeyPseudoColumn> = [];
-    const requests: any[] = [];
-    const selfLinks: Array<KeyPseudoColumn> = [];
-    const consideredUniqueFiltered: { [key: string]: number } = {};
-    const consideredSets: { [key: string]: number } = {};
-    const consideredOutbounds: { [key: string]: boolean } = {};
-    const consideredAggregates: { [key: string]: number } = {};
-    const consideredSelfLinks: { [key: string]: boolean } = {};
-    const consideredEntryWaitFors: { [key: string]: number } = {};
-
-    const sds = this.table.sourceDefinitions;
-
-    // in detailed, we want related and citation
     const isDetailed = this._context === _contexts.DETAILED;
-    // in entry, don't include waitfors in the activelist used for loading the page.
-    // the waitfors will be used in chaise instead prior to submission.
-    const isEntry = _isEntryContext(this._context);
+    const builder = new ActiveListBuilder(this, tuple, isDetailed);
 
-    const COLUMN_TYPE = 'column';
-    const RELATED_TYPE = 'related';
-    const CITATION_TYPE = 'citation';
-    const INLINE_TYPE = 'inline';
-
-    // FUNCTIONS:
-    const hasAggregate = (col: VisibleColumn) => {
-      return col.hasWaitForAggregate || ((col as PseudoColumn).isPathColumn && (col as PseudoColumn).hasAggregate);
+    /**
+     * Helper for the condition branch shared across the columns / related loops.
+     * Returns true if the column was routed through a conditional group (so the
+     * caller should NOT add the column directly), false if there was no
+     * applicable condition (caller adds normally).
+     */
+    const tryCondition = (
+      condition: ActiveListCondition | null | undefined,
+      conditionedItem: { column?: boolean; inline?: boolean; related?: boolean; index: number },
+      addToDeps: (deps: Array<ActiveListRequest | ActiveListRelatedEntityRequest>) => void,
+    ): boolean => {
+      if (!isDetailed || !condition) return false;
+      builder.processConditionedItem(condition, conditionedItem, addToDeps);
+      return true;
     };
 
-    // col: the column that we need its data
-    // isWaitFor: whether it was part of waitFor or just visible
-    // type: where in the page it belongs to
-    // index: the container index (column index, or related index) (optional)
-    const addColToActiveList = (col: VisibleColumn, isWaitFor: boolean, type: string, index?: number) => {
-      const obj: any = { isWaitFor: isWaitFor };
-
-      // add the type
-      obj[type] = true;
-
-      // add index if available (not available in citation)
-      if (Number.isInteger(index)) {
-        obj.index = index;
-      }
-
-      if (isWaitFor && isEntry) {
-        if (col.name in consideredEntryWaitFors) {
-          requests[consideredEntryWaitFors[col.name]].objects.push(obj);
-          return;
-        }
-        consideredEntryWaitFors[col.name] = requests.length;
-        requests.push({ firstOutbound: true, column: col, objects: [obj] });
-        return;
-      }
-
-      // unique filtered
-      // TODO FILTER_IN_SOURCE chaise should use this type of column as well?
-      // TODO FILTER_IN_SOURCE should be added to documentation as well
-      if ((col as PseudoColumn).sourceObjectWrapper?.isUniqueFiltered) {
-        // duplicate
-        if (col.name in consideredUniqueFiltered) {
-          requests[consideredUniqueFiltered[col.name]].objects.push(obj);
-          return;
-        }
-
-        // new
-        consideredUniqueFiltered[col.name] = requests.length;
-        requests.push({ entity: true, column: col, objects: [obj] });
-        return;
-      }
-
-      // aggregates
-      if ((col as PseudoColumn).isPathColumn && (col as PseudoColumn).hasAggregate) {
-        // duplicate
-        if (col.name in consideredAggregates) {
-          requests[consideredAggregates[col.name]].objects.push(obj);
-          return;
-        }
-
-        // new
-        consideredAggregates[col.name] = requests.length;
-        requests.push({ aggregate: true, column: col, objects: [obj] });
-        return;
-      }
-
-      //entitysets
-      if (isRelatedColumn(col)) {
-        if (!isDetailed) {
-          return; // only acceptable in detailed
-        }
-
-        if (col.name in consideredSets) {
-          requests[consideredSets[col.name]].objects.push(obj);
-          return;
-        }
-
-        consideredSets[col.name] = requests.length;
-        requests.push({ entityset: true, column: col, objects: [obj] });
-      }
-
-      // all outbounds
-      if (isAllOutboundColumn(col)) {
-        if (col.name in consideredOutbounds) return;
-        consideredOutbounds[col.name] = true;
-        allOutBounds.push(col as PseudoColumn | ForeignKeyPseudoColumn);
-      }
-
-      // self-links
-      if ((col as KeyPseudoColumn).isKey) {
-        if (col.name in consideredSelfLinks) return;
-        consideredSelfLinks[col.name] = true;
-        selfLinks.push(col as KeyPseudoColumn);
-      }
-    };
-
-    const addInlineColumn = (col: VisibleColumn, i: number) => {
-      if (isRelatedColumn(col)) {
-        requests.push({ inline: true, index: i });
-      } else {
-        addColToActiveList(col, false, COLUMN_TYPE, i);
-      }
-
-      col.waitFor.forEach((wf: any) => {
-        addColToActiveList(wf, true, isRelatedColumn(col) ? INLINE_TYPE : COLUMN_TYPE, i);
-      });
-    };
-
-    // THE CODE STARTS HERE:
     const columns = this.generateColumnsList(tuple);
 
     // citation
     if (isDetailed && this.citation) {
       this.citation.waitFor.forEach((col) => {
-        addColToActiveList(col, true, CITATION_TYPE);
+        builder.addCol(col, true, ActiveListRequestTypes.CITATION);
       });
     }
 
     // columns without aggregate
     columns.forEach((col, i: number) => {
-      if (!hasAggregate(col)) {
-        addInlineColumn(col, i);
-      }
+      if (builder.hasAggregate(col)) return;
+      const rc = col.resolvedCondition;
+      const item = isRelatedColumn(col) ? { inline: true, index: i } : { column: true, index: i };
+      if (tryCondition(rc, item, (deps) => builder.addInlineToDependent(deps, col, i))) return;
+      builder.addInline(col, i);
     });
 
     // columns with aggregate
     columns.forEach((col, i: number) => {
-      if (hasAggregate(col)) {
-        addInlineColumn(col, i);
-      }
+      if (!builder.hasAggregate(col)) return;
+      const rc = col.resolvedCondition;
+      const item = isRelatedColumn(col) ? { inline: true, index: i } : { column: true, index: i };
+      if (tryCondition(rc, item, (deps) => builder.addInlineToDependent(deps, col, i))) return;
+      builder.addInline(col, i);
     });
 
     // related tables
     if (isDetailed) {
       this.generateRelatedList(tuple).forEach((rel, i) => {
-        requests.push({ related: true, index: i });
-
-        if (rel.pseudoColumn) {
-          rel.pseudoColumn.waitFor.forEach((wf) => {
-            addColToActiveList(wf, true, RELATED_TYPE, i);
+        const rc = rel.pseudoColumn?.resolvedCondition;
+        /**
+         * if there's a condition, we have to capture the requests generated for the related entity as its dependencies.
+         * So when the condition is evaludated, we can decide whether to run those requests or not.
+         */
+        const addRelatedToDeps = (deps: Array<ActiveListRequest | ActiveListRelatedEntityRequest>) => {
+          deps.push({ related: true, index: i });
+          rel.pseudoColumn?.waitFor.forEach((wf) => {
+            builder.addColToDependent(deps, wf, true, ActiveListRequestTypes.RELATED, i);
           });
-        }
+        };
+        if (tryCondition(rc, { related: true, index: i }, addRelatedToDeps)) return;
+        builder.requests.push({ related: true, index: i });
+        rel.pseudoColumn?.waitFor.forEach((wf) => {
+          builder.addCol(wf, true, ActiveListRequestTypes.RELATED, i);
+        });
       });
     }
 
-    //fkeys
-    sds.fkeys.forEach((fk) => {
-      if (fk.name in consideredOutbounds) return;
-      consideredOutbounds[fk.name] = true;
-      allOutBounds.push(new ForeignKeyPseudoColumn(this, fk));
+    // fkeys
+    this.table.sourceDefinitions.fkeys.forEach((fk) => {
+      builder.addAllOutBound(new ForeignKeyPseudoColumn(this, fk));
     });
 
-    this._activeList = {
-      requests: requests,
-      allOutBounds: allOutBounds,
-      selfLinks: selfLinks,
-    };
-
+    this._activeList = builder.build();
     return this._activeList;
   }
 
@@ -1074,7 +968,7 @@ export class Reference {
   }
 
   /**
-   * Will return the expor templates that are available for this reference.
+   * Will return the export templates that are available for this reference.
    * It will validate the templates that are defined in annotations.
    * If its `detailed` context and annotation was missing,
    * it will return the default export template.
@@ -1088,6 +982,7 @@ export class Reference {
 
     // annotation is missing
     if (!Array.isArray(templates)) {
+      // eslint-disable-next-line eqeqeq
       const canUseDefault = useDefault && this.context === _contexts.DETAILED && this.defaultExportTemplate != null;
 
       return canUseDefault ? [this.defaultExportTemplate] : [];
@@ -1128,7 +1023,7 @@ export class Reference {
    */
   getColumnByName(name: string): VisibleColumn {
     // given an array of columns, find column by name
-    const findCol = (list: any[]): any => {
+    const findCol = (list: Array<VisibleColumn | Column>): VisibleColumn | Column | false => {
       for (let i = 0; i < list.length; i++) {
         if (list[i].name === name) {
           return list[i];
@@ -1140,13 +1035,13 @@ export class Reference {
     // search in visible columns
     let c = findCol(this.columns);
     if (c) {
-      return c;
+      return c as VisibleColumn;
     }
 
     // search in table columns
     c = findCol(this.table.columns.all());
     if (c) {
-      return new ReferenceColumn(this, [c]);
+      return new ReferenceColumn(this, [c as Column]);
     }
 
     // backward compatibility, look at fks and keys using constraint name
