@@ -273,6 +273,17 @@ export class ActiveListBuilder {
       obj.index = index;
     }
 
+    // unique filtered (mirrors addCol branch; dedup is scoped to dependentRequests)
+    if ((col as PseudoColumn).sourceObjectWrapper?.isUniqueFiltered) {
+      const existing = dependentRequests.find((r) => (r as ActiveListRequest).column?.name === col.name);
+      if (existing) {
+        (existing as ActiveListRequest).objects.push(obj);
+        return;
+      }
+      dependentRequests.push({ entity: true, column: col, objects: [obj] });
+      return;
+    }
+
     // aggregates
     if ((col as PseudoColumn).isPathColumn && (col as PseudoColumn).hasAggregate) {
       // check if already in dependentRequests

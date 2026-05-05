@@ -579,7 +579,7 @@ Conditions are only evaluated in the `detailed` context. In all other contexts, 
 A JSON object that defines an inline condition controlling whether this column or related entity is displayed. The object has the following properties:
 
 - `sourcekey`: A string referencing one of the sources defined in the [`source-definitions`](annotation.md#tag-2019-source-definitions) annotation. The data returned by this source is used to evaluate the condition.
-- `source`: An inline source path (same syntax as the column directive [`source`](#source) property). Use this as an alternative to `sourcekey` when you don't need to reuse the condition source elsewhere. You must provide either `sourcekey` or `source`, but not both.
+- `source`: An inline source path (same syntax as the column directive [`source`](#source) property). Use this as an alternative to `sourcekey` when you don't need to reuse the condition source elsewhere. You must provide at least one of `sourcekey` or `source`. If both are provided, `sourcekey` takes precedence.
 - `on_empty`: _(optional)_ Controls what happens when the condition source returns no data. Accepted values:
   - `"hide"` (default): Hide the column when the condition source is empty.
   - `"show"`: Show the column when the condition source is empty (and hide it when data is present).
