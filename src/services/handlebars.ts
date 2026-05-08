@@ -1,5 +1,6 @@
 /* eslint-disable no-useless-escape */
 import Handlebars from 'handlebars';
+import { map as lodashMap } from 'lodash-es';
 import moment from 'moment-timezone';
 
 import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
@@ -419,15 +420,7 @@ export default class HandlebarsService {
        * @returns a boolean indicating if the user is in any of the given groups
        */
       isUserInAcl: function (...args) {
-        const groups = args.reduce((acc, arg) => {
-          if (Array.isArray(arg)) {
-            return acc.concat(arg);
-          } else if (typeof arg === 'string') {
-            return acc.concat([arg]);
-          }
-          return acc;
-        }, []);
-
+        const groups = flattenVariadicArgs(args).filter((g): g is string => typeof g === 'string');
         return AuthnService.isUserInAcl(groups);
       },
 
@@ -591,6 +584,40 @@ export default class HandlebarsService {
         return Number(arg1) - Number(arg2);
       },
     });
+
+    // list/array helpers
+    Handlebars.registerHelper({
+      /**
+       * {{#if (memberOf scalarCol "a" "b" "c")}}
+       * {{#if (memberOf scalarCol someArray)}}
+       * {{#if (memberOf scalarCol (pluck $self "values.type"))}}
+       *
+       * Variadic args; any array argument is flattened one level.
+       * @returns true if `value` equals any of the given args
+       */
+      memberOf: function (value: unknown, ...args: unknown[]) {
+        return flattenVariadicArgs(args).includes(value);
+      },
+
+      /**
+       * {{#if (hasMember arrayCol "non-polymer")}}
+       * @returns true if `array` is an array containing `value`
+       */
+      hasMember: function (array: unknown, value: unknown) {
+        return Array.isArray(array) && array.includes(value);
+      },
+
+      /**
+       * {{pluck $self "values.type"}}
+       *
+       * Preserves length and order; missing paths resolve to undefined.
+       * @returns array of values from `array` at the given lodash path
+       */
+      pluck: function (array: unknown, path: string): unknown[] {
+        if (!Array.isArray(array) || typeof path !== 'string' || !path) return [];
+        return lodashMap(array, path);
+      },
+    });
   }
 }
 
@@ -600,6 +627,16 @@ const reduceOp = function (args: any[], reducer: (a: boolean, b: boolean) => boo
   args.pop(); // => options
   const first = args.shift();
   return args.reduce(reducer, first);
+};
+
+/**
+ * Drops the trailing Handlebars `options` arg, then flattens any array args
+ * one level into a single list. Used by variadic helpers that accept either
+ * loose values or arrays (e.g. `(memberOf col "a" "b")` vs `(memberOf col arr)`).
+ */
+const flattenVariadicArgs = function (args: unknown[]): unknown[] {
+  const rest = args.slice(0, -1); // drop options
+  return rest.reduce<unknown[]>((acc, a) => acc.concat(Array.isArray(a) ? a : [a]), []);
 };
 
 const regexpFindAll = function (value: string, regexp: string, flags: string) {

@@ -1146,6 +1146,62 @@ export function execute (options) {
         expect(module.renderHandlebarsTemplate('{{subtract a b}}', { a: 2, b: '1' })).toBe('1');
       });
 
+      it('memberOf helper', function () {
+        const render = (t, v) => module.renderHandlebarsTemplate(t, v);
+        // variadic primitives
+        expect(render('{{#if (memberOf type "a" "b" "c")}}match{{/if}}', { type: 'a' })).toBe('match');
+        expect(render('{{#if (memberOf type "a" "b" "c")}}match{{else}}none{{/if}}', { type: 'z' })).toBe('none');
+        // single array arg, flattened one level
+        expect(render('{{#if (memberOf type allowed)}}match{{else}}none{{/if}}', { type: 'a', allowed: ['a', 'b'] })).toBe('match');
+        expect(render('{{#if (memberOf type allowed)}}match{{else}}none{{/if}}', { type: 'z', allowed: ['a', 'b'] })).toBe('none');
+        // mixed: array + primitive
+        expect(render('{{#if (memberOf type allowed "extra")}}match{{else}}none{{/if}}', { type: 'extra', allowed: ['a', 'b'] })).toBe('match');
+        // composes with pluck
+        expect(
+          render('{{#if (memberOf "x" (pluck items "values.type"))}}match{{else}}none{{/if}}', {
+            items: [{ values: { type: 'x' } }, { values: { type: 'y' } }, {}],
+          }),
+        ).toBe('match');
+        // no candidates -> false
+        expect(render('{{#if (memberOf type)}}match{{else}}none{{/if}}', { type: 'a' })).toBe('none');
+      });
+
+      it('hasMember helper', function () {
+        const render = (t, v) => module.renderHandlebarsTemplate(t, v);
+        expect(render('{{#if (hasMember tags "active")}}yes{{else}}no{{/if}}', { tags: ['active', 'public'] })).toBe('yes');
+        expect(render('{{#if (hasMember tags "missing")}}yes{{else}}no{{/if}}', { tags: ['active', 'public'] })).toBe('no');
+        expect(render('{{#if (hasMember values 2)}}yes{{else}}no{{/if}}', { values: [1, 2, 3] })).toBe('yes');
+        // non-array input -> false (no throw)
+        expect(render('{{#if (hasMember tags "x")}}yes{{else}}no{{/if}}', { tags: 'not-an-array' })).toBe('no');
+        // missing variable -> false
+        expect(render('{{#if (hasMember missing "x")}}yes{{else}}no{{/if}}', {})).toBe('no');
+      });
+
+      it('pluck helper', function () {
+        const render = (t, v) => module.renderHandlebarsTemplate(t, v);
+        // basic path
+        expect(
+          render('{{#each (pluck items "values.type")}}{{this}},{{/each}}', {
+            items: [{ values: { type: 'a' } }, { values: { type: 'b' } }],
+          }),
+        ).toBe('a,b,');
+        expect(
+          render('{{#each (pluck items pluck_key)}}{{this}},{{/each}}', {
+            items: [{ values: { type: 'a' } }, { values: { type: 'b' } }], pluck_key: 'values.type'
+          }),
+        ).toBe('a,b,');
+        // null intermediate -> undefined (lodash _.map with string path does not throw errors)
+        expect(
+          render('{{#each (pluck items "values.fk.values.x")}}{{#if this}}{{this}}{{else}}-{{/if}},{{/each}}', {
+            items: [{ values: { fk: null } }, { values: { fk: { values: { x: 'q' } } } }],
+          }),
+        ).toBe('-,q,');
+        // non-array -> []
+        expect(render('{{#each (pluck items "x")}}{{this}}{{/each}}', { items: 'not-array' })).toBe('');
+        // empty path -> []
+        expect(render('{{#each (pluck items "")}}{{this}}{{/each}}', { items: [{ x: 1 }] })).toBe('');
+      });
+
       it('if eq (equals) helper', function () {
         expect(
           module.renderHandlebarsTemplate("Name {{#if (eq name 'Chloe')}}{{name}} is equal to Chloe{{else}}{{name}} is not equal to Chloe{{/if}}", {

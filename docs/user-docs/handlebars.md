@@ -29,40 +29,47 @@ This document summarizes the key concepts of Handlebars that are relevant to Der
     - [$session](#session)
   - [Helpers](#helpers)
     - [printf helper](#printf-helper)
-    - [formatDatetime helper](#formatdatetime-helper)
-    - [datetimeToSnapshot helper](#datetimetosnapshot-helper)
-    - [snapshotToDatetime helper](#snapshottodatetime-helper)
-    - [humanizeBytes helper](#humanizebytes-helper)
-      - [`mode`](#mode)
-      - [`precision`](#precision)
-      - [`tooltip`](#tooltip)
-    - [stringLength helper](#stringlength-helper)
-    - [Math Helpers](#math-helpers)
+    - [Dates & timestamps](#dates--timestamps)
+      - [formatDatetime helper](#formatdatetime-helper)
+      - [datetimeToSnapshot helper](#datetimetosnapshot-helper)
+      - [snapshotToDatetime helper](#snapshottodatetime-helper)
+    - [Numbers & math](#numbers--math)
+      - [humanizeBytes helper](#humanizebytes-helper)
+        - [`mode`](#mode)
+        - [`precision`](#precision)
+        - [`tooltip`](#tooltip)
       - [add](#add)
       - [subtract](#subtract)
-  - [Block Helpers](#block-helpers)
+    - [Strings & regex](#strings--regex)
+      - [stringLength helper](#stringlength-helper)
+      - [Replace helper](#replace-helper)
+      - [ToTitleCase helper](#totitlecase-helper)
+      - [Findfirst helper](#findfirst-helper)
+      - [Findall helper](#findall-helper)
+    - [URL & markdown encoding](#url--markdown-encoding)
+      - [Encode helper](#encode-helper)
+      - [Escape helper](#escape-helper)
+      - [Encodefacet helper](#encodefacet-helper)
+        - [1. Passing the string representation of a facet blob](#1-passing-the-string-representation-of-a-facet-blob)
+        - [2. Passing the JSON object representing a facet](#2-passing-the-json-object-representing-a-facet)
+      - [JsonStringify helper](#jsonstringify-helper)
+    - [Lists, iteration & scope](#lists-iteration--scope)
+      - [pluck](#pluck)
+      - [Each helper](#each-helper)
+      - [With helper](#with-helper)
+        - [Accessing outer context](#accessing-outer-context)
+        - [Accessing current value](#accessing-current-value)
+        - [Define known reference](#define-known-reference)
+        - [Using `else` with `with` block](#using-else-with-with-block)
+      - [Lookup helper](#lookup-helper)
+  - [Boolean Helpers](#boolean-helpers)
     - [If helper](#if-helper)
     - [Unless helper](#unless-helper)
-    - [Each helper](#each-helper)
-    - [With helper](#with-helper)
-      - [Accessing outer context](#accessing-outer-context)
-      - [Accessing current value](#accessing-current-value)
-      - [Define known reference](#define-known-reference)
-      - [Using `else` with `with` block](#using-else-with-with-block)
-    - [Lookup helper](#lookup-helper)
-    - [Encode helper](#encode-helper)
-    - [Escape helper](#escape-helper)
-    - [Encodefacet helper](#encodefacet-helper)
-      - [1. Passing the string representation of a facet blob](#1-passing-the-string-representation-of-a-facet-blob)
-      - [2. Passing the JSON object representing a facet](#2-passing-the-json-object-representing-a-facet)
-    - [JsonStringify helper](#jsonstringify-helper)
-    - [Findfirst helper](#findfirst-helper)
-    - [Findall helper](#findall-helper)
-    - [Replace helper](#replace-helper)
-    - [ToTitleCase helper](#totitlecase-helper)
-  - [Boolean Helpers](#boolean-helpers)
     - [Comparison Helpers](#comparison-helpers)
     - [Regular Expression Match](#regular-expression-match)
+    - [List Membership](#list-membership)
+      - [memberOf](#memberof)
+      - [hasMember](#hasmember)
     - [Access Control (ACL) check](#access-control-acl-check)
     - [Logical Helpers](#logical-helpers)
 
@@ -578,6 +585,8 @@ A Handlebars helper call is a simple identifier, followed by zero or more parame
 {{HELPER_NAME PARAM1 PARAM2 }}
 ```
 
+Helpers below are grouped by what they produce. Most can be used inline (`{{helper arg}}`) or as a subexpression (`{{outer (helper arg)}}`). Some also support block syntax (`{{#helper}}…{{/helper}}`).
+
 ### printf helper
 
 You can use the `printf` helper to format a value. The expected format follows the same syntax as [PreFormat](pre-format.md#syntax).
@@ -596,7 +605,11 @@ Example:
 
 Keep in mind that `printf` doesn't check the validity of the given values. So for example if the value might not be a number, you cannot blindly use the `d` type and should guard against it.
 
-### formatDatetime helper
+### Dates & timestamps
+
+Format and convert between datetime values.
+
+#### formatDatetime helper
 
 > :loudspeaker: This helper used to be called `formatDate` but was changed to the more accurate `formatDatetime` name. While both work, you should stop using `formatDate`.
 
@@ -616,7 +629,7 @@ Example:
 {{formatDatetime '2018-09-25T00:12:34.00-07:00' 'MM/DD/YYYY HH:mm A'}} ==> '09/25/2018 03:12 AM'
 ```
 
-### datetimeToSnapshot helper
+#### datetimeToSnapshot helper
 
 `datetimeToSnapshot` can be used to encode a given `date`, `timstamp`, or `timestamptz` value to a snapshot ID. The snapshot ID could be used for navigating to a specific version of the catalog.
 
@@ -632,7 +645,7 @@ Example:
 {{datetimeToSnapshot '2025-08-02' }} ==> 33P-PF8H-Q800
 ```
 
-### snapshotToDatetime helper
+#### snapshotToDatetime helper
 
 `snapshotToDatetime` can be used to decode a snapshot value to a datetime value. If no format is provided, the output will be in the ISO format.
 
@@ -649,7 +662,11 @@ Example:
 {{snapshotToDatetime '33N-PFKM-4DR0' 'YYYY-MM-DD'}} ==> 2025-07-26
 ```
 
-### humanizeBytes helper
+### Numbers & math
+
+Format numbers and perform basic arithmetic.
+
+#### humanizeBytes helper
 
 You can use `humanizeBytes` helper to convert byte count to human readable format.
 
@@ -677,7 +694,7 @@ Examples:
 
 The arguments are:
 
-#### `mode`
+##### `mode`
 
 This argument will allow you to change the output format. It can either be a string `"si"` or `"binary"`. Any other value will be ignored.
 
@@ -691,7 +708,7 @@ This argument will allow you to change the output format. It can either be a str
 {{humanizeBytes value mode='binary'}}
 ```
 
-#### `precision`
+##### `precision`
 
 An integer specifying the number of digits.
   - If we cannot show all the fractional digits of a number due to the defined precision, we will truncate the number (we will not round up or down). So for example `999999` with precision=3 will result in `999 kB`, and with precision=4 will be `999.9 kB`.
@@ -702,7 +719,7 @@ An integer specifying the number of digits.
 {{humanizeBytes value precision=6}}
 ```
 
-#### `tooltip`
+##### `tooltip`
 
 A boolean value specifying whether you want the output to include a tooltip or not. If this argument is missing, we will not return any tooltips.
 
@@ -710,7 +727,22 @@ A boolean value specifying whether you want the output to include a tooltip or n
 {{humanizeBytes value tooltip=true}}
 ```
 
-### stringLength helper
+#### add
+The `add` helper can be used to add 2 numbers together. It will always add the `value2` to `value1`. If the provided value is a string, we will try to convert it to a number before doing the calculation to avoid string concatenation. Note: This may behave oddly with float values.
+```
+{{add value1 value2}}
+```
+#### subtract
+The `subtract` helper can be used to subtract 2 numbers. It will always subtract `value2` from `value1`. If the provided value is a string, we will try to convert it to a number before doing the calculation to avoid string subtraction. Note: This may behave oddly with float values.
+```
+{{subtract value1 value2}}
+```
+
+### Strings & regex
+
+Operations on strings.
+
+#### stringLength helper
 
 You can use `stringLength` helper to get the length of a given string.
 
@@ -729,76 +761,293 @@ Example:
 [{{{caption}}}](https://example.com){ {{#if (gt (stringLength caption) 100)}}.lengthy-caption{{else}}.short-caption{{/if}} }
 ```
 
+#### Replace helper
 
+The `replace` helper will take the input regular expression (first argument) and replace all matches in the supplied string with the supplied substring (second argument). This helper behaves the same way as the `replace` function for Strings in javascript.
 
-### Math Helpers
+> The regular expression syntax that Javascript supports is a bit different from other languages, please refer to [MDN regular expressions document](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions) for more information.
 
-We have basic math functionality support available in handlebars templating. The following are the currently available math helpers.
+One example would be to replace all underscores with whitespace characters for table name display.
 
-#### add
-The `add` helper can be used to add 2 numbers together. It will always add the `value2` to `value1`. If the provided value is a string, we will try to convert it to a number before doing the calculation to avoid string concatenation. Note: This may behave oddly with float values.
+Template:
 ```
-{{add value1 value2}}
-```
-#### subtract
-The `subtract` helper can be used to subtract 2 numbers. It will always subtract `value2` from `value1`. If the provided value is a string, we will try to convert it to a number before doing the calculation to avoid string subtraction. Note: This may behave oddly with float values.
-```
-{{subtract value1 value2}}
+{{#replace "_" " "}}table_name_with_underscores{{/replace}}
 ```
 
-## Block Helpers
-
-Block helpers make it possible to define custom iterators and other functionality that can invoke the passed block with a new context. These helpers are very similar to functions that we have in Mustache.
-
+Result:
 ```
-{{#HELPER_NAME}}
- CONTENT
-{{/HELPER_NAME}}
+table name with underscores
 ```
 
-### If helper
+You can also use the `flags` named optional argument to pass [regular expression flags](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#advanced_searching_with_flags). By default we're using the `g` flag, that's why the example above is replacing all the matches. Examples of using the `flags` named argument:
 
-You can use the `if` helper to conditionally render a block. If its argument returns `false`, `undefined`, `null`, `""`, `0`, or `[]`, Handlebars will not render the block. You can use this helper with any of the [Boolean Helpers](#boolean-helpers) to do more complicated logical operations.
+- If you only want to replace the first match, you can pass empty string for flags:
+  - Template:
+  ```
+  {{#replace "_" " " flags=""}}table_name_with_underscores{{/replace}}
+  ```
 
+  - Result:
+  ```
+  table name_with_underscores
+  ```
+
+- Use the `i` flag for case-insensitive searching (in this example we're also using `g` flag to make sure we're still replacing all the matches):
+  - Template:
+  ```
+  {{#replace "aco1" "ACO1" flags="ig"}}{{{Gene_Names}}}{{/replace}}
+  ```
+
+  - Result (assuming `Gene_Names` is `"Aco1, ACO1"`):
+  ```
+  ACO1, ACO1
+  ```
+
+#### ToTitleCase helper
+
+The `toTitleCase` helper will change the first character of each word (split by whitespace) in the string to a capital letter. The rest of the case of the string will remain unchanged.
+
+Template:
 ```
-{{#if isVisible}} {{{firstName}}} {{{lastName}}}{{/if}}
-```
-
-> If you're using `if` block only to check for a JSON object and then using it, consider using [`with` helper](#with-helper) which will do the truthy check and changes context at the same time similar to [how Mustache null checking works](#null-checking).
-
-
-When using a block expression, you can specify a template section to run if the expression returns a falsy value. The section, marked by `{{else}}` is called an "else section".
-
-```
-{{#if isVisible}} {{{firstName}}} {{{lastName}}}{{else}}Hidden Author{{/if}}
-```
-
-You can also use `else if`:
-
-```
-{{#if isVisible}} {{firstName}} {{lastName}}{{else if isKnown}} Unknown Author {{/if}}
-
-{{#if isVisible}} {{firstName}} {{lastName}}{{else if isKnown}} Unknown Author {{else}} Hidden and Unknown Author{{/if}}
-```
-
-Plesae refer to [Boolean Helpers](#boolean-helpers) section to learn how you can achieve more complicated comparisons inside the `if` block.
-
-
-### Unless helper
-
-You can use the `unless` helper as the inverse of the `if` helper. Its block will be rendered if the expression returns a falsy value.
-
-```
-{{#unless license}}WARNING: This entry does not have a license!{{/unless}}
+{{#toTitleCase}}this is the title of my page{{/toTitleCase}}
 ```
 
-If looking up `license` under the current context returns a `falsy` value, Handlebars will render the warning. Otherwise, it will render nothing.
+Result:
+```
+This Is The Title Of My Page
+```
 
-**NOTE**: You can use inverted if (`^if`) to get the same effect of `unless`
+#### Findfirst helper
 
-### Each helper
+The `regexFindFirst` helper will take the input regular expression and return the first matching substring from the supplied string. Will return `""` otherwise.
 
-You can iterate over a list using the built-in `each` helper. Inside the block, you can use `this` to reference the element being iterated over.
+> The regular expression syntax that Javascript supports is a bit different from other languages, please refer to [MDN regular expressions document](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions) for more information.
+
+A simple example where we try to match the file extension `jpg` or `png` with testString="jumpng-fox.jpg":
+```
+{{#regexFindFirst testString "jpg|png"}}{{this}}{{/regexFindFirst}}
+```
+
+Result:
+```
+"png"
+```
+
+An example template to extract the filename from a given path with testString = "/var/www/html/index.html":
+```
+{{#regexFindFirst testString "[^\/]+$"}}{{this}}{{/regexFindFirst}}
+```
+
+Result:
+```
+"index.html"
+```
+
+You can also use the `flags` named optional argument to pass [regular expression flags](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#advanced_searching_with_flags). For example you can use the `i` flag for case-insensitive searching:
+```
+{{#regexFindFirst testString "human" flags="i" }}{{this}}{{/regexFindFirst}}
+```
+
+> If `flags` argument is not used, by default we are using the `g` (global search) flag for the regular expression search.
+
+#### Findall helper
+
+The `regexFindAll` helper will take the input regular expression and return all the matching substrings from the supplied string in an array. Will return `[]` otherwise.
+
+> The regular expression syntax that Javascript supports is a bit different from other languages, please refer to [MDN regular expressions document](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions) for more information.
+
+A simple example where we try to match the file extension `jpg` or `png` with testString="jumpng-fox.jpg":
+```
+{{#each (regexFindAll testString "jpg|png")}}{{this}}\n{{/each}}
+```
+
+Result:
+```
+"png\njpg\n"
+```
+
+You can also use the `flags` named optional argument to pass [regular expression flags](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#advanced_searching_with_flags). For example you can use the `i` flag for case-insensitive searching:
+```
+{{#regexFindAll testString "ACO1" flags="i" }}{{this}}{{/regexFindFirst}}
+```
+
+> If `flags` argument is not used, by default we are using the `g` (global search) flag for the regular expression search.
+
+### URL & markdown encoding
+
+Turn values into safely-encoded forms for URLs, markdown, or facet blobs.
+
+#### Encode helper
+
+You can use the `encode` helper to get strings in URL encoded format. It accepts more than one string that needs to be encoded
+```
+age={{#encode ageVar}}{{/encode}}
+```
+for context `ageVar=10` will result in `age%3D10`
+
+In addition, you can provide multiple inputs too which are concatenated and then encoded. For example,
+```
+{{#encode key '=' value}}
+```
+for context `key="name" and value="John"` will result in `name%3DJohn`
+
+#### Escape helper
+
+You can use the `escape` helper to specifically escape values; for example, hyphens "-" etc., you can use the escape block in this way. It accepts more than one string that needs to be escaped
+```
+name={{#escape key}}{{/escape}}
+```
+for context `key="**somevalue ] which is ! special"` will result in `name=\*\*somevalue \] which is \! special`
+
+In addition, you can provide multiple inputs too which are concatenated and then encoded. For example,
+```
+{{#escape key '-' value}}{{/escape}}
+```
+for context `key="**somevalue ] which is ! special" and value="John"` will result in `\*\*somevalue \] which is \! special\-John`
+
+#### Encodefacet helper
+
+You can use the `encodeFacet` helper to compress a JSON object. The compressed string can be used for creating a URL path with facets. This helper can be used for encoding both JSON objects and string representation of a JSON object.
+
+##### 1. Passing the string representation of a facet blob
+
+The string that you are passing as content MUST be JSON parsable. It will be ignored otherwise.
+
+Template (newline and indentation added for readability and should be removed):
+```
+[caption](example.com/chaise/recordset/#1/S:T/*::facets::{{#encodeFacet}}
+{
+  \"and\": [
+    {
+      \"source\": [{\"inbound\": [\"schema\", \"fk_1\"]}]}, \"RID\"],
+      \"choices\": [\"{{{RID}}}\"]
+    }
+  ]
+}
+{{/encodeFacet}})
+```
+Result:
+```
+<a href="example.com/chaise/recordset/#1/S:T/*::facets::<facet-blob-representation>">caption</a>
+```
+
+As you can see in this example we are escaping all the `"`s. This is because you are usually passing this value in a string in a JSON document. So all the `"`s must be escaped.
+
+You can also pass the string representation of the JSON object like the following:
+
+```
+{{encodeFacet json_str}}
+```
+
+or
+```
+{{#encodeFacet json_str}}{{/encodeFacet}}
+```
+
+With the following context:
+
+```json
+{
+  "json_str": "{\"and\": [{\"source\": [{\"inbound\": [\"schema\", \"fk_1\"]}]}, \"RID\"], \"choices\": [\"{{{RID}}}\"]}]}"
+}
+```
+
+##### 2. Passing the JSON object representing a facet
+
+
+For instance, assuming `obj` is the name of the `jsonb` column that stores the facet object:
+```
+[caption](example.com/chaise/recordset/#1/S:T/*::facets::{{encodeFacet obj}})
+```
+
+or
+
+```
+[caption](example.com/chaise/recordset/#1/S:T/*::facets::{{#encodeFacet obj}}{{/encodeFacet}})
+```
+
+Result:
+```
+<a href="example.com/chaise/recordset/#1/S:T/*::facets::<facet-blob-representation>">caption</a>
+```
+
+
+#### JsonStringify helper
+
+The `jsonStringify` helper will convert the supplied JSON object into a string representation of the JSON object. This helper behaves the same way as the `JSON.stringify` function in javascript.
+
+The following are different ways of using this helper (assume `column` stores a JSON object):
+```
+{{#jsonStringify}}{{{column}}}{{/jsonStringify}}
+
+{{#jsonStringify column}}{{/jsonStringify}}
+```
+
+This can be used in conjunction with the `encodeFacet` helper for creating facet URL strings. For example:
+
+```
+[caption](example.com/chaise/recordset/#1/S:T/*::facets::{{encodeFacet (jsonStringify col)}})
+```
+
+Wher `col` is:
+
+```
+{
+  "and": [
+    {
+      "source": [{"inbound": ["schema", "fk_1"]}]}, "RID"],
+      "choices": ["{{{RID}}}"]
+    }
+  ]
+}
+```
+
+This would result in:
+```
+<a href="example.com/chaise/recordset/#1/S:T/*::facets::<facet-blob-representation>">caption</a>
+```
+
+### Lists, iteration & scope
+
+Extract from arrays, iterate, and shift the rendering context.
+
+#### pluck
+
+The `pluck` helper extracts a value at the given path from each item of an array, producing a new array of the same length and order. Missing paths and `null` intermediates resolve to `undefined`.
+
+Syntax:
+```
+{{pluck array "path"}}
+```
+
+`pluck` is most useful as a subexpression. So you can pipe its output into `each`, [`memberOf`](#memberof), or [`hasMember`](#hasmember).
+
+Example, given `$self`:
+```json
+{
+  "$self": [
+    { "values": { "type": "non-polymer" } },
+    { "values": { "type": "polymer" } }
+  ]
+}
+```
+
+```
+{{#each (pluck $self "values.type")}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}
+{{#if (hasMember (pluck $self 'values.type') 'non-polymer')}}true{{/if}}
+```
+
+Returns:
+```
+non-polymer, polymer
+true
+```
+
+If the given value is not actually an array, or if path is empty, `pluck` returns `[]`.
+
+#### Each helper
+
+You can iterate over a list using the `each` helper. Inside the block, you can use `this` to reference the element being iterated over.
 
 ```
 {{#each people}}{{this}}{{/each}}
@@ -872,7 +1121,7 @@ The `each` helper also supports block parameters, allowing for named references 
 
 Will create a `key` and `value` variable that children may access without the need for depthed variable references. In the example above, `{{key}}` is identical to `{{@../key}}` but in many cases is more readable.
 
-### With helper
+#### With helper
 
 `With` helper can be used to shift the context. For example with the following context:
 
@@ -899,7 +1148,7 @@ Which results in
 My first post! By Charles Jolley
 ```
 
-#### Accessing outer context
+##### Accessing outer context
 
 If inside the `with` block you want to access the outer context, you need to prepend the column names with `../`. For example:
 
@@ -909,11 +1158,11 @@ If inside the `with` block you want to access the outer context, you need to pre
 {{/with}}
 ```
 
-#### Accessing current value
+##### Accessing current value
 
 As we described in [here](#null-checking), `with` can also be used for doing a "truthy" check. You can use `.` to access
 the value of the `with` block. For example:
-
+`
 ```
 {{#with column}}{{{.}}}{{{/with}}}
 ```
@@ -924,7 +1173,7 @@ the value of the `with` block. For example:
 
 You can also use `else` as we decribed [here](#using-else-with-with-block). That being said, we recommend using [`if` helper](#if-helper) instead of `with` for boolean operations as its more flexible and doesn't change the context.
 
-#### Define known reference
+##### Define known reference
 
 `with` can also be used with block parameters to define known references in the current block. The example above can be converted to
 
@@ -935,7 +1184,7 @@ You can also use `else` as we decribed [here](#using-else-with-with-block). That
 ```
 This allows for complex templates to potentially provide clearer code than `../` depthed references allow for.
 
-#### Using `else` with `with` block
+##### Using `else` with `with` block
 
 You can optionally provide an `{{else}}` section which will display only when the passed value is empty.
 
@@ -947,7 +1196,7 @@ You can optionally provide an `{{else}}` section which will display only when th
 {{/with}}
 ```
 
-### Lookup helper
+#### Lookup helper
 
 You can use the `lookup` helper to do dynamic parameter resolution with Handlebars variables.
 
@@ -965,252 +1214,50 @@ The example that will be used in CFDE uses a map attached to the `$session` temp
 
 NOTE: When looking up a key to get its value, `null` (if value is `null`) or `undefined` (if key is not present) will be returned so make sure to guard against those negative cases in templating.
 
-### Encode helper
-
-You can use the `encode` helper to get strings in URL encoded format. It accepts more than one string that needs to be encoded
-```
-age={{#encode ageVar}}{{/encode}}
-```
-for context `ageVar=10` will result in `age%3D10`
-
-In addition, you can provide multiple inputs too which are concatenated and then encoded. For example,
-```
-{{#encode key '=' value}}
-```
-for context `key="name" and value="John"` will result in `name%3DJohn`
-
-### Escape helper
-
-You can use the `escape` helper to specifically escape values; for example, hyphens "-" etc., you can use the escape block in this way. It accepts more than one string that needs to be escaped
-```
-name={{#escape key}}{{/escape}}
-```
-for context `key="**somevalue ] which is ! special"` will result in `name=\*\*somevalue \] which is \! special`
-
-In addition, you can provide multiple inputs too which are concatenated and then encoded. For example,
-```
-{{#escape key '-' value}}{{/escape}}
-```
-for context `key="**somevalue ] which is ! special" and value="John"` will result in `\*\*somevalue \] which is \! special\-John`
-
-### Encodefacet helper
-
-You can use the `encodeFacet` helper to compress a JSON object. The compressed string can be used for creating a URL path with facets. This helper can be used for encoding both JSON objects and string representation of a JSON object.
-
-#### 1. Passing the string representation of a facet blob
-
-The string that you are passing as content MUST be JSON parsable. It will be ignored otherwise.
-
-Template (newline and indentation added for readability and should be removed):
-```
-[caption](example.com/chaise/recordset/#1/S:T/*::facets::{{#encodeFacet}}
-{
-  \"and\": [
-    {
-      \"source\": [{\"inbound\": [\"schema\", \"fk_1\"]}]}, \"RID\"],
-      \"choices\": [\"{{{RID}}}\"]
-    }
-  ]
-}
-{{/encodeFacet}})
-```
-Result:
-```
-<a href="example.com/chaise/recordset/#1/S:T/*::facets::<facet-blob-representation>">caption</a>
-```
-
-As you can see in this example we are escaping all the `"`s. This is because you are usually passing this value in a string in a JSON document. So all the `"`s must be escaped.
-
-You can also pass the string representation of the JSON object like the following:
-
-```
-{{encodeFacet json_str}}
-```
-
-or
-```
-{{#encodeFacet json_str}}{{/encodeFacet}}
-```
-
-With the following context:
-
-```json
-{
-  "json_str": "{\"and\": [{\"source\": [{\"inbound\": [\"schema\", \"fk_1\"]}]}, \"RID\"], \"choices\": [\"{{{RID}}}\"]}]}"
-}
-```
-
-#### 2. Passing the JSON object representing a facet
-
-
-For instance, assuming `obj` is the name of the `jsonb` column that stores the facet object:
-```
-[caption](example.com/chaise/recordset/#1/S:T/*::facets::{{encodeFacet obj}})
-```
-
-or
-
-```
-[caption](example.com/chaise/recordset/#1/S:T/*::facets::{{#encodeFacet obj}}{{/encodeFacet}})
-```
-
-Result:
-```
-<a href="example.com/chaise/recordset/#1/S:T/*::facets::<facet-blob-representation>">caption</a>
-```
-
-
-### JsonStringify helper
-
-The `jsonStringify` helper will convert the supplied JSON object into a string representation of the JSON object. This helper behaves the same way as the `JSON.stringify` function in javascript.
-
-The following are different ways of using this helper (assume `column` stores a JSON object):
-```
-{{#jsonStringify}}{{{column}}}{{/jsonStringify}}
-
-{{#jsonStringify column}}{{/jsonStringify}}
-```
-
-This can be used in conjunction with the `encodeFacet` helper for creating facet URL strings. For example:
-
-```
-[caption](example.com/chaise/recordset/#1/S:T/*::facets::{{encodeFacet (jsonStringify col)}})
-```
-
-Wher `col` is:
-
-```
-{
-  "and": [
-    {
-      "source": [{"inbound": ["schema", "fk_1"]}]}, "RID"],
-      "choices": ["{{{RID}}}"]
-    }
-  ]
-}
-```
-
-This would result in:
-```
-<a href="example.com/chaise/recordset/#1/S:T/*::facets::<facet-blob-representation>">caption</a>
-```
-
-### Findfirst helper
-
-The `regexFindFirst` helper will take the input regular expression and return the first matching substring from the supplied string. Will return `""` otherwise.
-
-> The regular expression syntax that Javascript supports is a bit different from other languages, please refer to [MDN regular expressions document](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions) for more information.
-
-A simple example where we try to match the file extension `jpg` or `png` with testString="jumpng-fox.jpg":
-```
-{{#regexFindFirst testString "jpg|png"}}{{this}}{{/regexFindFirst}}
-```
-
-Result:
-```
-"png"
-```
-
-An example template to extract the filename from a given path with testString = "/var/www/html/index.html":
-```
-{{#regexFindFirst testString "[^\/]+$"}}{{this}}{{/regexFindFirst}}
-```
-
-Result:
-```
-"index.html"
-```
-
-You can also use the `flags` named optional argument to pass [regular expression flags](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#advanced_searching_with_flags). For example you can use the `i` flag for case-insensitive searching:
-```
-{{#regexFindFirst testString "human" flags="i" }}{{this}}{{/regexFindFirst}}
-```
-
-> If `flags` argument is not used, by default we are using the `g` (global search) flag for the regular expression search.
-
-### Findall helper
-
-The `regexFindAll` helper will take the input regular expression and return all the matching substrings from the supplied string in an array. Will return `[]` otherwise.
-
-> The regular expression syntax that Javascript supports is a bit different from other languages, please refer to [MDN regular expressions document](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions) for more information.
-
-A simple example where we try to match the file extension `jpg` or `png` with testString="jumpng-fox.jpg":
-```
-{{#each (regexFindAll testString "jpg|png")}}{{this}}\n{{/each}}
-```
-
-Result:
-```
-"png\njpg\n"
-```
-
-You can also use the `flags` named optional argument to pass [regular expression flags](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#advanced_searching_with_flags). For example you can use the `i` flag for case-insensitive searching:
-```
-{{#regexFindAll testString "ACO1" flags="i" }}{{this}}{{/regexFindFirst}}
-```
-
-> If `flags` argument is not used, by default we are using the `g` (global search) flag for the regular expression search.
-
-### Replace helper
-
-The `replace` helper will take the input regular expression (first argument) and replace all matches in the supplied string with the supplied substring (second argument). This helper behaves the same way as the `replace` function for Strings in javascript.
-
-> The regular expression syntax that Javascript supports is a bit different from other languages, please refer to [MDN regular expressions document](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions) for more information.
-
-One example would be to replace all underscores with whitespace characters for table name display.
-
-Template:
-```
-{{#replace "_" " "}}table_name_with_underscores{{/replace}}
-```
-
-Result:
-```
-table name with underscores
-```
-
-You can also use the `flags` named optional argument to pass [regular expression flags](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#advanced_searching_with_flags). By default we're using the `g` flag, that's why the example above is replacing all the matches. Examples of using the `flags` named argument:
-
-- If you only want to replace the first match, you can pass empty string for flags:
-  - Template:
-  ```
-  {{#replace "_" " " flags=""}}table_name_with_underscores{{/replace}}
-  ```
-
-  - Result:
-  ```
-  table name_with_underscores
-  ```
-
-- Use the `i` flag for case-insensitive searching (in this example we're also using `g` flag to make sure we're still replacing all the matches):
-  - Template:
-  ```
-  {{#replace "aco1" "ACO1" flags="ig"}}{{{Gene_Names}}}{{/replace}}
-  ```
-
-  - Result (assuming `Gene_Names` is `"Aco1, ACO1"`):
-  ```
-  ACO1, ACO1
-  ```
-
-### ToTitleCase helper
-
-The `toTitleCase` helper will change the first character of each word (split by whitespace) in the string to a capital letter. The rest of the case of the string will remain unchanged.
-
-Template:
-```
-{{#toTitleCase}}this is the title of my page{{/toTitleCase}}
-```
-
-Result:
-```
-This Is The Title Of My Page
-```
-
 
 ## Boolean Helpers
 
-In this section we go over the helpers that can be used to do boolean operations. These helpers are commonly used with `if` or `unless`.
+This section covers two related groups: helpers that produce booleans (comparison, regex match, list membership, ACL, logical), and the `if` / `unless` blocks that consume them. Most boolean helpers are designed to be wrapped in an `#if` block, often as subexpressions.
+
+### If helper
+
+You can use the `if` helper to conditionally render a block. If its argument returns `false`, `undefined`, `null`, `""`, `0`, or `[]`, Handlebars will not render the block. You can use this helper with any of the [Boolean Helpers](#boolean-helpers) to do more complicated logical operations.
+
+```
+{{#if isVisible}} {{{firstName}}} {{{lastName}}}{{/if}}
+```
+
+> If you're using `if` block only to check for a JSON object and then using it, consider using [`with` helper](#with-helper) which will do the truthy check and changes context at the same time similar to [how Mustache null checking works](#null-checking).
+
+
+When using a block expression, you can specify a template section to run if the expression returns a falsy value. The section, marked by `{{else}}` is called an "else section".
+
+```
+{{#if isVisible}} {{{firstName}}} {{{lastName}}}{{else}}Hidden Author{{/if}}
+```
+
+You can also use `else if`:
+
+```
+{{#if isVisible}} {{firstName}} {{lastName}}{{else if isKnown}} Unknown Author {{/if}}
+
+{{#if isVisible}} {{firstName}} {{lastName}}{{else if isKnown}} Unknown Author {{else}} Hidden and Unknown Author{{/if}}
+```
+
+Plesae refer to [Boolean Helpers](#boolean-helpers) section to learn how you can achieve more complicated comparisons inside the `if` block.
+
+
+### Unless helper
+
+You can use the `unless` helper as the inverse of the `if` helper. Its block will be rendered if the expression returns a falsy value.
+
+```
+{{#unless license}}WARNING: This entry does not have a license!{{/unless}}
+```
+
+If looking up `license` under the current context returns a `falsy` value, Handlebars will render the warning. Otherwise, it will render nothing.
+
+**NOTE**: You can use inverted if (`^if`) to get the same effect of `unless`
 
 ### Comparison Helpers
 
@@ -1281,6 +1328,36 @@ You can also use the `flags` named optional argument to pass [regular expression
 
 > If `flags` argument is not used, by default we are using the `g` (global search) flag for the regular expression search.
 
+### List Membership
+
+Membership test helpers.
+
+
+#### memberOf
+
+
+`memberOf` checks whether a scalar value appears in a list of candidates. `memberOf` is variadic. Pass the value to test, then any number of candidate args. Array arguments are flattened one level, so the same helper covers a fixed list, a column whose value is an array, or the result of [`pluck`](#pluck).
+
+```
+{{#if (memberOf type "non-polymer" "polymer")}}...{{/if}}
+
+{{#if (memberOf type allowedArray)}}...{{/if}}
+
+{{#if (memberOf type allowedArray "extra")}}...{{/if}}
+
+{{#if (memberOf "non-polymer" (pluck $self "values.type"))}}...{{/if}}
+```
+
+#### hasMember
+
+`hasMember` returns `true` if the given array contains the given value. If the first argument is not an array (missing column, scalar value, etc.), it returns `false`.
+
+```
+{{#if (hasMember tags "active")}}
+  ...
+{{/if}}
+```
+
 ### Access Control (ACL) check
 
 Using the `isUserInAcl` function you can check whether the current user is in a given ACL group or not. You may pass one or multiple groups, or a variable that represents an array. As long as the user is in one of the group ACL groups, this function will return true.
@@ -1302,7 +1379,6 @@ Using the `isUserInAcl` function you can check whether the current user is in a 
   has access
 {{/if}}
 ```
-
 
 ### Logical Helpers
 
