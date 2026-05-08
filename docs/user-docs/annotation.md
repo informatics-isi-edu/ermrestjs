@@ -755,7 +755,7 @@ Supported display _displayoption_ JSON payload patterns:
     - Your desired preview type (`"text"`, `"json"`, `"markdown"`, `"image"`, `"csv"`, `"tsv"`).
     - `"use_ext_mapping"` to let filename extension mapping find the type.
     - `false` to disable the preview for that given content-type.
-    
+
     For instance:
     ```json
     {
@@ -766,7 +766,7 @@ Supported display _displayoption_ JSON payload patterns:
       }
     }
     ```
-  - `{` ... `"filename_ext_mapping": ` _fileextmapping_ ... `}`: Map other filename extensions to the supported preview types. _fileextmapping_ must be an object with the file extension as key and the desired preview type (`"text"`, `"json"`, `"markdown"`, `"image"`, `"csv"`, `"tsv"`) or `false` as its value. By using `false`, file preview will not be presented for that partictular file. 
+  - `{` ... `"filename_ext_mapping": ` _fileextmapping_ ... `}`: Map other filename extensions to the supported preview types. _fileextmapping_ must be an object with the file extension as key and the desired preview type (`"text"`, `"json"`, `"markdown"`, `"image"`, `"csv"`, `"tsv"`) or `false` as its value. By using `false`, file preview will not be presented for that partictular file.
     ```json
     {
       "filename_ext_mapping": {
@@ -783,7 +783,7 @@ Supported display _displayoption_ JSON payload patterns:
     - `"image"`: The size that should be used for image preview.
     - `"csv"`: The size that should be used for CSV preview.
     - `"tsv"`: The size that should be used for CSV preview.
-  - `{` ... `"prefetch_bytes": ` _prefetchbytes_ ... `}`: how many bytes we should fetch for servers that support range requests. _prefetchbytes_ follows the same syntax as _prefetchmaxsize_. By default 524288 or 512 KB will be used. 
+  - `{` ... `"prefetch_bytes": ` _prefetchbytes_ ... `}`: how many bytes we should fetch for servers that support range requests. _prefetchbytes_ follows the same syntax as _prefetchmaxsize_. By default 524288 or 512 KB will be used.
 
 Default heuristics:
 - The `2017 Asset` annotation explicitly indicates that the associated column is the asset location.
@@ -930,6 +930,15 @@ Example:
             ]
         }
     },
+    "conditions": {
+        "has_related_data": {
+            "sourcekey": "source-1"
+        },
+        "custom_check": {
+            "source": [{"inbound": ["schema", "fk3"]}, "RID"],
+            "condition_pattern": "{{#each $self}}{{#with this.values}}{{#if (eq _name 'some-value')}}true{{/if}}{{/with}}{{/each}}"
+        }
+    },
     "search-box": {
         "or": [
             {"source": "column1", "markdown_name": "another name"},
@@ -945,10 +954,15 @@ Example:
 Supported JSON payload patterns:
 
 - `{` ... `"sources":` _sourcedefinitions_ `,` ... `}`: the source definitions that will allow you to refer to them by just using the defined _sourcekey_.
+- `{` ... `"conditions":` _conditiondefinitions_ `,` ... `}`: reusable condition definitions that can be referenced by column directives via `condition_key`. See [condition and condition_key](column-directive.md#condition) for more information.
 - `{` ... `"search-box": { "or": [` _searchcolumn_ `,` ... `]} }`: Configure list of search columns.
 - `{` ... `"fkeys":` _fkeylist_  `,` ... `}`: Array of foreign key constraints that will be mapped into `$fkey_schema_contraint` key in templating environments.
 - `{` ... `"columns":` _columns_  `,` ... `}`: Array of column names that their data will be available in templating environments.
 
+
+Supported _conditiondefinitions_ patterns:
+
+- `{` ... `"` _conditionkey_ `":` _conditionobject_ ... `}`: where _conditionkey_ is a name that will be used to refer to the defined condition. Each _conditionobject_ must have either `source` or `sourcekey` to identify the data that will be used for evaluating the condition. See the [condition documentation](column-directive.md#condition) for the full list of properties.
 
 Supported _sourcedefinitions_ patterns:
 
@@ -1218,7 +1232,7 @@ Notes:
   4. We continue by looking at the matching `by_name` property of catalog, schema, and table in order. Just like in the previous steps, if the same annotation property is already defined in the created object, it will be overwritten by the new step.
   5. If the column is an asset or is used in another asset column, the annotations under the appropriate `asset` of catalog, schema, and table will be used. Same as above, if the same annotation property is already defined in the created object, it will be overwritten by the new step.
   6. Any annotation defined directly on the column will override the annotations of the previous steps.
-  
+
   For instance, if you have the following column-defaults on the schema
   ```json
   {
@@ -1468,3 +1482,5 @@ The following attributes can be used to manipulate the presentation settings of 
     - `order`: An alternative sort method to apply when a client wants to semantically sort by key values. It follows the same syntax as `column_order`. In scalar array aggregate, you cannot sort based on other columns values, you can only sort based on the scalar value of the column.
     - `max_length`: `<number>` A number that defines the maximum number of elements that should be displayed.
 - `input_iframe`: Applicaple only to entry contexts. A JSON object that describes the settings for showing "input iframe" in entry apps. Please refer to the [input iframe document](input-iframe.md) for more information about this property.
+- `condition`: Applicable only to `detailed` context. A JSON object that defines a condition controlling whether this column or related entity is displayed. The condition references a data source whose result determines visibility. Please refer to the [condition documentation](column-directive.md#condition) for more information.
+- `condition_key`: Applicable only to `detailed` context. A string that references a reusable condition defined in the [`conditions`](#tag-2019-source-definitions) section of the `source-definitions` annotation. If both `condition` and `condition_key` are defined, `condition_key` takes precedence.

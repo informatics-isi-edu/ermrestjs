@@ -942,5 +942,173 @@ exports.execute = function (options) {
         });
       });
     });
+
+    describe('conditions, ', function () {
+      it('when annotation is missing should return undefined for any key.', function () {
+        expect(tableMainNoAnnot.sourceDefinitions.getCondition('cond_local_col')).toBeUndefined();
+      });
+
+      describe('when annotation is defined, ', function () {
+        var sds;
+        beforeAll(function () {
+          sds = tableMain.sourceDefinitions;
+        });
+
+        describe('valid conditions across source shapes, ', function () {
+          // Each test verifies the condition is parsed (preserved as-is) AND that the
+          // sourcekey resolves to a parsed source — confirming the linkage that the
+          // parser enforces in core.js:1750-1753.
+          var assertSourcekeyCondition = function (key, expectedSourcekey) {
+            var c = sds.getCondition(key);
+            expect(c).toBeDefined('condition `' + key + '` not parsed');
+            expect(c.sourcekey).toBe(expectedSourcekey, 'sourcekey mismatch for `' + key + '`');
+            expect(sds.getSource(expectedSourcekey)).toBeDefined('sourcekey `' + expectedSourcekey + '` does not resolve');
+          };
+
+          it('should accept sourcekey to a local column source.', function () {
+            assertSourcekeyCondition('cond_local_col', 'new_col');
+          });
+
+          it('should accept sourcekey to an outbound entity source.', function () {
+            assertSourcekeyCondition('cond_outbound_entity', 'fk1_col_entity');
+          });
+
+          it('should accept sourcekey to an outbound scalar source.', function () {
+            assertSourcekeyCondition('cond_outbound_scalar', 'fk1_col_scalar');
+          });
+
+          it('should accept sourcekey to a multi-step all-outbound source.', function () {
+            assertSourcekeyCondition('cond_all_outbound', 'all_outbound_col');
+          });
+
+          it('should accept sourcekey to an inbound entityset source.', function () {
+            assertSourcekeyCondition('cond_inbound_entity', 'inbound1_col');
+          });
+
+          it('should accept sourcekey to inbound aggregate sources.', function () {
+            // exercises every aggregate flavor in one test
+            [
+              ['cond_agg_cnt', 'agg1_cnt'],
+              ['cond_agg_cnt_d', 'agg1_cnt_d'],
+              ['cond_agg_min', 'agg1_min'],
+              ['cond_agg_max', 'agg1_max'],
+              ['cond_agg_array', 'agg1_array'],
+              ['cond_agg_array_d', 'agg1_array_d'],
+            ].forEach(function (pair) {
+              assertSourcekeyCondition(pair[0], pair[1]);
+            });
+          });
+
+          it('should accept sourcekey to a path-with-prefix source.', function () {
+            assertSourcekeyCondition('cond_path_w_prefix', 'path_to_outbound2_outbound1_inbound1_w_prefix');
+          });
+        });
+
+        describe('inline source (no sourcekey), ', function () {
+          it('should accept inline source as a bare column name.', function () {
+            var c = sds.getCondition('cond_inline_col');
+            expect(c).toBeDefined();
+            expect(c.source).toBe('col');
+            expect(c.sourcekey).toBeUndefined('inline condition should not have sourcekey');
+          });
+
+          it('should accept inline source as a path array (entity mode).', function () {
+            var c = sds.getCondition('cond_inline_path');
+            expect(c).toBeDefined();
+            expect(Array.isArray(c.source)).toBe(true);
+            expect(c.source.length).toBe(2);
+            expect(c.entity).toBe(true);
+          });
+
+          it('should accept inline source with aggregate.', function () {
+            var c = sds.getCondition('cond_inline_aggregate');
+            expect(c).toBeDefined();
+            expect(Array.isArray(c.source)).toBe(true);
+            expect(c.aggregate).toBe('cnt');
+            expect(c.entity).toBe(true);
+          });
+        });
+
+        describe('on_empty handling, ', function () {
+          it('should preserve on_empty when explicitly "hide".', function () {
+            expect(sds.getCondition('cond_on_empty_hide').on_empty).toBe('hide');
+          });
+
+          it('should preserve on_empty when explicitly "show".', function () {
+            expect(sds.getCondition('cond_on_empty_show').on_empty).toBe('show');
+          });
+
+          it('should leave on_empty undefined when omitted (callers default to "hide").', function () {
+            expect(sds.getCondition('cond_default_on_empty').on_empty).toBeUndefined();
+          });
+        });
+
+        describe('condition_pattern, ', function () {
+          it('should preserve condition_pattern as a string.', function () {
+            var c = sds.getCondition('cond_pattern_default');
+            expect(c.condition_pattern).toBe('{{#if $self}}show{{/if}}');
+            expect(c.template_engine).toBeUndefined('template_engine should default to undefined');
+          });
+
+          it('should preserve template_engine when specified.', function () {
+            var c = sds.getCondition('cond_pattern_handlebars');
+            expect(c.condition_pattern).toBe('{{#if $self}}show{{/if}}');
+            expect(c.template_engine).toBe('handlebars');
+          });
+        });
+
+        describe('wait_for, ', function () {
+          it('should preserve an empty wait_for array.', function () {
+            var c = sds.getCondition('cond_wait_for_empty');
+            expect(Array.isArray(c.wait_for)).toBe(true);
+            expect(c.wait_for.length).toBe(0);
+          });
+
+          it('should preserve wait_for with a single entry.', function () {
+            var c = sds.getCondition('cond_wait_for_single');
+            expect(c.wait_for).toEqual(['agg1_cnt_d']);
+          });
+
+          it('should preserve wait_for with multiple entries.', function () {
+            var c = sds.getCondition('cond_wait_for_multiple');
+            expect(c.wait_for).toEqual(['agg1_cnt_d', 'agg1_min']);
+          });
+        });
+
+        describe('mixed source and sourcekey, ', function () {
+          it('should accept a definition with both source and sourcekey set.', function () {
+            // parser keeps both keys; runtime resolves via sourcekey (ActiveListCondition
+            // checks sourcekey first in active-list-condition.ts:57)
+            var c = sds.getCondition('cond_both_source_and_sourcekey');
+            expect(c).toBeDefined();
+            expect(c.sourcekey).toBe('agg1_cnt');
+            expect(c.source).toBe('col');
+          });
+        });
+
+        describe('invalid conditions, ', function () {
+          // each rejection branch in core.js:1735-1758 gets a dedicated case
+          it('should reject when both source and sourcekey are missing.', function () {
+            expect(sds.getCondition('cond_invalid_neither')).toBeUndefined();
+          });
+
+          it('should reject when sourcekey points to a non-existent source.', function () {
+            expect(sds.getCondition('cond_invalid_dangling_key')).toBeUndefined();
+          });
+
+          it('should reject when sourcekey is an empty string.', function () {
+            expect(sds.getCondition('cond_invalid_empty_sourcekey')).toBeUndefined();
+          });
+
+          it('should reject when the condition value is null.', function () {
+            expect(sds.getCondition('cond_invalid_null')).toBeUndefined();
+          });
+
+          it('should return undefined for non-existent condition keys.', function () {
+            expect(sds.getCondition('does_not_exist_at_all')).toBeUndefined();
+          });
+        });
+      });
+    });
   });
 };

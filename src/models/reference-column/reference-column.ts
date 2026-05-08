@@ -5,13 +5,17 @@ import { CommentType } from '@isrd-isi-edu/ermrestjs/src/models/comment';
 import { DisplayName } from '@isrd-isi-edu/ermrestjs/src/models/display-name';
 import { ColumnAggregateFn, ColumnGroupAggregateFn } from '@isrd-isi-edu/ermrestjs/src/models/reference-column';
 import { Tuple, Reference } from '@isrd-isi-edu/ermrestjs/src/models/reference';
+import type { ConditionDefinition } from '@isrd-isi-edu/ermrestjs/src/models/table-source-definitions';
 
 // services
+import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
 
 // utils
 import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils';
 import { isObjectAndKeyExists, isObjectAndNotNull, isStringAndNotEmpty } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
 import { _annotations, _contexts } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
+import { buildSelfTemplateVariables } from '@isrd-isi-edu/ermrestjs/src/utils/template-utils';
+import ActiveListCondition from '@isrd-isi-edu/ermrestjs/src/models/active-list-condition';
 
 // legacy
 import { Column, Table, Type } from '@isrd-isi-edu/ermrestjs/js/core';
@@ -122,6 +126,8 @@ export class ReferenceColumn {
   protected _hasWaitFor?: boolean;
   protected _hasWaitForAggregate?: boolean;
   protected _waitFor?: ReferenceColumn[];
+  protected _hasCondition?: boolean;
+  protected _resolvedCondition?: ActiveListCondition | null;
   /**
    * the reference that this column is defined on
    */
@@ -442,6 +448,69 @@ export class ReferenceColumn {
   }
 
   /**
+   * Whether the column has an async condition that requires a secondary request.
+   * Only true in detailed context for conditions whose source has an inbound path or aggregate.
+   */
+  get hasCondition(): boolean {
+    if (this._hasCondition === undefined) {
+      // triggers resolution
+      void this.resolvedCondition;
+    }
+    return this._hasCondition!;
+  }
+
+  /**
+   * The resolved condition for this column, or null if no condition or not applicable.
+   */
+  get resolvedCondition(): ActiveListCondition | null {
+    if (this._resolvedCondition === undefined) {
+      this._resolvedCondition = this._resolveCondition();
+      this._hasCondition = this._resolvedCondition?.isAsync ?? false;
+    }
+    return this._resolvedCondition;
+  }
+
+  /**
+   * Resolve the condition definition and source for this column.
+   */
+  protected _resolveCondition(): ActiveListCondition | null {
+    // only applicable in detailed context
+    if (this._context !== _contexts.DETAILED) {
+      return null;
+    }
+
+    if (!this.sourceObjectWrapper) {
+      return null;
+    }
+
+    // get condition def: inline condition or condition_key
+    let condDef: ConditionDefinition | undefined, condKey: string | undefined;
+    const sourceObject = this.sourceObjectWrapper.sourceObject;
+    if (isStringAndNotEmpty(sourceObject.condition_key)) {
+      condKey = sourceObject.condition_key as string;
+      condDef = this._currentTable.sourceDefinitions.getCondition(condKey);
+      if (!condDef) {
+        $log.info('condition_key `' + condKey + '` not found in source-definitions conditions.');
+        return null;
+      }
+    } else if (isObjectAndNotNull(sourceObject.condition)) {
+      condDef = sourceObject.condition as Record<string, unknown>;
+    } else if (!condDef) {
+      return null;
+    }
+
+    let condition: ActiveListCondition;
+    try {
+      condition = new ActiveListCondition(condDef, this._baseReference, this._mainTuple, condKey);
+    } catch (e: unknown) {
+      $log.warn(e instanceof Error ? e.message : String(e));
+      return null;
+    }
+
+    return condition;
+  }
+
+  /**
    * Formats a value corresponding to this reference-column definition.
    */
   formatvalue(data: any, context?: string, options?: any): string | string[] {
@@ -465,7 +534,13 @@ export class ReferenceColumn {
       context = this._context;
     }
 
-    // if there's wait_for, this should return null.
+    // wait_for placeholder: the column depends on data that isn't ready, so
+    // return a null placeholder. Note: hasCondition is intentionally NOT in
+    // this check — the column's value is independent of the condition; the
+    // condition only controls *visibility* (chaise's `conditionHide` flag).
+    // Returning null here for an async-conditioned local column would
+    // permanently blank it, since there's no secondary fetch to flip the
+    // value back in chaise.
     if (this.hasWaitFor && !options.skipWaitFor) {
       return {
         isHTML: false,
@@ -608,17 +683,13 @@ export class ReferenceColumn {
   }
 
   sourceFormatPresentation(templateVariables: any, columnValue: any, mainTuple: Tuple): any {
-    const baseCol = this.baseColumns[0];
     const context = this._context;
 
     if (this.display.sourceMarkdownPattern) {
       let selfTemplateVariables = {};
-      // children pseudo-column have already set the $self and $_self
-      if (!this.isPseudo && baseCol) {
-        selfTemplateVariables = {
-          $self: baseCol.formatvalue(mainTuple.data[baseCol.name], context),
-          $_self: mainTuple.data[baseCol.name],
-        };
+      // children pseudo-columns build $self in their own override via buildSelfTemplateVariables
+      if (!this.isPseudo) {
+        selfTemplateVariables = buildSelfTemplateVariables(this, mainTuple, columnValue);
       }
 
       const keyValues = {};

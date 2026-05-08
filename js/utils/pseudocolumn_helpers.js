@@ -691,9 +691,9 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
      * - will ignore normal columns.
      * will return an object with the following attributes:
      * - waitForList: an array of pseudo-columns
-     * - hasWaitFor: whether any of the waitFor columns is seconadry
+     * - hasWaitFor: whether any of the waitFor columns is secondary
      * - hasWaitForAggregate: whether any of the waitfor columns are aggregate
-     * @param {Array|String} waitFor - the waitfor definition
+     * @param {unknown} waitFor - the waitfor definition
      * @param {Reference} baseReference - the reference that this waitfor is based on
      * @param {Table} currentTable - the current table.
      * @param {ReferenceColumn=} currentColumn - if this is defined on a column.

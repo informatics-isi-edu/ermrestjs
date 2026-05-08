@@ -103,6 +103,9 @@ exports.execute = function (options) {
         "entity_set_i7": "VEu1Crxy0bkExWQzrm6vvA",
         "all_outbound_entity_o1_o1_o1": "nTVhVgmnwDAdAScCUP5qwA",
         "path_to_outbound1_inbound1_array_d": "foYSV-qV86Kqb62X9sZlbQ",
+        "min_i3": "cVT7HCiuMShqBDIm54k-JA",
+        "max_i3": "8JxsvVi1yPJXQHDsoyPrHw",
+        "min_i4": "JXPgemxZLAlobnG6xDvLHQ",
     };
     var reverseColumnMapping = Object.keys(columnMapping).reduce(function (ret, key) {
         ret[columnMapping[key]] = key;
@@ -157,7 +160,7 @@ exports.execute = function (options) {
 
             // TODO add a test case for this too
             it ("should return the proper wait_fors (entry).", function () {
-                const expectedCreateColumns = Array.from({length: 9}, (_, i) => {
+                const expectedCreateColumns = Array.from({length: 10}, (_, i) => {
                     let waitFor = [];
 
                     if (i === 7) { // asset_col_1
@@ -202,11 +205,90 @@ exports.execute = function (options) {
             // more in depth test can be found in citation spec and chaise
         });
 
+        describe("Table.sourceDefinitions.conditions, ", function () {
+            var sds;
+            beforeAll(function () {
+                sds = mainRef.table.sourceDefinitions;
+            });
+
+            it ("should parse valid conditions from the annotation.", function () {
+                var cond = sds.getCondition("cond_has_inbound1");
+                expect(cond).toBeDefined("cond_has_inbound1 not found");
+                expect(cond.sourcekey).toBe("cnt_i1", "sourcekey missmatch");
+                expect(cond.on_empty).toBe("hide", "on_empty missmatch");
+                expect(cond.condition_pattern).toBeUndefined("condition_pattern should be undefined");
+            });
+
+            it ("should parse on_empty='show' correctly.", function () {
+                var cond = sds.getCondition("cond_has_inbound1_show");
+                expect(cond).toBeDefined("cond_has_inbound1_show not found");
+                expect(cond.sourcekey).toBe("cnt_i1", "sourcekey missmatch");
+                expect(cond.on_empty).toBe("show", "on_empty missmatch");
+            });
+
+            it ("should parse condition_pattern correctly.", function () {
+                var cond = sds.getCondition("cond_with_pattern");
+                expect(cond).toBeDefined("cond_with_pattern not found");
+                expect(cond.condition_pattern).toBe("{{#if $self}}show{{/if}}", "condition_pattern missmatch");
+            });
+
+            it ("should not parse invalid conditions (missing source/sourcekey).", function () {
+                var cond = sds.getCondition("cond_invalid_no_source");
+                expect(cond).toBeUndefined("invalid condition should not be parsed");
+            });
+
+            it ("should return undefined for non-existent condition keys.", function () {
+                var cond = sds.getCondition("non_existent_condition");
+                expect(cond).toBeUndefined("non-existent condition should return undefined");
+            });
+
+            it ("should parse wait_for in condition definitions.", function () {
+                var cond = sds.getCondition("cond_with_wait_for");
+                expect(cond).toBeDefined("cond_with_wait_for not found");
+                expect(cond.sourcekey).toBe("cnt_i1", "sourcekey missmatch");
+                expect(cond.condition_pattern).toBe("{{#if cnt_i2}}show{{/if}}", "condition_pattern missmatch");
+                expect(Array.isArray(cond.wait_for)).toBe(true, "wait_for should be an array");
+                expect(cond.wait_for.length).toBe(1, "wait_for length missmatch");
+                expect(cond.wait_for[0]).toBe("cnt_i2", "wait_for[0] missmatch");
+            });
+        });
+
+        describe("SourceObjectWrapper condition sourceObject, ", function () {
+            it ("should have inline condition on the sourceObject.", function () {
+                // conditioned_col_inline in detailed context
+                var col = detailedColumns[31];
+                expect(col.displayname.value).toContain("conditioned_col_inline", "wrong column at index 31");
+                var sow = col.sourceObjectWrapper;
+                expect(sow).toBeDefined("sourceObjectWrapper not defined");
+                expect(sow.sourceObject.condition).toBeDefined("condition not defined on sourceObject");
+                expect(sow.sourceObject.condition.sourcekey).toBe("cnt_i1", "sourcekey missmatch");
+            });
+
+            it ("should have condition_key on the sourceObject.", function () {
+                // conditioned_col_key in detailed context
+                var col = detailedColumns[32];
+                expect(col.displayname.value).toContain("conditioned_col_key", "wrong column at index 32");
+                var sow = col.sourceObjectWrapper;
+                expect(sow).toBeDefined("sourceObjectWrapper not defined");
+                expect(sow.sourceObject.condition_key).toBeDefined("condition_key not defined on sourceObject");
+            });
+
+            it ("should have condition on sourceObject in non-detailed context too.", function () {
+                var col = compactColumns[28];
+                expect(col.displayname.value).toContain("conditioned_col_inline", "wrong column at index 28");
+                var sow = col.sourceObjectWrapper;
+                if (sow) {
+                    expect(sow.sourceObject.condition).toBeDefined("condition should be on sourceObject");
+                }
+            });
+        });
+
         describe("Reference.sourceWaitFor", function () {
             it ("should be properly defined on related entities.", function () {
                 var expectedRelatedEntitiesWaitFor = [
                     {"waitFor": ["array_d_entity_i4", "array_d_entity_i5"], "hasWaitFor": true},
                     {"waitFor": ["entity_set_i5", "all_outbound_entity_o3_o1_o1"], "hasWaitFor": true},
+                    {"waitFor": [], "hasWaitFor": false},
                     {"waitFor": [], "hasWaitFor": false}
                 ];
                 var related = mainRefDetailed.related;
@@ -269,6 +351,136 @@ exports.execute = function (options) {
 
                 it ("should return the selfLinks properly.", function () {
                     testNameList(createActiveList.selfLinks, expectedCreateActiveList.selfLinks);
+                });
+            });
+
+            describe("conditionalGroups, ", function () {
+                it ("should be empty for compact (non-detailed) context.", function () {
+                    expect(compactActiveList.conditionalGroups).toBeDefined("conditionalGroups not defined");
+                    expect(compactActiveList.conditionalGroups.length).toBe(0, "should be empty for compact");
+                });
+
+                it ("should be empty for entry/create context.", function () {
+                    expect(createActiveList.conditionalGroups).toBeDefined("conditionalGroups not defined");
+                    expect(createActiveList.conditionalGroups.length).toBe(0, "should be empty for create");
+                });
+
+                it ("should return the correct number of conditional groups for detailed context.", function () {
+                    expect(detailedActiveList.conditionalGroups).toBeDefined("conditionalGroups not defined");
+                    // Option B: every conditioned item gets a group, sync or async.
+                    // 4 conditioned vis-cols (conditioned_col_inline, _key, _pattern, _outbound)
+                    // + 1 conditioned vis-fk (entity_set_i5).
+                    // Iteration order is non-aggregate then aggregate, then related, so:
+                    //   group 0: conditioned_col_outbound (sync, source=outbound_entity_o1, no aggregate)
+                    //   group 1: conditioned_col_inline   (async, source=cnt_i1, no condition_key)
+                    //   group 2: conditioned_col_key      (async, condition_key=cond_has_inbound1_show)
+                    //   group 3: conditioned_col_pattern  (async, source=cnt_i1, inline pattern + wait_for)
+                    //   group 4: entity_set_i5 vis-fk     (async, condition_key=cond_has_inbound1)
+                    expect(detailedActiveList.conditionalGroups.length).toBe(5,
+                        "should have 5 conditional groups (4 columns + 1 related)");
+                });
+
+                it ("each group should have a condition with the expected source column.", function () {
+                    var groups = detailedActiveList.conditionalGroups;
+                    var expectedSources = [
+                        // group 0: sync outbound, source=outbound_entity_o1
+                        columnMapping["outbound_entity_o1"],
+                        // groups 1-4: all use cnt_i1
+                        columnMapping["cnt_i1"],
+                        columnMapping["cnt_i1"],
+                        columnMapping["cnt_i1"],
+                        columnMapping["cnt_i1"]
+                    ];
+                    groups.forEach(function (g, i) {
+                        expect(g.condition).toBeDefined("condition not defined for group index=" + i);
+                        expect(g.condition.column).toBeDefined("condition.column not defined for group index=" + i);
+                        expect(g.condition.column.name).toBe(
+                            expectedSources[i],
+                            "condition column name missmatch for group index=" + i
+                        );
+                    });
+                });
+
+                it ("groups should have dependentRequests where applicable.", function () {
+                    var groups = detailedActiveList.conditionalGroups;
+                    // group 0 (conditioned_col_outbound on plain int_col_4) has no
+                    // aggregates/entitysets/related items in its dependents — addColToDependent
+                    // only registers those — so deps is legitimately empty. The conditioned item
+                    // identity lives on `conditionedItems` (not dependentRequests), so chaise
+                    // can still gate the column's visibility.
+                    groups.forEach(function (g, i) {
+                        expect(Array.isArray(g.dependentRequests)).toBe(true,
+                            "dependentRequests not an array for group index=" + i);
+                    });
+                    expect(groups[0].dependentRequests.length).toBe(0,
+                        "group 0 (sync outbound on plain column) should have empty deps");
+                    // groups 1-3 wrap aggregate columns, group 4 wraps a related entity, all
+                    // need at least one dependent request to fetch their data.
+                    [1, 2, 3, 4].forEach(function (i) {
+                        expect(groups[i].dependentRequests.length).toBeGreaterThan(0,
+                            "dependentRequests should not be empty for group index=" + i);
+                    });
+                });
+
+                it ("groups should also track the items they gate via conditionedItems.", function () {
+                    var groups = detailedActiveList.conditionalGroups;
+                    groups.forEach(function (g, i) {
+                        expect(Array.isArray(g.conditionedItems)).toBe(true,
+                            "conditionedItems not an array for group index=" + i);
+                        expect(g.conditionedItems.length).toBeGreaterThan(0,
+                            "conditionedItems should not be empty for group index=" + i);
+                    });
+                    // groups 0-3 are columns. Group 4 (cond_has_inbound1) gates BOTH the
+                    // entity_set_i5 vis-fk AND the dedup-test conditioned_col_shared_w_fk
+                    // — so it has two items, in arrival order: related first, then column.
+                    expect(groups[0].conditionedItems[0].column).toBe(true, "group 0 should be a column item");
+                    expect(groups[4].conditionedItems.length).toBe(2,
+                        "group 4 should hold both the vis-fk and the shared-key column");
+                    var hasRelated = groups[4].conditionedItems.some(function (it) { return it.related === true; });
+                    var hasColumn = groups[4].conditionedItems.some(function (it) { return it.column === true; });
+                    expect(hasRelated).toBe(true, "group 4 should still gate the entity_set_i5 vis-fk");
+                    expect(hasColumn).toBe(true, "group 4 should also gate the conditioned_col_shared_w_fk column");
+                });
+
+                it ("conditions without wait_for should have empty waitFor list.", function () {
+                    var groups = detailedActiveList.conditionalGroups;
+                    // groups 0 (sync outbound), 1 (cnt_i1 inline no wait_for), 4 (cond_has_inbound1)
+                    [0, 1, 4].forEach(function (i) {
+                        expect(groups[i].condition.hasWaitFor).toBe(false,
+                            "group " + i + " should not have waitFor");
+                        expect(groups[i].condition.waitFor.length).toBe(0,
+                            "group " + i + " waitFor length");
+                    });
+                });
+
+                it ("conditions with wait_for should have populated waitFor list.", function () {
+                    var groups = detailedActiveList.conditionalGroups;
+                    // group 2 (cond_has_inbound1_show, wait_for cnt_i2) and
+                    // group 3 (conditioned_col_pattern inline with wait_for cnt_i2)
+                    [2, 3].forEach(function (i) {
+                        expect(groups[i].condition.hasWaitFor).toBe(true,
+                            "group " + i + " should have waitFor");
+                        expect(groups[i].condition.waitFor.length).toBe(1,
+                            "group " + i + " waitFor length");
+                        expect(groups[i].condition.waitFor[0].name).toBe(
+                            columnMapping["cnt_i2"],
+                            "group " + i + " waitFor[0] should be cnt_i2"
+                        );
+                    });
+                });
+
+                it ("condition wait_for columns should appear in main requests with condition objects.", function () {
+                    // cnt_i2 should have condition objects for groups 2 and 3 (their wait_fors)
+                    var cnt_i2_req = detailedActiveList.requests.find(function (r) {
+                        return r.column && r.column.name === columnMapping["cnt_i2"];
+                    });
+                    expect(cnt_i2_req).toBeDefined("cnt_i2 should be in requests");
+                    var condObjects = cnt_i2_req.objects.filter(function (obj) {
+                        return obj.condition;
+                    });
+                    expect(condObjects.length).toBe(2, "cnt_i2 should have 2 condition objects");
+                    expect(condObjects[0].index).toBe(2, "first condition object should be for group 2");
+                    expect(condObjects[1].index).toBe(3, "second condition object should be for group 3");
                 });
             });
         });
@@ -381,6 +593,241 @@ exports.execute = function (options) {
             });
         });
 
+        describe("ActiveListCondition.evaluateCondition, ", function () {
+            // Use the async groups for these tests. Group 0 (sync outbound) needs a
+            // real mainTuple to derive emptiness from buildSelfTemplateVariables —
+            // exercising it without one would crash on tuple.linkedData. The async
+            // branch instead consults the conditionValue arg, so we can pass null.
+            //   group 1: inline condition on cnt_i1, on_empty=hide
+            //   group 2: condition_key cond_has_inbound1_show on cnt_i1, on_empty=show
+            //
+            // conditionValue for an aggregate is the unwrapped first row,
+            // shaped {value, templateVariables}. _isConditionValueEmpty treats
+            // null / "" / numeric-zero as empty.
+            it ("should return shouldShow=false when condition source is empty and on_empty='hide'.", function () {
+                var groups = detailedActiveList.conditionalGroups;
+                var condition = groups[1].condition;
+                var result = condition.evaluateCondition({}, null, null);
+                expect(result.shouldShow).toBe(false, "should hide when empty and on_empty=hide");
+            });
+
+            it ("should return shouldShow=true when condition source is empty and on_empty='show'.", function () {
+                var groups = detailedActiveList.conditionalGroups;
+                var condition = groups[2].condition;
+                var result = condition.evaluateCondition({}, null, null);
+                expect(result.shouldShow).toBe(true, "should show when empty and on_empty=show");
+            });
+
+            it ("should return shouldShow=true when condition source has data and on_empty='hide'.", function () {
+                var groups = detailedActiveList.conditionalGroups;
+                var condition = groups[1].condition;
+                var result = condition.evaluateCondition({}, {value: "5", templateVariables: {$self: "5"}}, null);
+                expect(result.shouldShow).toBe(true, "should show when has data and on_empty=hide");
+            });
+
+            it ("should return shouldShow=false when condition source has data and on_empty='show'.", function () {
+                var groups = detailedActiveList.conditionalGroups;
+                var condition = groups[2].condition;
+                var result = condition.evaluateCondition({}, {value: "5", templateVariables: {$self: "5"}}, null);
+                expect(result.shouldShow).toBe(false, "should hide when has data and on_empty=show");
+            });
+        });
+
+        describe("ActiveListCondition.conditionKey, ", function () {
+            it ("should be undefined for inline conditions (no condition_key reference).", function () {
+                var groups = detailedActiveList.conditionalGroups;
+                // group 0: conditioned_col_outbound (inline)
+                // group 1: conditioned_col_inline   (inline)
+                // group 3: conditioned_col_pattern  (inline w/ pattern)
+                [0, 1, 3].forEach(function (i) {
+                    expect(groups[i].condition.conditionKey).toBeUndefined(
+                        "group " + i + " conditionKey should be undefined for inline conditions");
+                });
+            });
+
+            it ("should be set to the key for condition_key references.", function () {
+                var groups = detailedActiveList.conditionalGroups;
+                // group 2: conditioned_col_key uses condition_key=cond_has_inbound1_show
+                expect(groups[2].condition.conditionKey).toBe("cond_has_inbound1_show");
+                // group 4: entity_set_i5 vis-fk + conditioned_col_shared_w_fk both use cond_has_inbound1
+                expect(groups[4].condition.conditionKey).toBe("cond_has_inbound1");
+            });
+        });
+
+        describe("ActiveListCondition.isAsync, ", function () {
+            it ("should be false for sync condition sources (all-outbound entity).", function () {
+                // group 0: condition source = outbound_entity_o1 (all-outbound, no inbound, no aggregate)
+                expect(detailedActiveList.conditionalGroups[0].condition.isAsync).toBe(false,
+                    "group 0 (outbound_entity_o1) should be sync");
+            });
+
+            it ("should be true for async condition sources (inbound aggregate).", function () {
+                // groups 1-4 all use cnt_i1 (inbound + cnt aggregate → async)
+                [1, 2, 3, 4].forEach(function (i) {
+                    expect(detailedActiveList.conditionalGroups[i].condition.isAsync).toBe(true,
+                        "group " + i + " (cnt_i1 source) should be async");
+                });
+            });
+        });
+
+        describe("ActiveListCondition.evaluateCondition (sync source), ", function () {
+            // group 0: condition source = outbound_entity_o1 (all-outbound entity, sync), on_empty=hide.
+            // Sync entity-mode emptiness comes from buildSelfTemplateVariables — empty when
+            // mainTuple.linkedData[outbound_entity_o1.name] is missing/null.
+            //   row 1 ("01") has fk1_col1/fk1_col2 → outbound row exists → not empty → show
+            //   row 2 ("02") has no fk1 cols      → outbound row missing → empty   → hide
+            it ("should show when sync FK is populated and on_empty=hide.", function (done) {
+                mainRefDetailed.read(2).then(function (page) {
+                    var condition = detailedActiveList.conditionalGroups[0].condition;
+                    var result = condition.evaluateCondition({}, null, page.tuples[0]);
+                    expect(result.shouldShow).toBe(true, "row 1 (FK populated) should show");
+                    done();
+                }).catch(catchError(done));
+            });
+
+            it ("should hide when sync FK is empty and on_empty=hide.", function (done) {
+                mainRefDetailed.read(2).then(function (page) {
+                    var condition = detailedActiveList.conditionalGroups[0].condition;
+                    var result = condition.evaluateCondition({}, null, page.tuples[1]);
+                    expect(result.shouldShow).toBe(false, "row 2 (FK empty) should hide");
+                    done();
+                }).catch(catchError(done));
+            });
+        });
+
+        describe("ActiveListCondition.evaluateCondition (pattern source), ", function () {
+            // group 3: conditioned_col_pattern. Inline condition with
+            //   condition_pattern: "{{#if cnt_i2}}show{{/if}}", wait_for: ["cnt_i2"]
+            // Renders to "show" if cnt_i2 truthy in templateVariables, else empty.
+            // on_empty=hide → show iff render is non-empty.
+            // Handlebars is the active engine (set via setClientConfig in beforeAll).
+            //
+            // The pattern path always calls buildSelfTemplateVariables, which for an
+            // aggregate path column (cnt_i1) reads templateVariables off the conditionValue.
+            // We pass a stub aggregate value with empty templateVariables — the pattern
+            // doesn't reference $self / $_self anyway, only cnt_i2 from the outer map.
+            var aggValueStub = {value: 5, templateVariables: {}};
+
+            it ("should show when condition_pattern renders non-empty.", function () {
+                var condition = detailedActiveList.conditionalGroups[3].condition;
+                var result = condition.evaluateCondition({cnt_i2: 5}, aggValueStub, null);
+                expect(result.shouldShow).toBe(true, "pattern rendered \"show\" → shouldShow=true");
+            });
+
+            it ("should hide when condition_pattern renders to empty string.", function () {
+                var condition = detailedActiveList.conditionalGroups[3].condition;
+                // 0 is falsy in handlebars #if → render is "" → empty → hide
+                var result = condition.evaluateCondition({cnt_i2: 0}, aggValueStub, null);
+                expect(result.shouldShow).toBe(false, "pattern rendered \"\" → shouldShow=false");
+            });
+
+            it ("should hide when wait_for variable is missing from templateVariables.", function () {
+                var condition = detailedActiveList.conditionalGroups[3].condition;
+                var result = condition.evaluateCondition({}, aggValueStub, null);
+                expect(result.shouldShow).toBe(false, "cnt_i2 missing → render empty → hide");
+            });
+        });
+
+        describe("ActiveListCondition.evaluateCondition (async value shapes), ", function () {
+            // group 1: cnt_i1 inline, async, no pattern, on_empty=hide.
+            // shouldShow == !isEmpty (empty values hide; non-empty values show).
+            var condition;
+            beforeAll(function () {
+                condition = detailedActiveList.conditionalGroups[1].condition;
+            });
+
+            it ("should treat null/undefined conditionValue as empty.", function () {
+                expect(condition.evaluateCondition({}, null, null).shouldShow).toBe(false,
+                    "null conditionValue → empty → hide");
+                expect(condition.evaluateCondition({}, undefined, null).shouldShow).toBe(false,
+                    "undefined conditionValue → empty → hide");
+            });
+
+            it ("should treat page-shape with length=0 as empty (entityset).", function () {
+                var result = condition.evaluateCondition({}, {length: 0, tuples: []}, null);
+                expect(result.shouldShow).toBe(false, "empty page → hide");
+            });
+
+            it ("should treat page-shape with length>0 as non-empty (entityset).", function () {
+                var result = condition.evaluateCondition({}, {length: 3, tuples: [{}, {}, {}]}, null);
+                expect(result.shouldShow).toBe(true, "non-empty page → show");
+            });
+
+            it ("should treat aggregate value=0 (number) as empty.", function () {
+                var result = condition.evaluateCondition({}, {value: 0, templateVariables: {}}, null);
+                expect(result.shouldShow).toBe(false, "value=0 (count-style) → empty");
+            });
+
+            it ("should treat aggregate value='0' (numeric string) as empty (count-style coercion).", function () {
+                // covers the Number() coercion branch — count aggregates often serialize as "0"
+                var result = condition.evaluateCondition({}, {value: "0", templateVariables: {}}, null);
+                expect(result.shouldShow).toBe(false, "value='0' should coerce to 0 → empty");
+            });
+
+            it ("should treat aggregate value='' (empty string) as empty.", function () {
+                var result = condition.evaluateCondition({}, {value: "", templateVariables: {}}, null);
+                expect(result.shouldShow).toBe(false, "value='' → empty");
+            });
+
+            it ("should treat aggregate value=5 (non-zero number) as non-empty.", function () {
+                var result = condition.evaluateCondition({}, {value: 5, templateVariables: {$self: "5"}}, null);
+                expect(result.shouldShow).toBe(true, "value=5 → not empty");
+            });
+
+            it ("should treat aggregate value='abc' (non-numeric string) as non-empty.", function () {
+                // Number("abc") = NaN → !isNaN check fails → falls through to "not empty"
+                var result = condition.evaluateCondition({}, {value: "abc", templateVariables: {}}, null);
+                expect(result.shouldShow).toBe(true, "value='abc' → !isNaN(NaN)=false → not empty");
+            });
+        });
+
+        describe("processConditionedItem dedup (shared condition_key), ", function () {
+            it ("should NOT create a separate group when two items share the same condition_key.", function () {
+                // 4 conditioned vis-cols + 1 conditioned vis-fk + 1 NEW conditioned vis-col sharing
+                // cond_has_inbound1 with the vis-fk = 6 conditioned items but only 5 groups (dedup).
+                expect(detailedActiveList.conditionalGroups.length).toBe(5,
+                    "should still be 5 groups even with 6 conditioned items");
+            });
+
+            it ("should add both items to the same group's conditionedItems list.", function () {
+                var group = detailedActiveList.conditionalGroups[4];
+                expect(group.condition.conditionKey).toBe("cond_has_inbound1",
+                    "group 4 should be the cond_has_inbound1 group");
+                expect(group.conditionedItems.length).toBe(2,
+                    "should hold both the vis-fk and the new column");
+
+                var byType = group.conditionedItems.reduce(function (acc, it) {
+                    if (it.related) acc.related = it;
+                    if (it.column) acc.column = it;
+                    return acc;
+                }, {});
+                expect(byType.related).toBeDefined("vis-fk item should still be present");
+                expect(byType.column).toBeDefined("new column item should be added");
+            });
+
+            it ("should add the new column's secondary fetch to the group dependentRequests, not main requests.", function () {
+                var group = detailedActiveList.conditionalGroups[4];
+                // the new column's source is array_d_entity_i3 (an aggregate) — it should land
+                // in the group's deps so chaise only fires it after the condition resolves true.
+                var depForNewCol = group.dependentRequests.find(function (r) {
+                    return r.column && r.column.name === columnMapping["array_d_entity_i3"] && r.aggregate;
+                });
+                expect(depForNewCol).toBeDefined("group 4 deps should include array_d_entity_i3");
+
+                // and the main detailed requests for array_d_entity_i3 should NOT have a new
+                // top-level entry from the conditioned column (only the existing wait_for entry)
+                var mainReq = detailedActiveList.requests.find(function (r) {
+                    return r.column && r.column.name === columnMapping["array_d_entity_i3"] && r.aggregate;
+                });
+                expect(mainReq).toBeDefined("array_d_entity_i3 should still be in main requests (used as wait_for of cnt_i2)");
+                var fromConditionedCol = mainReq.objects.filter(function (obj) {
+                    return obj.column && !obj.isWaitFor && obj.index >= 35;
+                });
+                expect(fromConditionedCol.length).toBe(0,
+                    "main detailed requests should NOT pick up the conditioned column directly");
+            });
+        });
+
         afterAll(function () {
             options.ermRest.setClientConfig({});
         });
@@ -400,6 +847,9 @@ exports.execute = function (options) {
                 })), "wait_for missmatch" + message);
             }
             expect(list[index].hasWaitFor).toBe(col.hasWaitFor, "hasWaitFor missmatch" + message);
+            if (col.hasCondition !== undefined) {
+                expect(list[index].hasCondition).toBe(col.hasCondition, "hasCondition missmatch" + message);
+            }
         });
     }
 
@@ -427,6 +877,7 @@ exports.execute = function (options) {
                     expect(obj.index).toBe(expObj.index, "index missmatch" + message + " obj index=" + objIndex);
                     expect(obj.isWaitFor).toBe(expObj.isWaitFor, "isWaitFor missmatch" + message + " obj index=" + objIndex);
                     expect(obj.column).toBe(expObj.column, "column missmatch" + message + " obj index=" + objIndex);
+                    expect(obj.condition).toBe(expObj.condition, "condition missmatch" + message + " obj index=" + objIndex);
                 });
             }
 
@@ -617,6 +1068,45 @@ exports.execute = function (options) {
                 "waitFor": ["max_i2", "array_d_entity_i1"],
                 "hasWaitFor": true,
                 "value": ""
+            },
+            {
+                "title": "conditioned_col_inline",
+                "waitFor": [],
+                "hasWaitFor": false,
+                "hasCondition": false,
+                "value": ""
+            },
+            {
+                "title": "conditioned_col_key",
+                "waitFor": [],
+                "hasWaitFor": false,
+                "hasCondition": false,
+                "value": ""
+            },
+            {
+                "title": "conditioned_col_pattern",
+                "waitFor": [],
+                "hasWaitFor": false,
+                "hasCondition": false,
+                "value": ""
+            },
+            {
+                "title": "conditioned_col_outbound",
+                "waitFor": [],
+                "hasWaitFor": false,
+                "hasCondition": false,
+                "value": "1,234,531"
+            },
+            {
+                // Added for the dedup test (#6) — shares condition_key cond_has_inbound1
+                // with the entity_set_i5 vis-fk. In compact context the condition is stripped
+                // (hasCondition=false); the column itself is an array_d aggregate so value stays
+                // empty until the secondary fetch resolves.
+                "title": "conditioned_col_shared_w_fk",
+                "waitFor": [],
+                "hasWaitFor": false,
+                "hasCondition": false,
+                "value": ""
             }
         ];
 
@@ -806,6 +1296,43 @@ exports.execute = function (options) {
                 "waitFor": ["max_i2", "array_d_entity_i1"],
                 "hasWaitFor": true,
                 "value": ""
+            },
+            {
+                "title": "conditioned_col_inline",
+                "waitFor": [],
+                "hasWaitFor": false,
+                "hasCondition": true,
+                "value": ""
+            },
+            {
+                "title": "conditioned_col_key",
+                "waitFor": [],
+                "hasWaitFor": false,
+                "hasCondition": true,
+                "value": ""
+            },
+            {
+                "title": "conditioned_col_pattern",
+                "waitFor": [],
+                "hasWaitFor": false,
+                "hasCondition": true,
+                "value": ""
+            },
+            {
+                "title": "conditioned_col_outbound",
+                "waitFor": [],
+                "hasWaitFor": false,
+                "hasCondition": false,
+                "value": "1,234,531"
+            },
+            {
+                // Detailed twin of the compact entry above — shares condition_key
+                // cond_has_inbound1 with the entity_set_i5 vis-fk (group 4 dedup target).
+                "title": "conditioned_col_shared_w_fk",
+                "waitFor": [],
+                "hasWaitFor": false,
+                "hasCondition": true,
+                "value": ""
             }
         ];
 
@@ -903,7 +1430,10 @@ exports.execute = function (options) {
                     "column": "array_d_entity_i3",
                     "aggregate": true,
                     "objects": [
-                        {"index": 18, "isWaitFor": true, "column": true}
+                        {"index": 18, "isWaitFor": true, "column": true},
+                        // dedup-test column (#6) lands at compact index 32 — its source IS array_d_entity_i3.
+                        // In compact, conditions are stripped, so the column is registered normally.
+                        {"index": 32, "isWaitFor": false, "column": true}
                     ]
                 },
                 {
@@ -933,6 +1463,27 @@ exports.execute = function (options) {
                     "aggregate": true,
                     "objects": [
                         {"index": 22, "isWaitFor": false, "column": true}
+                    ]
+                },
+                {
+                    "column": "min_i3",
+                    "aggregate": true,
+                    "objects": [
+                        {"index": 28, "isWaitFor": false, "column": true}
+                    ]
+                },
+                {
+                    "column": "min_i4",
+                    "aggregate": true,
+                    "objects": [
+                        {"index": 29, "isWaitFor": false, "column": true}
+                    ]
+                },
+                {
+                    "column": "max_i3",
+                    "aggregate": true,
+                    "objects": [
+                        {"index": 30, "isWaitFor": false, "column": true}
                     ]
                 }
             ],
@@ -1009,7 +1560,16 @@ exports.execute = function (options) {
                         {"index": 7, "isWaitFor": true, "column": true},
                         {"index": 20, "isWaitFor": false, "column": true},
                         {"index": 21, "isWaitFor": true, "column": true},
-                        {"index": 23, "isWaitFor": true, "column": true}
+                        {"index": 23, "isWaitFor": true, "column": true},
+                        // condition source for groups 1, 2, 3, 4. group 0 belongs to the
+                        // sync outbound_entity_o1 condition on conditioned_col_outbound,
+                        // which is processed first (non-aggregate pass) and doesn't fetch
+                        // anything. condition sources are isWaitFor:false (they ARE the
+                        // condition, not a prerequisite of it).
+                        {"isWaitFor": false, "condition": true, "index": 1},
+                        {"isWaitFor": false, "condition": true, "index": 2},
+                        {"isWaitFor": false, "condition": true, "index": 3},
+                        {"isWaitFor": false, "condition": true, "index": 4}
                     ]
                 },
                 {
@@ -1070,7 +1630,12 @@ exports.execute = function (options) {
                     "objects": [
                         {"index": 21, "isWaitFor": false,"column": true},
                         {"index": 23, "isWaitFor": true, "column": true},
-                        {"index": 25, "isWaitFor": true, "column": true}
+                        {"index": 25, "isWaitFor": true, "column": true},
+                        // wait_for of conditions on groups 2 (cond_has_inbound1_show on col 32)
+                        // and 3 (inline cnt_i1 + condition_pattern on col 33). still isWaitFor:true
+                        // — wait_fors of conditions ARE prerequisites.
+                        {"isWaitFor": true, "condition": true, "index": 2},
+                        {"isWaitFor": true, "condition": true, "index": 3}
                     ]
                 },
                 {

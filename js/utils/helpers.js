@@ -1325,7 +1325,7 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
             });
         }
 
-        return {successful: true, filters: result};
+        return {successful: true, filters: result, usedQuantified: canUseQuantified};
     };
 
     export function _stringToDate(_date, _format, _delimiter) {
