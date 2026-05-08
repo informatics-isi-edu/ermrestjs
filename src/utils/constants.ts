@@ -294,6 +294,10 @@ export const _handlebarsHelpersList = [
   // math helpers
   'add',
   'subtract',
+  // list/array helpers
+  'memberOf',
+  'hasMember',
+  'pluck',
 ];
 
 export const _operationsFlag = Object.freeze({
