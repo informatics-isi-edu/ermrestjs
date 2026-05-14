@@ -2133,6 +2133,66 @@
                     ]
                 }
             }
+        },
+        "table_w_no_source_condition": {
+            "comment": "table for testing the no-source condition filter pass on reference.columns",
+            "kind": "table",
+            "table_name": "table_w_no_source_condition",
+            "schema_name": "columns_schema",
+            "keys": [{"unique_columns": ["id"]}],
+            "foreign_keys": [],
+            "column_definitions": [
+                {"name": "id", "type": {"typename": "int4"}, "nullok": false},
+                {"name": "col_a", "type": {"typename": "text"}},
+                {"name": "col_b", "type": {"typename": "text"}},
+                {"name": "col_c", "type": {"typename": "text"}},
+                {"name": "col_d", "type": {"typename": "text"}}
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2019:source-definitions": {
+                    "conditions": {
+                        "cond_show": {"condition_pattern": "yes"},
+                        "cond_hide": {"condition_pattern": "{{#missing_var}}x{{/missing_var}}"}
+                    }
+                },
+                "tag:isrd.isi.edu,2016:visible-columns": {
+                    "compact": [
+                        "id",
+                        {
+                            "source": "col_a",
+                            "markdown_name": "col_a_inline_show",
+                            "condition": {"condition_pattern": "yes"}
+                        },
+                        {
+                            "source": "col_b",
+                            "markdown_name": "col_b_inline_hide",
+                            "condition": {"condition_pattern": "{{#missing_var}}x{{/missing_var}}"}
+                        },
+                        {
+                            "source": "col_c",
+                            "markdown_name": "col_c_key_show",
+                            "condition_key": "cond_show"
+                        },
+                        {
+                            "source": "col_d",
+                            "markdown_name": "col_d_key_hide",
+                            "condition_key": "cond_hide"
+                        }
+                    ],
+                    "entry": [
+                        {
+                            "source": "col_a",
+                            "markdown_name": "entry_col_a_show",
+                            "condition": {"condition_pattern": "yes"}
+                        },
+                        {
+                            "source": "col_b",
+                            "markdown_name": "entry_col_b_hide",
+                            "condition": {"condition_pattern": "{{#missing_var}}x{{/missing_var}}"}
+                        }
+                    ]
+                }
+            }
         }
     }
 }

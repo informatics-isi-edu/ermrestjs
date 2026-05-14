@@ -16,11 +16,22 @@ import { _processWaitForList } from '@isrd-isi-edu/ermrestjs/js/utils/pseudocolu
 
 /**
  * Encapsulates condition evaluation logic for conditionally visible
- * columns and related entities in the record page.
+ * columns and related entities.
+ *
+ * Two forms:
+ * - **With source**: `condDef.source` or `condDef.sourcekey` drives a fetch
+ *   whose data feeds the condition. Only honored in `detailed` context.
+ *   `column` is a PseudoColumn used by chaise's record-page flow.
+ * - **No source**: only `condDef.condition_pattern` is set. Evaluated
+ *   synchronously against template globals (`$session`, `$catalog`,
+ *   `isUserInAcl`, etc.). Honored in every context. `column` is `null`.
  */
 export default class ActiveListCondition {
-  /** The PseudoColumn for fetching condition data */
-  column: VisibleColumn;
+  /**
+   * The PseudoColumn for fetching condition data.
+   * `null` for no-source conditions (pattern-only).
+   */
+  column: VisibleColumn | null;
 
   /** Whether the condition source requires a secondary request (has inbound path or aggregate) */
   isAsync: boolean;
@@ -47,8 +58,23 @@ export default class ActiveListCondition {
 
     const wm = _warningMessages;
 
-    if (typeof condDef !== 'object' || (!condDef.source && !isStringAndNotEmpty(condDef.sourcekey))) {
+    if (typeof condDef !== 'object' || condDef === null) {
       throw new Error(wm.CONDITION.INVALID_SOURCE);
+    }
+
+    const hasSource = !!condDef.source || isStringAndNotEmpty(condDef.sourcekey);
+
+    // no-source branch: pattern-only, evaluated synchronously against template globals
+    if (!hasSource) {
+      if (!isStringAndNotEmpty(condDef.condition_pattern)) {
+        throw new Error(wm.CONDITION.MISSING_PATTERN);
+      }
+      if (condDef.wait_for !== undefined) {
+        throw new Error(wm.CONDITION.NO_SOURCE_WAIT_FOR);
+      }
+      this.column = null;
+      this.isAsync = false;
+      return;
     }
 
     let condSourceWrapper: SourceObjectWrapper;
@@ -101,10 +127,17 @@ export default class ActiveListCondition {
    */
   get waitFor(): ReferenceColumn[] {
     if (this._waitFor === undefined) {
-      const res = _processWaitForList(this._condDef.wait_for, this._reference, this._reference.table, null, this._tuple, 'condition');
-      this._waitFor = res.waitForList;
-      this._hasWaitFor = res.hasWaitFor;
-      this._hasWaitForAggregate = res.hasWaitForAggregate;
+      // no-source conditions don't have a source fetch to wait on
+      if (this.column === null) {
+        this._waitFor = [];
+        this._hasWaitFor = false;
+        this._hasWaitForAggregate = false;
+      } else {
+        const res = _processWaitForList(this._condDef.wait_for, this._reference, this._reference.table, null, this._tuple, 'condition');
+        this._waitFor = res.waitForList;
+        this._hasWaitFor = res.hasWaitFor;
+        this._hasWaitForAggregate = res.hasWaitForAggregate;
+      }
     }
     return this._waitFor!;
   }
@@ -112,25 +145,29 @@ export default class ActiveListCondition {
   /**
    * Decide whether the conditioned content should be shown.
    *
-   * Three internal paths, dispatched on `condition_pattern` and `this.isAsync`:
+   * Four internal paths, dispatched on `this.column`, `condition_pattern`, and `this.isAsync`:
    *
-   * 1. **`condition_pattern` set.** Render the pattern. `$self` / `$_self` come
-   *    from {@link buildSelfTemplateVariables}, which sources from `mainTuple`
-   *    for sync sources and from `conditionValue` for async sources. Blank
-   *    rendered output ⇒ empty.
-   * 2. **No pattern + `isAsync === true`.** Caller already fetched the data;
-   *    emptiness is computed from `conditionValue` by {@link _isConditionValueEmpty}.
-   * 3. **No pattern + `isAsync === false`.** `conditionValue` is ignored (sync
-   *    sources have no fetched value). The raw value is pulled from `mainTuple`
-   *    via {@link buildSelfTemplateVariables}: scalar sources are empty when
-   *    `$_self` is `null`/`undefined`/`''`; entity-mode sources are empty when
-   *    `$self` is undefined (the joined row didn't load).
+   * 0. **No-source (`this.column === null`).** `condition_pattern` is rendered
+   *    against the caller's `templateVariables` plus the catalog's global
+   *    template environment (`$session`, `$catalog`, `isUserInAcl`, etc.).
+   *    `conditionValue` and `mainTuple` are unused.
+   * 1. **With-source, `condition_pattern` set.** Render the pattern. `$self` /
+   *    `$_self` come from {@link buildSelfTemplateVariables}, which sources from
+   *    `mainTuple` for sync sources and from `conditionValue` for async sources.
+   *    Blank rendered output ⇒ empty.
+   * 2. **With-source, no pattern + `isAsync === true`.** Caller already fetched
+   *    the data; emptiness is computed from `conditionValue` by {@link _isConditionValueEmpty}.
+   * 3. **With-source, no pattern + `isAsync === false`.** `conditionValue` is
+   *    ignored (sync sources have no fetched value). The raw value is pulled
+   *    from `mainTuple` via {@link buildSelfTemplateVariables}: scalar sources
+   *    are empty when `$_self` is `null`/`undefined`/`''`; entity-mode sources
+   *    are empty when `$self` is undefined (the joined row didn't load).
    *
    * The `on_empty` flag then maps `isEmpty` to "show": `"hide"` (default) shows
    * when not empty; `"show"` shows when empty.
    *
    * @param templateVariables - accumulated `$x`/`$_x` template variables for
-   *   every other source (only consulted by the pattern branch).
+   *   every other source (consulted by the pattern branches).
    * @param conditionValue - the fetched value for an async source.
    *   - **entityset** (Reference.read result): a {@link Page} object — has
    *     `length` (used by `_isConditionValueEmpty`) and `templateVariables`
@@ -140,18 +177,24 @@ export default class ActiveListCondition {
    *     scalar; `templateVariables` carries `$self`/`$_self`.
    *   - **null** if the request failed or there's no fetched value (treated
    *     as empty).
-   *   Ignored entirely for sync sources (path 3).
-   * @param mainTuple - the main record tuple. Always required: the pattern
-   *   branch and the sync no-pattern branch both look up `$self`/`$_self`
-   *   from it.
+   *   Ignored for no-source (path 0) and sync sources (path 3).
+   * @param mainTuple - the main record tuple. Required for paths 1 and 3
+   *   (both look up `$self`/`$_self` from it). Unused for paths 0 and 2.
    * @returns whether the conditioned content should be shown.
    */
-  evaluateCondition(templateVariables: any, conditionValue: any, mainTuple: Tuple): { shouldShow: boolean } {
+  evaluateCondition(templateVariables: any, conditionValue: any, mainTuple?: Tuple): { shouldShow: boolean } {
     let isEmpty: boolean;
     const condDef = this._condDef;
 
-    if (condDef.condition_pattern) {
-      const selfTemplateVariables = buildSelfTemplateVariables(this.column as ReferenceColumn, mainTuple, conditionValue);
+    if (this.column === null) {
+      // no-source: pattern-only, evaluated against caller's templateVariables
+      // plus the catalog's global template environment ($session, $catalog, etc.)
+      const rendered = _renderTemplate(condDef.condition_pattern as string, templateVariables ?? {}, this._reference.table.schema.catalog, {
+        templateEngine: condDef.template_engine,
+      });
+      isEmpty = !rendered || rendered.trim() === '';
+    } else if (condDef.condition_pattern) {
+      const selfTemplateVariables = buildSelfTemplateVariables(this.column as ReferenceColumn, mainTuple!, conditionValue);
       const keyValues: any = {};
       Object.assign(keyValues, templateVariables, selfTemplateVariables);
 
@@ -166,7 +209,7 @@ export default class ActiveListCondition {
     } else {
       // no pattern, sync: derive the raw value from the tuple via the same
       // helper sourceFormatPresentation uses, then decide emptiness directly.
-      const selfVars = buildSelfTemplateVariables(this.column as ReferenceColumn, mainTuple, null);
+      const selfVars = buildSelfTemplateVariables(this.column as ReferenceColumn, mainTuple!, null);
       if ('$_self' in selfVars) {
         // scalar source (local column or all-outbound scalar)
         const v = selfVars.$_self;

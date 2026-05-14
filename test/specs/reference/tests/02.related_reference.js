@@ -840,5 +840,35 @@ exports.execute = function(options) {
                 });
             });
         });
+
+        // No-source conditions on visible-foreign-keys entries are evaluated at
+        // related-list build time; hide-gated entries are spliced out of reference.related.
+        describe('no-source condition filter pass on related, ', function () {
+            var mainTable = "main_w_no_source_cond_related";
+            var mainUri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName2 + ":" + mainTable;
+            var related;
+
+            beforeAll(function (done) {
+                options.ermRest.resolve(mainUri, { cid: "test" }).then(function (response) {
+                    related = response.contextualize.detailed.related;
+                    done();
+                }).catch(function (err) {
+                    done.fail(err);
+                });
+            });
+
+            it('should keep related entries with no condition or a show-gated condition; filter out hide-gated ones.', function () {
+                // 3 entries declared in visible-foreign-keys; hide-gated one is filtered out.
+                // Identify survivors by the inbound table name.
+                var tableNames = related.map(function (rel) {
+                    return rel.table && rel.table.name;
+                });
+
+                expect(related.length).toBe(2, 'related length missmatch');
+                expect(tableNames[0]).toBe('inbound_to_main_w_no_cond', 'related index=0 should be inbound_to_main_w_no_cond');
+                expect(tableNames[1]).toBe('inbound_to_main_w_cond_show', 'related index=1 should be inbound_to_main_w_cond_show');
+                expect(tableNames.indexOf('inbound_to_main_w_cond_hide')).toBe(-1, 'hide-gated inbound should be filtered out');
+            });
+        });
     });
 };

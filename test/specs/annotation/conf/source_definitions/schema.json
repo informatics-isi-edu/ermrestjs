@@ -491,10 +491,16 @@
 
                       "cond_both_source_and_sourcekey": {"sourcekey": "agg1_cnt", "source": "col"},
 
+                      "cond_no_source_pattern":             {"condition_pattern": "show"},
+                      "cond_no_source_pattern_with_engine": {"condition_pattern": "show", "template_engine": "handlebars"},
+                      "cond_no_source_on_empty_show":       {"condition_pattern": "{{#if missing_var}}x{{/if}}", "on_empty": "show"},
+
                       "cond_invalid_neither":         {"on_empty": "hide"},
                       "cond_invalid_dangling_key":    {"sourcekey": "does_not_exist"},
                       "cond_invalid_empty_sourcekey": {"sourcekey": ""},
-                      "cond_invalid_null":            null
+                      "cond_invalid_null":            null,
+                      "cond_invalid_no_source_wait_for": {"condition_pattern": "show", "wait_for": ["agg1_cnt"]},
+                      "cond_invalid_no_source_empty_pattern": {"condition_pattern": ""}
                   }
               }
           }

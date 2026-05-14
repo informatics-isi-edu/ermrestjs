@@ -1086,9 +1086,31 @@ exports.execute = function (options) {
           });
         });
 
+        describe('no-source condition (pattern-only), ', function () {
+          it('should accept a condition with only `condition_pattern` (no source/sourcekey).', function () {
+            var c = sds.getCondition('cond_no_source_pattern');
+            expect(c).toBeDefined('no-source condition with pattern should parse');
+            expect(c.source).toBeUndefined('source should be absent');
+            expect(c.sourcekey).toBeUndefined('sourcekey should be absent');
+            expect(c.condition_pattern).toBe('show');
+          });
+
+          it('should preserve template_engine on a no-source condition.', function () {
+            var c = sds.getCondition('cond_no_source_pattern_with_engine');
+            expect(c).toBeDefined();
+            expect(c.template_engine).toBe('handlebars');
+          });
+
+          it('should preserve on_empty on a no-source condition.', function () {
+            var c = sds.getCondition('cond_no_source_on_empty_show');
+            expect(c).toBeDefined();
+            expect(c.on_empty).toBe('show');
+          });
+        });
+
         describe('invalid conditions, ', function () {
           // each rejection branch in core.js:1735-1758 gets a dedicated case
-          it('should reject when both source and sourcekey are missing.', function () {
+          it('should reject when source, sourcekey, AND condition_pattern are all missing.', function () {
             expect(sds.getCondition('cond_invalid_neither')).toBeUndefined();
           });
 
@@ -1102,6 +1124,15 @@ exports.execute = function (options) {
 
           it('should reject when the condition value is null.', function () {
             expect(sds.getCondition('cond_invalid_null')).toBeUndefined();
+          });
+
+          it('should reject a no-source condition that also has `wait_for`.', function () {
+            // wait_for needs a driving fetch; pattern-only conditions have none
+            expect(sds.getCondition('cond_invalid_no_source_wait_for')).toBeUndefined();
+          });
+
+          it('should reject a no-source condition with an empty condition_pattern.', function () {
+            expect(sds.getCondition('cond_invalid_no_source_empty_pattern')).toBeUndefined();
           });
 
           it('should return undefined for non-existent condition keys.', function () {
