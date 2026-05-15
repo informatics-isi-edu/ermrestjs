@@ -73,6 +73,9 @@ Thumbs.db
 *.sln
 *.sw?
 
+# Claude Code user-local settings (personal permissions, env vars, etc.)
+.claude/settings.local.json
+
 # specific project files
 dist
 test/support/*.spec.js
