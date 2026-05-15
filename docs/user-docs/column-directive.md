@@ -588,7 +588,7 @@ A JSON object that defines an inline condition controlling whether this column o
   - `"show"`: Show the column when empty (hide when non-empty).
 
   What counts as "empty" is determined by `condition_pattern` (see below): if a pattern is set, "empty" means the rendered template is empty or whitespace-only; if no pattern is set (with-source only), "empty" means the source returned no rows or a null/empty value.
-- `condition_pattern`: _(optional with `source`/`sourcekey`; required without)_ A template whose rendered output determines visibility. When provided with a source, the template has access to `$self` (the condition source value) plus the same templating environment as `markdown_pattern`. When provided **without** a source, it is the entire condition: only the catalog-wide template environment is available ([`$session`](handlebars.md#session), [`$catalog`](handlebars.md#catalog), helpers like [`isUserInAcl`](handlebars.md#access-control-acl-check), etc.). No markdown rendering is applied to the result; only emptiness is checked.
+- `condition_pattern`: _(optional with `source`/`sourcekey`; required without)_ A template whose rendered output determines visibility. When provided with a source, the template has access to `$self` (the condition source value) plus the same templating environment as `markdown_pattern`. When provided **without** a source, it is the entire condition: only the catalog-wide template environment is available (e.g., [`$session`](handlebars.md#session), [`$catalog`](handlebars.md#catalog), and helpers like [`isUserInAcl`](handlebars.md#access-control-acl-check)). No markdown rendering is applied to the result; only emptiness is checked.
 - `wait_for`: _(optional, only with `source`/`sourcekey`)_ An array of source key strings (referencing sources defined in `source-definitions`). These sources are fetched alongside the condition source, and their data is available in the templating environment when `condition_pattern` is evaluated. The condition is not evaluated until all `wait_for` sources have completed. Not allowed for no-source conditions.
 
 You must define at least one of `source`, `sourcekey`, or `condition_pattern`.
@@ -644,12 +644,6 @@ Visibility is a two-step decision: first determine whether the condition result 
    - `"show"`: the column is shown only when the result **is** empty.
 
 For example, a no-source `condition_pattern` of `{{#if (isUserInAcl "admin")}}show{{/if}}` renders non-empty for admins and empty for everyone else. With `on_empty: "hide"` (default), admins see the column; with `on_empty: "show"`, the visibility is inverted (everyone except admins sees it).
-
-**Sync vs. async conditions:**
-
-- **No-source conditions** are evaluated synchronously at column-build time against the catalog's template environment. No request is needed.
-- If the with-source condition is all-outbound (no inbound foreign keys or aggregates), the condition is evaluated synchronously using data already available from the main request.
-- If the with-source condition has an inbound path or uses an aggregate, it requires a secondary request. The column value is hidden until the condition is evaluated.
 
 #### condition_key
 
