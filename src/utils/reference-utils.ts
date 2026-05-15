@@ -20,7 +20,6 @@ import {
   type VisibleColumn,
 } from '@isrd-isi-edu/ermrestjs/src/models/reference';
 import ActiveListCondition from '@isrd-isi-edu/ermrestjs/src/models/active-list-condition';
-import type { ConditionDefinition } from '@isrd-isi-edu/ermrestjs/src/models/table-source-definitions';
 
 // services
 import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
@@ -1138,9 +1137,7 @@ export function generateFacetColumns(
 
       try {
         if ('and' in obj) {
-          // NOTE: group-level conditions (`condition` / `condition_key` on a grouped facet
-          // entry) are not honored in v1. Only individual-facet directives are gated.
-          const fow = new FacetObjectGroupWrapper(obj, reference.table, hasFilterOrFacet);
+          const fow = new FacetObjectGroupWrapper(obj, reference, hasFilterOrFacet);
           // avoid duplicate groups
           if (fow.displayname.unformatted! in addedGroups) {
             throw new Error(`Duplicate facet group name: ${fow.displayname.unformatted}`);
@@ -1148,39 +1145,7 @@ export function generateFacetColumns(
           addedGroups[fow.displayname.unformatted!] = true;
           facetObjectWrappers.push(fow);
         } else {
-          // Resolve condition def: `condition_key` wins if present; only fall back to inline
-          // `condition` when no key is given. Matches the precedence in
-          // reference-column.ts:_resolveCondition.
-          let condDef: ConditionDefinition | undefined;
-          let condKey: string | undefined;
-          if (isStringAndNotEmpty(obj.condition_key)) {
-            condKey = obj.condition_key as string;
-            condDef = reference.table.sourceDefinitions.getCondition(condKey);
-            if (!condDef) {
-              logError('condition_key `' + condKey + '` not found in source-definitions conditions; ignoring', objIndex);
-            }
-          } else if (isObjectAndNotNull(obj.condition)) {
-            condDef = obj.condition as ConditionDefinition;
-          }
-
-          if (condDef) {
-            try {
-              const cond = new ActiveListCondition(condDef, reference, undefined, condKey);
-              if (cond.column === null) {
-                // no-source: evaluate synchronously
-                const { shouldShow } = cond.evaluateCondition({}, null);
-                if (!shouldShow) return; // skip this facet entirely
-                // shown: fall through; the condition isn't consumed downstream
-              } else {
-                // with-source conditions are not honored in filter context
-                logError('condition with `source`/`sourcekey` not honored in `filter` context; ignoring', objIndex);
-              }
-            } catch (e) {
-              logError('failed to evaluate condition: ' + (e instanceof Error ? e.message : String(e)), objIndex);
-            }
-          }
-
-          const wrapper = helpers.sourceDefToFacetObjectWrapper(obj, reference.table, hasFilterOrFacet);
+          const wrapper = helpers.sourceDefToFacetObjectWrapper(obj, reference, hasFilterOrFacet);
           facetObjectWrappers.push(wrapper);
         }
       } catch (exp) {

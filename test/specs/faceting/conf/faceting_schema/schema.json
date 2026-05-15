@@ -1847,12 +1847,18 @@
                 "tag:isrd.isi.edu,2019:source-definitions": {
                     "conditions": {
                         "cond_show": {"condition_pattern": "yes"},
-                        "cond_hide": {"condition_pattern": "{{#missing_var}}x{{/missing_var}}"}
+                        "cond_hide": {"condition_pattern": "{{#missing_var}}x{{/missing_var}}"},
+                        "cond_w_source": {
+                            "source": "id",
+                            "on_empty": "show",
+                            "template_engine": "handlebars"
+                        }
                     }
                 },
                 "tag:isrd.isi.edu,2016:visible-columns": {
                     "filter": {
                         "and": [
+                            {"source": "id", "condition_key": "cond_w_source", "comment": "condition is ignored"},
                             {"source": "col_a", "markdown_name": "facet_col_a_no_cond"},
                             {
                                 "source": "col_a",

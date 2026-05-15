@@ -286,6 +286,40 @@
         }
       }
     },
+    "main_w_cond_in_group": {
+      "kind": "table",
+      "table_name": "main_w_cond_in_group",
+      "schema_name": "facet_group_schema",
+      "keys": [{ "unique_columns": ["id"] }],
+      "column_definitions": [
+        { "name": "id", "type": { "typename": "text" } },
+        { "name": "col1", "type": { "typename": "text" } }
+      ],
+      "annotations": {
+        "tag:isrd.isi.edu,2019:source-definitions": {
+          "conditions": {
+            "cond_show": { "condition_pattern": "yes" },
+            "cond_hide": { "condition_pattern": "{{#missing_var}}x{{/missing_var}}" }
+          }
+        },
+        "tag:isrd.isi.edu,2016:visible-columns": {
+          "filter": {
+            "and": [
+              {
+                "markdown_name": "Group w/ conditions",
+                "and": [
+                  { "source": "col1", "markdown_name": "no_cond" },
+                  { "source": "col1", "markdown_name": "inline_show", "condition": { "condition_pattern": "yes" } },
+                  { "source": "col1", "markdown_name": "inline_hide", "condition": { "condition_pattern": "{{#missing_var}}x{{/missing_var}}" } },
+                  { "source": "col1", "markdown_name": "key_hide", "condition_key": "cond_hide" },
+                  { "source": "col1", "markdown_name": "key_show", "condition_key": "cond_show" }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
     "outbound1": {
       "kind": "table",
       "table_name": "outbound1",

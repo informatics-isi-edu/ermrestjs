@@ -3207,9 +3207,10 @@ exports.execute = function (options) {
                     return fc.displayname && fc.displayname.unformatted;
                 });
 
-                expect(facetColumns.length).toBe(2, "facetColumns length missmatch");
-                expect(names[0]).toBe("facet_col_a_no_cond", "facet index=0 should be facet_col_a_no_cond");
-                expect(names[1]).toBe("facet_col_a_inline_show", "facet index=1 should be facet_col_a_inline_show");
+                expect(facetColumns.length).toBe(3, "facetColumns length missmatch");
+                expect(names[0]).toBe('id', 'facet index=0 should be id');
+                expect(names[1]).toBe("facet_col_a_no_cond", "facet index=1 should be facet_col_a_no_cond");
+                expect(names[2]).toBe("facet_col_a_inline_show", "facet index=2 should be facet_col_a_inline_show");
                 expect(names.indexOf("facet_col_b_inline_hide")).toBe(-1, "inline-hide facet should be filtered out");
                 expect(names.indexOf("facet_col_c_key_hide")).toBe(-1, "condition_key=hide facet should be filtered out");
             });
