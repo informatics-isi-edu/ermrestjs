@@ -133,6 +133,40 @@ exports.execute = (options) => {
           .catch((err) => done.fail(err));
       });
 
+      describe('no-source conditions on facets inside a group', () => {
+        let groupRef;
+
+        beforeAll((done) => {
+          resolveURL(options, SCHEMA_NAME, 'main_w_cond_in_group')
+            .then((ref) => {
+              groupRef = ref;
+              return groupRef.generateFacetColumns();
+            })
+            .then(() => done())
+            .catch((err) => done.fail(err));
+        });
+
+        it('should filter out child facets whose no-source condition evaluates to hide', () => {
+          expect(groupRef.facetColumns.length).toBe(3, 'facetColumns length mismatch');
+          expect(groupRef.facetColumnsStructure.length).toBe(1, 'facetColumnsStructure length mismatch');
+
+          const names = groupRef.facetColumns.map((fc) => fc.displayname.unformatted);
+          expect(names[0]).toBe('no_cond', 'facet index=0 should be no_cond');
+          expect(names[1]).toBe('inline_show', 'facet index=1 should be inline_show');
+          expect(names[2]).toBe('key_show', 'facet index=2 should be key_show');
+          expect(names.indexOf('inline_hide')).toBe(-1, 'inline-hide facet should be filtered out');
+          expect(names.indexOf('key_hide')).toBe(-1, 'condition_key=hide facet should be filtered out');
+
+          const group = groupRef.facetColumnsStructure[0];
+          expect(group.children).toEqual([0, 1, 2], 'group children indices should be [0,1,2] after filtering');
+        });
+
+        it('should preserve the group header when some children are hidden', () => {
+          const group = groupRef.facetColumnsStructure[0];
+          expect(group.displayname.unformatted).toBe('Group w/ conditions', 'group displayname mismatch');
+        });
+      });
+
       describe('preselected facets inside groups', () => {
         it('should work properly', (done) => {
           resolveURL(options, SCHEMA_NAME, 'main_preselected_facets')

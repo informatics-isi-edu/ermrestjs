@@ -3184,5 +3184,36 @@ exports.execute = function (options) {
 
             });
         });
+
+        // No-source conditions on facet directives in `filter` context are evaluated
+        // before FacetColumn construction; hide-gated entries are omitted entirely.
+        describe("no-source condition filter pass on facetColumns, ", function () {
+            var tableNoSourceCondFacets = "main_w_no_source_cond_facets";
+            var uri = options.url + "/catalog/" + catalog_id + "/entity/" + schemaName + ":" + tableNoSourceCondFacets;
+            var facetColumns;
+
+            beforeAll(function (done) {
+                options.ermRest.resolve(uri, { cid: "test" }).then(function (response) {
+                    facetColumns = response.contextualize.compact.facetColumns;
+                    done();
+                }).catch(function (err) {
+                    done.fail(err);
+                });
+            });
+
+            it("should keep facets with no condition or a show-gated condition; filter out hide-gated ones.", function () {
+                // 4 facets declared in `filter` context; 2 hide-gated should be filtered out.
+                var names = facetColumns.map(function (fc) {
+                    return fc.displayname && fc.displayname.unformatted;
+                });
+
+                expect(facetColumns.length).toBe(3, "facetColumns length missmatch");
+                expect(names[0]).toBe('id', 'facet index=0 should be id');
+                expect(names[1]).toBe("facet_col_a_no_cond", "facet index=1 should be facet_col_a_no_cond");
+                expect(names[2]).toBe("facet_col_a_inline_show", "facet index=2 should be facet_col_a_inline_show");
+                expect(names.indexOf("facet_col_b_inline_hide")).toBe(-1, "inline-hide facet should be filtered out");
+                expect(names.indexOf("facet_col_c_key_hide")).toBe(-1, "condition_key=hide facet should be filtered out");
+            });
+        });
     });
 };

@@ -251,6 +251,14 @@ exports.execute = function (options) {
                 expect(cond.wait_for.length).toBe(1, "wait_for length missmatch");
                 expect(cond.wait_for[0]).toBe("cnt_i2", "wait_for[0] missmatch");
             });
+
+            it ("should parse a no-source condition (pattern-only) from the annotation.", function () {
+                var cond = sds.getCondition("cond_no_source_show");
+                expect(cond).toBeDefined("cond_no_source_show not found");
+                expect(cond.source).toBeUndefined("source should be absent on a no-source condition");
+                expect(cond.sourcekey).toBeUndefined("sourcekey should be absent on a no-source condition");
+                expect(cond.condition_pattern).toBe("show", "condition_pattern missmatch");
+            });
         });
 
         describe("SourceObjectWrapper condition sourceObject, ", function () {

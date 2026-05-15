@@ -1124,6 +1124,115 @@
                     }]
                 }
             ]
+        },
+        "main_w_no_source_cond_related": {
+            "comment": "table for testing the no-source condition filter pass on reference.related",
+            "kind": "table",
+            "schema_name": "reference_schema_2",
+            "table_name": "main_w_no_source_cond_related",
+            "keys": [{"unique_columns": ["id"]}],
+            "foreign_keys": [],
+            "column_definitions": [
+                {"name": "id", "nullok": false, "type": {"typename": "int4"}}
+            ],
+            "annotations": {
+                "tag:isrd.isi.edu,2019:source-definitions": {
+                    "conditions": {
+                        "cond_show": {"condition_pattern": "yes"},
+                        "cond_hide": {"condition_pattern": "{{#missing_var}}x{{/missing_var}}"}
+                    }
+                },
+                "tag:isrd.isi.edu,2016:visible-foreign-keys": {
+                    "detailed": [
+                        {
+                            "source": [{"inbound": ["reference_schema_2", "fk_inbound_to_main_w_no_cond"]}, "RID"]
+                        },
+                        {
+                            "source": [{"inbound": ["reference_schema_2", "fk_inbound_to_main_w_cond_show"]}, "RID"],
+                            "condition": {"condition_pattern": "yes"}
+                        },
+                        {
+                            "source": [{"inbound": ["reference_schema_2", "fk_inbound_to_main_w_cond_hide"]}, "RID"],
+                            "condition": {"condition_pattern": "{{#missing_var}}x{{/missing_var}}"}
+                        }
+                    ]
+                }
+            }
+        },
+        "inbound_to_main_w_no_cond": {
+            "kind": "table",
+            "schema_name": "reference_schema_2",
+            "table_name": "inbound_to_main_w_no_cond",
+            "keys": [{"unique_columns": ["id"]}],
+            "foreign_keys": [
+                {
+                    "names": [["reference_schema_2", "fk_inbound_to_main_w_no_cond"]],
+                    "foreign_key_columns": [{
+                        "schema_name": "reference_schema_2",
+                        "table_name": "inbound_to_main_w_no_cond",
+                        "column_name": "main_id"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "reference_schema_2",
+                        "table_name": "main_w_no_source_cond_related",
+                        "column_name": "id"
+                    }]
+                }
+            ],
+            "column_definitions": [
+                {"name": "id", "nullok": false, "type": {"typename": "int4"}},
+                {"name": "main_id", "type": {"typename": "int4"}}
+            ]
+        },
+        "inbound_to_main_w_cond_show": {
+            "kind": "table",
+            "schema_name": "reference_schema_2",
+            "table_name": "inbound_to_main_w_cond_show",
+            "keys": [{"unique_columns": ["id"]}],
+            "foreign_keys": [
+                {
+                    "names": [["reference_schema_2", "fk_inbound_to_main_w_cond_show"]],
+                    "foreign_key_columns": [{
+                        "schema_name": "reference_schema_2",
+                        "table_name": "inbound_to_main_w_cond_show",
+                        "column_name": "main_id"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "reference_schema_2",
+                        "table_name": "main_w_no_source_cond_related",
+                        "column_name": "id"
+                    }]
+                }
+            ],
+            "column_definitions": [
+                {"name": "id", "nullok": false, "type": {"typename": "int4"}},
+                {"name": "main_id", "type": {"typename": "int4"}}
+            ]
+        },
+        "inbound_to_main_w_cond_hide": {
+            "kind": "table",
+            "schema_name": "reference_schema_2",
+            "table_name": "inbound_to_main_w_cond_hide",
+            "keys": [{"unique_columns": ["id"]}],
+            "foreign_keys": [
+                {
+                    "names": [["reference_schema_2", "fk_inbound_to_main_w_cond_hide"]],
+                    "foreign_key_columns": [{
+                        "schema_name": "reference_schema_2",
+                        "table_name": "inbound_to_main_w_cond_hide",
+                        "column_name": "main_id"
+                    }],
+                    "referenced_columns": [{
+                        "schema_name": "reference_schema_2",
+                        "table_name": "main_w_no_source_cond_related",
+                        "column_name": "id"
+                    }]
+                }
+            ],
+            "column_definitions": [
+                {"name": "id", "nullok": false, "type": {"typename": "int4"}},
+                {"name": "main_id", "type": {"typename": "int4"}}
+            ]
         }
     },
     "comment": null,

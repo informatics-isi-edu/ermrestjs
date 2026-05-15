@@ -49,6 +49,7 @@ import {
   computeReferenceDisplay,
   type ReferenceDisplay,
   generateColumnsList,
+  applyNoSourceConditions,
 } from '@isrd-isi-edu/ermrestjs/src/utils/reference-utils';
 import { isObject, isObjectAndNotNull, isStringAndNotEmpty, verify } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
 import { fixedEncodeURIComponent, simpleDeepCopy } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
@@ -817,7 +818,7 @@ export class Reference {
     }
 
     if (notSorted && this._related.length !== 0) {
-      return this._related.sort((a, b) => {
+      this._related.sort((a, b) => {
         // displayname
         if (a.displayname.value !== b.displayname.value) {
           return (a.displayname.value as string).localeCompare(b.displayname.value as string);
@@ -834,6 +835,8 @@ export class Reference {
         return fkeyColPositions === -1 ? -1 : 1;
       });
     }
+
+    applyNoSourceConditions(this._related, (rel) => rel.pseudoColumn?.resolvedCondition);
 
     return this._related;
   }
@@ -888,7 +891,10 @@ export class Reference {
       conditionedItem: { column?: boolean; inline?: boolean; related?: boolean; index: number },
       addToDeps: (deps: Array<ActiveListRequest | ActiveListRelatedEntityRequest>) => void,
     ): boolean => {
-      if (!isDetailed || !condition) return false;
+      // !condition.column is the no-source marker: those should already be
+      // filtered out by generateColumnsList / generateRelatedList, but this is
+      // a safety net since ActiveList's processConditionedItem assumes a column.
+      if (!isDetailed || !condition || !condition.column) return false;
       builder.processConditionedItem(condition, conditionedItem, addToDeps);
       return true;
     };

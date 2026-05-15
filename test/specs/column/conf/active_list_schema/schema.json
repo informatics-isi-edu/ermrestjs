@@ -779,6 +779,9 @@
                             "on_empty": "hide",
                             "condition_pattern": "{{#if cnt_i2}}show{{/if}}",
                             "wait_for": ["cnt_i2"]
+                        },
+                        "cond_no_source_show": {
+                            "condition_pattern": "show"
                         }
                     }
                 }

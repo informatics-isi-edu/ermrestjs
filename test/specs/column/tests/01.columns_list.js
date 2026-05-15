@@ -1115,6 +1115,44 @@ exports.execute = function (options) {
       }
     });
 
+    // No-source conditions are evaluated at column-build time; hide-gated entries
+    // are spliced out of reference.columns. Filter runs uniformly across contexts.
+    describe('no-source condition filter pass on reference.columns, ', function () {
+      var tableNoSourceCond = 'table_w_no_source_condition';
+      var noSourceCondUri = options.url + '/catalog/' + catalog_id + '/entity/' + schemaName + ':' + tableNoSourceCond;
+
+      var ref;
+      beforeAll(function (done) {
+        options.ermRest.resolve(noSourceCondUri, { cid: 'test' }).then(function (response) {
+          ref = response;
+          done();
+        }).catch(function (err) {
+          done.fail(err);
+        });
+      });
+
+      it('should keep unconditioned and show-gated columns in compact context.', function () {
+        var cols = ref.contextualize.compact.columns;
+        var names = cols.map(function (c) { return c.displayname.unformatted; });
+
+        expect(cols.length).toBe(3, 'compact columns length missmatch');
+        expect(names[0]).toBe('id', 'col index=0 should be id (unconditioned)');
+        expect(names[1]).toBe('col_a_inline_show', 'col index=1 should be col_a_inline_show (inline-show kept)');
+        expect(names[2]).toBe('col_c_key_show', 'col index=2 should be col_c_key_show (condition_key=show kept)');
+        expect(names.indexOf('col_b_inline_hide')).toBe(-1, 'inline-hide should be filtered out');
+        expect(names.indexOf('col_d_key_hide')).toBe(-1, 'condition_key=hide should be filtered out');
+      });
+
+      it('should apply the filter in entry context too (uniform across contexts).', function () {
+        var cols = ref.contextualize.entry.columns;
+        var names = cols.map(function (c) { return c.displayname.unformatted; });
+
+        expect(cols.length).toBe(1, 'entry columns length missmatch');
+        expect(names[0]).toBe('entry_col_a_show', 'entry-show column should be the only survivor');
+        expect(names.indexOf('entry_col_b_hide')).toBe(-1, 'entry-hide should be filtered out');
+      });
+    });
+
     /************** HELPER FUNCTIONS ************* */
     function areSameColumnList(cols1, cols2) {
       expect(cols1.length).toEqual(cols2.length, "didn't have the same length.");

@@ -572,21 +572,26 @@ For more information about this property, please refer to [this document](input-
 
 ### 3. Condition properties
 
-These properties allow you to conditionally show or hide a column or related entity on the record page (`detailed` context). The condition is based on the result of a separate data source. This is useful when you want to display a column only if related data exists (or does not exist).
+These properties allow you to conditionally show or hide a column or related entity. There are two forms:
 
-Conditions are only evaluated in the `detailed` context. In all other contexts, these properties are ignored and the column is displayed normally.
+- **With source** (`source` or `sourcekey` set): The condition is based on the result of a separate data source. Useful when visibility depends on whether related data exists. With-source conditions are evaluated **only in the `detailed` context** (record page); they are ignored in `compact`, `entry`, `filter`, etc.
+- **No source** (only `condition_pattern` set, no `source`/`sourcekey`/`wait_for`): The condition is a pure template evaluated synchronously against the catalog's [template environment](handlebars.md#using-pre-defined-attributes). Useful for ACL-driven visibility, for example showing a column only to members of a given group. No-source conditions are honored **in every context**, including `compact`, `entry`, and `filter` (facets).
 
 #### condition
 
 A JSON object that defines an inline condition controlling whether this column or related entity is displayed. The object has the following properties:
 
-- `sourcekey`: A string referencing one of the sources defined in the [`source-definitions`](annotation.md#tag-2019-source-definitions) annotation. The data returned by this source is used to evaluate the condition.
-- `source`: An inline source path (same syntax as the column directive [`source`](#source) property). Use this as an alternative to `sourcekey` when you don't need to reuse the condition source elsewhere. You must provide at least one of `sourcekey` or `source`. If both are provided, `sourcekey` takes precedence.
-- `on_empty`: _(optional)_ Controls what happens when the condition source returns no data. Accepted values:
-  - `"hide"` (default): Hide the column when the condition source is empty.
-  - `"show"`: Show the column when the condition source is empty (and hide it when data is present).
-- `condition_pattern`: _(optional)_ A template that is evaluated using the condition source data. When provided, the condition is based on whether the rendered template produces a non-empty string, rather than whether the condition source returned data. The template has access to `$self` (the condition source value) and the same templating environment as `markdown_pattern`. No markdown rendering is applied to the result; only emptiness is checked.
-- `wait_for`: _(optional)_ An array of source key strings (referencing sources defined in `source-definitions`). These sources are fetched alongside the condition source, and their data is available in the templating environment when `condition_pattern` is evaluated. This allows the condition to reference data from multiple sources. The condition is not evaluated until all `wait_for` sources have completed.
+- `sourcekey`: _(optional)_ A string referencing one of the sources defined in the [`source-definitions`](annotation.md#tag-2019-source-definitions) annotation. The data returned by this source is used to evaluate the condition.
+- `source`: _(optional)_ An inline source path (same syntax as the column directive [`source`](#source) property). Use this as an alternative to `sourcekey` when you don't need to reuse the condition source elsewhere. If both `source` and `sourcekey` are provided, `sourcekey` takes precedence.
+- `on_empty`: _(optional)_ Decides what to do when the condition result is "empty". Applies to both with-source and no-source forms. Accepted values:
+  - `"hide"` (default): Hide the column when empty (show when non-empty).
+  - `"show"`: Show the column when empty (hide when non-empty).
+
+  What counts as "empty" is determined by `condition_pattern` (see below): if a pattern is set, "empty" means the rendered template is empty or whitespace-only; if no pattern is set (with-source only), "empty" means the source returned no rows or a null/empty value.
+- `condition_pattern`: _(optional with `source`/`sourcekey`; required without)_ A template whose rendered output determines visibility. When provided with a source, the template has access to `$self` (the condition source value) plus the same templating environment as `markdown_pattern`. When provided **without** a source, it is the entire condition: only the catalog-wide template environment is available (e.g., [`$session`](handlebars.md#session), [`$catalog`](handlebars.md#catalog), and helpers like [`isUserInAcl`](handlebars.md#access-control-acl-check)). No markdown rendering is applied to the result; only emptiness is checked.
+- `wait_for`: _(optional, only with `source`/`sourcekey`)_ An array of source key strings (referencing sources defined in `source-definitions`). These sources are fetched alongside the condition source, and their data is available in the templating environment when `condition_pattern` is evaluated. The condition is not evaluated until all `wait_for` sources have completed. Not allowed for no-source conditions.
+
+You must define at least one of `source`, `sourcekey`, or `condition_pattern`.
 
 ```json
 {
@@ -612,23 +617,37 @@ A JSON object that defines an inline condition controlling whether this column o
 }
 ```
 
+**No-source example (ACL-driven visibility):**
+
+```json
+{
+  "source": "admin_notes",
+  "condition": {
+    "condition_pattern": "{{#if (isUserInAcl \"https://group-id-for-admins\")}}show{{/if}}",
+    "template_engine": "handlebars"
+  }
+}
+```
+
+This column appears only when the current user is in the given group. Beyond [`isUserInAcl`](handlebars.md#access-control-acl-check), `condition_pattern` in the no-source form can reference any of the [pre-defined template variables](handlebars.md#using-pre-defined-attributes) (`$session`, `$catalog`, `$moment`, etc.) and any helper available in the templating environment.
+
 **How conditions are evaluated:**
 
-1. The client sends a request to fetch the condition source data.
-2. If `condition_pattern` is defined, the template is rendered with the condition data. The result is considered "empty" if it renders to an empty or whitespace-only string.
-3. If `condition_pattern` is not defined, the condition is considered "empty" when the source returns no rows (for entity sets) or a null/empty value (for aggregates).
-4. Based on `on_empty`:
+Visibility is a two-step decision: first determine whether the condition result is "empty", then apply `on_empty` to decide show vs. hide.
+
+1. **Resolve the result.** For with-source conditions, the client fetches the condition source data if it isn't already available. For no-source conditions, nothing is fetched.
+2. **Decide if the result is "empty".** This depends on whether `condition_pattern` is set:
+   - **Pattern set** (either form): render the template; "empty" means the rendered output is empty or whitespace-only.
+   - **No pattern** (with-source only): "empty" means the source returned no rows (for entity sets) or a null/empty value (for aggregates).
+3. **Apply `on_empty`** to map "empty" to show vs. hide:
    - `"hide"` (default): the column is shown only when the result is **not** empty.
    - `"show"`: the column is shown only when the result **is** empty.
 
-**Sync vs. async conditions:**
-
-- If the condition source is all-outbound (no inbound foreign keys or aggregates), the condition is evaluated synchronously using data already available from the main request. No additional request is needed.
-- If the condition source has an inbound path or uses an aggregate, it requires a secondary request. The column value is hidden until the condition is evaluated.
+For example, a no-source `condition_pattern` of `{{#if (isUserInAcl "admin")}}show{{/if}}` renders non-empty for admins and empty for everyone else. With `on_empty: "hide"` (default), admins see the column; with `on_empty: "show"`, the visibility is inverted (everyone except admins sees it).
 
 #### condition_key
 
-A string that references a reusable condition defined in the `conditions` section of the [`source-definitions`](annotation.md#tag-2019-source-definitions) annotation. This allows you to define a condition once and apply it to multiple columns or related entities.
+A string that references a reusable condition defined in the `conditions` section of the [`source-definitions`](annotation.md#tag-2019-source-definitions) annotation. This allows you to define a condition once and apply it to multiple columns or related entities. The referenced condition can be either the with-source or no-source form, and the same context rules apply (with-source only in `detailed`; no-source in every context).
 
 If both `condition` and `condition_key` are defined on the same column directive, `condition_key` takes precedence and `condition` is ignored.
 

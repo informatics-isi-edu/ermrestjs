@@ -1741,9 +1741,16 @@ import {
                         $log.info("condition definition, table =" + self.name + ", condition=" + cKey + ": must be an object.");
                         continue;
                     }
-                    // must have source or sourcekey
-                    if (!condDef.source && !isStringAndNotEmpty(condDef.sourcekey)) {
-                        $log.info("condition definition, table =" + self.name + ", condition=" + cKey + ": must have `source` or `sourcekey`.");
+                    var hasSource = !!condDef.source || isStringAndNotEmpty(condDef.sourcekey);
+                    var hasPattern = isStringAndNotEmpty(condDef.condition_pattern);
+                    // must have source/sourcekey OR a no-source condition_pattern
+                    if (!hasSource && !hasPattern) {
+                        $log.info("condition definition, table =" + self.name + ", condition=" + cKey + ": must have `source`/`sourcekey` or `condition_pattern`.");
+                        continue;
+                    }
+                    // wait_for requires source/sourcekey (no-source conditions cannot coordinate secondary fetches)
+                    if (!hasSource && condDef.wait_for !== undefined) {
+                        $log.info("condition definition, table =" + self.name + ", condition=" + cKey + ": `wait_for` requires `source` or `sourcekey`.");
                         continue;
                     }
                     // if sourcekey, it must exist in the sources map

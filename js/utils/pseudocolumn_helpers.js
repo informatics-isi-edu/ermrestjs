@@ -9,6 +9,7 @@ import SourceObjectNode from '@isrd-isi-edu/ermrestjs/src/models/source-object-n
 import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-object-wrapper';
 import PathPrefixAliasMapping from '@isrd-isi-edu/ermrestjs/src/models/path-prefix-alias-mapping';
 import { Tuple, Reference } from '@isrd-isi-edu/ermrestjs/src/models/reference';
+import ActiveListCondition from '@isrd-isi-edu/ermrestjs/src/models/active-list-condition';
 
 // services
 import CatalogService from '@isrd-isi-edu/ermrestjs/src/services/catalog';
@@ -901,25 +902,56 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
          *
          *
          * @param {any} obj the source definition object
-         * @param {Table} table the table that this source definition is based on
+         * @param {Reference} reference the reference that this source definition is defined on
          * @param {boolean} hasFilterOrFacet whether the url has any filter or facet defined. If this is true, we will remove any filter defined in the source definition.
          *
          * @throws {Error} if the source definition is invalid for facet
          *
          * @returns {SourceObjectWrapper} the source object wrapper that can be used as a facet object.
          */
-        sourceDefToFacetObjectWrapper: function (obj, table, hasFilterOrFacet) {
+        sourceDefToFacetObjectWrapper: function (obj, reference, hasFilterOrFacet) {
+
+            // evaluate the condition, and throw an error only if the condition is no-source and evaluates to hidden.
+            let condDef, condKey;
+            if (isStringAndNotEmpty(obj.condition_key)) {
+                condKey = obj.condition_key;
+                condDef = reference.table.sourceDefinitions.getCondition(condKey);
+                if (!condDef) {
+                    $log.info('condition_key `' + condKey + '` not found in source-definitions conditions');
+                }
+            } else if (isObjectAndNotNull(obj.condition)) {
+                condDef = obj.condition;
+            }
+            if (condDef) {
+                let shouldShow = true;
+                try {
+                    const cond = new ActiveListCondition(condDef, reference, undefined, condKey);
+                    if (cond.column === null) {
+                        // no-source: evaluate synchronously
+                        shouldShow = cond.evaluateCondition({}, null).shouldShow;
+                    } else {
+                        // with-source conditions are not honored in filter context
+                        $log.info('condition with `source`/`sourcekey` not honored in `filter` context');
+                    }
+                } catch (e) {
+                    $log.info('failed to evaluate condition: ' + (e instanceof Error ? e.message : String(e)));
+                }
+                if (!shouldShow) {
+                    throw new Error('no-source condition evaluated to hidden');
+                }
+            }
+
             let wrapper;
             // if both source and sourcekey are defined, ignore the source and use sourcekey
             if (obj.sourcekey) {
-                const sd = table.sourceDefinitions.getSource(obj.sourcekey);
+                const sd = reference.table.sourceDefinitions.getSource(obj.sourcekey);
                 if (!sd) {
                     throw new Error(_facetingErrors.invalidSourcekey);
                 }
 
-                wrapper = sd.clone(obj, table, true);
+                wrapper = sd.clone(obj, reference.table, true);
             } else {
-                wrapper = new SourceObjectWrapper(obj, table, true);
+                wrapper = new SourceObjectWrapper(obj, reference.table, true);
             }
 
             const col = wrapper.column;

@@ -901,10 +901,21 @@ Note: Some properties might not make sense to be used in this annotation. The `d
 
 Using this key you can,
 
+- Define list of column names and outbound foreign keys that should be available in the templating environments (Please refer to [this document](column-directive-template.md) for more information).
 - Define `sources` that can be used in `visible-columns` and `visible-foreign-keys` annotations.
 - Define `sources` that can be used in the `wait_for` definition of `visible-columns`, `visible-foreign-keys`, and `citation` annotations.
-- Define list of column names and outbound foreign keys that should be available in the templating environments (Please refer to [this document](column-directive-template.md) for more information).
+- Define `conditions` that can be referenced by column directives via `condition_key`. See [condition and condition_key](column-directive.md#condition) for more information.
 - Modify the behavior of main search box in recordset page.
+
+
+> ⚠️ **REQUIRED ATTRIBUTES**
+>
+> When defining this annotation, you **MUST** always include both `columns` and `fkeys` attributes, even if you are only adding this annotation to define `sources` or `conditions`.
+>
+> If you don't need to customize which columns/fkeys are available, simply set them to `true`: `"columns": true, "fkeys": true`
+>
+> If you do not provide values for `columns` and `fkeys`, Chaise will **NOT** provide data for any columns or outbound foreign keys in templating environments.
+
 
 Example:
 
@@ -937,6 +948,10 @@ Example:
         "custom_check": {
             "source": [{"inbound": ["schema", "fk3"]}, "RID"],
             "condition_pattern": "{{#each $self}}{{#with this.values}}{{#if (eq _name 'some-value')}}true{{/if}}{{/with}}{{/each}}"
+        },
+        "is_admin": {
+            "condition_pattern": "{{#if (isUserInAcl \"https://group-id-for-admins\")}}show{{/if}}",
+            "template_engine": "handlebars"
         }
     },
     "search-box": {
@@ -949,8 +964,6 @@ Example:
 }
 ```
 
-> If you define this annotation, you have to define all three attributes. If you do not providing any values for `columns` and `fkeys`, chaise will not provide data for any columns or outbound foreign keys in templating environments.
-
 Supported JSON payload patterns:
 
 - `{` ... `"sources":` _sourcedefinitions_ `,` ... `}`: the source definitions that will allow you to refer to them by just using the defined _sourcekey_.
@@ -962,7 +975,11 @@ Supported JSON payload patterns:
 
 Supported _conditiondefinitions_ patterns:
 
-- `{` ... `"` _conditionkey_ `":` _conditionobject_ ... `}`: where _conditionkey_ is a name that will be used to refer to the defined condition. Each _conditionobject_ must have either `source` or `sourcekey` to identify the data that will be used for evaluating the condition. See the [condition documentation](column-directive.md#condition) for the full list of properties.
+- `{` ... `"` _conditionkey_ `":` _conditionobject_ ... `}`: where _conditionkey_ is a name that will be used to refer to the defined condition. Each _conditionobject_ must define one of:
+    - `source` or `sourcekey` (the **with-source** form): visibility is driven by data from a separate fetch (only honored in `detailed` context).
+    - `condition_pattern` alone (no `source`/`sourcekey`/`wait_for`) (the **no-source** form): visibility is driven by a pure template evaluated against the catalog's [template environment](handlebars.md#using-pre-defined-attributes), useful for ACL-driven visibility via [`isUserInAcl`](handlebars.md#access-control-acl-check) (honored in every context).
+
+  See the [condition documentation](column-directive.md#condition) for the full list of properties and a no-source example.
 
 Supported _sourcedefinitions_ patterns:
 
@@ -1482,5 +1499,5 @@ The following attributes can be used to manipulate the presentation settings of 
     - `order`: An alternative sort method to apply when a client wants to semantically sort by key values. It follows the same syntax as `column_order`. In scalar array aggregate, you cannot sort based on other columns values, you can only sort based on the scalar value of the column.
     - `max_length`: `<number>` A number that defines the maximum number of elements that should be displayed.
 - `input_iframe`: Applicaple only to entry contexts. A JSON object that describes the settings for showing "input iframe" in entry apps. Please refer to the [input iframe document](input-iframe.md) for more information about this property.
-- `condition`: Applicable only to `detailed` context. A JSON object that defines a condition controlling whether this column or related entity is displayed. The condition references a data source whose result determines visibility. Please refer to the [condition documentation](column-directive.md#condition) for more information.
-- `condition_key`: Applicable only to `detailed` context. A string that references a reusable condition defined in the [`conditions`](#tag-2019-source-definitions) section of the `source-definitions` annotation. If both `condition` and `condition_key` are defined, `condition_key` takes precedence.
+- `condition`: A JSON object that defines a condition controlling whether this column or related entity is displayed. The **with-source** form (`source` or `sourcekey` set) references a data source whose result determines visibility and is only honored in the `detailed` context. The **no-source** form (with `condition_pattern` set) is a pure template evaluated against the catalog's template environment, useful for ACL-driven visibility, and is honored in every context (including `filter` facets). Please refer to the [condition documentation](column-directive.md#condition) for more information.
+- `condition_key`: A string that references a reusable condition defined in the [`conditions`](#tag-2019-source-definitions) section of the `source-definitions` annotation. The same context rules as `condition` apply (with-source only in `detailed`; no-source in every context). If both `condition` and `condition_key` are defined, `condition_key` takes precedence.

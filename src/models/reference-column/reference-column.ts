@@ -461,6 +461,8 @@ export class ReferenceColumn {
 
   /**
    * The resolved condition for this column, or null if no condition or not applicable.
+   * Note: no-source conditions are returned here even after `applyNoSourceConditions`
+   * has already handled them. Downstream consumers guard via `!condition.column`.
    */
   get resolvedCondition(): ActiveListCondition | null {
     if (this._resolvedCondition === undefined) {
@@ -472,13 +474,13 @@ export class ReferenceColumn {
 
   /**
    * Resolve the condition definition and source for this column.
+   *
+   * With-source conditions (drive a secondary fetch tied to the main entity)
+   * are only honored in `detailed` context. No-source conditions (pattern-only)
+   * are honored in every context — they're evaluated synchronously against
+   * the catalog's global template environment.
    */
   protected _resolveCondition(): ActiveListCondition | null {
-    // only applicable in detailed context
-    if (this._context !== _contexts.DETAILED) {
-      return null;
-    }
-
     if (!this.sourceObjectWrapper) {
       return null;
     }
@@ -496,6 +498,13 @@ export class ReferenceColumn {
     } else if (isObjectAndNotNull(sourceObject.condition)) {
       condDef = sourceObject.condition as Record<string, unknown>;
     } else if (!condDef) {
+      return null;
+    }
+
+    // gate with-source conditions to detailed context (no-source falls through)
+    const hasSource = !!condDef.source || isStringAndNotEmpty(condDef.sourcekey as string | undefined);
+    if (hasSource && this._context !== _contexts.DETAILED) {
+      $log.info('condition with `source`/`sourcekey` only honored in `detailed` context; ignoring on column `' + this.name + '`.');
       return null;
     }
 

@@ -411,6 +411,8 @@ export const _warningMessages = Object.freeze({
   USED_IN_IFRAME_INPUT: 'the column already used in another column mapping.',
   CONDITION: {
     INVALID_SOURCE: 'condition definition is invalid. `source` or `sourcekey` is required and must be valid.',
+    MISSING_PATTERN: 'condition without `source`/`sourcekey` must define `condition_pattern`.',
+    NO_SOURCE_WAIT_FOR: 'condition without `source`/`sourcekey` cannot use `wait_for`.',
   },
 });
 

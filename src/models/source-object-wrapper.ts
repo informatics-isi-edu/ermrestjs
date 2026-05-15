@@ -693,12 +693,12 @@ export class FacetObjectGroupWrapper {
    * Will throw an error if there was any issues in processing the source object.
    *
    * @param sourceObject The source object representing the facet group.
-   * @param table The table to which the facet group belongs.
+   * @param reference The reference to which the facet group belongs.
    * @param hasFilterOrFacet Indicates if the group has any filters or facets.
    *
    * @throws Will throw an error if the source object is invalid or has no valid children.
    */
-  constructor(sourceObject: Record<string, unknown>, table: Table, hasFilterOrFacet: boolean) {
+  constructor(sourceObject: Record<string, unknown>, reference: Reference, hasFilterOrFacet: boolean) {
     if (!Array.isArray(sourceObject.and) || sourceObject.and.length === 0) {
       throw new Error('valid array of children is required');
     }
@@ -727,10 +727,10 @@ export class FacetObjectGroupWrapper {
     const children: SourceObjectWrapper[] = [];
     for (const child of sourceObject.and) {
       try {
-        const wrapper = _facetColumnHelpers.sourceDefToFacetObjectWrapper(child, table, hasFilterOrFacet);
+        const wrapper = _facetColumnHelpers.sourceDefToFacetObjectWrapper(child, reference, hasFilterOrFacet);
         children.push(wrapper);
       } catch (exp: unknown) {
-        $log.info(`child of facet group "${sourceObject.markdown_name}", index: ${children.length} is invalid:`);
+        $log.info(`child of facet group "${sourceObject.markdown_name}", index: ${children.length} is invalid/ignored:`);
         $log.info((exp as Error).message);
       }
     }

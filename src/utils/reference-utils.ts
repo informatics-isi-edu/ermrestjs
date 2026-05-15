@@ -19,6 +19,7 @@ import {
   type Tuple,
   type VisibleColumn,
 } from '@isrd-isi-edu/ermrestjs/src/models/reference';
+import ActiveListCondition from '@isrd-isi-edu/ermrestjs/src/models/active-list-condition';
 
 // services
 import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
@@ -1031,7 +1032,33 @@ export function generateColumnsList(
     }
   }
 
+  applyNoSourceConditions(resultColumns, (col) => col.resolvedCondition);
+
   return resultColumns;
+}
+
+/**
+ * Splice items whose no-source condition evaluates to "hide". With-source
+ * conditions are left in place (handled by chaise after the main read).
+ * Mutates `items` in place.
+ */
+export function applyNoSourceConditions<T>(items: T[], getCondition: (item: T) => ActiveListCondition | null | undefined): void {
+  for (let i = 0; i < items.length; i++) {
+    const cond = getCondition(items[i]);
+    if (!cond || cond.column !== null) continue; // no condition, or with-source
+
+    let shouldShow = true;
+    try {
+      shouldShow = cond.evaluateCondition({}, null).shouldShow;
+    } catch (e) {
+      $log.warn('no-source condition evaluation failed; defaulting to show: ' + (e instanceof Error ? e.message : String(e)));
+    }
+
+    if (!shouldShow) {
+      items.splice(i, 1);
+      i--;
+    }
+  }
 }
 
 /**
@@ -1110,7 +1137,7 @@ export function generateFacetColumns(
 
       try {
         if ('and' in obj) {
-          const fow = new FacetObjectGroupWrapper(obj, reference.table, hasFilterOrFacet);
+          const fow = new FacetObjectGroupWrapper(obj, reference, hasFilterOrFacet);
           // avoid duplicate groups
           if (fow.displayname.unformatted! in addedGroups) {
             throw new Error(`Duplicate facet group name: ${fow.displayname.unformatted}`);
@@ -1118,7 +1145,7 @@ export function generateFacetColumns(
           addedGroups[fow.displayname.unformatted!] = true;
           facetObjectWrappers.push(fow);
         } else {
-          const wrapper = helpers.sourceDefToFacetObjectWrapper(obj, reference.table, hasFilterOrFacet);
+          const wrapper = helpers.sourceDefToFacetObjectWrapper(obj, reference, hasFilterOrFacet);
           facetObjectWrappers.push(wrapper);
         }
       } catch (exp) {

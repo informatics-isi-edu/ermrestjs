@@ -379,6 +379,11 @@ export class ActiveListBuilder {
     conditionedItem: ActiveListConditionedItem,
     addToDependent: (dependentRequests: Array<ActiveListRequest | ActiveListRelatedEntityRequest>) => void,
   ): void {
+    // Defense: no-source conditions (column === null) are evaluated synchronously
+    // at column-build time and should never reach the ActiveList. Caller
+    // (`tryCondition`) already guards this; bail safely if something slipped past.
+    if (!condition.column) return;
+
     // dedup: if this condition was already grouped (via condition_key), reuse
     // that group's dependent list and add this item to its conditionedItems list.
     if (condition.conditionKey) {
@@ -396,7 +401,7 @@ export class ActiveListBuilder {
     // this populates `requests` (with `condition: true, index: conditionIndex`
     // so chaise routes the completion to evaluateCondition); for sync sources
     // it's a no-op on `requests` but still populates `allOutBounds` / `selfLinks`.
-    this.addCol(condition.column, false, ActiveListRequestTypes.CONDITION, conditionIndex);
+    this.addCol(condition.column!, false, ActiveListRequestTypes.CONDITION, conditionIndex);
     condition.waitFor.forEach((wf) => {
       this.addCol(wf, true, ActiveListRequestTypes.CONDITION, conditionIndex);
     });
