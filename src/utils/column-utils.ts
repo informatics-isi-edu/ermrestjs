@@ -18,12 +18,12 @@ import { isDefinedAndNotNull } from '@isrd-isi-edu/ermrestjs/src/utils/type-util
 
 // legacy
 import {
-  _formatUtils,
   _generateRowPresentation,
   _getRowTemplateVariables,
   _processColumnOrderList,
   _renderTemplate,
 } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
+import { _formatUtils } from '@isrd-isi-edu/ermrestjs/src/utils/format-utils';
 
 /**
  * Convert the raw value of an aggregate column to a formatted value.

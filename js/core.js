@@ -48,14 +48,13 @@ import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-objec
 import { parse } from '@isrd-isi-edu/ermrestjs/js/parser';
 import {
   _isValidBulkCreateForeignKey,
-  _formatValueByType,
-  _formatUtils,
   _getFormattedKeyValues,
   _getNullValue,
   _processColumnOrderList,
   processMarkdownPattern,
   _renderTemplate,
 } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
+import { _formatUtils, _formatValueByType } from '@isrd-isi-edu/ermrestjs/src/utils/format-utils';
 import printf from '@isrd-isi-edu/ermrestjs/js/format';
 
 // legacy

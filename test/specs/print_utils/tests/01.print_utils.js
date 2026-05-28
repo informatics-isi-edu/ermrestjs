@@ -1042,6 +1042,136 @@ export function execute (options) {
         );
       });
 
+      it('datetimeDuration helper', function () {
+        // 35 days between start and end (Jan 1 -> Feb 5, 2025), the spec worked example.
+        var ctx = { start: '2025-01-01T00:00:00Z', end: '2025-02-05T00:00:00Z' };
+
+        // ---- defaults / unit options ----
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end}}', ctx)).toBe('+1.1 months', 'default unit=auto fraction=1');
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end fraction=0}}', ctx)).toBe('+1 months', 'fraction=0 drops the decimal');
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end unit="day"}}', ctx)).toBe('+35.0 days', 'unit=day');
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end unit="hour"}}', ctx)).toBe('+840.0 hours', 'unit=hour');
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end unit="month" fraction=4}}', ctx)).toBe('+1.1499 months', 'unit=month fraction=4');
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end unit="year" fraction=3}}', ctx)).toBe('+0.096 years', 'unit=year fraction=3');
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end unit="multi"}}', ctx)).toBe('+1M 4D 13h 30m', 'unit=multi (fixed-math lopover)');
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end unit="calendar"}}', ctx)).toBe('+1M 4D', 'unit=calendar (clean breakdown)');
+        // unknown unit falls back to auto
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end unit="bogus"}}', ctx)).toBe('+1.1 months', 'unknown unit falls back to auto');
+
+        // ---- direction options ----
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end direction="sign"}}', ctx)).toBe('+1.1 months', 'direction=sign');
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end direction="before/after"}}', ctx)).toBe('1.1 months after', 'direction=before/after, positive');
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end direction="earlier/later"}}', ctx)).toBe('1.1 months later', 'direction=earlier/later, positive');
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end direction="unsigned"}}', ctx)).toBe('1.1 months', 'direction=unsigned');
+        // unknown direction falls back to sign
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end direction="bogus"}}', ctx)).toBe('+1.1 months', 'unknown direction falls back to sign');
+
+        // ---- negative diff (swap args) ----
+        var rev = { start: ctx.end, end: ctx.start };
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end}}', rev)).toBe('-1.1 months', 'negative diff with sign');
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end direction="before/after"}}', rev)).toBe('1.1 months before', 'negative diff with before/after');
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end direction="earlier/later"}}', rev)).toBe('1.1 months earlier', 'negative diff with earlier/later');
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end direction="unsigned"}}', rev)).toBe('1.1 months', 'negative diff with unsigned');
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end unit="multi"}}', rev)).toBe('-1M 4D 13h 30m', 'negative diff with multi');
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end unit="calendar"}}', rev)).toBe('-1M 4D', 'negative diff with calendar');
+
+        // ---- zero diff ----
+        var zero = { start: ctx.start, end: ctx.start };
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end}}', zero)).toBe('0 seconds', 'zero diff = "0 seconds"');
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end direction="sign"}}', zero)).toBe('0 seconds', 'zero diff ignores sign');
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end direction="before/after"}}', zero)).toBe('0 seconds', 'zero diff ignores before/after');
+
+        // ---- invalid input ----
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end}}', { start: null, end: ctx.end })).toBe('', 'null start');
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end}}', { start: ctx.start, end: null })).toBe('', 'null end');
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end}}', { start: 'not-a-date', end: ctx.end })).toBe('', 'invalid start');
+
+        // ---- rounding-near-boundary: 0.999 years -> "+12.0 months" (no promotion, simple rule) ----
+        var nearYear = { start: '2025-01-01T00:00:00Z', end: '2025-12-31T00:00:00Z' };  // 364 days
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end}}', nearYear)).toBe('+12.0 months', 'auto picks month, rounds to 12.0');
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end unit="year" fraction=1}}', nearYear)).toBe('+1.0 years', 'unit=year fraction=1 rounds to 1.0');
+
+        // ---- multi-mode lopover examples from the spec ----
+        // 1 calendar month with 30 days (Apr 1 -> May 1) under fixed-math multi
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end unit="multi"}}',
+          { start: '2025-04-01T00:00:00Z', end: '2025-05-01T00:00:00Z' })).toBe('+30D', '30 days = "30D" in multi, not "1M"');
+        // 1 calendar month with 31 days (Jan 1 -> Feb 1) in multi
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end unit="multi"}}',
+          { start: '2025-01-01T00:00:00Z', end: '2025-02-01T00:00:00Z' })).toBe('+1M 13h 30m', '31 days has lopover in multi');
+        // 1 common year in multi
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end unit="multi"}}',
+          { start: '2025-01-01T00:00:00Z', end: '2026-01-01T00:00:00Z' })).toBe('+11M 30D 4h 30m', '1 common year has lopover');
+        // 1 leap year in multi
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end unit="multi"}}',
+          { start: '2024-01-01T00:00:00Z', end: '2025-01-01T00:00:00Z' })).toBe('+1Y 18h', '1 leap year has 18h lopover');
+
+        // ---- calendar-mode examples from the spec ----
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end unit="calendar"}}',
+          { start: '2025-04-01T00:00:00Z', end: '2025-05-01T00:00:00Z' })).toBe('+1M', '30-day month is "1M" in calendar');
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end unit="calendar"}}',
+          { start: '2025-01-01T00:00:00Z', end: '2025-02-01T00:00:00Z' })).toBe('+1M', '31-day month is "1M" in calendar');
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end unit="calendar"}}',
+          { start: '2025-01-01T00:00:00Z', end: '2026-01-01T00:00:00Z' })).toBe('+1Y', '1 common year is "1Y" in calendar');
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end unit="calendar"}}',
+          { start: '2024-01-01T00:00:00Z', end: '2025-01-01T00:00:00Z' })).toBe('+1Y', '1 leap year is "1Y" in calendar');
+        // Calendar month-end overflow quirk
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end unit="calendar"}}',
+          { start: '2025-01-31T00:00:00Z', end: '2025-02-28T00:00:00Z' })).toBe('+1M', 'Jan 31 -> Feb 28 = "1M" (month-end clamp)');
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end unit="calendar"}}',
+          { start: '2025-01-31T00:00:00Z', end: '2025-03-01T00:00:00Z' })).toBe('+1M 1D', 'Jan 31 -> Mar 1 = "1M 1D"');
+
+        // ---- sub-second / small diffs ----
+        // 500 ms diff -> auto picks ms
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end}}',
+          { start: '2025-01-01T00:00:00.000Z', end: '2025-01-01T00:00:00.500Z' })).toBe('+500.0 milliseconds', 'sub-second diff falls through to ms');
+        // 500 ms in multi
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end unit="multi"}}',
+          { start: '2025-01-01T00:00:00.000Z', end: '2025-01-01T00:00:00.500Z' })).toBe('+0.5s', 'multi for 500ms is "0.5s"');
+
+        // ---- tooltip wrapping ----
+        // When tooltip=true and unit is anything other than "calendar", wrap.
+        // = → &#x3D;, " → &quot;. The line break between the multi form and the
+        // rates uses &#10; (HTML char ref for newline) rather than a literal '\n'
+        // — markdown-it splits blocks at a literal newline inside {...}, breaking
+        // the attribute. Under the default escaping {{...}} Handlebars escapes
+        // the '&' to '&amp;', yielding the doubled form below; templates that
+        // need the entity to survive to the markdown stage should use {{{...}}}.
+        // The rates list only includes the units that appear in the multi form,
+        // wrapped two per line.
+        var tooltipBody =
+          '1M 4D 13h 30m&amp;#10;&amp;#10;' +
+          'M &#x3D; 30.4375 days, D &#x3D; 24 hours&amp;#10;' +
+          'h &#x3D; 60 minutes, m &#x3D; 60 seconds';
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end unit="month" tooltip=true}}', ctx)).toBe(
+          ':span:+1.1 months:/span:{data-chaise-tooltip&#x3D;&quot;' + tooltipBody + '&quot;}',
+          'tooltip wraps and includes multi + only the used conversion rates',
+        );
+        // tooltip=true on unit="multi" → now also wrapped (same body as above for
+        // this input since visible is also the multi form modulo the sign).
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end unit="multi" tooltip=true}}', ctx)).toBe(
+          ':span:+1M 4D 13h 30m:/span:{data-chaise-tooltip&#x3D;&quot;' + tooltipBody + '&quot;}',
+          'tooltip wraps for unit=multi too',
+        );
+        // Rates are filtered to only the units present, even when the gaps are
+        // non-contiguous: "1Y 3h" lists Y and h but skips M/D/m in between.
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end unit="multi" tooltip=true}}',
+          { start: '2025-01-01T00:00:00.000Z', end: '2026-01-01T09:00:00.000Z' })).toBe(
+          ':span:+1Y 3h:/span:{data-chaise-tooltip&#x3D;&quot;1Y 3h&amp;#10;&amp;#10;Y &#x3D; 365.25 days, h &#x3D; 60 minutes&quot;}',
+          'tooltip rates list only the units present, skipping gaps',
+        );
+        // A seconds-only diff has no conversion rates to list → tooltip body is
+        // just the multi form, with no trailing newline separator.
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end tooltip=true}}',
+          { start: '2025-01-01T00:00:00.000Z', end: '2025-01-01T00:00:30.000Z' })).toBe(
+          ':span:+30.0 seconds:/span:{data-chaise-tooltip&#x3D;&quot;30.00s&quot;}',
+          'tooltip with no listed rates omits the separator',
+        );
+        // tooltip=true on unit="calendar" → suppressed
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end unit="calendar" tooltip=true}}', ctx)).toBe('+1M 4D', 'tooltip is suppressed in unit=calendar');
+        // tooltip=false or unspecified → no wrapping
+        expect(module.renderHandlebarsTemplate('{{datetimeDuration start end unit="month" tooltip=false}}', ctx)).toBe('+1.1 months', 'tooltip=false does not wrap');
+      });
+
       it('stringLength helper', function () {
         expect(module.renderHandlebarsTemplate('{{stringLength "123" }}', {})).toBe('3', 'test 01');
         expect(module.renderHandlebarsTemplate('{{stringLength val }}', { val: '751231asd' })).toBe('9', 'test 02');
