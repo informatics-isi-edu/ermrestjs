@@ -625,6 +625,8 @@ Syntax:
 {{formatDatetime value format}}
 ```
 
+> :warning: CAUTION :warning: When the value comes from a column, pass the [raw](#raw-values) (`_`-prefixed) value, e.g. `{{formatDatetime _col 'YYYY'}}`. The formatted column value of a `timestamp`/`timestamptz` drops the timezone offset and sub-second precision, so re-formatting it can produce an inaccurate result.
+
 Example:
 ```
 {{formatDatetime "30-08-2018' 'YYYY'}} ==> '2018'
@@ -632,6 +634,8 @@ Example:
 {{formatDatetime '30-08-2018' 'YYYY-MM-DD'}} ==> '2018-08-30'
 
 {{formatDatetime '2018-09-25T00:12:34.00-07:00' 'MM/DD/YYYY HH:mm A'}} ==> '09/25/2018 03:12 AM'
+
+{{formatDatetime _RCT 'MM/DD/YYYY HH:mm A'}} ==> '09/25/2025 07:12 PM'
 ```
 
 #### datetimeToSnapshot helper
@@ -643,11 +647,15 @@ Syntax
 {{datetimeToSnapshot value }}
 ```
 
+> :warning: CAUTION :warning: When the value comes from a column, pass the [raw](#raw-values) (`_`-prefixed) value, e.g. `{{datetimeToSnapshot _col}}`. The formatted column value of a `timestamp`/`timestamptz` drops the timezone offset and sub-second precision, which can produce the wrong snapshot ID.
+
 Example:
 ```
 {{datetimeToSnapshot '2025-07-26T19:20:30Z' }} ==> 33N-PFKM-4DR0
 
 {{datetimeToSnapshot '2025-08-02' }} ==> 33P-PF8H-Q800
+
+{{datetimeToSnapshot _RCT }} ==> 355-RY0X-54W0
 ```
 
 #### snapshotToDatetime helper
@@ -676,21 +684,23 @@ Syntax:
 {{datetimeDuration start end}}
 ```
 
+> :warning: CAUTION :warning: When the values come from columns, pass the [raw](#raw-values) (`_`-prefixed) values, e.g. `{{datetimeDuration _start _end}}`. The formatted column value of a `timestamp`/`timestamptz` drops the timezone offset and sub-second precision, which can make the computed duration inaccurate.
+
 The duration is `end - start`, so a positive output means `end` is after `start`. An invalid input (null or unparseable) returns the empty string. When `start === end`, the output is always `"0 seconds"` (no sign or direction word).
 
 The conversion uses fixed Julian constants: `1 year = 365.25 days`, `1 month = 30.4375 days` (`365.25 / 12`), `1 day = 24 hours`, `1 hour = 60 minutes`, `1 minute = 60 seconds`, `1 second = 1000 ms`. <!-- These match `moment.js` / `date-fns` / astronomy conventions and are self-consistent (`12 × month = year`). -->
 
-Examples (assume `start = 2025-01-01T00:00:00Z`, `end = 2025-02-05T00:00:00Z` which is 35 days):
+Examples (assume `_start = 2025-01-01T00:00:00Z`, `_end = 2025-02-05T00:00:00Z` which is 35 days):
 
 ```
-{{datetimeDuration start end}}                              ==> '+1.1 months'
-{{datetimeDuration start end fraction=4}}                   ==> '+1.1499 months'
-{{datetimeDuration start end unit="day"}}                   ==> '+35.0 days'
-{{datetimeDuration start end unit="multi"}}                 ==> '+1M 4D 13h 30m'
-{{datetimeDuration start end unit="calendar"}}              ==> '+1M 4D'
-{{datetimeDuration start end direction="before/after"}}     ==> '1.1 months after'
-{{datetimeDuration start end direction="unsigned"}}         ==> '1.1 months'
-{{{datetimeDuration start end unit="month" tooltip=true}}}  ==> ':span:+1.1 months:/span:{data-chaise-tooltip="1M 4D 13h 30m&#10;&#10;M = 30.4375 days, D = 24 hours&#10;h = 60 minutes, m = 60 seconds"}'
+{{datetimeDuration _start _end}}                              ==> '+1.1 months'
+{{datetimeDuration _start _end fraction=4}}                   ==> '+1.1499 months'
+{{datetimeDuration _start _end unit="day"}}                   ==> '+35.0 days'
+{{datetimeDuration _start _end unit="multi"}}                 ==> '+1M 4D 13h 30m'
+{{datetimeDuration _start _end unit="calendar"}}              ==> '+1M 4D'
+{{datetimeDuration _start _end direction="before/after"}}     ==> '1.1 months after'
+{{datetimeDuration _start _end direction="unsigned"}}         ==> '1.1 months'
+{{{datetimeDuration _start _end unit="month" tooltip=true}}}  ==> ':span:+1.1 months:/span:{data-chaise-tooltip="1M 4D 13h 30m&#10;&#10;M = 30.4375 days, D = 24 hours&#10;h = 60 minutes, m = 60 seconds"}'
 ```
 
 The optional arguments are:
@@ -709,10 +719,10 @@ A string controlling how the duration is rendered. Accepted values:
 Any unrecognized value falls back to `"auto"`.
 
 ```
-{{datetimeDuration start end unit="auto"}}
-{{datetimeDuration start end unit="month"}}
-{{datetimeDuration start end unit="multi"}}
-{{datetimeDuration start end unit="calendar"}}
+{{datetimeDuration _start _end unit="auto"}}
+{{datetimeDuration _start _end unit="month"}}
+{{datetimeDuration _start _end unit="multi"}}
+{{datetimeDuration _start _end unit="calendar"}}
 ```
 
 ##### `fraction`
@@ -722,9 +732,9 @@ A non-negative integer specifying the number of decimal places in the output. De
 For `unit="multi"` and `unit="calendar"`, the fraction applies to the seconds component only.
 
 ```
-{{datetimeDuration start end fraction=0}}   ==> '+1 months'
-{{datetimeDuration start end fraction=2}}   ==> '+1.15 months'
-{{datetimeDuration start end fraction=4}}   ==> '+1.1499 months'
+{{datetimeDuration _start _end fraction=0}}   ==> '+1 months'
+{{datetimeDuration _start _end fraction=2}}   ==> '+1.15 months'
+{{datetimeDuration _start _end fraction=4}}   ==> '+1.1499 months'
 ```
 
 ##### `direction`
@@ -745,7 +755,7 @@ A boolean. When `true`, wraps the visible value in a tooltip span that shows the
 You **must** use the triple-brace form when `tooltip=true`. The default `{{...}}` syntax HTML-escapes the `=` and `"` in the tooltip markup, which corrupts the attribute block, and the tooltip will not render.
 
 ```
-{{{datetimeDuration start end unit="month" tooltip=true}}}
+{{{datetimeDuration _start _end unit="month" tooltip=true}}}
 ```
 
 ### Numbers & math
