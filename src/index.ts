@@ -60,12 +60,12 @@ import {
   decodeFacet,
   encodeFacet,
   encodeFacetString,
-  _formatUtils,
   processMarkdownPattern,
   renderMustacheTemplate,
   _validateMustacheTemplate,
   generateKeyValueFilters,
 } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
+import { _formatUtils } from '@isrd-isi-edu/ermrestjs/src/utils/format-utils';
 import {
   AttributeGroupColumn,
   AttributeGroupReference,

@@ -12,11 +12,11 @@ import {
   _addErmrestVarsToTemplate,
   _addTemplateVars,
   _escapeMarkdownCharacters,
-  _formatUtils,
   _getPath,
   encodeFacet,
   encodeFacetString,
 } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
+import { _formatUtils } from '@isrd-isi-edu/ermrestjs/src/utils/format-utils';
 import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
 import { isObjectAndNotNull } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
 import { fixedEncodeURIComponent } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
@@ -401,6 +401,28 @@ export default class HandlebarsService {
           tooltip = options.hash.tooltip;
         }
         return _formatUtils.humanizeBytes(value, mode, precision, tooltip);
+      },
+
+      /**
+       * {{datetimeDuration start end}}
+       * {{datetimeDuration start end unit="month"}}
+       * {{datetimeDuration start end unit="auto" fraction=2}}
+       * {{datetimeDuration start end unit="multi"}}
+       * {{datetimeDuration start end unit="calendar"}}
+       * {{datetimeDuration start end direction="before/after"}}
+       * {{datetimeDuration start end unit="month" tooltip=true}}
+       * @ignore
+       * @returns human-readable duration between `start` and `end`
+       */
+      datetimeDuration: function (start: any, end: any, options: Handlebars.HelperOptions) {
+        let unit, fraction, direction, tooltip;
+        if (options && isObjectAndNotNull(options.hash)) {
+          unit = options.hash.unit;
+          fraction = options.hash.fraction;
+          direction = options.hash.direction;
+          tooltip = options.hash.tooltip;
+        }
+        return _formatUtils.datetimeDuration(start, end, unit, fraction, direction, tooltip);
       },
 
       /**

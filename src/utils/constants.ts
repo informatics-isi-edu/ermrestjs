@@ -286,6 +286,7 @@ export const _handlebarsHelpersList = [
   'toTitleCase',
   'replace',
   'humanizeBytes',
+  'datetimeDuration',
   'printf',
   'stringLength',
   'isUserInAcl',
@@ -528,6 +529,83 @@ export const _sourceProperties = Object.freeze({
 });
 
 export const _exportKnownAPIs = ['entity', 'attribute', 'attributegroup', 'aggregate'];
+
+/**
+ * Named constants for the `unit` argument of `datetimeDuration`. Source of
+ * truth for valid unit values — `_datetimeDuration.VALID_UNITS` and
+ * `UNIT_ORDER` are derived from this object below.
+ *
+ * Includes the three pseudo-units (`AUTO`, `MULTI`, `CALENDAR`) alongside the
+ * seven real time units. Use `DurationRealUnit` for the real-unit subset.
+ */
+export const DURATION_UNIT = Object.freeze({
+  AUTO: 'auto',
+  MULTI: 'multi',
+  CALENDAR: 'calendar',
+  YEAR: 'year',
+  MONTH: 'month',
+  DAY: 'day',
+  HOUR: 'hour',
+  MINUTE: 'minute',
+  SECOND: 'second',
+  MILLISECOND: 'millisecond',
+} as const);
+export type DurationUnit = (typeof DURATION_UNIT)[keyof typeof DURATION_UNIT];
+
+/**
+ * Named constants for the `direction` argument of `datetimeDuration`. Source
+ * of truth for valid direction values — `_datetimeDuration.VALID_DIRECTIONS`
+ * is derived from this object below.
+ */
+export const DURATION_DIRECTION = Object.freeze({
+  SIGN: 'sign',
+  BEFORE_AFTER: 'before/after',
+  EARLIER_LATER: 'earlier/later',
+  UNSIGNED: 'unsigned',
+} as const);
+export type DurationDirection = (typeof DURATION_DIRECTION)[keyof typeof DURATION_DIRECTION];
+
+export const _datetimeDuration = Object.freeze({
+  // Real units in walking order (largest first). The source of truth for what
+  // counts as a "real" (non-pseudo) duration unit.
+  UNIT_ORDER: [
+    DURATION_UNIT.YEAR,
+    DURATION_UNIT.MONTH,
+    DURATION_UNIT.DAY,
+    DURATION_UNIT.HOUR,
+    DURATION_UNIT.MINUTE,
+    DURATION_UNIT.SECOND,
+    DURATION_UNIT.MILLISECOND,
+  ] as const,
+  ABBREVIATIONS: {
+    [DURATION_UNIT.YEAR]: 'Y',
+    [DURATION_UNIT.MONTH]: 'M',
+    [DURATION_UNIT.DAY]: 'D',
+    [DURATION_UNIT.HOUR]: 'h',
+    [DURATION_UNIT.MINUTE]: 'm',
+    [DURATION_UNIT.SECOND]: 's',
+    [DURATION_UNIT.MILLISECOND]: 'ms',
+  },
+  // Julian fixed-math constants (1Y = 365.25d, 1M = 365.25/12d).
+  // Self-consistent (12 * MONTH === YEAR), matches moment.js / date-fns / astronomy.
+  CONVERSION_RATES: {
+    [DURATION_UNIT.MILLISECOND]: 1,
+    [DURATION_UNIT.SECOND]: 1000,
+    [DURATION_UNIT.MINUTE]: 60 * 1000,
+    [DURATION_UNIT.HOUR]: 60 * 60 * 1000,
+    [DURATION_UNIT.DAY]: 24 * 60 * 60 * 1000,
+    [DURATION_UNIT.MONTH]: (365.25 / 12) * 24 * 60 * 60 * 1000, // 2,629,800,000
+    [DURATION_UNIT.YEAR]: 365.25 * 24 * 60 * 60 * 1000, // 31,557,600,000
+  },
+  VALID_UNITS: Object.values(DURATION_UNIT) as readonly DurationUnit[],
+  VALID_DIRECTIONS: Object.values(DURATION_DIRECTION) as readonly DurationDirection[],
+});
+
+/**
+ * The real (non-pseudo) subset of `DurationUnit`, derived from `UNIT_ORDER`
+ * so it stays in sync automatically.
+ */
+export type DurationRealUnit = (typeof _datetimeDuration.UNIT_ORDER)[number];
 
 export const FILTER_TYPES = Object.freeze({
   BINARYPREDICATE: 'BinaryPredicate',

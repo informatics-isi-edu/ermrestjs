@@ -25,7 +25,8 @@ import {
 
 // legacy
 import { _convertSearchTermToFilter, _getSortModifier, _getPagingModifier } from '@isrd-isi-edu/ermrestjs/js/parser';
-import { _isValidSortElement, _formatValueByType, _extends } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
+import { _isValidSortElement, _extends } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
+import { _formatValueByType } from '@isrd-isi-edu/ermrestjs/src/utils/format-utils';
 import { _compressFacetObject } from '@isrd-isi-edu/ermrestjs/js/utils/pseudocolumn_helpers';
 
 import { Type } from '@isrd-isi-edu/ermrestjs/js/core';

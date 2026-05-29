@@ -33,6 +33,11 @@ This document summarizes the key concepts of Handlebars that are relevant to Der
       - [formatDatetime helper](#formatdatetime-helper)
       - [datetimeToSnapshot helper](#datetimetosnapshot-helper)
       - [snapshotToDatetime helper](#snapshottodatetime-helper)
+      - [datetimeDuration helper](#datetimeduration-helper)
+        - [`unit`](#unit)
+        - [`fraction`](#fraction)
+        - [`direction`](#direction)
+        - [`tooltip`](#tooltip-1)
     - [Numbers & math](#numbers--math)
       - [humanizeBytes helper](#humanizebytes-helper)
         - [`mode`](#mode)
@@ -662,6 +667,87 @@ Example:
 {{snapshotToDatetime '33N-PFKM-4DR0' 'YYYY-MM-DD'}} ==> 2025-07-26
 ```
 
+#### datetimeDuration helper
+
+`datetimeDuration` returns the duration between two `date`, `timestamp`, or `timestamptz` values. By default, it picks the largest unit that produces a whole number, prepends a `+` or `-` sign, and uses one decimal place.
+
+Syntax:
+```
+{{datetimeDuration start end}}
+```
+
+The duration is `end - start`, so a positive output means `end` is after `start`. An invalid input (null or unparseable) returns the empty string. When `start === end`, the output is always `"0 seconds"` (no sign or direction word).
+
+The conversion uses fixed Julian constants: `1 year = 365.25 days`, `1 month = 30.4375 days` (`365.25 / 12`), `1 day = 24 hours`, `1 hour = 60 minutes`, `1 minute = 60 seconds`, `1 second = 1000 ms`. <!-- These match `moment.js` / `date-fns` / astronomy conventions and are self-consistent (`12 × month = year`). -->
+
+Examples (assume `start = 2025-01-01T00:00:00Z`, `end = 2025-02-05T00:00:00Z` which is 35 days):
+
+```
+{{datetimeDuration start end}}                              ==> '+1.1 months'
+{{datetimeDuration start end fraction=4}}                   ==> '+1.1499 months'
+{{datetimeDuration start end unit="day"}}                   ==> '+35.0 days'
+{{datetimeDuration start end unit="multi"}}                 ==> '+1M 4D 13h 30m'
+{{datetimeDuration start end unit="calendar"}}              ==> '+1M 4D'
+{{datetimeDuration start end direction="before/after"}}     ==> '1.1 months after'
+{{datetimeDuration start end direction="unsigned"}}         ==> '1.1 months'
+{{{datetimeDuration start end unit="month" tooltip=true}}}  ==> ':span:+1.1 months:/span:{data-chaise-tooltip="1M 4D 13h 30m&#10;&#10;M = 30.4375 days, D = 24 hours&#10;h = 60 minutes, m = 60 seconds"}'
+```
+
+The optional arguments are:
+
+##### `unit`
+
+A string controlling how the duration is rendered. Accepted values:
+
+- `"auto"` (default): pick the largest unit where the value is at least 1.
+- `"year"`, `"month"`, `"day"`, `"hour"`, `"minute"`, `"second"`, `"millisecond"`: force a single unit.
+- `"multi"`: multi-component breakdown using the same fixed-math constants (e.g., `1M 4D 13h 30m`)
+- `"calendar"`: multi-component breakdown computed with a calendar-aware walk (UTC) instead of fixed-math constants, e.g., `Jan 1 → Feb 1 ==> "1M"`, `Jan 31 → Feb 28 ==> "1M"` (month arithmetic clamps to the last day of the target month).
+
+  > :warning: CAUTION :warning: `"calendar"` uses fundamentally different math from every other `unit` value. Mixing it with the others in the same view will produce values that disagree. The same diff can render as `+0.9 months` under `unit="month"` and `+1M` under `unit="calendar"`. If you choose `"calendar"`, use it consistently everywhere you render a duration for the same data.
+
+Any unrecognized value falls back to `"auto"`.
+
+```
+{{datetimeDuration start end unit="auto"}}
+{{datetimeDuration start end unit="month"}}
+{{datetimeDuration start end unit="multi"}}
+{{datetimeDuration start end unit="calendar"}}
+```
+
+##### `fraction`
+
+A non-negative integer specifying the number of decimal places in the output. Defaults to `1`. The value is rounded to this many places (round-half-away-from-zero) and trailing zeros are preserved. With `fraction=0`, the decimal point and trailing zeros are dropped.
+
+For `unit="multi"` and `unit="calendar"`, the fraction applies to the seconds component only.
+
+```
+{{datetimeDuration start end fraction=0}}   ==> '+1 months'
+{{datetimeDuration start end fraction=2}}   ==> '+1.15 months'
+{{datetimeDuration start end fraction=4}}   ==> '+1.1499 months'
+```
+
+##### `direction`
+
+Controls how the sign of the duration is rendered. Accepted values:
+
+- `"sign"` (default): prepend `+` or `-` to the output. e.g., `+1.2 years`, `-1.2 years`. For `multi` / `calendar`, the sign goes on the whole expression: `+5Y 6M 4D`.
+- `"before/after"`: append `before` (negative) or `after` (positive). e.g., `1.2 years after`.
+- `"earlier/later"`: append `earlier` (negative) or `later` (positive). e.g., `1.2 years later`.
+- `"unsigned"`: no sign or word. e.g., `1.2 years`.
+
+When `start === end`, no sign or word is emitted regardless of `direction` (output is always `"0 seconds"`). Any unrecognized value falls back to `"sign"`.
+
+##### `tooltip`
+
+A boolean. When `true`, wraps the visible value in a tooltip span that shows the fixed-math `multi` form and the conversion constants for the units it contains. The tooltip is automatically suppressed when `unit="calendar"`.
+
+You **must** use the triple-brace form when `tooltip=true`. The default `{{...}}` syntax HTML-escapes the `=` and `"` in the tooltip markup, which corrupts the attribute block, and the tooltip will not render.
+
+```
+{{{datetimeDuration start end unit="month" tooltip=true}}}
+```
+
 ### Numbers & math
 
 Format numbers and perform basic arithmetic.
@@ -692,7 +778,7 @@ Examples:
 {{humanizeBytes 41235532 mode='binary' precision=5 tootlip=true}} ==> ':span:39.325 MiB:/span:{data-chaise-tooltip="41235532 bytes (1 MiB = 1,048,576 bytes)"}'
 ```
 
-The arguments are:
+The optional arguments are:
 
 ##### `mode`
 
