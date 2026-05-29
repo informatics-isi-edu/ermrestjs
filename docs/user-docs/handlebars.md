@@ -616,7 +616,7 @@ Format and convert between datetime values.
 
 #### formatDatetime helper
 
-> :loudspeaker: This helper used to be called `formatDate` but was changed to the more accurate `formatDatetime` name. While both work, you should stop using `formatDate`.
+> 📝 **NOTE:** This helper used to be called `formatDate` but was changed to the more accurate `formatDatetime` name. While both work, you should stop using `formatDate`.
 
 You can use the `formatDatetime` helper to take any `date`, `timestamp`, or `timestamptz` value and format it according to the [Pre Format Guide](pre-format.md#syntax-for-dates-and-timestamps).
 
@@ -625,7 +625,7 @@ Syntax:
 {{formatDatetime value format}}
 ```
 
-> :warning: CAUTION :warning: When the value comes from a column, pass the [raw](#raw-values) (`_`-prefixed) value, e.g. `{{formatDatetime _col 'YYYY'}}`. The formatted column value of a `timestamp`/`timestamptz` drops the timezone offset and sub-second precision, so re-formatting it can produce an inaccurate result.
+> ⚠️ **CAUTION:** When the value comes from a column, pass the [raw](#raw-values) (`_`-prefixed) value, e.g. `{{formatDatetime _col 'YYYY'}}`. The formatted column value of a `timestamp`/`timestamptz` drops the timezone offset and sub-second precision, so re-formatting it can produce an inaccurate result.
 
 Example:
 ```
@@ -647,7 +647,7 @@ Syntax
 {{datetimeToSnapshot value }}
 ```
 
-> :warning: CAUTION :warning: When the value comes from a column, pass the [raw](#raw-values) (`_`-prefixed) value, e.g. `{{datetimeToSnapshot _col}}`. The formatted column value of a `timestamp`/`timestamptz` drops the timezone offset and sub-second precision, which can produce the wrong snapshot ID.
+> ⚠️ **CAUTION:** When the value comes from a column, pass the [raw](#raw-values) (`_`-prefixed) value, e.g. `{{datetimeToSnapshot _col}}`. The formatted column value of a `timestamp`/`timestamptz` drops the timezone offset and sub-second precision, which can produce the wrong snapshot ID.
 
 Example:
 ```
@@ -684,7 +684,7 @@ Syntax:
 {{datetimeDuration start end}}
 ```
 
-> :warning: CAUTION :warning: When the values come from columns, pass the [raw](#raw-values) (`_`-prefixed) values, e.g. `{{datetimeDuration _start _end}}`. The formatted column value of a `timestamp`/`timestamptz` drops the timezone offset and sub-second precision, which can make the computed duration inaccurate.
+> ⚠️ **CAUTION:** When the values come from columns, pass the [raw](#raw-values) (`_`-prefixed) values, e.g. `{{datetimeDuration _start _end}}`. The formatted column value of a `timestamp`/`timestamptz` drops the timezone offset and sub-second precision, which can make the computed duration inaccurate.
 
 The duration is `end - start`, so a positive output means `end` is after `start`. An invalid input (null or unparseable) returns the empty string. When `start === end`, the output is always `"0 seconds"` (no sign or direction word).
 
@@ -714,7 +714,7 @@ A string controlling how the duration is rendered. Accepted values:
 - `"multi"`: multi-component breakdown using the same fixed-math constants (e.g., `1M 4D 13h 30m`)
 - `"calendar"`: multi-component breakdown computed with a calendar-aware walk (UTC) instead of fixed-math constants, e.g., `Jan 1 → Feb 1 ==> "1M"`, `Jan 31 → Feb 28 ==> "1M"` (month arithmetic clamps to the last day of the target month).
 
-  > :warning: CAUTION :warning: `"calendar"` uses fundamentally different math from every other `unit` value. Mixing it with the others in the same view will produce values that disagree. The same diff can render as `+0.9 months` under `unit="month"` and `+1M` under `unit="calendar"`. If you choose `"calendar"`, use it consistently everywhere you render a duration for the same data.
+  > ⚠️ **CAUTION:** `"calendar"` uses fundamentally different math from every other `unit` value. Mixing it with the others in the same view will produce values that disagree. The same diff can render as `+0.9 months` under `unit="month"` and `+1M` under `unit="calendar"`. If you choose `"calendar"`, use it consistently everywhere you render a duration for the same data.
 
 Any unrecognized value falls back to `"auto"`.
 

@@ -218,7 +218,7 @@ node test/jasmine-runner.js
 2. Login. The account that you are using must have delete and create access. We use this cookie to create and delete catalogs.
 3. Open the Developer tools in your browser.
 4. Go to the console section and write `$.cookie("webauthn")`.
-5. voilà! :satisfied:
+5. voilà! 😆
 
 ### Sample Enviroment Variables
 ```sh
