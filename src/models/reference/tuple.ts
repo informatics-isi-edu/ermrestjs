@@ -4,7 +4,7 @@ import { DisplayName } from '@isrd-isi-edu/ermrestjs/src/models/display-name';
 
 // utils
 import { fixedEncodeURIComponent, shallowCopy, simpleDeepCopy } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
-import { isObjectAndNotNull } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
+import { isObjectAndNotNull, isStringAndNotEmpty } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
 import { _ERMrestACLs, _contexts, _permissionMessages } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
 
 import { isAllOutboundColumn } from '@isrd-isi-edu/ermrestjs/src/utils/column-utils';
@@ -154,6 +154,13 @@ export class Tuple {
     return this._data;
   }
 
+  /**
+   *
+   * @param permission the ermrest permission that should be checked (refer to _ERMrestACLs constant for more details)
+   * @param colName the name of the column for which the permission should be checked
+   * @param isAssoc whether the permission check is for an association
+   * @returns a boolean indicating whether the permission is granted
+   */
   checkPermissions(permission: string, colName?: string, isAssoc = false): boolean {
     let sum = this._rightsSummary[permission];
     if (isAssoc) {
@@ -161,6 +168,12 @@ export class Tuple {
     }
 
     if (permission === _ERMrestACLs.COLUMN_UPDATE) {
+      // if the column is passed but doesn't exist in the table, return false
+      if (isStringAndNotEmpty(colName) && !this._pageRef.table.columns.has(colName!)) {
+        return false;
+      }
+
+      // if there aren't any column-level permissions, then allow it
       if (!isObjectAndNotNull(sum) || typeof sum[colName!] !== 'boolean') return true;
       return sum[colName!];
     }
