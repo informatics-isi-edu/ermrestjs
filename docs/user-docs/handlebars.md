@@ -680,7 +680,7 @@ The duration is `end - start`, so a positive output means `end` is after `start`
 
 The conversion uses fixed Julian constants: `1 year = 365.25 days`, `1 month = 30.4375 days` (`365.25 / 12`), `1 day = 24 hours`, `1 hour = 60 minutes`, `1 minute = 60 seconds`, `1 second = 1000 ms`. <!-- These match `moment.js` / `date-fns` / astronomy conventions and are self-consistent (`12 × month = year`). -->
 
-Examples (assume `start = 2025-01-01T00:00:00Z`, `end = 2025-02-05T00:00:00Z` — 35 days):
+Examples (assume `start = 2025-01-01T00:00:00Z`, `end = 2025-02-05T00:00:00Z` which is 35 days):
 
 ```
 {{datetimeDuration start end}}                              ==> '+1.1 months'
@@ -702,9 +702,9 @@ A string controlling how the duration is rendered. Accepted values:
 - `"auto"` (default): pick the largest unit where the value is at least 1.
 - `"year"`, `"month"`, `"day"`, `"hour"`, `"minute"`, `"second"`, `"millisecond"`: force a single unit.
 - `"multi"`: multi-component breakdown using the same fixed-math constants (e.g., `1M 4D 13h 30m`)
-- `"calendar"`: multi-component breakdown computed with a calendar-aware walk (UTC) instead of fixed-math constants — e.g., `Jan 1 → Feb 1 ==> "1M"`, `Jan 31 → Feb 28 ==> "1M"` (month arithmetic clamps to the last day of the target month).
+- `"calendar"`: multi-component breakdown computed with a calendar-aware walk (UTC) instead of fixed-math constants, e.g., `Jan 1 → Feb 1 ==> "1M"`, `Jan 31 → Feb 28 ==> "1M"` (month arithmetic clamps to the last day of the target month).
 
-  > **Warning:** `"calendar"` uses fundamentally different math from every other `unit` value. Mixing it with the others in the same view will produce values that disagree — e.g., the same diff can render as `+0.9 months` under `unit="month"` and `+1M` under `unit="calendar"`. If you choose `"calendar"`, use it consistently everywhere you render a duration for the same data.
+  > :warning: CAUTION :warning: `"calendar"` uses fundamentally different math from every other `unit` value. Mixing it with the others in the same view will produce values that disagree. The same diff can render as `+0.9 months` under `unit="month"` and `+1M` under `unit="calendar"`. If you choose `"calendar"`, use it consistently everywhere you render a duration for the same data.
 
 Any unrecognized value falls back to `"auto"`.
 
