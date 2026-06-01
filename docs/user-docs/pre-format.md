@@ -117,75 +117,76 @@ output =>
 
 ## Examples:
 
-| Expression   | Input     | Output        |
-| :-------------| :------- |:-------------|
-| '%%'|  | '%' |
-| '%b'| 2 | '10' |
-| '%c'| 65 | 'A' |
-| '%d'| 2 | '2' |
-| '%i'| 2 | '2' |
-| '%d'| '2' | '2' |
-| '%i'| '2' | '2' |
-| '%j'| { "foo": "bar" } | '{"foo":"bar"}' |
-| '%j'| ["foo", "bar"] | '["foo","bar"]' |
-| '%e'| 2 | '2e+0' |
-| '%u'| 2 | '2' |
-| '%u'| -2 | '4294967294' |
-| '%f'| 2.2 | '2.2' |
-| '%g'| 3.141592653589793 | '3.141592653589793' |
-| '%o'| 8 | '10' |
-| '%o'| -8 | '37777777770' |
-| '%s'| '%s' | '%s' |
-| '%X'| 255 | 'FF' |
-| '%X'| -255 | 'FFFFFF01' |
-| 'Hello %(who)s!'| { who: 'world' } | 'Hello world!' |
-| '%t'| true | 'true' |
-| '%.1t'| true | 't' |
-| '%t'| 'true' | 'true' |
-| '%t'| 1 | 'true' |
-| '%t'| false | 'false' |
-| '%.1t'| false | 'f' |
-| '%t'| '' | 'false' |
-| '%t'| 0 | 'false' |
-| '%d'| 2 | '2' |
-| '%d'| -2 | '-2' |
-| '%+d'| 2 | '+2' |
-| '%+d'| -2 | '-2' |
-| '%i'| 2 | '2' |
-| '%i'| -2 | '-2' |
-| '%+i'| 2 | '+2' |
-| '%+i'| -2 | '-2' |
-| '%f'| 2.2 | '2.2' |
-| '%f'| -2.2 | '-2.2' |
-| '%+f'| 2.2 | '+2.2' |
-| '%+f'| -2.2 | '-2.2' |
-| '%+.1f'| -2.34 | '-2.3' |
-| '%+.1f'| -0.01 | '-0.0' |
-| '%.6g'| 3.141592653589793 | '3.14159' |
-| '%.3g'| 3.141592653589793 | '3.14' |
-| '%.1g'| 3.141592653589793 | '3' |
-| '%+010d'| -123 | '-000000123' |
-| '%+#_10d'| -123 | '______-123' |
-| '%f'| -234.34 | '-234.34' |
-| '%05d'| -2 | '-0002' |
-| '%05i'| -2 | '-0002' |
-| '%5s'| '<' | '    <' |
-| '%05s'| '<' | '0000<' |
-| '%#_5s'| '<' | '____<' |
-| '%-5s'| '>' | '>    ' |
-| '%0-5s'| '>' | '>0000' |
-| '%#_-5s'| '>' | '>____' |
-| '%5s'| 'xxxxxx' | 'xxxxxx' |
-| '%02u'| 1234 | '1234' |
-| '%8.3f'| -10.23456 | ' -10.235' |
-| '%f %s'| -12.34 | '-12.34 xxx' |
-| '%2j'| { "foo": "bar" } | '{\n  "foo":"bar"\n}' |
-| '%2j'| ["foo", "bar"] | '[\n  "foo",\n  "bar"\n]' |
-| '%.1f'| 2.345 | '2.3' |
-| '%5.5s'| 'xxxxxx' | 'xxxxx' |
-| '%5.1s'| 'xxxxxx' | '    x' |
-| %'15.3f | 10000.23456 | '     10,000.235' |
-| %'15d | 12345668 | '     12,345,668' |
+| Expression   | Input     | Output        | Note |
+| :-------------| :------- |:-------------|:-------------|
+| '%.1f'| 2.345 | '2.3' | Round float to 1 decimal place |
+| '%d' | 12345668 | '12345668' | Disable default thousand separator for integers |
+| %'15d | 12345668 | '     12,345,668' | Enable thousand separator (width 15) |
+| '%%'|  | '%' | Literal percent sign |
+| '%b'| 2 | '10' | Integer as binary |
+| '%c'| 65 | 'A' | Integer as ASCII character |
+| '%d'| 2 | '2' | Signed decimal integer |
+| '%i'| 2 | '2' | Signed decimal integer |
+| '%d'| '2' | '2' | String coerced to integer |
+| '%i'| '2' | '2' | String coerced to integer |
+| '%j'| { "foo": "bar" } | '{"foo":"bar"}' | Object as JSON |
+| '%j'| ["foo", "bar"] | '["foo","bar"]' | Array as JSON |
+| '%e'| 2 | '2e+0' | Scientific notation |
+| '%u'| 2 | '2' | Unsigned integer |
+| '%u'| -2 | '4294967294' | Negative wraps as unsigned |
+| '%f'| 2.2 | '2.2' | Float as-is |
+| '%g'| 3.141592653589793 | '3.141592653589793' | Float, shortest representation |
+| '%o'| 8 | '10' | Integer as octal |
+| '%o'| -8 | '37777777770' | Negative octal |
+| '%s'| '%s' | '%s' | String as-is |
+| '%X'| 255 | 'FF' | Integer as uppercase hex |
+| '%X'| -255 | 'FFFFFF01' | Negative hex |
+| 'Hello %(who)s!'| { who: 'world' } | 'Hello world!' | Named argument from object |
+| '%t'| true | 'true' | Boolean as text |
+| '%.1t'| true | 't' | Boolean truncated to 1 char |
+| '%t'| 'true' | 'true' | Truthy value as boolean |
+| '%t'| 1 | 'true' | Truthy value as boolean |
+| '%t'| false | 'false' | Boolean as text |
+| '%.1t'| false | 'f' | Boolean truncated to 1 char |
+| '%t'| '' | 'false' | Falsy value as boolean |
+| '%t'| 0 | 'false' | Falsy value as boolean |
+| '%d'| 2 | '2' | Signed decimal integer |
+| '%d'| -2 | '-2' | Negative integer |
+| '%+d'| 2 | '+2' | Force sign on positives |
+| '%+d'| -2 | '-2' | Force sign on positives |
+| '%i'| 2 | '2' | Signed decimal integer |
+| '%i'| -2 | '-2' | Negative integer |
+| '%+i'| 2 | '+2' | Force sign on positives |
+| '%+i'| -2 | '-2' | Force sign on positives |
+| '%f'| 2.2 | '2.2' | Float as-is |
+| '%f'| -2.2 | '-2.2' | Negative float |
+| '%+f'| 2.2 | '+2.2' | Force sign on positives |
+| '%+f'| -2.2 | '-2.2' | Force sign on positives |
+| '%+.1f'| -2.34 | '-2.3' | Signed, 1 decimal place |
+| '%+.1f'| -0.01 | '-0.0' | Signed, 1 decimal place |
+| '%.6g'| 3.141592653589793 | '3.14159' | 6 significant digits |
+| '%.3g'| 3.141592653589793 | '3.14' | 3 significant digits |
+| '%.1g'| 3.141592653589793 | '3' | 1 significant digit |
+| '%+010d'| -123 | '-000000123' | Signed, zero-padded to width |
+| '%+#_10d'| -123 | '______-123' | Signed, custom pad char |
+| '%f'| -234.34 | '-234.34' | Negative float |
+| '%05d'| -2 | '-0002' | Pad with leading zeros to width 5 |
+| '%05i'| -2 | '-0002' | Pad with leading zeros to width 5 |
+| '%5s'| '<' | '    <' | Right-align to width 5 |
+| '%05s'| '<' | '0000<' | Zero-pad string to width 5 |
+| '%#_5s'| '<' | '____<' | Custom pad char to width 5 |
+| '%-5s'| '>' | '>    ' | Left-align to width 5 |
+| '%0-5s'| '>' | '>0000' | Left-align, zero-padded |
+| '%#_-5s'| '>' | '>____' | Left-align, custom pad char |
+| '%5s'| 'xxxxxx' | 'xxxxxx' | Width does not truncate |
+| '%02u'| 1234 | '1234' | Width does not truncate |
+| '%8.3f'| -10.23456 | ' -10.235' | Width 8, 3 decimal places |
+| '%f %s'| -12.34 | '-12.34 xxx' | Multiple placeholders |
+| '%2j'| { "foo": "bar" } | '{\n  "foo":"bar"\n}' | Pretty-print JSON with 2-space indent |
+| '%2j'| ["foo", "bar"] | '[\n  "foo",\n  "bar"\n]' | Pretty-print JSON array |
+| '%5.5s'| 'xxxxxx' | 'xxxxx' | Precision truncates string |
+| '%5.1s'| 'xxxxxx' | '    x' | Truncate then right-align |
+| %'15.3f | 10000.23456 | '     10,000.235' | Thousand separator, 3 decimals |
 
 Example for using json keys in format
 
