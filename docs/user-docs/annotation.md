@@ -349,6 +349,8 @@ You need to define one of these attributes which will refer to the source of the
 
 - `sourcekey`: A string literal that refers to any of the defined sources in [`source-definitions` annotations](#tag-2019-source-definitions). You MUST avoid defining both `source` and `sourcekey` as the client will ignore the `source` and just uses the `sourcekey`.
 
+> 💡 **BEST PRACTICE:** When the `source` (or the referenced `sourcekey`) includes inbound/outbound foreign key paths, the end column should be `RID` in the vast majority of cases. Choose a different end column only when you specifically want to facet on that displayed value, or when you know that search performs better on it. See [facet documentation](facet.md#source-path) for more information.
+
 Constraint attributes (optional):
 
 You can use these attributes to define default preselected facets (Combination of these attributes are not supported yet, you cannot have both `choices` and `ranges` specified on a facet).

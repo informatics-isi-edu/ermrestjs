@@ -104,6 +104,12 @@ Even if we are faceting on a vocabulary concept and just want the user to pick v
 
 For more information about source path refer to column directive's documentation in [here](column-directive.md#source).
 
+> 💡 **BEST PRACTICE:** When a source path includes inbound/outbound foreign key paths, the end column should be `RID` in the vast majority of cases. Choose a different end column only when you specifically want to facet on that displayed value, or when you know that search performs better on it.
+>
+> Ending the path in `RID` is recommended because:
+> 1. It guarantees the facet is treated as an "entity" facet without having to verify that the chosen column is part of a unique, not-null key. Entity facets offer a better search experience, since the facet popup lets users filter even further, and they can be more performant than scalar facets, which rely on `attributegroup` queries with aggregate functions.
+> 2. Chaise's "Explore" action on the record page generates facet URLs using the `RID` column. Defining your facets on the same column lets Chaise match the applied filter to your existing facet and display it in place, instead of synthesizing a separate facet column to represent it.
+
 ## Source key
 
 Instead of defining a new `source`, you can refer to the sources that are defined in [`2019:source-definitions`](annotation.md#tag-2019-source-definitions) by using `sourcekey` attribute. For instance, assuming `path_to_table_1` is a valid source definition, you can do
