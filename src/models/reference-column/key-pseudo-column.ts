@@ -7,7 +7,7 @@ import { Reference, Tuple } from '@isrd-isi-edu/ermrestjs/src/models/reference';
 
 // utils
 import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils';
-import { isStringAndNotEmpty } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
+import { isValidVisibleCellHeight, isStringAndNotEmpty } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
 import { buildSelfTemplateVariables } from '@isrd-isi-edu/ermrestjs/src/utils/template-utils';
 
 // legacy
@@ -225,6 +225,10 @@ export class KeyPseudoColumn extends ReferenceColumn {
 
       if (this.sourceObject && typeof this.sourceObject.hide_column_header === 'boolean') {
         sourceDisplay.hideColumnHeader = this.sourceObject.hide_column_header;
+      }
+
+      if (this.sourceObject && isValidVisibleCellHeight(this.sourceObject.visible_cell_height)) {
+        sourceDisplay.visibleCellHeight = this.sourceObject.visible_cell_height;
       }
 
       Object.assign(res, keyDisplay, sourceDisplay);

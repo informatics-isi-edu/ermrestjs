@@ -21,7 +21,7 @@ import HTTPService from '@isrd-isi-edu/ermrestjs/src/services/http';
 import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
 
 // utils
-import { isObjectAndNotNull, isEmptyArray, isStringAndNotEmpty, isValidColorRGBHex } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
+import { isObjectAndNotNull, isEmptyArray, isStringAndNotEmpty, isValidColorRGBHex, isValidVisibleCellHeight } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
 import { fixedEncodeURIComponent, escapeHTML, updateObject } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
 import {
   _annotations,
@@ -3570,6 +3570,8 @@ import {
                     }
                 }
 
+                const visibleCellHeight = _getHierarchicalDisplayAnnotationValue(this, context, "visible_cell_height", false);
+
                 this._display[context] = {
                     "hideColumnHeader": annotation.hide_column_header || false, // only hide if the annotation value is true
                     "isPreformat": hasPreformat,
@@ -3582,7 +3584,8 @@ import {
                     "columnOrder": columnOrder,
                     "comment": _processModelComment(comment, commentRenderMarkdown, columnCommentDisplayMode),
                     "commentRenderMarkdown": commentRenderMarkdown,
-                    "commentDisplayMode": columnCommentDisplayMode
+                    "commentDisplayMode": columnCommentDisplayMode,
+                    "visibleCellHeight": isValidVisibleCellHeight(visibleCellHeight) ? visibleCellHeight : undefined
                 };
             }
             return this._display[context];
@@ -4079,9 +4082,7 @@ import {
                 columnOrder = _processColumnOrderList(annotation.column_order, this.table);
                 showKeyLink = annotation.show_key_link;
                 if (typeof showFKLink !== "boolean") {
-                    showKeyLink = _getHierarchicalDisplayAnnotationValue(
-                        self, context, "show_key_link"
-                    );
+                    showKeyLink = _getHierarchicalDisplayAnnotationValue(self, context, "show_key_link", false);
 
                     // default:
                     //   compact/select: false
@@ -4108,16 +4109,18 @@ import {
                     comment = annotComment;
                 }
 
-                var displayProps = _getHierarchicalDisplayAnnotationValue(this, context, "comment_display", false);
-                var commentDisplay = _commentDisplayModes.tooltip, commentRenderMarkdown;
-                if (isObjectAndNotNull(displayProps)) {
-                    if (_isValidModelCommentDisplay(displayProps.column_comment_display)) {
-                        commentDisplay = displayProps.column_comment_display;
+                const commentProps = _getHierarchicalDisplayAnnotationValue(this, context, "comment_display", false);
+                let commentDisplay = _commentDisplayModes.tooltip, commentRenderMarkdown;
+                if (isObjectAndNotNull(commentProps)) {
+                    if (_isValidModelCommentDisplay(commentProps.column_comment_display)) {
+                        commentDisplay = commentProps.column_comment_display;
                     }
-                    if (typeof displayProps.comment_render_markdown === 'boolean') {
-                        commentRenderMarkdown = displayProps.comment_render_markdown;
+                    if (typeof commentProps.comment_render_markdown === 'boolean') {
+                        commentRenderMarkdown = commentProps.comment_render_markdown;
                     }
                 }
+
+                const visibleCellHeight = _getHierarchicalDisplayAnnotationValue(this, context, "visible_cell_height", false);
 
                 this._display[context] = {
                     "columnOrder": columnOrder,
@@ -4125,7 +4128,8 @@ import {
                     "templateEngine": annotation.template_engine,
                     "markdownPattern": annotation.markdown_pattern,
                     "showKeyLink": showKeyLink,
-                    "comment": _processModelComment(comment, commentRenderMarkdown, commentDisplay)
+                    "comment": _processModelComment(comment, commentRenderMarkdown, commentDisplay),
+                    "visibleCellHeight": isValidVisibleCellHeight(visibleCellHeight) ? visibleCellHeight : undefined
                 };
             }
 

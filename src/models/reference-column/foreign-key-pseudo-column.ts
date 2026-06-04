@@ -10,7 +10,12 @@ import { Tuple } from '@isrd-isi-edu/ermrestjs/src/models/reference';
 import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
 
 // utils
-import { isObjectAndNotNull, isStringAndNotEmpty, isObjectAndKeyExists } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
+import {
+  isObjectAndNotNull,
+  isStringAndNotEmpty,
+  isObjectAndKeyExists,
+  isValidVisibleCellHeight,
+} from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
 import { fixedEncodeURIComponent } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
 import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils';
 import { _annotations, _foreignKeyInputModes } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
@@ -578,6 +583,10 @@ export class ForeignKeyPseudoColumn extends ReferenceColumn {
 
       if (this.sourceObject && typeof this.sourceObject.hide_column_header === 'boolean') {
         sourceDisplay.hideColumnHeader = this.sourceObject.hide_column_header;
+      }
+
+      if (this.sourceObject && isValidVisibleCellHeight(this.sourceObject.visible_cell_height)) {
+        sourceDisplay.visibleCellHeight = this.sourceObject.visible_cell_height;
       }
 
       Object.assign(res, fkDisplay, sourceDisplay);
