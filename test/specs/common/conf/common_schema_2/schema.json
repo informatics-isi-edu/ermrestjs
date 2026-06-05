@@ -32,11 +32,25 @@
                 },
                 {
                     "name": "table_1_text",
-                    "type": { "typename": "text" }
+                    "type": { "typename": "text" },
+                    "annotations": {
+                        "tag:misd.isi.edu,2015:display": {
+                            "visible_cell_height": {
+                                "detailed": 300
+                            }
+                        }
+                    }
                 },
                 {
                     "name": "table_1_longtext",
-                    "type": { "typename": "longtext" }
+                    "type": { "typename": "longtext" },
+                    "annotations": {
+                        "tag:misd.isi.edu,2015:display": {
+                            "visible_cell_height": {
+                                "detailed": false
+                            }
+                        }
+                    }
                 },
                 {
                     "name": "table_1_date",
@@ -76,7 +90,14 @@
                 },
                 {
                     "name": "table_1_markdown",
-                    "type": { "typename": "markdown" }
+                    "type": { "typename": "markdown" },
+                    "annotations": {
+                        "tag:misd.isi.edu,2015:display": {
+                            "visible_cell_height": {
+                                "detailed": "300"
+                            }
+                        }
+                    }
                 },
                 {
                     "name": "table_1_show_null_annotation",
@@ -244,6 +265,10 @@
                 "tag:misd.isi.edu,2015:display": {
                     "show_null": {
                         "entry/create": "table"
+                    },
+                    "visible_cell_height": {
+                        "detailed": 2000,
+                        "compact": 500
                     }
                 }
             }
@@ -868,6 +893,9 @@
             },
             "show_foreign_key_link": {
                 "compact/brief": false
+            },
+            "visible_cell_height": {
+                "detailed": 800
             }
         }
     }

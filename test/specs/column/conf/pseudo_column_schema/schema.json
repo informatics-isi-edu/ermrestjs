@@ -10,7 +10,10 @@
                 "unique_columns": ["main_table_id_col"],
                 "annotations": {
                     "tag:misd.isi.edu,2015:display": {
-                        "markdown_name": "**key name**"
+                        "markdown_name": "**key name**",
+                        "visible_cell_height": {
+                            "detailed": 400
+                        }
                     },
                     "tag:isrd.isi.edu,2017:key-display": {
                         "*": {
@@ -182,7 +185,8 @@
                             "source": "col",
                             "markdown_name": "new name",
                             "comment": "new comment",
-                            "hide_column_header": false
+                            "hide_column_header": false,
+                            "visible_cell_height": 300
                         },
                         {
                             "source": "main_table_id_col",
@@ -194,7 +198,12 @@
                             },
                             "hide_column_header": true
                         },
-                        {"source": [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "id"], "markdown_name": "main fk", "comment": "main fk cm"},
+                        {
+                            "source": [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "id"],
+                            "markdown_name": "main fk",
+                            "comment": "main fk cm",
+                            "visible_cell_height": 2500
+                        },
                         {"source": [{"outbound": ["pseudo_column_schema", "main_fk1"]}, "id"], "entity": false},
                         {"source": [
                             {"outbound": ["pseudo_column_schema", "main_fk1"]},
@@ -206,12 +215,12 @@
                             {"outbound": ["pseudo_column_schema", "outbound_1_fk1"]},
                             "id"
                         ], "entity": false, "markdown_name": "**Outbound Len 2**", "comment": "outbound len 2 cm"},
-                        {"source": [{"inbound": ["pseudo_column_schema", "inbound_1_fk1"]}, "id"], "markdown_name": "inbound", "comment": "inbound cm"},
+                        {"source": [{"inbound": ["pseudo_column_schema", "inbound_1_fk1"]}, "id"], "markdown_name": "inbound", "comment": "inbound cm", "visible_cell_height": 450},
                         {"source": [
                             {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
                             {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
                             "id"
-                        ], "markdown_name": "**association table**", "comment": false},
+                        ], "markdown_name": "**association table**", "comment": false, "visible_cell_height": 550},
                         {"sourcekey": "path_to_inbound_2_outbound_1", "source": "RID", "comment": "make sure sourcekey is used and source is ignored"},
                         {"source": [{"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]}, "id"]},
                         {"source": [
@@ -231,7 +240,7 @@
                             {"inbound": ["pseudo_column_schema", "main_inbound_2_association_fk1"]},
                             {"outbound": ["pseudo_column_schema", "main_inbound_2_association_fk2"]},
                             "id"
-                        ], "aggregate": "array", "entity": false},
+                        ], "aggregate": "array", "entity": false, "visible_cell_height": 650},
                         {"sourcekey": "path_to_inbound_2", "aggregate": "array", "array_display": "csv"},
                         {
                             "sourcekey": "main_inbound_2_association_fk1_fk2_path_id_cnt_d",

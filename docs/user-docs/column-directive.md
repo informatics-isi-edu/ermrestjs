@@ -67,7 +67,8 @@ In this category, you use the [`source`](#source) property to define the data so
   "comment": <tooltip message>,
   "comment_display": <inline|tooltip>,
   "comment_render_markdown": <boolean>,
-  "hide_column_header": <boolean>
+  "hide_column_header": <boolean>,
+  "visible_cell_height": <number or false>,
   "display": {
       "markdown_pattern": <pattern>,
       "template_engine": <handlebars or mustache>,
@@ -113,7 +114,8 @@ In this category, the [`sourcekey`](#sourcekey) proprety is used to refer to one
   "comment": <tooltip message>,
   "comment_display": <inline|tooltip>,
   "comment_render_markdown": <boolean>,
-  "hide_column_header": <boolean>
+  "hide_column_header": <boolean>,
+  "visible_cell_height": <number or false>,
   "display": {
       "markdown_pattern": <pattern>,
       "template_engine": <handlebars or mustache>,
@@ -162,7 +164,8 @@ The following is an overview of such column directive with all the available pro
   "markdown_name": <display name>,
   "comment": <tooltip message>,
   "comment_display": <inline|tooltip>,
-  "hide_column_header": <boolean>
+  "hide_column_header": <boolean>,
+  "visible_cell_height": <number or false>,
   "display": {
       "markdown_pattern": <pattern>,
       "template_engine": <handlebars or mustache>,
@@ -413,6 +416,14 @@ By default Chaise will display `comment` as a tooltip. Set this value to `inline
 #### hide_column_header
 
 By setting this to `true`, chaise will hide the column header (and still show the value). This is only supported in `detailed` context. If this attribute is missing, we are going to use the inherited behavior from the [column display](annotation.md#tag-2016-column-display) annotation. If that one is missing too, [display annotation](annotation.md#tag-2015-display) will be used.
+
+#### visible_cell_height
+
+Limit the height of displayed cells. Currently only supported in the `detailed` context (record page). The acceptable values are,
+
+- Any positive number: The cell values in the record page will be limited to the given height.
+- `false`: Disable the feature and show all the contents. If this property is missing or is invalid, this is the default behavior.
+
 
 #### self-link
 If you want to show a self-link to the current row, you need to make sure the source is based on a not-null unique column of the current table and add the `"self_link": true` to the definition.
