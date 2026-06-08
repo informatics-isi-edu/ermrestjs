@@ -175,7 +175,7 @@ Supported JSON _maxfacetdepth_ patterns:
 
 Supported JSON _visiblecellheight_ patterns:
 
-- Any positive number: The cell values in the record page will be limited to the given height.
+- Any positive number (in pixels): The cell values in the record page will be limited to the given height. `300` is the recommended starting value for most content.
 - `false`: Disable the feature and show all the contents. If this property is missing or is invalid, this is the default behavior.
 
 Supported JSON _context_ patterns:
