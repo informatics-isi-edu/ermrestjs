@@ -87,3 +87,10 @@ export function verify(test: any, message: string) {
     throw new InvalidInputError(message);
   }
 }
+
+/**
+ * check if the value is a valid visible cell height (i.e. a positive number or false)
+ */
+export function isValidVisibleCellHeight(value: unknown) {
+  return (typeof value === 'number' && value > 0) || value === false;
+}

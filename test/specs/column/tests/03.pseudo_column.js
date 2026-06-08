@@ -943,6 +943,27 @@ exports.execute = function (options) {
         // the rest of tests are in 02.referenced_column.js
       });
 
+      describe('.display.visibleCellHeight', function () {
+        var visibleCellHeightIndices = { 1: 300, 3: 2500, 7: 450, 8: 550, 15: 650 };
+
+        it('should return the `visible_cell_height` defined on the source', function () {
+          Object.keys(visibleCellHeightIndices).forEach(function (i) {
+            expect(detailedColsWTuple[i].display.visibleCellHeight).toBe(visibleCellHeightIndices[i], 'missmatch for index=' + i);
+          });
+        });
+
+        it('for key pseudo-columns, should return the `visible_cell_height` defined on the key display annotation', function () {
+          expect(detailedColsWTuple[2].display.visibleCellHeight).toBe(400, 'missmatch for index=2');
+        });
+
+        it('otherwise should return a falsy value', function () {
+          detailedColsWTuple.forEach(function (col, i) {
+            if (i === 2 || i in visibleCellHeightIndices) return;
+            expect(col.display.visibleCellHeight).toBeFalsy('missmatch for index=' + i);
+          });
+        });
+      });
+
       describe('.inputDisplayMode', function () {
         it('should return the `selector_ux_mode` defined on the table-display annotation', function () {
           // table-display on outbound_2 says 'simple-search-dropdown' that overrides default ('facet-search-popup')

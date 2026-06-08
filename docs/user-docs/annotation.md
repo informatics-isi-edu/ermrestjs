@@ -102,6 +102,7 @@ Supported JSON payload patterns:
 - `{`... `"max_facet_depth":` `{` _context_ `:` _maxfacetdepth_ `,`  ...`}`: How many levels of facet popups we should allow.
 - `{`... `"show_saved_query":` _savedquery_ ...`}`: Whether we want to display the saved query UI features or not. By default, this feature is turned off (set to false).
 - `{`... `"bulk_create_foreign_key"`: _bulkfk_ ... `}`: Use this property to control the bulk selection of foreign key values in `entry/create` context when there is a prefill query parameter. By default, the heuristics will be used to determine if this feature will be used. This can be defined on each of the catalog, schema, and table model elements.
+- `{`... `"visible_cell_height":` `{` _context_ `:` _visiblecellheight_ `,` ... `}`: Limit the height of displayed cells. Currently only supported in the `detailed` context (record page).
 
 Supported JSON _ccomment_ patterns:
 
@@ -170,6 +171,12 @@ Supported JSON _maxfacetdepth_ patterns:
 - `1`: Facet panel is only displayed for one level. The facet panel is not displayed as part of the facet popups.
 - `2`: Facet panel is displayed for two levels. Both once the main table is opened and when the facet popup is opened for any of the facets.
 - Any number bigger than 2 will be treated the same as defining `2`.
+
+
+Supported JSON _visiblecellheight_ patterns:
+
+- Any positive number: The cell values in the record page will be limited to the given height.
+- `false`: Disable the feature and show all the contents. If this property is missing or is invalid, this is the default behavior.
 
 Supported JSON _context_ patterns:
 - See [Context Names](#context-names) section for the list of supported JSON _context_ patterns.

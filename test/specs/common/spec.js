@@ -5,6 +5,7 @@ require('./../../utils/starter.spec.js').runTests({
         "/common/tests/02.column.js",
         "/common/tests/03.table.js",
         "/common/tests/04.catalog.js",
+        "/common/tests/05.visible_cell_height.js",
     ],
     schemaConfigurations: [
         "/common/conf/common_schema_2.conf.json", //this should come first since schema_1 has fk to it.

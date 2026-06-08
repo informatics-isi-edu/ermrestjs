@@ -12,7 +12,12 @@ import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
 
 // utils
 import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils';
-import { isObjectAndKeyExists, isObjectAndNotNull, isStringAndNotEmpty } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
+import {
+  isValidVisibleCellHeight,
+  isObjectAndKeyExists,
+  isObjectAndNotNull,
+  isStringAndNotEmpty,
+} from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
 import { _annotations, _contexts } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
 import { buildSelfTemplateVariables } from '@isrd-isi-edu/ermrestjs/src/utils/template-utils';
 import ActiveListCondition from '@isrd-isi-edu/ermrestjs/src/models/active-list-condition';
@@ -383,6 +388,10 @@ export class ReferenceColumn {
 
       if (this.sourceObject && typeof this.sourceObject.hide_column_header === 'boolean') {
         sourceDisplay.hideColumnHeader = this.sourceObject.hide_column_header;
+      }
+
+      if (this.sourceObject && isValidVisibleCellHeight(this.sourceObject.visible_cell_height)) {
+        sourceDisplay.visibleCellHeight = this.sourceObject.visible_cell_height;
       }
 
       // Using assign to avoid changing the original colDisplay
