@@ -2,6 +2,12 @@ name: Release
 
 on:
   workflow_dispatch:
+    inputs:
+      dry-run:
+        description: 'Run semantic-release in dry-run mode'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   id-token: write  # Required for OIDC
@@ -11,6 +17,7 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
     permissions:
       contents: write # to be able to publish a GitHub release
       issues: write # to be able to comment on released issues
@@ -36,9 +43,9 @@ jobs:
         run: npm clean-install
       - name: Verify the integrity of provenance attestations and registry signatures for installed dependencies
         run: npm audit signatures
-      - name: Install semantic-release plugins
+      - name: Install release plugins
         run: npm install --no-save @semantic-release/git
       - name: Release
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
-        run: npx semantic-release
+        run: npx semantic-release ${{ inputs.dry-run && '--dry-run' || '' }}
