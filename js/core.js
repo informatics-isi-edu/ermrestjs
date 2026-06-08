@@ -4081,7 +4081,7 @@ import {
 
                 columnOrder = _processColumnOrderList(annotation.column_order, this.table);
                 showKeyLink = annotation.show_key_link;
-                if (typeof showFKLink !== "boolean") {
+                if (typeof showKeyLink !== "boolean") {
                     showKeyLink = _getHierarchicalDisplayAnnotationValue(self, context, "show_key_link", false);
 
                     // default:

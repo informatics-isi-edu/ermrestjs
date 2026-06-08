@@ -89,9 +89,7 @@ export function verify(test: any, message: string) {
 }
 
 /**
- * check if the value is a valid visible cell height
- * @param value The value to check
- * @returns True if the value is a positive number or false, false otherwise
+ * check if the value is a valid visible cell height (i.e. a positive number or false)
  */
 export function isValidVisibleCellHeight(value: unknown) {
   return (typeof value === 'number' && value > 0) || value === false;
