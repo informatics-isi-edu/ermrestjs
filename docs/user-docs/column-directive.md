@@ -28,6 +28,7 @@ Column directive allows instruction of a data source and modification of its pre
     - [comment\_render\_markdown](#comment_render_markdown)
     - [comment\_display](#comment_display)
     - [hide\_column\_header](#hide_column_header)
+    - [visible\_cell\_height](#visible_cell_height)
     - [self-link](#self-link)
     - [display](#display)
       - [markdown\_pattern](#markdown_pattern)
@@ -53,6 +54,7 @@ Column directive allows instruction of a data source and modification of its pre
 
 As it was described, column directives are meant to intruct the data source and its presentation. Based on how the data source is defined, we can categorize them into the following:
 
+<a name="1-column-directive-with-source"></a>
 ### 1. Column directive with `source`
 
 In this category, you use the [`source`](#source) property to define the data source of the column directive in place. Other source related properties (i.e. [`entity`](#entity), [`aggregate`](aggregate)) can be used in combination with `source` to change the nature of the column directive. The following is an overview of such column directive with all the available properties (some might not be applicaple depending on where the column directive is used):
@@ -100,6 +102,7 @@ In this category, you use the [`source`](#source) property to define the data so
 }
 ```
 
+<a name="2-column-directive-with-sourcekey"></a>
 ### 2. Column directive with `sourcekey`
 
 In this category, the [`sourcekey`](#sourcekey) proprety is used to refer to one of the defines sources in the [`source-definitions` annotations](annotation.md#tag-2019-source-definitions). The following is an overview of such column directive with all the available properties (some might not be applicaple depending on where the column directive is used):
@@ -142,6 +145,7 @@ In this category, the [`sourcekey`](#sourcekey) proprety is used to refer to one
 }
 ```
 
+<a name="3-column-directive-without-any-source"></a>
 ### 3. Column directive without any source
 
 If you want to have a column directive that its value is made up of multiple column directives, you don't need to define any `source` or `sourcekey`. The only required attributes for these types of columns (we call them virtual columns) are [`markdown_name`](#markdown_name) that is used for generating the display name, and [`markdown_pattern`](#markdown_pattern) under [`display`](#display) to get the value. For instance the following is an acceptable virtual column:
@@ -178,6 +182,7 @@ The following is an overview of such column directive with all the available pro
 
 Some properties are only available in special scenarios and are not used in all the scenarios. As you can see in the overall structure, there are three different ways that you can define a column directive:
 
+<a name="1-data-source-properties"></a>
 ### 1. Data source properties
 
 These sets of properties change the nature of the column directive, as they will affect the communication with server. To detect duplicate column-directives we only look for these attributes. The properties are:
@@ -378,11 +383,13 @@ This is only applicable in visible columns definition (Not applicable in Facet d
 - `array_d` will return the distinct values. It has the same performance overhead as `array`, so pleas USE WITH CARE.
 
 
+<a name="2-presentation-properties"></a>
 ### 2. Presentation properties
 
 The following attributes can be used to manipulate the presentation settings of the column directive.
 
 
+<a name="markdown_name"></a>
 #### markdown_name
 `markdown_name` captures the display name of the column. You can change the default display name by setting the `markdown_name` attribute.
 
@@ -395,6 +402,7 @@ In Chaise, comment is displayed as tooltip associated with columns. To change th
 
     "comment": "New comment"
 
+<a name="comment_render_markdown"></a>
 #### comment_render_markdown
 
 A boolean value that dictates whether the comment should be treated as markdown or not. If not defined, its value will be inherited from the underlying column or table which could be inherited from the schema or the catalog. If it's not defined on any of the models, the default behavior is to treat comments as markdown.
@@ -403,6 +411,7 @@ A boolean value that dictates whether the comment should be treated as markdown 
 
 This boolean works independent of the `comment` property. Which means that you can define `commen_render_markdown` to be used in combination with the comment that is derived based on the heuristics.
 
+<a name="comment_display"></a>
 #### comment_display
 
 By default Chaise will display `comment` as a tooltip. Set this value to `inline` to show it as text or `tooltip` to show as a hover tooltip.
@@ -413,10 +422,12 @@ By default Chaise will display `comment` as a tooltip. Set this value to `inline
 - `visible-columns` annotation in `detailed` context.
 - `visible-columns` annotation in `entry` contexts.
 
+<a name="hide_column_header"></a>
 #### hide_column_header
 
 By setting this to `true`, chaise will hide the column header (and still show the value). This is only supported in `detailed` context. If this attribute is missing, we are going to use the inherited behavior from the [column display](annotation.md#tag-2016-column-display) annotation. If that one is missing too, [display annotation](annotation.md#tag-2015-display) will be used.
 
+<a name="visible_cell_height"></a>
 #### visible_cell_height
 
 Limit the height of displayed cells. Currently only supported in the `detailed` context (record page). The acceptable values are,
@@ -447,6 +458,7 @@ By using this attribute you can customize the presented value to the users. The 
 }
 ```
 
+<a name="markdown_pattern"></a>
 ##### markdown_pattern
 
 Allows modification of the displayed values for the column directive. You can access the current column directive data with `$self` namespace alongside the defined source definitions. Please refer to the [Column directive display documentation](column-directive-display.md) for more information.
@@ -454,14 +466,17 @@ Allows modification of the displayed values for the column directive. You can ac
 Notes:
 - If a value that is not a string or an empty string is provided for this property, we will ignore that. And act as if this property was completely missing.
 
+<a name="wait_for"></a>
 ##### wait_for
 
 Used to signal Chaise that this column directive's `markdown_pattern` relies on the values of other column directives. It's an array of `sourcekey`s that are defined in the [`source-definitions` annotation](annotation.md#tag-2019-source-definitions) of the table. You should list all the all-outbound, aggregates, and entity sets that you want to use in your `markdown_pattern`. Entity sets (column directives with `inbound` path and no `aggregate` attribute) are only acceptable in `detailed` context. Please refer to the [column directive display documentation](column-directive-display.md) for more information.
 
+<a name="show_foreign_key_link"></a>
 ##### show_foreign_key_link
 
 While generating a default presentation for all outbound foreign key paths, ERMrestJS will display a link to the referred row. Using this attribute you can modify this behavior. If this attribute is missing, we are going to use the inherited behavior from the [foreign key](annotation.md#tag-2016-foreign-key) annotation defined on the last foreign key in the path. If that one is missing too, [display annotation](annotation.md#tag-2015-display) will be applied.
 
+<a name="selector_ux_mode"></a>
 ##### selector_ux_mode
 
 While generating a default presentation in `entry` mode for single outbound foreign key paths, Chaise will show a modal popup dialog for selecting rows. Using this attribute, you can modify this behavior. If this attribute is missing, we are going to use the inherited behavior from the [foreign key](annotation.md#tag-2016-foreign-key) annotation defined on the foreign key relationship. If that one is missing too, [table display](annotation.md#tag-2016-table-display) annotation will be applied. Supported values are `"facet-search-popup"` and `"simple-search-dropdown"`, with `"facet-search-popup"` being the default.
@@ -470,14 +485,17 @@ While generating a default presentation in `entry` mode for single outbound fore
 
 Use this property to force the required (nullok) check for this visible column. This property is only used in the `entry` contexts. If set to `true`, users cannot leave the input empty. And if set to `false`, the input becomes optional.
 
+<a name="bulk_create_foreign_key"></a>
 ##### bulk_create_foreign_key
 
 Use this property to control the bulk selection of foreign key values in `entry/create` context when there is a prefill query parameter. Supported values are a foreign key `name` in the format of `['schema_name', 'foreign_key_name']` from the schema document, `false`, or `null`. Using a foreign key name will use that foreign key as the one being bulk selected if that foreign key is in the visible columns list. `false` turns off the heuristics that trigger this feature. `null` will override inheritance for this property and use the default heuristics. This will override the `bulk_create_foreign_key` property defined in the display property of the foreign-key annotation. Currently only supported in `entry/create` context.
 
+<a name="show_key_link"></a>
 ##### show_key_link
 
 While generating a default presentation for key column directives (self link), ERMrestJS will add a link to the referred row. Using this attribute you can modify this behavior. If this attribute is missing, we are going to use the inherited behavior from the [key display](annotation.md#tag-2017-key-display) annotation. If that one is missing too, [display annotation](annotation.md#tag-2015-display) will be applied.
 
+<a name="array_ux_mode"></a>
 ##### array_ux_mode
 
 If you have `"aggregate": "array"` or `"aggregate": "array_d"` in your column directive definition, you can use `array_ux_mode` attribute to change the display of values. You can use
@@ -486,6 +504,7 @@ If you have `"aggregate": "array"` or `"aggregate": "array_d"` in your column di
 - `csv` for comma-seperated values (the default presentation).
 - `raw` for space-seperated values.
 
+<a name="array_options"></a>
 #### array_options
 
 If you have `"aggregate": "array"` or `"aggregate": "array_d"` in your column directive definition, you can use `array_options` to change the array of data that client will present. It will not have any effect on the generated ERMrest query and manipulation of the array is happening on the client side. The available options are:
@@ -574,6 +593,7 @@ cnt_d -> #
 -->
 
 
+<a name="input_iframe"></a>
 #### input_iframe
 
 This property can be used for integrating Chaise's recordedit app with any third-party tools. When this property is added to a visible column in entry contexts, Chaise will display a special input for them. Clicking on this input will open a modal to show the third-party tool in an iframe.
@@ -581,6 +601,7 @@ This property can be used for integrating Chaise's recordedit app with any third
 For more information about this property, please refer to [this document](input-iframe.md).
 
 
+<a name="3-condition-properties"></a>
 ### 3. Condition properties
 
 These properties allow you to conditionally show or hide a column or related entity. There are two forms:
@@ -656,6 +677,7 @@ Visibility is a two-step decision: first determine whether the condition result 
 
 For example, a no-source `condition_pattern` of `{{#if (isUserInAcl "admin")}}show{{/if}}` renders non-empty for admins and empty for everyone else. With `on_empty: "hide"` (default), admins see the column; with `on_empty: "show"`, the visibility is inverted (everyone except admins sees it).
 
+<a name="condition_key"></a>
 #### condition_key
 
 A string that references a reusable condition defined in the `conditions` section of the [`source-definitions`](annotation.md#tag-2019-source-definitions) annotation. This allows you to define a condition once and apply it to multiple columns or related entities. The referenced condition can be either the with-source or no-source form, and the same context rules apply (with-source only in `detailed`; no-source in every context).

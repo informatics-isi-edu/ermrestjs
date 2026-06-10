@@ -24,7 +24,7 @@ First you need to define your source definitions. To do this, you have to define
 }
 ```
 
-Use the `sources` attribute to define the sources that you want to use in this table. You should be able to access the data by the given _sourcekey_. The available data will be [different based on the dolumn directive type](#Column-Directive-Templating-Variable-Data-Structure). Please make sure to follow these rules while specifying the _sourcekey_:
+Use the `sources` attribute to define the sources that you want to use in this table. You should be able to access the data by the given _sourcekey_. The available data will be [different based on the dolumn directive type](#column-directive-templating-variable-data-structure). Please make sure to follow these rules while specifying the _sourcekey_:
 
    - sourcekey cannot start with `$`.
    - sourcekey should not be any of the table's column names.

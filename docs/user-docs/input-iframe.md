@@ -59,6 +59,7 @@ Now that you know how the iframe should be implemented, let's discuss the annota
 
 `url_pattern` and `field_mapping` are required. While `optional_fields` is optional.
 
+<a name="url_pattern"></a>
 ### url_pattern
 
 Allows you to define the location of this third-party tool. We recommend installing this tool in your deployment to avoid any cross-origin issues. In [this document](https://github.com/informatics-isi-edu/deriva-react-template/blob/main/docs/dev-docs/dev-guide.md#recommended-location-for-the-apps), we added our recommended location for any apps that you might have in your deployment. For instance, you could use `/apps/myapp/index.html`.
@@ -91,6 +92,7 @@ That being said, in most cases you don't need to use pattern and just a static v
 ```
 
 
+<a name="field_mapping"></a>
 ### field_mapping
 
 The fields that the iframe users might have different names from the database column. You can also change the model without changing the code. That's why you need to define the mapping between iframe fields and column names as part of this annotation.
@@ -114,6 +116,7 @@ The `field_mapping` must be an object where keys are the names used in the ifram
 
 With this, we expect the iframe to return an object with `hra_id`, `hra_file`, and `hra_creator` field. And Chaise will store their values in `ID`, `URI`, and `Principal_Investigator` columns.
 
+<a name="optional_fields"></a>
 ### optional_fields
 
 We expect the iframe to return values for all the fields noted under `field_mapping`; we will complain if we don't receive it. If some fields are unavailable in some scenarios, you should list them with `optional_fields`.   For example,
@@ -134,6 +137,7 @@ We expect the iframe to return values for all the fields noted under `field_mapp
 }
 ```
 
+<a name="empty_field_confirm_message_markdown"></a>
 ### empty_field_confirm_message_markdown
 
 This optional field can be used to customize the message that we show to users when they attempt to close the iframe without submitting. This message is only displayed when users start with an empty field, that's why the property is named this way.

@@ -478,7 +478,7 @@ Ermrestjs allows users to access some pre-defined variables in the template envi
 * `LocaleTimeString`: 4:04:46 PM
 * `LocalString`: 10/19/2017, 4:04:46 PM
 
-The `$moment` object can be referred directly in the Mustache environment. If you would like to display the current date and time in a different format, you can use `$moment.ISOString` with [`formatDatetime`](#formatDatetime) helper.
+The `$moment` object can be referred directly in the Mustache environment. If you would like to display the current date and time in a different format, you can use `$moment.ISOString` with [`formatDatetime`](#formatdatetime-helper) helper.
 
 **Examples**
 
@@ -610,6 +610,7 @@ Example:
 
 Keep in mind that `printf` doesn't check the validity of the given values. So for example if the value might not be a number, you cannot blindly use the `d` type and should guard against it.
 
+<a name="dates--timestamps"></a>
 ### Dates & timestamps
 
 Format and convert between datetime values.
@@ -758,6 +759,7 @@ You **must** use the triple-brace form when `tooltip=true`. The default `{{...}}
 {{{datetimeDuration _start _end unit="month" tooltip=true}}}
 ```
 
+<a name="numbers--math"></a>
 ### Numbers & math
 
 Format numbers and perform basic arithmetic.
@@ -834,6 +836,7 @@ The `subtract` helper can be used to subtract 2 numbers. It will always subtract
 {{subtract value1 value2}}
 ```
 
+<a name="strings--regex"></a>
 ### Strings & regex
 
 Operations on strings.
@@ -969,6 +972,7 @@ You can also use the `flags` named optional argument to pass [regular expression
 
 > If `flags` argument is not used, by default we are using the `g` (global search) flag for the regular expression search.
 
+<a name="url--markdown-encoding"></a>
 ### URL & markdown encoding
 
 Turn values into safely-encoded forms for URLs, markdown, or facet blobs.
@@ -1005,6 +1009,7 @@ for context `key="**somevalue ] which is ! special" and value="John"` will resul
 
 You can use the `encodeFacet` helper to compress a JSON object. The compressed string can be used for creating a URL path with facets. This helper can be used for encoding both JSON objects and string representation of a JSON object.
 
+<a name="1-passing-the-string-representation-of-a-facet-blob"></a>
 ##### 1. Passing the string representation of a facet blob
 
 The string that you are passing as content MUST be JSON parsable. It will be ignored otherwise.
@@ -1048,6 +1053,7 @@ With the following context:
 }
 ```
 
+<a name="2-passing-the-json-object-representing-a-facet"></a>
 ##### 2. Passing the JSON object representing a facet
 
 
@@ -1103,6 +1109,7 @@ This would result in:
 <a href="example.com/chaise/recordset/#1/S:T/*::facets::<facet-blob-representation>">caption</a>
 ```
 
+<a name="lists-iteration--scope"></a>
 ### Lists, iteration & scope
 
 Extract from arrays, iterate, and shift the rendering context.

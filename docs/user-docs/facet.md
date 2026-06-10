@@ -167,6 +167,7 @@ A half-open range might be `{"min" lower}` or `{"max": upper}`. By default both 
 
 In this section we will go over the properties that can be used to customize the displayed facets.
 
+<a name="entity-vs-scalar-facet"></a>
 ### entity v.s. scalar facet
  If the facet can be treated as entity (the column that is being used for facet is key of the table), setting `entity` attribute to `false` will force the facet to show scalar mode.
 
@@ -183,6 +184,7 @@ If a multi-modal facet control UX is available, we might even mix-in several for
 The mixing of several constraints would be disjunctive to be consistent with the disjunctive list of options in each constraint.
 -->
 
+<a name="markdown_name"></a>
 ### markdown_name
 
 To change the default displayname of facets, `markdown_name` can be used.
@@ -203,6 +205,7 @@ Using `open` you can force the facet to open by default.
 "open": true
 ```
 
+<a name="ux_mode"></a>
 ### ux_mode
 
  If a multi-modal facet control UX is available, it will specify the default UX mode that should be used (If `ux_mode` is defined, the other type of constraint will not be displayed even if you have defined it in the annotation). The available options are
@@ -223,6 +226,7 @@ Notes:
   - `ranges` will be used if the end column's type is a variant of `serial`, `int`, `float`, `date`, `timestamp`, or `timestamptz`.
   - Otherwise, `choices` will be used.
 
+<a name="hide_null_choicehide_not_null_choice"></a>
 ### hide_null_choice/hide_not_null_choice
 
 If applicable we are going to show "null" and "not-null" options on the facet panel. Setting any of these variables to `true`, will hide its respective option.
@@ -265,6 +269,7 @@ And the following is the logic for "not-null" option (first applicaple rule will
 3. Otherwise show it.
 
 
+<a name="bar_plot"></a>
 ### bar_plot
 
 This attribute is meant to be an object of properties that control the display of the histogram. Setting this attribute to `false` will force the histogram to not be shown in the facet in the facet panel. If unspecified, default is `true` (or show the histogram). Available options in this object are:
@@ -286,6 +291,7 @@ Assuming your path ends with column `COL`, the default order is the following:
 
 As you can see, you can use `"num_occurrences": true` to refer to the number of occurrences (frequency) column.
 
+<a name="hide_num_occurrences"></a>
 ### hide_num_occurrences
 
 In _scalar_ facets we show an extra column called "number of occurrences". Use this attribute to hide the column from users.

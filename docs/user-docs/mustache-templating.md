@@ -132,6 +132,7 @@ These special characters are as follows:
 }
 ```
 
+<a name="1-normal-replacement---name"></a>
 ### 1. Normal replacement - "{{{name}}}"
 
 ```
@@ -143,6 +144,7 @@ This is some value in COLUMN **{{{name}}}**
 ```
 > 'This is some value in COLUMN **BiomassProdBatch for Virus=7782 Target=5HT1B site=USC**'
 
+<a name="2-replacement-with-url-encoding---encodenameencode"></a>
 ### 2. Replacement with URL encoding - "{{#encode}}{{{name}}}{{/encode}}"
 
 ```
@@ -154,6 +156,7 @@ This is some value in COLUMN **{{{name}}}**
 ```
 > [BiomassProdBatch for Virus&#x3D;7782 Target&#x3D;5HT1B site&#x3D;USC](https://example.com/chaise/search?name=BiomassProdBatch%20for%20Virus%3D7782%20Target%3D5HT1B%20site%3DUSC)
 
+<a name="3-replacement-with-html-escaping---name"></a>
 ### 3. Replacement with HTML escaping - "{{name}}"
 
 ```
@@ -165,6 +168,7 @@ Research **{{name}}** was conducted on {{{date}}}
 ```
 > Research **BiomassProdBatch for Virus&#x3D;7782 Target&#x3D;5HT1B site&#x3D;USC** was conducted on 08/25/2016
 
+<a name="4-replacement-with-null-check-disabled-escaping-and-url-encoding---namename"></a>
 ### 4. Replacement with null check, disabled escaping and url encoding - "{{#name}}...{{/name}}"
 
 With null value for title
@@ -191,6 +195,7 @@ Research on date {{{date}}} : {{#title}}[{{{title}}}](https://example.com/chaise
 ```
 > Research on date 08/25/2016 : [BiomassProdBatch for Virus=7782 Target=5HT1B site=USC](https://example.com/chaise/search?name=BiomassProdBatch%20for%20Virus%3D7782%20Target%3D5HT1B%20site%3DUSC)
 
+<a name="5-replacement-with-negated-null-check---namename"></a>
 ### 5. Replacement with negated-null check - "{{^name}}...{{/name}}"
 
 In cases where you need to check whether a value is null, then use this string, you can use this syntax.
@@ -207,6 +212,7 @@ Research on date {{{date}}} : {{^title}}[This is some title](https://example.com
 
 
 
+<a name="6-null-handling"></a>
 ### 6. Null Handling
 
 If the value of any of the columns which are being used in the `markdown_pattern` are either null or empty, then the pattern will fall back on the `show_null` display annotation to return respective value. For example, if title property in the json object is not defined or null then following template `[{{{title}}}]({{{url}}})` will resolve as null and use the `show_null` annotation to determine what should be done.
