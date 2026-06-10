@@ -1095,6 +1095,95 @@ exports.execute = (options) => {
                 });
             })
 
+            describe("regarding canUseTCRS, ", function () {
+
+                // Table is statically updatable; only the `name` column has a row-dependent
+                // (dynamic) update ACL. So table.rights['update'] is decidable (true) while
+                // the column's update right is null -- this is the new canUseTCRS branch.
+                describe("when only a column (not the table) has a dynamic update ACL, ", function () {
+                    var reference;
+
+                    beforeAll((done) => {
+                        setCatalogAcls(done, tablePermUri, catalogId, {
+                            "catalog": {
+                                "id": catalogId,
+                                "schemas": {
+                                    "permission_schema": {
+                                        "tables": {
+                                            "perm_table": {
+                                                "acls": { "select": ["*"], "update": [restrictedUserId] },
+                                                "acl_bindings": {},
+                                                "columns": {
+                                                    "name": {
+                                                        "acls": { "select": ["*"] },
+                                                        "acl_bindings": {
+                                                            "can_update_name_for_9001": {
+                                                                "types": ["update"],
+                                                                "projection": [
+                                                                    {"filter": "key", "operand": 9001}, "key"
+                                                                ],
+                                                                "projection_type": "nonnull"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }, (response) => reference = response.contextualize.entryEdit, restrictedUserCookie);
+                    });
+
+                    it("table-level update right should be static (sanity check for this case)", function () {
+                        // confirms we are exercising the new branch, not the old table-dynamic one
+                        expect(reference.table.rights["update"]).toBe(true, "table update right should be static true");
+                    });
+
+                    it("canUseTCRS should be true because a column has a dynamic update ACL", function () {
+                        expect(reference.canUseTCRS).toBe(true, "canUseTCRS should be true");
+                    });
+
+                    afterAll((done) => {
+                        removeCachedCatalog(catalogId);
+                        utils.resetCatalogAcls(done, {
+                            "catalog": { "id": catalogId, "schemas": { "permission_schema": { "tables": { "perm_table": {
+                                "acls": { "select": [] },
+                                "acl_bindings": {},
+                                "columns": { "name": { "acl_bindings": {} } }
+                            }}}}}
+                        });
+                    });
+                });
+
+                // Nothing dynamic anywhere -> TCRS must NOT be enabled (locks the contract).
+                describe("when neither the table nor any column has a dynamic update ACL, ", function () {
+                    var reference;
+
+                    beforeAll((done) => {
+                        setCatalogAcls(done, tablePermUri, catalogId, {
+                            "catalog": { "id": catalogId, "schemas": { "permission_schema": { "tables": { "perm_table": {
+                                "acls": { "select": ["*"], "update": [restrictedUserId] },
+                                "acl_bindings": {}
+                            }}}}}
+                        }, (response) => reference = response.contextualize.entryEdit, restrictedUserCookie);
+                    });
+
+                    it("canUseTCRS should be false when all update rights are statically decidable", function () {
+                        expect(reference.canUseTCRS).toBe(false, "canUseTCRS should be false");
+                    });
+
+                    afterAll((done) => {
+                        removeCachedCatalog(catalogId);
+                        utils.resetCatalogAcls(done, {
+                            "catalog": { "id": catalogId, "schemas": { "permission_schema": { "tables": { "perm_table": {
+                                "acls": { "select": [] }, "acl_bindings": {}
+                            }}}}}
+                        });
+                    });
+                });
+            });
+
         });
 
     });
