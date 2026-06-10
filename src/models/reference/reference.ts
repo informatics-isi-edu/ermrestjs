@@ -1688,7 +1688,7 @@ export class Reference {
   /**
    * Returns true if
    *  - ermrest supports tcrs, and
-   *  - table has dynamic acls, and
+   *  - table or any of the columns of the table have dynamic acls, and
    *  - table has RID column, and
    *  - table is not marked non-updatable by annotation
    */
@@ -1698,7 +1698,7 @@ export class Reference {
       this._canUseTCRS =
         this.table.schema.catalog.features[rightKey] === true &&
         // eslint-disable-next-line eqeqeq
-        this.table.rights[_ERMrestACLs.UPDATE] == null &&
+        (this.table.rights[_ERMrestACLs.UPDATE] == null || this.table.columns.all().some((col) => col.rights[_ERMrestACLs.UPDATE] == null)) &&
         this.table.columns.has('RID') &&
         this.canUpdate;
     }
