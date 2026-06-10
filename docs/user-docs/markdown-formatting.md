@@ -176,7 +176,7 @@ The following is the list of special class names that you can use:
 - `.fullscreen-off`: When applied in iframe template, this class hides the full screen button that appears at the top right corner.
 - `.chaise-reduce-header-margin`: Used on a `<h3>` or other header tag to reduce the space after the header to 5px. [Link to implementation](https://github.com/informatics-isi-edu/chaise/blob/master/src/assets/scss/_markdown-container.scss#L107-L109)
 - `.chaise-iframe-after`: Reduces the margin after the element's content when an iframe is the next element. This class will reduce the margin and pull the iframe content closer. [Link to implementation](https://github.com/informatics-isi-edu/chaise/blob/master/src/assets/scss/_markdown-container.scss#L112-L114)
-- `.chaise-image-preview`: When applied to an image, Chaise will properly display a scaled down version of the image to the users. Clicking on the image would allow users to see the fully scaled version of the image. You can find an example [here](#6-image-with-zoom-capabilties). While the behavior looks like a zoom, by clicking on images with this class, we're switching between these two modes:
+- `.chaise-image-preview`: When applied to an image, Chaise will properly display a scaled down version of the image to the users. Clicking on the image would allow users to see the fully scaled version of the image. You can find an example [here](#5-image-with-zoom-capabilties). While the behavior looks like a zoom, by clicking on images with this class, we're switching between these two modes:
   - The scaled-down version,
     - The height of the image is limited to 50vh. Therefore small images will be displayed fully, while the bigger images will be scaled down to fit the limited size.
     - The width is limited to the available width space on the page.
@@ -221,9 +221,10 @@ You can use the [`span`](#13-span-attach-attributes-to-text) block to attach the
 
 ## Examples
 
+<a name="1-link-anchor"></a>
 ### 1. Link (Anchor)
 
-This is part of commonMark specification. Links are [inline](#inline-vs.-block) elements.
+This is part of commonMark specification. Links are [inline](#inline-vs-block) elements.
 ```html
 [ChaiseLink](https://example.com/chaise/search)
 
@@ -247,6 +248,7 @@ You can attach attributes to the link.
 ```
 > <p><a href="https://example.com/chaise/search" target="\_blank">ChaiseLink</a></p>
 
+<a name="2-download-button"></a>
 ### 2. Download Button
 
 Download button is a link with some predefined attributes. You can use these attributes to ensure consistent display for the download buttons:
@@ -277,9 +279,10 @@ Example:
 
 **NOTE:** please stick to the above formats only to generate a download link.
 
+<a name="3-image"></a>
 ### 3. Image
 
-By adding `!` at the begining of a link definition, it will display the image. Images are [inline](#inline-vs.-block) elements.
+By adding `!` at the begining of a link definition, it will display the image. Images are [inline](#inline-vs-block) elements.
 ```html
 ![Image](http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg)
 
@@ -303,6 +306,7 @@ The following are the most common attributes that you could use:
 
 The following are some common examples of styling Images:
 
+<a name="31-image-with-static-width-and-height"></a>
 #### 3.1. Image with static width and height
 
 You can define the `width` and `height` attributes for an image.
@@ -319,6 +323,7 @@ You can define the `width` and `height` attributes for an image.
 > <p><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="ImageWithSize" width="800" height="300"></p>
 
 
+<a name="32-image-with-maximum-width-and-maximum-height"></a>
 #### 3.2. Image with maximum width and maximum height
 
 Instead of defining static with and height, you can also define maximum allowed values:
@@ -335,6 +340,7 @@ Instead of defining static with and height, you can also define maximum allowed 
 > <p><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="ImageWithSize" width="500" style="max-height:300px;max-width:800px;"></p>
 
 
+<a name="33-preserving-the-aspect-ratio-of-image"></a>
 #### 3.3. Preserving the aspect ratio of image
 
 To preserve the image's aspect ratio, you need to add the `object-fit:contain` style. This is style is helpful in combination with static `width` or `height`. For example,
@@ -353,6 +359,7 @@ You can also use this style with both width and height:
 
 This example specifies the width and height of the image's container. And depending on the aspect ratio of the image, you will see white space around the scaled-down image (instead of stretching the image to the container's width/height).
 
+<a name="4-thumbnail-with-link-to-original-image-and-a-caption"></a>
 ### 4. Thumbnail With Link To Original Image And A caption
 
 This is not part of commonMark specification and it will result in a [block](#inline-vs-block). You have to follow the syntax completely (notice the newline in the closing tag).
@@ -375,6 +382,7 @@ With attributes width=500, height=400 and a linkable caption to open it in new t
 
 > <figure class="embed-block" style="display:inline-block;"><a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="\_blank"><figcaption class="embed-caption">Skyscrapers</figcaption><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" height="200"  /></a></figure>
 
+<a name="5-image-with-zoom-capabilties"></a>
 ### 5. Image with zoom capabilties
 
 This is not part of commonMark specification and it will result in a [block](#inline-vs-block). You have to follow the syntax completely (notice the newline in the closing tag).
@@ -399,6 +407,7 @@ If you're using this feature in a tabular view, you need to specify the width of
 :::image [](https://example.com/path/to/image.png){figure-class=chaise-image-preview image-preview-max-height="300px" figure-style=width:300px } \n:::
 ```
 
+<a name="6-iframe"></a>
 ### 6. Iframe
 
 This is not part of commonMark specification and it will result in a [block](#inline-vs-block). You have to follow the syntax completely (notice the newline in the closing tag). The following is the basic syntax structure:
@@ -421,6 +430,7 @@ The following list of terms are used to describe how to style iframes:
      - NOTE: see example below on how to use this
 
 
+<a name="a1-without-any-attributes"></a>
 #### a.1. Without any attributes
 ```html
 ::: iframe [CAPTION](https://example.com) \n:::
@@ -438,6 +448,7 @@ The following list of terms are used to describe how to style iframes:
 ```
 
 
+<a name="a2-with-height-and-width-defined"></a>
 #### a.2. With height and width defined
 ```html
 ::: iframe [CAPTION](https://example.com){width="800" height="300"} \n:::
@@ -455,6 +466,7 @@ The following list of terms are used to describe how to style iframes:
 ```
 
 
+<a name="a3-invalid-link"></a>
 #### a.3. Invalid link
 If you provide an invalid link then instead of an iframe you will just get the internal markdown rendered
 ```html
@@ -469,6 +481,7 @@ If you provide an invalid link then instead of an iframe you will just get the i
 > <p><em>Invalid</em> <a href="https://example.com/chaise/search">CAPTION</a></p>
 
 
+<a name="a4-iframe-without-scrolling"></a>
 #### a.4. Iframe without scrolling
 ```html
 ::: iframe [CAPTION](https://example.com){width="800" height="300" scrolling="no"} \n:::
@@ -486,6 +499,7 @@ If you provide an invalid link then instead of an iframe you will just get the i
 ```
 
 
+<a name="a5-class-and-style-attached-to-the-iframe-element"></a>
 #### a.5. Class and style attached to the iframe element
 ```html
 ::: iframe [CAPTION](https://example.com){pos="bottom" style="border: 5px solid;" class="iframe-element-class"} \n:::
@@ -501,6 +515,7 @@ If you provide an invalid link then instead of an iframe you will just get the i
 ```
 
 
+<a name="a6-iframe-with-figure-class-and-style"></a>
 #### a.6. Iframe with figure class and style
 To style the whole iframe enclosing block (`<figure>`) you can either specify classes using `figure-class` or CSS style using `figure-style`.
  - NOTE: `iframe-class` and `iframe-style` are deprecated.
@@ -519,6 +534,7 @@ To style the whole iframe enclosing block (`<figure>`) you can either specify cl
 ```
 
 
+<a name="a7-iframe-with-caption-styles-and-figure-styles"></a>
 #### a.7. Iframe with caption styles and figure styles
 
 ```html
@@ -537,6 +553,7 @@ To style the whole iframe enclosing block (`<figure>`) you can either specify cl
 
 #### b. Captions
 
+<a name="b1-linkable-caption"></a>
 #### b.1. Linkable caption
 ```html
 ::: iframe [CAPTION](https://example.com){width="800" height="300" caption-link="https://example.com"} \n:::
@@ -553,6 +570,7 @@ To style the whole iframe enclosing block (`<figure>`) you can either specify cl
 </figure>
 ```
 
+<a name="b2-download-link-caption"></a>
 #### b.2. Download link caption
 
 ```html
@@ -571,6 +589,7 @@ To style the whole iframe enclosing block (`<figure>`) you can either specify cl
 ```
 
 
+<a name="b3-caption-positioned-at-the-bottom"></a>
 #### b.3. Caption positioned at the bottom
 ```html
 ::: iframe [CAPTION](https://example.com){width="800" height="300" caption-link="https://example.com" pos="bottom" } \n:::
@@ -586,6 +605,7 @@ To style the whole iframe enclosing block (`<figure>`) you can either specify cl
 ```
 
 
+<a name="b4-caption-class-and-style"></a>
 #### b.4. Caption class and style
 To style the caption of an iframe you can either specify classes using `caption-class` or CSS style using `caption-style`.
 
@@ -602,6 +622,7 @@ To style the caption of an iframe you can either specify classes using `caption-
 </figure>
 ```
 
+<a name="b5-linkable-caption-open-new-tab"></a>
 #### b.5. Linkable caption open new tab
 To have the caption open in a new tab, use `caption-target=_blank`.
 ```html
@@ -633,6 +654,7 @@ Some best practices for creating responsive or specifically sized iframes are as
    - For iframes that are accompanied by a potentially long caption, define `min-height` on the iframe to ensure the cell resizes to fit all of the caption and the iframe.
    - CSS styles can be applied to the `<td>` element with `id="entity-<column_name>"` to set height/width for the cell
 
+<a name="c1-stretch-to-height-and-width-of-parent-container"></a>
 #### c.1. Stretch to height and width of parent container
 If parent container (cell in record app) has no styles, the iframe will only fill the minimum height of the cell
 
@@ -652,6 +674,7 @@ If parent container (cell in record app) has no styles, the iframe will only fil
 ```
 
 
+<a name="c2-fill-container-with-min-width"></a>
 #### c.2. Fill container with min-width
 When a min-width value is defined, the parent container will stop resizing once the viewport width forces the container to be smaller than the iframe.
 
@@ -671,6 +694,7 @@ When a min-width value is defined, the parent container will stop resizing once 
 ```
 
 
+<a name="c3-fill-container-with-min-width-and-min-height-and-max-height"></a>
 #### c.3. Fill container with min-width and min-height and max-height
 When a min-height value is defined, the parent container will resize to allow for the defined minimum height. Max height is defined to limit the iframe from continually stretching as noted in the best practices above.
 
@@ -690,6 +714,7 @@ When a min-height value is defined, the parent container will resize to allow fo
 ```
 
 
+<a name="c4-iframe-with-set-height-and-responsive-width"></a>
 #### c.4. Iframe with set height and responsive width
 To have a responsive width and a set height, do not use `chaise-autofill` and set `height` or `min-height` with `width: 100%`.
 
@@ -709,6 +734,7 @@ To have a responsive width and a set height, do not use `chaise-autofill` and se
 ```
 
 
+<a name="c5-iframe-with-variable-height-based-on-viewport-with-bounds"></a>
 #### c.5. Iframe with variable height based on viewport with bounds
 To create an iframe that responds to the current viewport size, set the height using `vh` units.
 
@@ -728,6 +754,7 @@ To create an iframe that responds to the current viewport size, set the height u
 ```
 
 
+<a name="c6-iframe-with-fullscreen-button-hidden"></a>
 #### c.6. Iframe with fullscreen button hidden
 To hide the fullscreen button, use the `fullscreen-off` class attached to the figure.
 
@@ -747,6 +774,7 @@ To hide the fullscreen button, use the `fullscreen-off` class attached to the fi
 ```
 
 
+<a name="c7-iframe-with-fullscreen-button-open-new-tab"></a>
 #### c.7. Iframe with fullscreen button open new tab
 To have the fullscreen button open in a new tab, use `fullscreen-target=_blank`.
 
@@ -766,6 +794,7 @@ To have the fullscreen button open in a new tab, use `fullscreen-target=_blank`.
 ```
 
 
+<a name="7-dropdown-download-button"></a>
 ### 7. Dropdown download button
 
 This is not part of commonMark specification and it will result in a [block](#inline-vs-block). You have to follow the syntax completely (notice the newline in the closing tag).
@@ -780,6 +809,7 @@ The button has an appearance similar to the [Bootstrap dropdown button](http://g
 
 You can test the `markdown_pattern` string [here](https://tonicdev.com/chiragsanghvi/57b4b5f94c7bbd13004b43f6). Just scroll down and change the `markdown_pattern` string and `obj` object according to your requirement.
 
+<a name="8-vocabulary"></a>
 ### 8. Vocabulary
 
 To show text as vocabulary, you can use the predefined `vocab` class. The following markdown pattern turns a bock of text, to a gray bold bubble with color blue.
@@ -789,6 +819,7 @@ To show text as vocabulary, you can use the predefined `vocab` class. The follow
 # OUTPUT: <strong class="vocab">some bold term</strong>
 ```
 
+<a name="9-youtube-video"></a>
 ### 9. Youtube Video
 
 Assuming that `https://www.youtube.com/watch?v=YOUTUBE_VIDEO_ID` is the link to a youtube video,
@@ -824,6 +855,7 @@ Therefore you have two options for showing a youtube video in your markdown temp
 ```
 
 
+<a name="10-video"></a>
 ### 10. Video
 
 This is not part of commonMark specification and it will result in a [block](#inline-vs-block). You have to follow the syntax completely (notice the newline in the closing tag).
@@ -917,6 +949,7 @@ Invalid attributes provided to the attribute list will be simple ignored.
 </figure>
 ```
 
+<a name="11-subscript"></a>
 ### 11. Subscript
 
 This is not part of commonMark specification and it will result in an [inline](#inline-vs-block) element.
@@ -945,6 +978,7 @@ With attributes
 > <p> <sub class="class-name">This</sub> should be subscript.</p>
 
 
+<a name="12-superscript"></a>
 ### 12. Superscript
 
 This is not part of commonMark specification and it will result in an [inline](#inline-vs-block) element.
@@ -974,6 +1008,7 @@ With attributes
 ```
 > <p> <sup class="class-name">This</sup> should be superscript.</p>
 
+<a name="13-span-attach-attributes-to-text"></a>
 ### 13. Span (Attach Attributes To Text)
 
 This is not part of commonMark specification and it will result in an [inline](#inline-vs-block) element.  Opening tag is `:span:` and closing is `:/span:`.
@@ -1006,6 +1041,7 @@ You can also have empty span. You can use this to display icons.
 > <p><span class="fa-solid fa-download"></span></p>
 
 
+<a name="14-escape-markdown-content"></a>
 ### 14. Escape markdown content
 
 This is not part of commonMark specification and it will result in an [inline](#inline-vs-block) element. Opening tag is `:mdEscape:` and closing is `:/mdEscape:`.
@@ -1032,6 +1068,7 @@ The following is how you can add links: :mdEscape:[caption](link):/mdEscape:
 ```
 > The following is how you can add links: <span>\[caption](link)</span>
 
+<a name="15-rid-link"></a>
 ### 15. RID link
 
 Takes an RID of an existing record and generates a resolvable link for that record. This is not part of commonMark specification. It will result in an [inline](#inline-vs-block) element. You have to follow the syntax completely.
@@ -1052,6 +1089,7 @@ Takes an RID of an existing record and generates a resolvable link for that reco
 > <a href="/id/1-3X0H">1-3X0H</a>
 
 
+<a name="16-table"></a>
 ### 16. Table
 
 Tables are not part of the commonMark specifications, but the parser that we use follows the [GitHub Flavored Markdown specification for tables](https://github.github.com/gfm/#tables-extension-).
@@ -1135,6 +1173,7 @@ The table is broken at the first empty line, or beginning of another block eleme
     > <table><thead><tr><th>foo</th><th>bar</th></tr></thead><tbody><tr><td>baz</td><td>bim</td></tr></tbody></table><a href="example.com">caption</a>
 
 
+<a name="17-gene-sequence"></a>
 ### 17. Gene Sequence
 
 This is not part of commonMark specification and it will result in a [block](#inline-vs-block). You have to follow the syntax completely (notice the newline in the closing tag). The following is the basic syntax structure:
@@ -1166,6 +1205,7 @@ This is not part of commonMark specification and it will result in a [block](#in
     ```
 
 
+<a name="18-div-custom-container"></a>
 ### 18. Div (Custom container)
 
 This is not part of commonMark specification and it will result in a [block](#inline-vs-block). The `:::div` block allows you to create custom `<div>` containers with attributes and nested content, which is useful for creating complex layouts like Bootstrap cards or custom styled sections.
@@ -1273,6 +1313,7 @@ When a div contains only a single element (like an image, heading, or link), the
     :::div {.section}\n## Section Title\n\nThis is a paragraph with some text.\n\n- List item 1\n- List item 2\n:::
     ```
 
+<a name="19-file-preview"></a>
 ### 19. File Preview
 
 This is not part of commonMark specification and it will result in a [block](#inline-vs-block). You have to follow the syntax completely (notice the newline in the closing tag). The following is the basic syntax structure:

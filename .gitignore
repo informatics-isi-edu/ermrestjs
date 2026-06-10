@@ -35,6 +35,12 @@ node_modules
 # Bower dependency directory
 bower_components
 
+# Python cache files
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+
 # Package output directories
 build
 jsdoc

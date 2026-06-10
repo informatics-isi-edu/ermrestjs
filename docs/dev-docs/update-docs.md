@@ -26,6 +26,24 @@ There might be some documents under [user-docs folder](../user-docs) that were a
 
 If you added any new files to the `user-docs`, make sure the [index.rst](../index.rst) is updated to include them. This file is used by deriva-docs to pull all the docs from this repository.
 
+## Keep in-page anchor links working on both GitHub and the docs site
+
+The docs are read in two places that generate heading anchors differently:
+
+- **GitHub** (github-slugger): keeps `_`, keeps a leading `1.` number, and drops other punctuation without inserting a separator. So `#### markdown_name` becomes `#markdown_name` and `## Dates & Timestamps` becomes `#dates--timestamps`.
+- **docs.derivacloud.org** (Sphinx/docutils): turns `_` and punctuation runs into `-` and strips leading digits. The same headings become `#markdown-name` and `#dates-timestamps`.
+
+A table-of-contents or cross-reference link that uses one form is broken on the other renderer. To support both, add an explicit `<a name="<github-slug>"></a>` anchor right before any heading whose link target differs between the two. GitHub resolves the link via the heading's own id, and the explicit anchor gives the Sphinx site a matching `id`.
+
+`scripts/docs-anchors.py` automates this. It follows the toctrees in `index.rst` to find every Markdown file the site renders, computes both slugs for each heading, and reports or inserts the anchors that are needed. Run it after adding or renaming headings:
+
+```sh
+python3 scripts/docs-anchors.py          # check only; exits non-zero if anchors are missing
+python3 scripts/docs-anchors.py --fix    # insert the missing anchors
+```
+
+It is idempotent, so re-running is safe. Links flagged with `!` point at no heading (a typo or a stale cross-reference) and must be fixed by hand.
+
 
 ## Update the annotation validator in deriva-py
 
