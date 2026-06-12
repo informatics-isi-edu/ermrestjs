@@ -184,6 +184,7 @@ The following is the list of special class names that you can use:
   - The zoomed-in version,
     - The height and width of the image are not limited; instead, the limits mentioned above are moved to the image's container. That's why we will see scrollbars in larger images, and in smaller images, nothing will change.
     > The max height mentioned above can be changed by defining the `image-preview-max-height` property. Please refer to the example for more information.
+- `.chaise-image-fallback`: ERMrestJS automatically adds this class to every rendered image. When such an image fails to load, Chaise replaces the browser's broken-image icon with a fallback image. If the failure is due to a permission error (401/403) or a missing file (404), Chaise shows a contextual fallback (for example a "no access" image) along with an explanatory tooltip.
 - content classes for positioning:
   - classes for horizontal alignment:
     - `.chaise-content-left`: Aligns the inner content to the left side of the container this class is attached to

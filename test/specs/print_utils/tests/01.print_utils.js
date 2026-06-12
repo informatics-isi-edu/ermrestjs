@@ -133,7 +133,7 @@ export function execute (options) {
         });
 
         it('image', function () {
-          testMarkdown('![a random image](random_image.com)', '<p><img src="random_image.com" alt="a random image" class="-chaise-post-load"></p>\n');
+          testMarkdown('![a random image](random_image.com)', '<p><img src="random_image.com" alt="a random image" class="-chaise-post-load chaise-image-fallback"></p>\n');
         });
 
         it('block quote', function () {
@@ -205,7 +205,7 @@ export function execute (options) {
             '**Image With Size** \n ![ImageWithSize](http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg){width=800 height=300}',
           ),
         ).toBe(
-          '<p><strong>Image With Size</strong><br>\n<img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="ImageWithSize" width="800" height="300" class="-chaise-post-load"></p>\n',
+          '<p><strong>Image With Size</strong><br>\n<img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="ImageWithSize" width="800" height="300" class="-chaise-post-load chaise-image-fallback"></p>\n',
           'invalid image with tag',
         );
 
@@ -215,7 +215,7 @@ export function execute (options) {
             '[![Image](http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg){width=500 height=400}](https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg){target=_blank}',
           ),
         ).toBe(
-          '<p><a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="_blank"><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="Image" width="500" height="400" class="-chaise-post-load"></a></p>\n',
+          '<p><a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="_blank"><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="Image" width="500" height="400" class="-chaise-post-load chaise-image-fallback"></a></p>\n',
           'invalid thumbnail with tag',
         );
       });
