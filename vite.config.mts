@@ -24,7 +24,7 @@ export default defineConfig(async (): Promise<UserConfig> => {
   // dev related plugins
   if (isDev) {
     // visualize the bundle size
-    const { visualizer } = await import('rollup-plugin-visualizer');
+    const { visualizer } = await import(/* @vite-ignore */ 'rollup-plugin-visualizer');
     plugins.push(
       visualizer({
         filename: resolve(__dirname, 'dist', 'stats.html'),
@@ -61,14 +61,12 @@ export default defineConfig(async (): Promise<UserConfig> => {
             name: 'ERMrest',
             format: 'umd',
             entryFileNames: 'ermrest.js',
-            inlineDynamicImports: true,
           },
           // the following is the main build that chaise uses:
           {
             name: 'ERMrest',
             format: 'umd',
             entryFileNames: 'ermrest.min.js',
-            inlineDynamicImports: true,
           },
         ],
       },
@@ -84,6 +82,13 @@ export default defineConfig(async (): Promise<UserConfig> => {
     resolve: {
       alias: {
         '@isrd-isi-edu/ermrestjs': resolve(__dirname),
+        /**
+         * markdown-it imports the deprecated Node `punycode` builtin. In a browser
+         * build that gets externalized to a stub and logs a warning. markdown-it only
+         * calls it inside try/catch for hostname normalization, so an empty shim is
+         * safe (ASCII URLs unaffected) and silences the warning.
+         */
+        punycode: resolve(__dirname, 'vendor/punycode-shim.js'),
       },
     },
     plugins,

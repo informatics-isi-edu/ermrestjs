@@ -171,8 +171,8 @@ export function Upload(file, otherInfo) {
   if (!this.file) throw new Error('No file provided while creating hatrac file object');
 
   this.storedFilename = file.name; // the name that will be used for content-disposition and filename column
-  // eslint-disable-next-line @typescript-eslint/no-require-imports, no-undef
-  if (ENV_IS_NODE) this.file.buffer = require('fs').readFileSync(file.path);
+  /* In Node (unit tests) the caller provides `file.buffer`; the browser path reads via FileReader.
+     We avoid importing `fs` here so the browser bundle has no Node built-ins to stub. */
 
   this.column = otherInfo.column;
   if (!this.column) throw new Error('No column provided while creating hatrac file object');
