@@ -68,6 +68,13 @@ exports.run = function (config) {
   // Add Jasmine  specReporter
   jrunner.addReporter(new SpecReporter());
 
+  // On GitHub Actions, surface failures as annotations + a job summary.
+  var GithubReporter = require('./github-reporter.js').default;
+  var githubReporter = new GithubReporter();
+  if (githubReporter.enabled) {
+    jrunner.addReporter(githubReporter);
+  }
+
   // Set timeout to a large value
   jrunner.jasmine.DEFAULT_TIMEOUT_INTERVAL = 180000;
 
