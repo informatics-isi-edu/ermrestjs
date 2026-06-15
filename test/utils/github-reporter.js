@@ -7,6 +7,10 @@ const escapeData = (s) => String(s).replace(/%/g, '%25').replace(/\r/g, '%0D').r
 // Escape a value used as a workflow command property (title, file, ...).
 const escapeProp = (s) => escapeData(s).replace(/:/g, '%3A').replace(/,/g, '%2C');
 
+// Escape a value for a markdown table cell. Backslashes must be escaped before
+// pipes, otherwise a `\` in the input would consume the escape we add.
+const escapeCell = (s) => String(s).replace(/\\/g, '\\\\').replace(/\|/g, '\\|');
+
 // Pull the first `file:line:col` out of a stack trace and make it relative to
 // the workspace, so the annotation can attach to the right line. Returns null
 // when nothing usable is found.
@@ -76,9 +80,9 @@ export default class GithubReporter {
     } else {
       lines = [`## ❌ ERMrestJS unit tests: ${this.failures.length} failure(s)`, '', '| Spec | Message |', '| --- | --- |'];
       for (const f of this.failures) {
-        // Collapse to a single line and escape pipes so the table stays intact.
-        const msg = String(f.message).split('\n')[0].replace(/\|/g, '\\|');
-        lines.push(`| ${String(f.spec).replace(/\|/g, '\\|')} | ${msg} |`);
+        // Collapse to a single line so the table stays intact.
+        const msg = String(f.message).split('\n')[0];
+        lines.push(`| ${escapeCell(f.spec)} | ${escapeCell(msg)} |`);
       }
       lines.push('');
     }
