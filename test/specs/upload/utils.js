@@ -17,6 +17,7 @@ function createMockFile(path) {
     lastModified: stats.mtime.getTime(),
     lastModifiedDate: stats.mtime,
     _buffer: buffer,
+    buffer: buffer, // the Node upload/checksum path reads file.buffer directly
     path: path, // Upload constructor expects file.path
 
     // Add slice method for compatibility with chunked uploads
