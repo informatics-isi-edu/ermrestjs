@@ -12,8 +12,10 @@ import markdownItSub from '@isrd-isi-edu/ermrestjs/vendor/markdown-it-sub.min';
 import markdownItSup from '@isrd-isi-edu/ermrestjs/vendor/markdown-it-sup.min';
 import markdownItSpan from '@isrd-isi-edu/ermrestjs/vendor/markdown-it-span';
 import markdownItEscape from '@isrd-isi-edu/ermrestjs/vendor/markdown-it-escape';
-import markdownItAttrs from '@isrd-isi-edu/ermrestjs/vendor/markdown-it-attrs';
 import MarkdownItContainer from '@isrd-isi-edu/ermrestjs/vendor/markdown-it-container.min';
+
+// npm package (replaces the previously vendored markdown-it-attrs)
+import markdownItAttrs from 'markdown-it-attrs';
 
 let _markdownItDefaultImageRenderer: any = null;
 export const MarkdownIt = markdownit({ typographer: true, breaks: true })
@@ -32,11 +34,48 @@ _bindCustomMarkdownTags(MarkdownIt);
  * @param throwError if true, it will throw the error instead of swalloing it
  */
 export function renderMarkdown(value: string, inline?: boolean, throwError?: boolean) {
-  try {
-    if (inline) {
-      return MarkdownIt.renderInline(value);
+  /*
+   * markdown-it-attrs 5.x catches errors thrown while applying an attribute
+   * block and only reports them via `console.error` (it has no error callback
+   * or opt-out). To preserve the old "if anything fails, show the raw value"
+   * behavior, trap that signal during the render and treat it as a failure so
+   * we fall back to the raw value below instead of returning a partial render.
+   */
+  let attrsError: string | null = null;
+  // message of the failure we just captured; used to recognize its stack-trace follow-up
+  let pendingMessage: string | null = null;
+  const consoleError = console.error;
+  console.error = (...args: any[]) => {
+    if (typeof args[0] === 'string' && args[0].indexOf('markdown-it-attrs:') === 0) {
+      attrsError = args[0];
+      /*
+       * markdown-it-attrs logs the message above and then `console.error(error.stack)`
+       * on the very next call (see its index.js: the two calls are consecutive and
+       * synchronous). error.stack is a string, not an Error, so we match it by content:
+       * the stack embeds the same `error.message` that trails this message.
+       */
+      pendingMessage = args[0].replace(/^markdown-it-attrs: Error in pattern '.*?': /, '');
+      return;
     }
-    return MarkdownIt.render(value);
+    // swallow only that stack-trace follow-up; anything else is unrelated and must pass through
+    if (pendingMessage !== null) {
+      const message = pendingMessage;
+      pendingMessage = null;
+      if (message.length > 0 && typeof args[0] === 'string' && args[0].indexOf(message) !== -1) {
+        return;
+      }
+    }
+    consoleError.apply(console, args);
+  };
+
+  try {
+    const rendered = inline ? MarkdownIt.renderInline(value) : MarkdownIt.render(value);
+    pendingMessage = null; // render is done; don't let a dangling flag swallow our own catch logging
+    // markdown-it-attrs only logs (never throws), so re-throw here to fall back to the raw value
+    if (attrsError !== null) {
+      throw new Error(attrsError);
+    }
+    return rendered;
   } catch (e) {
     if (throwError) {
       throw e;
@@ -45,6 +84,8 @@ export function renderMarkdown(value: string, inline?: boolean, throwError?: boo
     $log.error(`Couldn't parse the given markdown value: ${value}`);
     $log.error(e);
     return value;
+  } finally {
+    console.error = consoleError;
   }
 }
 

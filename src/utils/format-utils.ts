@@ -573,6 +573,9 @@ export function printColor(value: any, options?: any): string {
  *                   output in a Chaise tooltip span showing the raw byte
  *                   count and the unit conversion factor
  * @returns the humanized byte string
+ *
+ * SECURITY: Do NOT interpolate raw, user-controlled strings into the output without escaping/validating them first.
+ * The handlebars `humanizeBytes` helper returns this output as a Handlebars.SafeString (unescaped).
  */
 export function humanizeBytes(value: any, mode?: any, precision?: any, withTooltip?: any): string {
   // we cannot use parseInt here since it won't allow larger numbers.
@@ -642,6 +645,9 @@ export function humanizeBytes(value: any, mode?: any, precision?: any, withToolt
  *                   tooltip body would conflict with the calendar walk
  *                   already visible in line 1)
  * @returns the formatted duration string
+ *
+ * SECURITY: Do NOT interpolate raw, user-controlled strings into the output without escaping/validating them first.
+ * The handlebars `datetimeDuration` helper returns this output as a Handlebars.SafeString (unescaped).
  */
 export function datetimeDuration(start: any, end: any, unit?: any, fraction?: any, direction?: any, withTooltip?: any): string {
   const startM = moment(start);
