@@ -402,11 +402,12 @@ export default class HandlebarsService {
         }
 
         /**
-         * The humanizeBytes generates a markup like this:
+         * humanizeBytes generates markup like this:
          * :span:1.23 KB:/span:{data-chaise-tooltip="1.23 KB"}
-         * So we have to make sure handlebars is not HTML-escaping them. Doing so breaks the attribute markdup.
-         * NOTE: this is safe only becaue datetimeDuration doesn't produce user provided values as is. if we change
-         * this so for example the user could write their own tooltip, we have to think of a different solution.
+         * So we have to make sure handlebars is not HTML-escaping it. Doing so breaks the attribute markup.
+         * NOTE: this is safe only because humanizeBytes derives its output entirely from the numeric byte value
+         * (no user-provided text). If we ever let users supply their own tooltip text, the SafeString would expose
+         * an HTML-injection vector and we'd need a different solution (escape the user portion before returning).
          */
         return new Handlebars.SafeString(_formatUtils.humanizeBytes(value, mode, precision, tooltip));
       },
@@ -432,11 +433,12 @@ export default class HandlebarsService {
         }
 
         /**
-         * The datetimeDuration generates a markup like this:
+         * datetimeDuration generates markup like this:
          * :span:+1.1 months:/span:{data-chaise-tooltip="1.1 months"}
-         * So we have to make sure handlebars is not HTML-escaping them. Doing so breaks the attribute markdup.
-         * NOTE: this is safe only becaue datetimeDuration doesn't produce user provided values as is. if we change
-         * this so for example the user could write their own tooltip, we have to think of a different solution.
+         * So we have to make sure handlebars is not HTML-escaping it. Doing so breaks the attribute markup.
+         * NOTE: this is safe only because datetimeDuration derives its output entirely from the start/end values
+         * (no user-provided text). If we ever let users supply their own tooltip text, the SafeString would expose
+         * an HTML-injection vector and we'd need a different solution (escape the user portion before returning).
          */
         return new Handlebars.SafeString(_formatUtils.datetimeDuration(start, end, unit, fraction, direction, tooltip));
       },

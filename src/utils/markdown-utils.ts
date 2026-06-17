@@ -41,26 +41,31 @@ export function renderMarkdown(value: string, inline?: boolean, throwError?: boo
    * behavior, trap that signal during the render and treat it as a failure so
    * we fall back to the raw value below instead of returning a partial render.
    */
-  let attrsFailed = false;
+  let attrsError: string | null = null;
   let suppressNext = false;
   const consoleError = console.error;
   console.error = (...args: any[]) => {
     if (typeof args[0] === 'string' && args[0].indexOf('markdown-it-attrs:') === 0) {
-      attrsFailed = true;
-      suppressNext = true; // the next call is the stack trace for this same error
+      attrsError = args[0];
+      suppressNext = true; // the next call is the Error object for this same failure
       return;
     }
+    // only swallow a direct Error-object follow-up; anything else is unrelated and must pass through
     if (suppressNext) {
       suppressNext = false;
-      return;
+      if (args[0] instanceof Error) {
+        return;
+      }
     }
     consoleError.apply(console, args);
   };
 
   try {
     const rendered = inline ? MarkdownIt.renderInline(value) : MarkdownIt.render(value);
-    if (attrsFailed) {
-      throw new Error('markdown-it-attrs failed to apply an attribute block');
+    suppressNext = false; // render is done; don't let a dangling flag swallow our own catch logging
+    // markdown-it-attrs only logs (never throws), so re-throw here to fall back to the raw value
+    if (attrsError !== null) {
+      throw new Error(attrsError);
     }
     return rendered;
   } catch (e) {
