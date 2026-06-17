@@ -946,16 +946,17 @@ function _bindCustomMarkdownTags(md: typeof MarkdownIt) {
       };
   }
 
-  // the class that we should add
-  const className = _classNames.postLoad;
+  // the classes that we should add (post-load for layout, image-fallback so chaise
+  // can swap in a fallback image when the image fails to load)
+  const imgClassName = _classNames.postLoad + ' ' + _classNames.imageFallback;
   md.renderer.rules.image = function (tokens, idx, options, env, self) {
     const token = tokens[idx];
 
     const cIndex = token.attrIndex('class');
     if (cIndex < 0) {
-      token.attrPush(['class', className]);
+      token.attrPush(['class', imgClassName]);
     } else {
-      token.attrs![cIndex][1] += ' ' + className;
+      token.attrs![cIndex][1] += ' ' + imgClassName;
     }
 
     return _markdownItDefaultImageRenderer(tokens, idx, options, env, self);

@@ -480,6 +480,8 @@ export const _classNames = Object.freeze({
   showInPrintMode: 'video-info-in-print',
   colorPreview: 'chaise-color-preview',
   imagePreview: 'chaise-image-preview',
+  // chaise attaches an onerror handler to images with this class to show a fallback
+  imageFallback: 'chaise-image-fallback',
 });
 
 export const _specialSourceDefinitions = Object.freeze({

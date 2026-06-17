@@ -304,8 +304,10 @@ export default class HTTPService {
                 }
               } else {
                 // If we get an HTTP error with HTML in it, this means something the server returned as an error.
-                // Ermrest never produces HTML errors, so this was produced by the server itself
-                if (contentType && contentType.indexOf('html') > -1) {
+                // Ermrest never produces HTML errors, so this was produced by the server itself.
+                // Callers that hit non-ermrest endpoints (e.g. checking an arbitrary image URL) can set
+                // `skipHTTPErrorStatusReplacement` to keep the raw status instead of masking it as 500.
+                if (contentType && contentType.indexOf('html') > -1 && !config.skipHTTPErrorStatusReplacement) {
                   response.status = _http_status_codes.internal_server_error;
                   // keep response.data the way it is, so client can provide more info to users
                 }

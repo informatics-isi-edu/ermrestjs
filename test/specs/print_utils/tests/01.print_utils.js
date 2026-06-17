@@ -133,7 +133,7 @@ export function execute (options) {
         });
 
         it('image', function () {
-          testMarkdown('![a random image](random_image.com)', '<p><img src="random_image.com" alt="a random image" class="-chaise-post-load"></p>\n');
+          testMarkdown('![a random image](random_image.com)', '<p><img src="random_image.com" alt="a random image" class="-chaise-post-load chaise-image-fallback"></p>\n');
         });
 
         it('block quote', function () {
@@ -205,7 +205,7 @@ export function execute (options) {
             '**Image With Size** \n ![ImageWithSize](http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg){width=800 height=300}',
           ),
         ).toBe(
-          '<p><strong>Image With Size</strong><br>\n<img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="ImageWithSize" width="800" height="300" class="-chaise-post-load"></p>\n',
+          '<p><strong>Image With Size</strong><br>\n<img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="ImageWithSize" width="800" height="300" class="-chaise-post-load chaise-image-fallback"></p>\n',
           'invalid image with tag',
         );
 
@@ -215,7 +215,7 @@ export function execute (options) {
             '[![Image](http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg){width=500 height=400}](https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg){target=_blank}',
           ),
         ).toBe(
-          '<p><a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="_blank"><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="Image" width="500" height="400" class="-chaise-post-load"></a></p>\n',
+          '<p><a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="_blank"><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" alt="Image" width="500" height="400" class="-chaise-post-load chaise-image-fallback"></a></p>\n',
           'invalid thumbnail with tag',
         );
       });
@@ -386,13 +386,13 @@ export function execute (options) {
         testPrintMarkdown(':::div {.level1}\n::::div {.level2}\n:::::div {.level3}\nDeeply nested\n:::::\n::::\n:::', '<div class="level1"><div class="level2"><div class="level3"><p>Deeply nested</p>\n</div>\n</div>\n</div>\n', false, 'triple nested divs');
 
         // Div with markdown content (paragraph tags should be unwrapped for single elements)
-        testPrintMarkdown(':::div {.container}\n![image](https://example.com/img.jpg){.img-fluid}\n:::', '<div class="container"><img src="https://example.com/img.jpg" alt="image" class="img-fluid -chaise-post-load">\n</div>\n', false, 'div with image (p tag unwrapped)');
+        testPrintMarkdown(':::div {.container}\n![image](https://example.com/img.jpg){.img-fluid}\n:::', '<div class="container"><img src="https://example.com/img.jpg" alt="image" class="img-fluid -chaise-post-load chaise-image-fallback">\n</div>\n', false, 'div with image (p tag unwrapped)');
         testPrintMarkdown(':::div {.wrapper}\n# Heading\n:::', '<div class="wrapper"><h1>Heading</h1>\n</div>\n', false, 'div with heading (p tag unwrapped)');
         testPrintMarkdown(':::div {.link-container}\n[Link text](https://example.com){.btn}\n:::', '<div class="link-container"><a href="https://example.com" class="btn">Link text</a>\n</div>\n', false, 'div with single link (p tag unwrapped)');
 
         // Bootstrap card structure
         const cardMarkdown = ':::div {.card style="width:200px;"}\n![Card image](https://example.com/card.jpg){.card-img-top}\n::::div {.card-body}\n#### [Card Title](https://example.com){.card-title}\n[seqFISH](https://example.com/seqfish){.vocab}\n::::\n:::';
-        const cardHTML = '<div class="card" style="width:200px;"><img src="https://example.com/card.jpg" alt="Card image" class="card-img-top -chaise-post-load">\n<div class="card-body"><h4><a href="https://example.com" class="card-title">Card Title</a></h4>\n<a href="https://example.com/seqfish" class="vocab">seqFISH</a>\n</div>\n</div>\n';
+        const cardHTML = '<div class="card" style="width:200px;"><img src="https://example.com/card.jpg" alt="Card image" class="card-img-top -chaise-post-load chaise-image-fallback">\n<div class="card-body"><h4><a href="https://example.com" class="card-title">Card Title</a></h4>\n<a href="https://example.com/seqfish" class="vocab">seqFISH</a>\n</div>\n</div>\n';
         testPrintMarkdown(cardMarkdown, cardHTML, false, 'bootstrap card with image and nested body');
 
         // Card with just text in body
