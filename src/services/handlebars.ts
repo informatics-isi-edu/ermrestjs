@@ -400,7 +400,15 @@ export default class HandlebarsService {
           precision = options.hash.precision;
           tooltip = options.hash.tooltip;
         }
-        return _formatUtils.humanizeBytes(value, mode, precision, tooltip);
+
+        /**
+         * The humanizeBytes generates a markup like this:
+         * :span:1.23 KB:/span:{data-chaise-tooltip="1.23 KB"}
+         * So we have to make sure handlebars is not HTML-escaping them. Doing so breaks the attribute markdup.
+         * NOTE: this is safe only becaue datetimeDuration doesn't produce user provided values as is. if we change
+         * this so for example the user could write their own tooltip, we have to think of a different solution.
+         */
+        return new Handlebars.SafeString(_formatUtils.humanizeBytes(value, mode, precision, tooltip));
       },
 
       /**
@@ -422,7 +430,15 @@ export default class HandlebarsService {
           direction = options.hash.direction;
           tooltip = options.hash.tooltip;
         }
-        return _formatUtils.datetimeDuration(start, end, unit, fraction, direction, tooltip);
+
+        /**
+         * The datetimeDuration generates a markup like this:
+         * :span:+1.1 months:/span:{data-chaise-tooltip="1.1 months"}
+         * So we have to make sure handlebars is not HTML-escaping them. Doing so breaks the attribute markdup.
+         * NOTE: this is safe only becaue datetimeDuration doesn't produce user provided values as is. if we change
+         * this so for example the user could write their own tooltip, we have to think of a different solution.
+         */
+        return new Handlebars.SafeString(_formatUtils.datetimeDuration(start, end, unit, fraction, direction, tooltip));
       },
 
       /**

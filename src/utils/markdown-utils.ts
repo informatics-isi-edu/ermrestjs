@@ -12,8 +12,10 @@ import markdownItSub from '@isrd-isi-edu/ermrestjs/vendor/markdown-it-sub.min';
 import markdownItSup from '@isrd-isi-edu/ermrestjs/vendor/markdown-it-sup.min';
 import markdownItSpan from '@isrd-isi-edu/ermrestjs/vendor/markdown-it-span';
 import markdownItEscape from '@isrd-isi-edu/ermrestjs/vendor/markdown-it-escape';
-import markdownItAttrs from '@isrd-isi-edu/ermrestjs/vendor/markdown-it-attrs';
 import MarkdownItContainer from '@isrd-isi-edu/ermrestjs/vendor/markdown-it-container.min';
+
+// npm package (replaces the previously vendored markdown-it-attrs)
+import markdownItAttrs from 'markdown-it-attrs';
 
 let _markdownItDefaultImageRenderer: any = null;
 export const MarkdownIt = markdownit({ typographer: true, breaks: true })
@@ -32,11 +34,35 @@ _bindCustomMarkdownTags(MarkdownIt);
  * @param throwError if true, it will throw the error instead of swalloing it
  */
 export function renderMarkdown(value: string, inline?: boolean, throwError?: boolean) {
-  try {
-    if (inline) {
-      return MarkdownIt.renderInline(value);
+  /*
+   * markdown-it-attrs 5.x catches errors thrown while applying an attribute
+   * block and only reports them via `console.error` (it has no error callback
+   * or opt-out). To preserve the old "if anything fails, show the raw value"
+   * behavior, trap that signal during the render and treat it as a failure so
+   * we fall back to the raw value below instead of returning a partial render.
+   */
+  let attrsFailed = false;
+  let suppressNext = false;
+  const consoleError = console.error;
+  console.error = (...args: any[]) => {
+    if (typeof args[0] === 'string' && args[0].indexOf('markdown-it-attrs:') === 0) {
+      attrsFailed = true;
+      suppressNext = true; // the next call is the stack trace for this same error
+      return;
     }
-    return MarkdownIt.render(value);
+    if (suppressNext) {
+      suppressNext = false;
+      return;
+    }
+    consoleError.apply(console, args);
+  };
+
+  try {
+    const rendered = inline ? MarkdownIt.renderInline(value) : MarkdownIt.render(value);
+    if (attrsFailed) {
+      throw new Error('markdown-it-attrs failed to apply an attribute block');
+    }
+    return rendered;
   } catch (e) {
     if (throwError) {
       throw e;
@@ -45,6 +71,8 @@ export function renderMarkdown(value: string, inline?: boolean, throwError?: boo
     $log.error(`Couldn't parse the given markdown value: ${value}`);
     $log.error(e);
     return value;
+  } finally {
+    console.error = consoleError;
   }
 }
 

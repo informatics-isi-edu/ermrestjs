@@ -981,9 +981,20 @@ export function execute (options) {
         expect(module.renderHandlebarsTemplate('{{humanizeBytes 12345678 mode="invalid"}}')).toBe('12.3 MB');
         expect(module.renderHandlebarsTemplate('{{humanizeBytes 12345678 tooltip=false}}')).toBe('12.3 MB');
         expect(module.renderHandlebarsTemplate('{{humanizeBytes 12345678 tooltip="invalid"}}')).toBe('12.3 MB');
+        // returned as a Handlebars.SafeString so the quotes survive (unescaped)
+        // to markdown-it-attrs; markdown-it 14 no longer decodes &quot; for us.
         expect(module.renderHandlebarsTemplate('{{humanizeBytes "12345678" tooltip=true }}')).toBe(
-          ':span:12.3 MB:/span:{data-chaise-tooltip&#x3D;&quot;12,345,678 bytes (1 MB &#x3D; 1,000,000 bytes)&quot;}',
+          ':span:12.3 MB:/span:{data-chaise-tooltip="12,345,678 bytes (1 MB = 1,000,000 bytes)"}',
         );
+
+        // SECURITY GUARD: the helper returns its output unescaped (SafeString), so
+        // hostile input must be neutralized by humanizeBytes itself (parseFloat for
+        // the value, Math.round for the tooltip). No raw HTML may ever appear in the
+        // output. If someone lets user text leak through, these assertions fail.
+        ['<script>alert(1)</script>', '12345678<img src=x onerror=alert(1)>'].forEach(function (evil) {
+          var out = module.renderHandlebarsTemplate('{{humanizeBytes data tooltip=true}}', { data: evil });
+          expect(out.indexOf('<')).toBe(-1, 'humanizeBytes leaked raw HTML for input: ' + evil);
+        });
 
         // test si
         expect(module.renderHandlebarsTemplate('{{humanizeBytes 999 mode="si"}}')).toBe('999 B');
@@ -1007,7 +1018,7 @@ export function execute (options) {
         // test truncation (si)
         expect(module.renderHandlebarsTemplate('{{humanizeBytes 9999999999999 }}')).toBe('9.99 TB');
         expect(module.renderHandlebarsTemplate('{{humanizeBytes 9999999999999 tooltip=true}}')).toBe(
-          ':span:9.99 TB:/span:{data-chaise-tooltip&#x3D;&quot;9,999,999,999,999 bytes (1 TB &#x3D; 1,000,000,000,000 bytes)&quot;}',
+          ':span:9.99 TB:/span:{data-chaise-tooltip="9,999,999,999,999 bytes (1 TB = 1,000,000,000,000 bytes)"}',
         );
         expect(module.renderHandlebarsTemplate('{{humanizeBytes 9999999999999 mpde="si"}}')).toBe('9.99 TB');
         expect(module.renderHandlebarsTemplate('{{humanizeBytes 9999999999999 mode="si" precision=4}}')).toBe('9.999 TB');
@@ -1015,7 +1026,7 @@ export function execute (options) {
         // test truncation (binary)
         expect(module.renderHandlebarsTemplate('{{humanizeBytes 1125899906842623 mode="binary"}}')).toBe('1023 TiB');
         expect(module.renderHandlebarsTemplate('{{humanizeBytes 1125899906842623 mode="binary" tooltip=true}}')).toBe(
-          ':span:1023 TiB:/span:{data-chaise-tooltip&#x3D;&quot;1,125,899,906,842,623 bytes (1 TiB &#x3D; 1,099,511,627,776 bytes)&quot;}',
+          ':span:1023 TiB:/span:{data-chaise-tooltip="1,125,899,906,842,623 bytes (1 TiB = 1,099,511,627,776 bytes)"}',
         );
         expect(module.renderHandlebarsTemplate('{{humanizeBytes 1125899906842623 mode="binary" precision=6}}')).toBe('1023.99 TiB');
 
@@ -1028,13 +1039,13 @@ export function execute (options) {
         // test very large numbers
         expect(module.renderHandlebarsTemplate('{{humanizeBytes 123456712345671234656742232 }}')).toBe('123 YB');
         expect(module.renderHandlebarsTemplate('{{humanizeBytes 123456712345671234656742232 tooltip=true }}')).toBe(
-          ':span:123 YB:/span:{data-chaise-tooltip&#x3D;&quot;1.2,345,671,234,567,124e+26 bytes (1 YB &#x3D; 1e+24 bytes)&quot;}',
+          ':span:123 YB:/span:{data-chaise-tooltip="1.2,345,671,234,567,124e+26 bytes (1 YB = 1e+24 bytes)"}',
         );
         expect(module.renderHandlebarsTemplate('{{humanizeBytes 1234567123456712346567422321 }}')).toBe('1.2,345,671,234,567,124e+27');
         expect(module.renderHandlebarsTemplate('{{humanizeBytes 1234567123456712346567422321 tooltip=true }}')).toBe('1.2,345,671,234,567,124e+27');
         expect(module.renderHandlebarsTemplate('{{humanizeBytes 1197940039285380274899124224 mode="binary" }}')).toBe('990.9 YiB');
         expect(module.renderHandlebarsTemplate('{{humanizeBytes 1197940039285380274899124224 mode="binary" tooltip=true }}')).toBe(
-          ':span:990.9 YiB:/span:{data-chaise-tooltip&#x3D;&quot;1.1,979,400,392,853,803e+27 bytes (1 YiB &#x3D; 1.2,089,258,196,146,292e+24 bytes)&quot;}',
+          ':span:990.9 YiB:/span:{data-chaise-tooltip="1.1,979,400,392,853,803e+27 bytes (1 YiB = 1.2,089,258,196,146,292e+24 bytes)"}',
         );
         expect(module.renderHandlebarsTemplate('{{humanizeBytes 1237940039285380274899124223 mode="binary" }}')).toBe('1.2,379,400,392,853,803e+27');
         expect(module.renderHandlebarsTemplate('{{humanizeBytes 1237940039285380274899124223 mode="binary" tooltip=true }}')).toBe(
@@ -1086,6 +1097,14 @@ export function execute (options) {
         expect(module.renderHandlebarsTemplate('{{datetimeDuration start end}}', { start: ctx.start, end: null })).toBe('', 'null end');
         expect(module.renderHandlebarsTemplate('{{datetimeDuration start end}}', { start: 'not-a-date', end: ctx.end })).toBe('', 'invalid start');
 
+        // SECURITY GUARD: the helper returns its output unescaped (SafeString), so
+        // hostile input must be neutralized by datetimeDuration itself (moment
+        // rejects non-dates -> ""). No raw HTML may ever appear in the output.
+        ['<script>alert(1)</script>', '2025-01-01<img src=x onerror=alert(1)>'].forEach(function (evil) {
+          var out = module.renderHandlebarsTemplate('{{datetimeDuration start end tooltip=true}}', { start: evil, end: ctx.end });
+          expect(out.indexOf('<')).toBe(-1, 'datetimeDuration leaked raw HTML for input: ' + evil);
+        });
+
         // ---- rounding-near-boundary: 0.999 years -> "+12.0 months" (no promotion, simple rule) ----
         var nearYear = { start: '2025-01-01T00:00:00Z', end: '2025-12-31T00:00:00Z' };  // 364 days
         expect(module.renderHandlebarsTemplate('{{datetimeDuration start end}}', nearYear)).toBe('+12.0 months', 'auto picks month, rounds to 12.0');
@@ -1130,40 +1149,39 @@ export function execute (options) {
 
         // ---- tooltip wrapping ----
         // When tooltip=true and unit is anything other than "calendar", wrap.
-        // = → &#x3D;, " → &quot;. The line break between the multi form and the
-        // rates uses &#10; (HTML char ref for newline) rather than a literal '\n'
-        // — markdown-it splits blocks at a literal newline inside {...}, breaking
-        // the attribute. Under the default escaping {{...}} Handlebars escapes
-        // the '&' to '&amp;', yielding the doubled form below; templates that
-        // need the entity to survive to the markdown stage should use {{{...}}}.
+        // The helper returns a Handlebars.SafeString, so its output is NOT
+        // HTML-escaped: the real quotes and the '&' in the &#10; line breaks
+        // survive verbatim to the markdown stage (markdown-it-attrs needs the
+        // real quotes; &#10; is used instead of a literal '\n' because markdown-it
+        // splits a block at a literal newline inside {...}, breaking the attribute).
         // The rates list only includes the units that appear in the multi form,
         // wrapped two per line.
         var tooltipBody =
-          '1M 4D 13h 30m&amp;#10;&amp;#10;' +
-          'M &#x3D; 30.4375 days, D &#x3D; 24 hours&amp;#10;' +
-          'h &#x3D; 60 minutes, m &#x3D; 60 seconds';
+          '1M 4D 13h 30m&#10;&#10;' +
+          'M = 30.4375 days, D = 24 hours&#10;' +
+          'h = 60 minutes, m = 60 seconds';
         expect(module.renderHandlebarsTemplate('{{datetimeDuration start end unit="month" tooltip=true}}', ctx)).toBe(
-          ':span:+1.1 months:/span:{data-chaise-tooltip&#x3D;&quot;' + tooltipBody + '&quot;}',
+          ':span:+1.1 months:/span:{data-chaise-tooltip="' + tooltipBody + '"}',
           'tooltip wraps and includes multi + only the used conversion rates',
         );
         // tooltip=true on unit="multi" → now also wrapped (same body as above for
         // this input since visible is also the multi form modulo the sign).
         expect(module.renderHandlebarsTemplate('{{datetimeDuration start end unit="multi" tooltip=true}}', ctx)).toBe(
-          ':span:+1M 4D 13h 30m:/span:{data-chaise-tooltip&#x3D;&quot;' + tooltipBody + '&quot;}',
+          ':span:+1M 4D 13h 30m:/span:{data-chaise-tooltip="' + tooltipBody + '"}',
           'tooltip wraps for unit=multi too',
         );
         // Rates are filtered to only the units present, even when the gaps are
         // non-contiguous: "1Y 3h" lists Y and h but skips M/D/m in between.
         expect(module.renderHandlebarsTemplate('{{datetimeDuration start end unit="multi" tooltip=true}}',
           { start: '2025-01-01T00:00:00.000Z', end: '2026-01-01T09:00:00.000Z' })).toBe(
-          ':span:+1Y 3h:/span:{data-chaise-tooltip&#x3D;&quot;1Y 3h&amp;#10;&amp;#10;Y &#x3D; 365.25 days, h &#x3D; 60 minutes&quot;}',
+          ':span:+1Y 3h:/span:{data-chaise-tooltip="1Y 3h&#10;&#10;Y = 365.25 days, h = 60 minutes"}',
           'tooltip rates list only the units present, skipping gaps',
         );
         // A seconds-only diff has no conversion rates to list → tooltip body is
         // just the multi form, with no trailing newline separator.
         expect(module.renderHandlebarsTemplate('{{datetimeDuration start end tooltip=true}}',
           { start: '2025-01-01T00:00:00.000Z', end: '2025-01-01T00:00:30.000Z' })).toBe(
-          ':span:+30.0 seconds:/span:{data-chaise-tooltip&#x3D;&quot;30.00s&quot;}',
+          ':span:+30.0 seconds:/span:{data-chaise-tooltip="30.00s"}',
           'tooltip with no listed rates omits the separator',
         );
         // tooltip=true on unit="calendar" → suppressed
