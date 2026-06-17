@@ -42,18 +42,26 @@ export function renderMarkdown(value: string, inline?: boolean, throwError?: boo
    * we fall back to the raw value below instead of returning a partial render.
    */
   let attrsError: string | null = null;
-  let suppressNext = false;
+  // message of the failure we just captured; used to recognize its stack-trace follow-up
+  let pendingMessage: string | null = null;
   const consoleError = console.error;
   console.error = (...args: any[]) => {
     if (typeof args[0] === 'string' && args[0].indexOf('markdown-it-attrs:') === 0) {
       attrsError = args[0];
-      suppressNext = true; // the next call is the Error object for this same failure
+      /*
+       * markdown-it-attrs logs the message above and then `console.error(error.stack)`
+       * on the very next call (see its index.js: the two calls are consecutive and
+       * synchronous). error.stack is a string, not an Error, so we match it by content:
+       * the stack embeds the same `error.message` that trails this message.
+       */
+      pendingMessage = args[0].replace(/^markdown-it-attrs: Error in pattern '.*?': /, '');
       return;
     }
-    // only swallow a direct Error-object follow-up; anything else is unrelated and must pass through
-    if (suppressNext) {
-      suppressNext = false;
-      if (args[0] instanceof Error) {
+    // swallow only that stack-trace follow-up; anything else is unrelated and must pass through
+    if (pendingMessage !== null) {
+      const message = pendingMessage;
+      pendingMessage = null;
+      if (message.length > 0 && typeof args[0] === 'string' && args[0].indexOf(message) !== -1) {
         return;
       }
     }
@@ -62,7 +70,7 @@ export function renderMarkdown(value: string, inline?: boolean, throwError?: boo
 
   try {
     const rendered = inline ? MarkdownIt.renderInline(value) : MarkdownIt.render(value);
-    suppressNext = false; // render is done; don't let a dangling flag swallow our own catch logging
+    pendingMessage = null; // render is done; don't let a dangling flag swallow our own catch logging
     // markdown-it-attrs only logs (never throws), so re-throw here to fall back to the raw value
     if (attrsError !== null) {
       throw new Error(attrsError);

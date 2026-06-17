@@ -96,6 +96,31 @@ export function execute (options) {
         expect(formatUtils.printMarkdown('[test](test\r.com){.download download}', { inline: true })).toBe('[test](test\r.com){.download download}');
       });
 
+      it('should trap a markdown-it-attrs failure and fall back to the raw value without leaking its message or stack to the console.', function () {
+        // A link with an empty URL followed by an attribute block makes markdown-it-attrs
+        // throw inside a transform; the library only reports it via console.error (the
+        // message followed by error.stack). renderMarkdown traps that signal to fall back,
+        // and must not let either line leak to the real console.
+        var badInput = '[link]() {.classname}';
+        var calls = [];
+        var spy = function () { calls.push(Array.prototype.slice.call(arguments)); };
+        var origError = console.error;
+        console.error = spy;
+        var out, restored;
+        try {
+          out = formatUtils.printMarkdown(badInput, { inline: true });
+          restored = console.error; // renderMarkdown should put our spy back when it is done
+        } finally {
+          console.error = origError;
+        }
+        expect(out).toBe(badInput, 'should fall back to the raw value');
+        expect(restored).toBe(spy, 'renderMarkdown should restore console.error after it finishes');
+        var leaked = calls.filter(function (args) {
+          return typeof args[0] === 'string' && (args[0].indexOf('markdown-it-attrs:') === 0 || /\n\s+at\s/.test(args[0]));
+        });
+        expect(leaked.length).toBe(0, 'markdown-it-attrs message/stack leaked to console.error: ' + JSON.stringify(leaked));
+      });
+
       describe('should support default markdown tags.', function () {
         var testMarkdown = function (markdown, expected, message) {
           if (message) {
