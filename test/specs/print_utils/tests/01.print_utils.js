@@ -345,7 +345,7 @@ export function execute (options) {
               ':::image [Skyscrapers](http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg){height=200 link=https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg} \n:::',
             ),
           ).toBe(
-            '<figure class="embed-block -chaise-post-load" style="display:inline-block;"><a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="_blank"><figcaption class="embed-caption">Skyscrapers</figcaption><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" height="200" /></a></figure>',
+            '<figure class="embed-block -chaise-post-load" style="display:inline-block;"><a href="https://static.pexels.com/photos/2324/skyline-buildings-new-york-skyscrapers.jpg" target="_blank"><figcaption class="embed-caption">Skyscrapers</figcaption><img src="http://assets.barcroftmedia.com.s3-website-eu-west-1.amazonaws.com/assets/images/recent-images-11.jpg" height="200" class="chaise-image-fallback" /></a></figure>',
           );
         });
 
@@ -353,13 +353,19 @@ export function execute (options) {
           expect(
             printMarkdown(':::image [](https://example.com/a.png){figure-class=chaise-image-preview image-preview-max-height="40vh"} \n:::'),
           ).toBe(
-            '<figure class="embed-block -chaise-post-load chaise-image-preview" style="display:inline-block;"><figcaption class="embed-caption"></figcaption><img src="https://example.com/a.png" image-preview-max-height="40vh" /></figure>',
+            '<figure class="embed-block -chaise-post-load chaise-image-preview" style="display:inline-block;"><figcaption class="embed-caption"></figcaption><img src="https://example.com/a.png" image-preview-max-height="40vh" class="chaise-image-fallback" /></figure>',
           );
         });
 
         it('image with figure-style', () => {
           expect(printMarkdown(':::image [](https://example.com/a.png){figure-style=max-width:400px} \n:::')).toBe(
-            '<figure class="embed-block -chaise-post-load" style="max-width:400px"><figcaption class="embed-caption"></figcaption><img src="https://example.com/a.png" /></figure>',
+            '<figure class="embed-block -chaise-post-load" style="max-width:400px"><figcaption class="embed-caption"></figcaption><img src="https://example.com/a.png" class="chaise-image-fallback" /></figure>',
+          );
+        });
+
+        it('image with user-provided class appends the fallback class', () => {
+          expect(printMarkdown(':::image [caption](https://example.com/a.png){.test} \n:::')).toBe(
+            '<figure class="embed-block -chaise-post-load" style="display:inline-block;"><figcaption class="embed-caption">caption</figcaption><img src="https://example.com/a.png" class="chaise-image-fallback test" /></figure>',
           );
         });
       });
@@ -431,7 +437,7 @@ export function execute (options) {
           '<div class="iframe-container">',
           '<figure class="embed-block -chaise-post-load" style="display:inline-block;">',
           '<figcaption class="embed-caption">caption</figcaption>',
-          '<img src="http:://example.com/image.png" width="500" height="400" />',
+          '<img src="http:://example.com/image.png" width="500" height="400" class="chaise-image-fallback" />',
           '</figure>',
           '<figure class="embed-block -chaise-post-load">',
           '<div class="figcaption-wrapper" style="width: 800px;">',

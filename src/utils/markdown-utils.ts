@@ -517,8 +517,9 @@ function _bindCustomMarkdownTags(md: typeof MarkdownIt) {
           if (attrs[0].children[0].type == 'link_open') {
             let imageHTML = '<img ';
             const openingLink = attrs[0].children[0];
-            let enlargeLink,
-              posTop = true;
+            let enlargeLink;
+            let posTop = true;
+            let imageClass = _classNames.imageFallback;
 
             // Add all attributes to the image
             openingLink.attrs!.forEach(function (attr) {
@@ -538,12 +539,15 @@ function _bindCustomMarkdownTags(md: typeof MarkdownIt) {
                 case 'pos':
                   posTop = attr[1].toLowerCase() == 'bottom' ? false : true;
                   break;
+                case 'class':
+                  imageClass += ' ' + attr[1];
+                  break;
                 default:
                   imageHTML += attr[0] + '="' + attr[1] + '" ';
               }
             });
 
-            html += imageHTML + '/>';
+            html += imageHTML + 'class="' + imageClass + '" />';
 
             let captionHTML = '';
 
