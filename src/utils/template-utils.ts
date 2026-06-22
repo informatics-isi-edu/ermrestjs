@@ -60,6 +60,18 @@ export function buildSelfTemplateVariables(column: ReferenceColumn, mainTuple: T
     };
   }
 
+  // InboundForeignKeyPseudoColumn: a single-inbound-FK entity set. Like the
+  // isPathColumn entityset case, use the fetched page's templateVariables.
+  if ((column as any).isInboundForeignKey) {
+    if (columnValue && columnValue.templateVariables) {
+      if (Array.isArray(columnValue.templateVariables)) {
+        return { $self: columnValue.templateVariables };
+      }
+      return columnValue.templateVariables;
+    }
+    return {};
+  }
+
   // PseudoColumn (path-based source column)
   if ((column as any).isPathColumn) {
     const pseudoCol = column as PseudoColumn;
@@ -88,8 +100,14 @@ export function buildSelfTemplateVariables(column: ReferenceColumn, mainTuple: T
       };
     }
 
-    // entityset: use templateVariables from the page result
+    // entityset vs aggregate value:
+    // - an entityset's value is the page, whose templateVariables is the bare array
+    //   of per-row template variables -> wrap it as $self.
+    // - an aggregate value already carries { $self, $_self } (chaise builds it) -> use as-is.
     if (columnValue && columnValue.templateVariables) {
+      if (Array.isArray(columnValue.templateVariables)) {
+        return { $self: columnValue.templateVariables };
+      }
       return columnValue.templateVariables;
     }
 
