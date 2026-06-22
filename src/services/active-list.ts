@@ -68,6 +68,18 @@ export type ActiveListRelatedEntityRequest = {
   related?: boolean;
   /** the index of the related entity in the reference.related array */
   index: number;
+  /**
+   * the source hash (pseudo-column name) of the displayed entity set. Set so the
+   * consolidation pass can match data consumers (values, wait_fors, citation,
+   * condition sources) of the same source onto this display request.
+   */
+  entitysetSourceName?: string;
+  /**
+   * consumers folded onto this display request by the consolidation pass. When
+   * present, chaise routes the display read's page to these consumers instead of
+   * issuing a separate fetch. Mirrors `ActiveListRequest.objects`.
+   */
+  objects?: Array<ActiveListRequestObject>;
 };
 
 /**
@@ -333,7 +345,7 @@ export class ActiveListBuilder {
    */
   addInline(col: VisibleColumn, i: number): void {
     if (isRelatedColumn(col)) {
-      this.requests.push({ inline: true, index: i });
+      this.requests.push({ inline: true, index: i, entitysetSourceName: col.name });
     } else {
       this.addCol(col, false, ActiveListRequestTypes.COLUMN, i);
     }
@@ -346,7 +358,7 @@ export class ActiveListBuilder {
   /** Same as addInline but adds to dependent requests in a conditional group */
   addInlineToDependent(dependentRequests: Array<ActiveListRequest | ActiveListRelatedEntityRequest>, col: VisibleColumn, i: number): void {
     if (isRelatedColumn(col)) {
-      dependentRequests.push({ inline: true, index: i });
+      dependentRequests.push({ inline: true, index: i, entitysetSourceName: col.name });
     } else {
       this.addColToDependent(dependentRequests, col, false, ActiveListRequestTypes.COLUMN, i);
     }
@@ -424,9 +436,85 @@ export class ActiveListBuilder {
   }
 
   /**
+   * One read per source. After the whole active list is built, fold every set of
+   * requests that share the same source hash — across the main `requests` list and
+   * every conditional group's `dependentRequests` — onto a single canonical request,
+   * merging their consumer objects. This covers entitysets, aggregates, and
+   * inline/related displays uniformly, so a source that is both displayed and
+   * consumed (or whose gated value equals its condition source / an unconditional
+   * wait_for) is read only once.
+   *
+   * - The canonical is a display when one exists (it renders the table AND yields the
+   *   rows the data consumers need); otherwise the unconditional (main) data request.
+   * - A canonical that lives in a group's `dependentRequests` is promoted into the main
+   *   `requests` when any consumer of the same source is unconditional (lives in main),
+   *   so the read happens once on load; visibility is still gated by `conditionHide`.
+   * - Aggregates only ever share a hash with other aggregates of the same source (the
+   *   hash encodes the aggregate function), so they never fold into a display.
+   * - Dependents of two different conditional groups are never folded into each other
+   *   (that would mis-gate one group's consumer behind the other's condition).
+   *
+   * Runs after the whole list is built (columns, inline, related, citation, conditions),
+   * because related displays are registered after the consumers that may reference them.
+   */
+  private consolidateRequests(): void {
+    if (!this.isDetailed) return;
+
+    type Entry = {
+      requestList: Array<ActiveListRequest | ActiveListRelatedEntityRequest>;
+      req: ActiveListRequest & ActiveListRelatedEntityRequest;
+      isDisplay: boolean;
+      isMain: boolean;
+    };
+    const byHash: { [hash: string]: Entry[] } = {};
+    const collect = (requestList: Array<ActiveListRequest | ActiveListRelatedEntityRequest>, isMain: boolean) => {
+      requestList.forEach((r) => {
+        const req = r as ActiveListRequest & ActiveListRelatedEntityRequest;
+        const isDisplay = !!(req.inline || req.related);
+        const hash = isDisplay ? req.entitysetSourceName : req.column?.name;
+        if (typeof hash !== 'string') return;
+        (byHash[hash] = byHash[hash] || []).push({ requestList, req, isDisplay, isMain });
+      });
+    };
+    collect(this.requests, true);
+    this.conditionalGroups.forEach((group) => collect(group.dependentRequests, false));
+
+    Object.keys(byHash).forEach((hash) => {
+      const entries = byHash[hash];
+      if (entries.length < 2) return;
+
+      // canonical: a display if any (prefer a main display), else a main data request.
+      // if neither exists (only dependent data requests), leave them gated as-is.
+      const displays = entries.filter((e) => e.isDisplay);
+      const canonical = displays.find((e) => e.isMain) || displays[0] || entries.find((e) => e.isMain);
+      if (!canonical) return;
+
+      const anyMain = entries.some((e) => e.isMain);
+      entries.forEach((e) => {
+        if (e === canonical) return;
+        // when the canonical is deferred, only fold unconditional consumers or ones in
+        // the canonical's own list — never another group's dependent.
+        if (!canonical.isMain && !e.isMain && e.requestList !== canonical.requestList) return;
+        if (!canonical.req.objects) canonical.req.objects = [];
+        if (Array.isArray(e.req.objects)) canonical.req.objects.push(...e.req.objects);
+        const idx = e.requestList.indexOf(e.req);
+        if (idx !== -1) e.requestList.splice(idx, 1);
+      });
+
+      // a deferred canonical that has an unconditional consumer must run on load.
+      if (!canonical.isMain && anyMain) {
+        const idx = canonical.requestList.indexOf(canonical.req);
+        if (idx !== -1) canonical.requestList.splice(idx, 1);
+        this.requests.push(canonical.req);
+      }
+    });
+  }
+
+  /**
    * Return the built ActiveList object. After calling this method, the builder should not be used anymore.
    */
   build(): ActiveList {
+    this.consolidateRequests();
     return {
       requests: this.requests,
       conditionalGroups: this.conditionalGroups,

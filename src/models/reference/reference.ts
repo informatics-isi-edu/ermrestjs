@@ -930,18 +930,22 @@ export class Reference {
     if (isDetailed) {
       this.generateRelatedList(tuple).forEach((rel, i) => {
         const rc = rel.pseudoColumn?.resolvedCondition;
+        // source hash of this related entity, used by the consolidation pass to match
+        // data consumers (wait_fors, citation, condition sources) of the same source.
+        // Mirrors how generateRelatedList computes fkName.
+        const relSourceName = rel.pseudoColumn ? rel.pseudoColumn.name : (_sourceColumnHelpers.generateForeignKeyName(rel.origFKR, true) as string);
         /**
          * if there's a condition, we have to capture the requests generated for the related entity as its dependencies.
          * So when the condition is evaludated, we can decide whether to run those requests or not.
          */
         const addRelatedToDeps = (deps: Array<ActiveListRequest | ActiveListRelatedEntityRequest>) => {
-          deps.push({ related: true, index: i });
+          deps.push({ related: true, index: i, entitysetSourceName: relSourceName });
           rel.pseudoColumn?.waitFor.forEach((wf) => {
             builder.addColToDependent(deps, wf, true, ActiveListRequestTypes.RELATED, i);
           });
         };
         if (tryCondition(rc, { related: true, index: i }, addRelatedToDeps)) return;
-        builder.requests.push({ related: true, index: i });
+        builder.requests.push({ related: true, index: i, entitysetSourceName: relSourceName });
         rel.pseudoColumn?.waitFor.forEach((wf) => {
           builder.addCol(wf, true, ActiveListRequestTypes.RELATED, i);
         });
