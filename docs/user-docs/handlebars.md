@@ -75,6 +75,7 @@ This document summarizes the key concepts of Handlebars that are relevant to Der
     - [List Membership](#list-membership)
       - [memberOf](#memberof)
       - [hasMember](#hasmember)
+      - [overlaps](#overlaps)
     - [Access Control (ACL) check](#access-control-acl-check)
     - [Logical Helpers](#logical-helpers)
 
@@ -1459,6 +1460,20 @@ Membership test helpers.
 {{#if (hasMember tags "active")}}
   ...
 {{/if}}
+```
+
+#### overlaps
+
+`overlaps` returns `true` if the given array shares at least one element with a list of candidates (a non-empty intersection). It is the array-vs-list counterpart to [`hasMember`](#hasmember) (array contains a single scalar). `overlaps` is variadic, pass the array column first, then any number of candidate args. Array arguments are flattened one level, so the same helper covers a fixed list, another array column, or the result of [`pluck`](#pluck). If the first argument is not an array, it returns `false`.
+
+```
+{{#if (overlaps tags "active" "featured")}}...{{/if}}
+
+{{#if (overlaps tags allowedArray)}}...{{/if}}
+
+{{#if (overlaps tags allowedArray "extra")}}...{{/if}}
+
+{{#if (overlaps tags (pluck $self "values.type"))}}...{{/if}}
 ```
 
 ### Access Control (ACL) check

@@ -648,6 +648,20 @@ export default class HandlebarsService {
       },
 
       /**
+       * {{#if (overlaps arrayCol "a" "b")}}
+       * {{#if (overlaps arrayCol someArray)}}
+       * {{#if (overlaps arrayCol (pluck $self "values.type"))}}
+       *
+       * Variadic candidate args; any array argument is flattened one level.
+       * @returns true if `array` shares at least one element with the candidates
+       */
+      overlaps: function (array: unknown, ...args: unknown[]) {
+        if (!Array.isArray(array)) return false;
+        const candidates = flattenVariadicArgs(args);
+        return array.some((v) => candidates.includes(v));
+      },
+
+      /**
        * {{pluck $self "values.type"}}
        *
        * Preserves length and order; missing paths resolve to undefined.
