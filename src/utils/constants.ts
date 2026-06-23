@@ -298,6 +298,7 @@ export const _handlebarsHelpersList = [
   // list/array helpers
   'memberOf',
   'hasMember',
+  'overlaps',
   'pluck',
 ];
 

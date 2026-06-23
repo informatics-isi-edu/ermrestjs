@@ -1356,6 +1356,32 @@ export function execute (options) {
         expect(render('{{#if (hasMember missing "x")}}yes{{else}}no{{/if}}', {})).toBe('no');
       });
 
+      it('overlaps helper', function () {
+        const render = (t, v) => module.renderHandlebarsTemplate(t, v);
+        // variadic candidates
+        expect(render('{{#if (overlaps tags "active" "draft")}}yes{{else}}no{{/if}}', { tags: ['active', 'public'] })).toBe('yes');
+        expect(render('{{#if (overlaps tags "draft" "archived")}}yes{{else}}no{{/if}}', { tags: ['active', 'public'] })).toBe('no');
+        // array candidate is flattened
+        expect(render('{{#if (overlaps tags allowed)}}yes{{else}}no{{/if}}', { tags: ['active', 'public'], allowed: ['draft', 'public'] })).toBe('yes');
+        expect(render('{{#if (overlaps tags allowed)}}yes{{else}}no{{/if}}', { tags: ['active', 'public'], allowed: ['draft', 'archived'] })).toBe('no');
+        // mix array candidate with extra scalar
+        expect(render('{{#if (overlaps tags allowed "active")}}yes{{else}}no{{/if}}', { tags: ['active'], allowed: ['draft'] })).toBe('yes');
+        // numeric members
+        expect(render('{{#if (overlaps values 4 2)}}yes{{else}}no{{/if}}', { values: [1, 2, 3] })).toBe('yes');
+        // composes with pluck
+        expect(
+          render('{{#if (overlaps (pluck items "values.type") "b")}}yes{{else}}no{{/if}}', {
+            items: [{ values: { type: 'a' } }, { values: { type: 'b' } }],
+          }),
+        ).toBe('yes');
+        // no candidates -> false
+        expect(render('{{#if (overlaps tags)}}yes{{else}}no{{/if}}', { tags: ['active'] })).toBe('no');
+        // non-array input -> false (no throw)
+        expect(render('{{#if (overlaps tags "x")}}yes{{else}}no{{/if}}', { tags: 'not-an-array' })).toBe('no');
+        // missing variable -> false
+        expect(render('{{#if (overlaps missing "x")}}yes{{else}}no{{/if}}', {})).toBe('no');
+      });
+
       it('pluck helper', function () {
         const render = (t, v) => module.renderHandlebarsTemplate(t, v);
         // basic path
