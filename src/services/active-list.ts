@@ -436,76 +436,79 @@ export class ActiveListBuilder {
   }
 
   /**
-   * One read per source. After the whole active list is built, fold every set of
-   * requests that share the same source hash — across the main `requests` list and
-   * every conditional group's `dependentRequests` — onto a single canonical request,
-   * merging their consumer objects. This covers entitysets, aggregates, and
-   * inline/related displays uniformly, so a source that is both displayed and
-   * consumed (or whose gated value equals its condition source / an unconditional
-   * wait_for) is read only once.
+   * consolidates the requests in this.requests and this.conditionalGroups.dependentRequests
+   * to avoid duplicate reads for the same source.
    *
-   * - The canonical is a display when one exists (it renders the table AND yields the
-   *   rows the data consumers need); otherwise the unconditional (main) data request.
-   * - A canonical that lives in a group's `dependentRequests` is promoted into the main
-   *   `requests` when any consumer of the same source is unconditional (lives in main),
-   *   so the read happens once on load; visibility is still gated by `conditionHide`.
-   * - Aggregates only ever share a hash with other aggregates of the same source (the
-   *   hash encodes the aggregate function), so they never fold into a display.
-   * - Dependents of two different conditional groups are never folded into each other
-   *   (that would mis-gate one group's consumer behind the other's condition).
-   *
-   * Runs after the whole list is built (columns, inline, related, citation, conditions),
-   * because related displays are registered after the consumers that may reference them.
+   * - Uses similar dedup logic as `consideredSets` / `consideredAggregates`
+   * (group by source hash, first request wins, the rest attach their `objects`),
+   * plus one clause: a display (visible inline or related entities) wins when one exists,
+   * so a source that is both displayed and consumed is read once.
+   * - Runs as a final pass rather than an inline map because related displays are registered
+   * after the consumers that reference them, so at consumer time the display does not exist yet.
+   * - A fold removes the duplicate from wherever it lives (`requests` or a group's
+   * `dependentRequests`); a deferred merge target is promoted into `requests` when any
+   * request for its source is unconditional, so the read happens on load. Nothing is ever
+   * added to a group's `dependentRequests`.
    */
   private consolidateRequests(): void {
     if (!this.isDetailed) return;
 
-    type Entry = {
+    type LocatedRequest = {
       requestList: Array<ActiveListRequest | ActiveListRelatedEntityRequest>;
       req: ActiveListRequest & ActiveListRelatedEntityRequest;
-      isDisplay: boolean;
-      isMain: boolean;
+      isRelatedOrInline: boolean;
+      isUnconditional: boolean;
     };
-    const byHash: { [hash: string]: Entry[] } = {};
-    const collect = (requestList: Array<ActiveListRequest | ActiveListRelatedEntityRequest>, isMain: boolean) => {
+
+    // capture all the requests that we have (conditioned + unconditioned)
+    const requestsBySource: { [hash: string]: LocatedRequest[] } = {};
+    const collect = (requestList: Array<ActiveListRequest | ActiveListRelatedEntityRequest>, isUnconditional: boolean) => {
       requestList.forEach((r) => {
         const req = r as ActiveListRequest & ActiveListRelatedEntityRequest;
-        const isDisplay = !!(req.inline || req.related);
-        const hash = isDisplay ? req.entitysetSourceName : req.column?.name;
+        const isRelatedOrInline = !!(req.inline || req.related);
+        const hash = isRelatedOrInline ? req.entitysetSourceName : req.column?.name;
         if (typeof hash !== 'string') return;
-        (byHash[hash] = byHash[hash] || []).push({ requestList, req, isDisplay, isMain });
+        if (!(hash in requestsBySource)) requestsBySource[hash] = [];
+        requestsBySource[hash].push({ requestList, req, isRelatedOrInline, isUnconditional });
       });
     };
     collect(this.requests, true);
     this.conditionalGroups.forEach((group) => collect(group.dependentRequests, false));
 
-    Object.keys(byHash).forEach((hash) => {
-      const entries = byHash[hash];
+    Object.keys(requestsBySource).forEach((hash) => {
+      const entries = requestsBySource[hash];
       if (entries.length < 2) return;
 
-      // canonical: a display if any (prefer a main display), else a main data request.
-      // if neither exists (only dependent data requests), leave them gated as-is.
-      const displays = entries.filter((e) => e.isDisplay);
-      const canonical = displays.find((e) => e.isMain) || displays[0] || entries.find((e) => e.isMain);
-      if (!canonical) return;
+      /**
+       * Prefer a display as the merge target (even a conditional one): it renders the
+       * table AND yields the rows the data consumers need, so everyone reuses its read.
+       * A conditional display is promoted to run on load below when needed. With no
+       * display and no unconditional consumer there is no safe target, so skip: e.g.
+       * condition A gates column X and condition B gates column Y, both X and Y valued
+       * from the same entity set `H`. Folding B's `H` onto A would gate Y behind A, so
+       * if A is false but B is true, Y loses its data. Leave them as two reads.
+       */
+      const displays = entries.filter((e) => e.isRelatedOrInline);
+      const mergeTarget = displays.find((e) => e.isUnconditional) || displays[0] || entries.find((e) => e.isUnconditional);
+      if (!mergeTarget) return;
 
-      const anyMain = entries.some((e) => e.isMain);
+      const anyUnconditional = entries.some((e) => e.isUnconditional);
       entries.forEach((e) => {
-        if (e === canonical) return;
-        // when the canonical is deferred, only fold unconditional consumers or ones in
-        // the canonical's own list — never another group's dependent.
-        if (!canonical.isMain && !e.isMain && e.requestList !== canonical.requestList) return;
-        if (!canonical.req.objects) canonical.req.objects = [];
-        if (Array.isArray(e.req.objects)) canonical.req.objects.push(...e.req.objects);
+        if (e === mergeTarget) return;
+        // when the merge target is deferred, only fold unconditional requests or ones in
+        // the merge target's own list (never another group's dependent)
+        if (!mergeTarget.isUnconditional && !e.isUnconditional && e.requestList !== mergeTarget.requestList) return;
+        if (!mergeTarget.req.objects) mergeTarget.req.objects = [];
+        if (Array.isArray(e.req.objects)) mergeTarget.req.objects.push(...e.req.objects);
         const idx = e.requestList.indexOf(e.req);
         if (idx !== -1) e.requestList.splice(idx, 1);
       });
 
-      // a deferred canonical that has an unconditional consumer must run on load.
-      if (!canonical.isMain && anyMain) {
-        const idx = canonical.requestList.indexOf(canonical.req);
-        if (idx !== -1) canonical.requestList.splice(idx, 1);
-        this.requests.push(canonical.req);
+      // a deferred merge target that has an unconditional request must run on load.
+      if (!mergeTarget.isUnconditional && anyUnconditional) {
+        const idx = mergeTarget.requestList.indexOf(mergeTarget.req);
+        if (idx !== -1) mergeTarget.requestList.splice(idx, 1);
+        this.requests.push(mergeTarget.req);
       }
     });
   }
