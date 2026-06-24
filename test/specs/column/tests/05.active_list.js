@@ -101,6 +101,7 @@ exports.execute = function (options) {
         "entity_set_i5": "F9KkhBV_Qkaw20GzvIMAjQ",
         "entity_set_i6": "FZPDS1yFBJ1mdyr_Q",
         "entity_set_i7": "VEu1Crxy0bkExWQzrm6vvA",
+        "entity_set_i8": "zp5su_u3gOQ6FHT2DZY8uQ",
         "all_outbound_entity_o1_o1_o1": "nTVhVgmnwDAdAScCUP5qwA",
         "path_to_outbound1_inbound1_array_d": "foYSV-qV86Kqb62X9sZlbQ",
         "min_i3": "cVT7HCiuMShqBDIm54k-JA",
@@ -297,6 +298,8 @@ exports.execute = function (options) {
                     {"waitFor": ["array_d_entity_i4", "array_d_entity_i5"], "hasWaitFor": true},
                     {"waitFor": ["entity_set_i5", "all_outbound_entity_o3_o1_o1"], "hasWaitFor": true},
                     {"waitFor": [], "hasWaitFor": false},
+                    {"waitFor": [], "hasWaitFor": false},
+                    // entity_set_i8 (self-ref condition, no display wait_for)
                     {"waitFor": [], "hasWaitFor": false}
                 ];
                 var related = mainRefDetailed.related;
@@ -384,8 +387,9 @@ exports.execute = function (options) {
                     //   group 2: conditioned_col_key      (async, condition_key=cond_has_inbound1_show)
                     //   group 3: conditioned_col_pattern  (async, source=cnt_i1, inline pattern + wait_for)
                     //   group 4: entity_set_i5 vis-fk     (async, condition_key=cond_has_inbound1)
-                    expect(detailedActiveList.conditionalGroups.length).toBe(5,
-                        "should have 5 conditional groups (4 columns + 1 related)");
+                    //   group 5: entity_set_i8 vis-fk     (async, condition_key=cond_self_i8 — source is itself)
+                    expect(detailedActiveList.conditionalGroups.length).toBe(6,
+                        "should have 6 conditional groups (4 columns + 2 related)");
                 });
 
                 it ("each group should have a condition with the expected source column.", function () {
@@ -397,7 +401,9 @@ exports.execute = function (options) {
                         columnMapping["cnt_i1"],
                         columnMapping["cnt_i1"],
                         columnMapping["cnt_i1"],
-                        columnMapping["cnt_i1"]
+                        columnMapping["cnt_i1"],
+                        // group 5: cond_self_i8 — its source is the entity_set_i8 it gates
+                        columnMapping["entity_set_i8"]
                     ];
                     groups.forEach(function (g, i) {
                         expect(g.condition).toBeDefined("condition not defined for group index=" + i);
@@ -422,11 +428,20 @@ exports.execute = function (options) {
                     });
                     expect(groups[0].dependentRequests.length).toBe(0,
                         "group 0 (sync outbound on plain column) should have empty deps");
-                    // groups 1-3 wrap aggregate columns, group 4 wraps a related entity, all
-                    // need at least one dependent request to fetch their data.
-                    [1, 2, 3, 4].forEach(function (i) {
+                    // groups 1-3 wrap aggregate columns whose sources are exclusively conditional,
+                    // so they keep a deferred dependent fetch.
+                    [1, 2, 3].forEach(function (i) {
                         expect(groups[i].dependentRequests.length).toBeGreaterThan(0,
                             "dependentRequests should not be empty for group index=" + i);
+                    });
+                    // group 4 (cond_has_inbound1) gates the entity_set_i5 vis-fk and the
+                    // conditioned_col_shared_w_fk column, but both their sources are ALSO needed
+                    // unconditionally elsewhere, so consolidation folds them into main requests
+                    // and the group keeps no deferred fetch. group 5 (cond_self_i8) is the same:
+                    // its display is promoted to main, leaving no deps.
+                    [4, 5].forEach(function (i) {
+                        expect(groups[i].dependentRequests.length).toBe(0,
+                            "deps should be empty for group index=" + i + " (sources folded to main)");
                     });
                 });
 
@@ -489,6 +504,67 @@ exports.execute = function (options) {
                     expect(condObjects.length).toBe(2, "cnt_i2 should have 2 condition objects");
                     expect(condObjects[0].index).toBe(2, "first condition object should be for group 2");
                     expect(condObjects[1].index).toBe(3, "second condition object should be for group 3");
+                });
+            });
+
+            describe("consolidation (one read per source), ", function () {
+                it ("no standalone entityset request for a displayed source", function () {
+                    // every entity set in this schema is displayed (inline or vis-fk), so the data
+                    // consumers (values, wait_fors, citation, condition) are folded onto the matching
+                    // display request and no standalone entityset request remains.
+                    var standalone = detailedActiveList.requests.filter(function (r) {
+                        return r.entityset === true;
+                    });
+                    expect(standalone.length).toBe(0,
+                        "no standalone entityset requests should remain after consolidation");
+                });
+
+                it ("no two top-level requests share a source hash", function () {
+                    // a display (entitysetSourceName) and a data request (column.name) must never both
+                    // exist for the same source — that pair was the duplicate read this change removes.
+                    var seen = {};
+                    detailedActiveList.requests.forEach(function (r, i) {
+                        var hash = (r.inline || r.related) ? r.entitysetSourceName : (r.column && r.column.name);
+                        if (!hash) return;
+                        expect(hash in seen).toBe(false,
+                            "duplicate source hash `" + (reverseColumnMapping[hash] || hash) +
+                            "` at requests index " + i + " (also at " + seen[hash] + ")");
+                        seen[hash] = i;
+                    });
+                });
+
+                it ("promotes a self-referential conditioned display to main requests", function () {
+                    // entity_set_i8 vis-fk is gated by cond_self_i8 whose source IS entity_set_i8. The
+                    // condition source folds onto the display and the display is promoted to a main
+                    // request tagged with a condition object — so it is read once, not twice.
+                    var i8Hash = columnMapping["entity_set_i8"];
+                    var display = detailedActiveList.requests.find(function (r) {
+                        return r.related === true && r.entitysetSourceName === i8Hash;
+                    });
+                    expect(display).toBeDefined("entity_set_i8 display should be a main request");
+                    expect(Array.isArray(display.objects)).toBe(true, "i8 display should carry folded consumers");
+                    var condObj = (display.objects || []).find(function (o) { return o.condition === true; });
+                    expect(condObj).toBeDefined("i8 display should carry a condition consumer object");
+
+                    // the self-ref group must NOT also keep the display in its dependentRequests
+                    var group = detailedActiveList.conditionalGroups.find(function (g) {
+                        return g.condition.conditionKey === "cond_self_i8";
+                    });
+                    expect(group).toBeDefined("cond_self_i8 group should exist");
+                    expect(condObj.index).toBe(
+                        detailedActiveList.conditionalGroups.indexOf(group),
+                        "condition object index should point at the cond_self_i8 group"
+                    );
+                    var depDisplay = group.dependentRequests.find(function (r) {
+                        return r.related === true && r.index === display.index;
+                    });
+                    expect(depDisplay).toBeUndefined("self-ref display should not be duplicated in dependentRequests");
+
+                    // and no standalone entityset request for entity_set_i8
+                    var standalone = detailedActiveList.requests.find(function (r) {
+                        return r.entityset === true && r.column && r.column.name === i8Hash;
+                    });
+                    expect(standalone).toBeUndefined("entity_set_i8 should not have a standalone entityset request");
                 });
             });
         });
@@ -670,10 +746,11 @@ exports.execute = function (options) {
             });
 
             it ("should be true for async condition sources (inbound aggregate).", function () {
-                // groups 1-4 all use cnt_i1 (inbound + cnt aggregate → async)
-                [1, 2, 3, 4].forEach(function (i) {
+                // groups 1-4 all use cnt_i1 (inbound + cnt aggregate → async);
+                // group 5 (cond_self_i8) uses the entity_set_i8 inbound entityset → also async.
+                [1, 2, 3, 4, 5].forEach(function (i) {
                     expect(detailedActiveList.conditionalGroups[i].condition.isAsync).toBe(true,
-                        "group " + i + " (cnt_i1 source) should be async");
+                        "group " + i + " should be async");
                 });
             });
         });
@@ -789,12 +866,43 @@ exports.execute = function (options) {
             });
         });
 
+        describe("ActiveListCondition.evaluateCondition ($self over a single-inbound-FK entityset), ", function () {
+            // cond_self_i8's source is entity_set_i8 — a single inbound FK, which ERMrestJS
+            // represents as an InboundForeignKeyPseudoColumn (NOT a path-based PseudoColumn).
+            // Its condition_pattern reads `$self.length`, so buildSelfTemplateVariables must
+            // expose the page's row array as `$self` (the `{ $self: page.templateVariables }`
+            // wrapping) rather than falling through to the scalar/base-column branch.
+            var selfCondition;
+            beforeAll(function () {
+                var group = detailedActiveList.conditionalGroups.find(function (g) {
+                    return g.condition.conditionKey === "cond_self_i8";
+                });
+                selfCondition = group ? group.condition : null;
+            });
+
+            it ("should show when the entityset $self has rows.", function () {
+                expect(selfCondition).toBeTruthy("cond_self_i8 condition should exist");
+                // page-shaped value: templateVariables is the bare row array (Page.templateVariables)
+                var pageWithRows = { length: 2, templateVariables: [{}, {}] };
+                var result = selfCondition.evaluateCondition({}, pageWithRows, null);
+                expect(result.shouldShow).toBe(true, "$self.length > 0 → pattern renders show");
+            });
+
+            it ("should hide when the entityset $self has no rows.", function () {
+                expect(selfCondition).toBeTruthy("cond_self_i8 condition should exist");
+                var emptyPage = { length: 0, templateVariables: [] };
+                var result = selfCondition.evaluateCondition({}, emptyPage, null);
+                expect(result.shouldShow).toBe(false, "$self.length === 0 → pattern renders empty");
+            });
+        });
+
         describe("processConditionedItem dedup (shared condition_key), ", function () {
             it ("should NOT create a separate group when two items share the same condition_key.", function () {
-                // 4 conditioned vis-cols + 1 conditioned vis-fk + 1 NEW conditioned vis-col sharing
-                // cond_has_inbound1 with the vis-fk = 6 conditioned items but only 5 groups (dedup).
-                expect(detailedActiveList.conditionalGroups.length).toBe(5,
-                    "should still be 5 groups even with 6 conditioned items");
+                // 4 conditioned vis-cols (groups 0-3) + 1 conditioned vis-fk (entity_set_i5) sharing
+                // cond_has_inbound1 with 1 NEW conditioned vis-col = group 4 (the shared column does
+                // NOT add its own group) + entity_set_i8 self-ref vis-fk (group 5) = 6 groups.
+                expect(detailedActiveList.conditionalGroups.length).toBe(6,
+                    "shared condition_key still collapses to one group; total is 6 with the self-ref group");
             });
 
             it ("should add both items to the same group's conditionedItems list.", function () {
@@ -813,26 +921,28 @@ exports.execute = function (options) {
                 expect(byType.column).toBeDefined("new column item should be added");
             });
 
-            it ("should add the new column's secondary fetch to the group dependentRequests, not main requests.", function () {
+            it ("should fold the new column's secondary fetch onto the unconditional main request (one read per source).", function () {
+                // the new column's source is array_d_entity_i3 (an aggregate) which is ALSO an
+                // unconditional wait_for elsewhere, so it is already fetched on load. The
+                // consolidation pass folds the conditioned column's value onto that main request
+                // instead of issuing a second (gated) read — group 4 keeps no aggregate dep.
                 var group = detailedActiveList.conditionalGroups[4];
-                // the new column's source is array_d_entity_i3 (an aggregate) — it should land
-                // in the group's deps so chaise only fires it after the condition resolves true.
                 var depForNewCol = group.dependentRequests.find(function (r) {
                     return r.column && r.column.name === columnMapping["array_d_entity_i3"] && r.aggregate;
                 });
-                expect(depForNewCol).toBeDefined("group 4 deps should include array_d_entity_i3");
+                expect(depForNewCol).toBeUndefined("group 4 deps should NOT hold a duplicate array_d_entity_i3");
 
-                // and the main detailed requests for array_d_entity_i3 should NOT have a new
-                // top-level entry from the conditioned column (only the existing wait_for entry)
+                // the main array_d_entity_i3 request now carries the conditioned column (index 35)
+                // as a folded consumer, so it is read once and serves both uses.
                 var mainReq = detailedActiveList.requests.find(function (r) {
                     return r.column && r.column.name === columnMapping["array_d_entity_i3"] && r.aggregate;
                 });
-                expect(mainReq).toBeDefined("array_d_entity_i3 should still be in main requests (used as wait_for of cnt_i2)");
-                var fromConditionedCol = mainReq.objects.filter(function (obj) {
-                    return obj.column && !obj.isWaitFor && obj.index >= 35;
+                expect(mainReq).toBeDefined("array_d_entity_i3 should be in main requests (unconditional wait_for)");
+                var foldedConditionedCol = mainReq.objects.filter(function (obj) {
+                    return obj.column && obj.index === 35;
                 });
-                expect(fromConditionedCol.length).toBe(0,
-                    "main detailed requests should NOT pick up the conditioned column directly");
+                expect(foldedConditionedCol.length).toBe(1,
+                    "the conditioned column's value should be folded onto the main array_d_entity_i3 request");
             });
         });
 
@@ -861,15 +971,34 @@ exports.execute = function (options) {
         });
     }
 
+    function assertRequestObjects (objects, expectedObjects, message) {
+        objects = objects || [];
+        expectedObjects = expectedObjects || [];
+        expect(objects.length).toBe(expectedObjects.length, "objects length missmatch" + message);
+        objects.forEach(function (obj, objIndex) {
+            var expObj = expectedObjects[objIndex] || {};
+            var m = message + " obj index=" + objIndex;
+            expect(obj.index).toBe(expObj.index, "index missmatch" + m);
+            expect(obj.isWaitFor).toBe(expObj.isWaitFor, "isWaitFor missmatch" + m);
+            expect(obj.column).toBe(expObj.column, "column missmatch" + m);
+            expect(obj.condition).toBe(expObj.condition, "condition missmatch" + m);
+            expect(obj.inline).toBe(expObj.inline, "obj.inline missmatch" + m);
+            expect(obj.related).toBe(expObj.related, "obj.related missmatch" + m);
+            expect(obj.citation).toBe(expObj.citation, "obj.citation missmatch" + m);
+        });
+    }
+
     function testRequestList (requests, expected) {
         expect(requests.length).toBe(expected.length, "length missmatch.");
         requests.forEach(function (req, reqIndex) {
-            var expReq = expected[reqIndex];
+            var expReq = expected[reqIndex] || {};
 
-            if (req.inline) {
-                expect(req.inline).toBe(expReq.inline, "inline missmatch for index=" + reqIndex);
-            } else if (req.related) {
-                expect(req.related).toBe(expReq.related, "related missmatch for index=" + reqIndex);
+            if (req.inline || req.related) {
+                var typeKey = req.inline ? "inline" : "related";
+                expect(req[typeKey]).toBe(expReq[typeKey], typeKey + " missmatch for index=" + reqIndex);
+                expect(req.index).toBe(expReq.index, "display index missmatch for reqIndex=" + reqIndex);
+                // consumers folded onto the display request by the consolidation pass
+                assertRequestObjects(req.objects, expReq.objects, " for display reqIndex=" + reqIndex);
             } else {
                 // entityset/aggregate/firstOutbound
                 var message = " for index= " + reqIndex + "(expected column= `"+ reverseColumnMapping[req.column.name] +"`)";
@@ -877,18 +1006,8 @@ exports.execute = function (options) {
                 expect(req.entityset).toBe(expReq.entityset, "entityset missmatch" + message);
                 expect(req.aggregate).toBe(expReq.aggregate, "aggregate missmatch" + message);
                 expect(req.firstOutbound).toBe(expReq.firstOutbound, "firstOutbound missmatch" + message);
-                expect(req.objects.length).toBe(expReq.objects.length, "objects length missmatch" + message);
-
-
-                req.objects.forEach(function (obj, objIndex) {
-                    var expObj = expReq.objects[objIndex];
-                    expect(obj.index).toBe(expObj.index, "index missmatch" + message + " obj index=" + objIndex);
-                    expect(obj.isWaitFor).toBe(expObj.isWaitFor, "isWaitFor missmatch" + message + " obj index=" + objIndex);
-                    expect(obj.column).toBe(expObj.column, "column missmatch" + message + " obj index=" + objIndex);
-                    expect(obj.condition).toBe(expObj.condition, "condition missmatch" + message + " obj index=" + objIndex);
-                });
+                assertRequestObjects(req.objects, expReq.objects, message);
             }
-
         });
     }
 
@@ -1510,204 +1629,390 @@ exports.execute = function (options) {
         expectedDetailedActiveList = {
             requests: [
                 {
-                    "column": "array_d_entity_i5",
-                    "aggregate": true,
-                    "objects": [
-                        {"citation": true, "isWaitFor": true},
-                        {"inline": true, "index": 4, "isWaitFor": true},
-                        {"related": true, "index": 0, "isWaitFor": true}
-                    ]
+                  "column": "array_d_entity_i5",
+                  "aggregate": true,
+                  "objects": [
+                    {
+                      "citation": true,
+                      "isWaitFor": true
+                    },
+                    {
+                      "inline": true,
+                      "index": 4,
+                      "isWaitFor": true
+                    },
+                    {
+                      "related": true,
+                      "index": 0,
+                      "isWaitFor": true
+                    }
+                  ]
                 },
                 {
-                    "column": "entity_set_i4",
-                    "entityset": true,
-                    "objects": [
-                        {"citaiton": true, "isWaitFor": true}
-                    ]
+                  "inline": true,
+                  "index": 8,
+                  "objects": [
+                    {
+                      "inline": true,
+                      "index": 4,
+                      "isWaitFor": true
+                    }
+                  ]
                 },
                 {
-                    "inline": true,
-                    "index": 8
+                  "inline": true,
+                  "index": 14,
+                  "objects": [
+                    {
+                      "column": true,
+                      "index": 28,
+                      "isWaitFor": true
+                    },
+                    {
+                      "column": true,
+                      "index": 29,
+                      "isWaitFor": true
+                    }
+                  ]
                 },
                 {
-                    "column": "entity_set_i5",
-                    "entityset": true,
-                    "objects": [
-                        {"inline": true, "index": 8, "isWaitFor": true},
-                        {"related": true, "index": 1, "isWaitFor": true}
-                    ]
+                  "column": "array_d_scalar_i1",
+                  "aggregate": true,
+                  "objects": [
+                    {
+                      "column": true,
+                      "index": 2,
+                      "isWaitFor": true
+                    },
+                    {
+                      "column": true,
+                      "index": 18,
+                      "isWaitFor": false
+                    }
+                  ]
                 },
                 {
-                    "inline": true,
-                    "index": 14
+                  "inline": true,
+                  "index": 4
                 },
                 {
-                    "column": "array_d_scalar_i1",
-                    "aggregate": true,
-                    "objects": [
-                        {"index": 2, "isWaitFor": true, "column": true},
-                        { "index": 18, "isWaitFor": false, "column": true}
-                    ]
+                  "column": "cnt_i1",
+                  "aggregate": true,
+                  "objects": [
+                    {
+                      "column": true,
+                      "index": 5,
+                      "isWaitFor": true
+                    },
+                    {
+                      "column": true,
+                      "index": 7,
+                      "isWaitFor": true
+                    },
+                    {
+                      "column": true,
+                      "index": 20,
+                      "isWaitFor": false
+                    },
+                    {
+                      "column": true,
+                      "index": 21,
+                      "isWaitFor": true
+                    },
+                    {
+                      "column": true,
+                      "index": 23,
+                      "isWaitFor": true
+                    },
+                    {
+                      "condition": true,
+                      "index": 1,
+                      "isWaitFor": false
+                    },
+                    {
+                      "condition": true,
+                      "index": 2,
+                      "isWaitFor": false
+                    },
+                    {
+                      "condition": true,
+                      "index": 3,
+                      "isWaitFor": false
+                    },
+                    {
+                      "condition": true,
+                      "index": 4,
+                      "isWaitFor": false
+                    }
+                  ]
                 },
                 {
-                    "inline": true,
-                    "index": 4
+                  "column": "array_d_entity_i1",
+                  "aggregate": true,
+                  "objects": [
+                    {
+                      "column": true,
+                      "index": 10,
+                      "isWaitFor": true
+                    },
+                    {
+                      "column": true,
+                      "index": 16,
+                      "isWaitFor": false
+                    },
+                    {
+                      "column": true,
+                      "index": 27,
+                      "isWaitFor": true
+                    },
+                    {
+                      "column": true,
+                      "index": 30,
+                      "isWaitFor": true
+                    }
+                  ]
                 },
                 {
-                    "column": "entity_set_i2",
-                    "entityset": true,
-                    "objects": [
-                        {"inline": true, "index": 4, "isWaitFor": true}
-                    ]
+                  "column": "max_i1",
+                  "aggregate": true,
+                  "objects": [
+                    {
+                      "column": true,
+                      "index": 10,
+                      "isWaitFor": true
+                    },
+                    {
+                      "column": true,
+                      "index": 26,
+                      "isWaitFor": false
+                    }
+                  ]
                 },
                 {
-                    "column": "cnt_i1",
-                    "aggregate": true,
-                    "objects": [
-                        {"index": 5, "isWaitFor": true, "column": true},
-                        {"index": 7, "isWaitFor": true, "column": true},
-                        {"index": 20, "isWaitFor": false, "column": true},
-                        {"index": 21, "isWaitFor": true, "column": true},
-                        {"index": 23, "isWaitFor": true, "column": true},
-                        // condition source for groups 1, 2, 3, 4. group 0 belongs to the
-                        // sync outbound_entity_o1 condition on conditioned_col_outbound,
-                        // which is processed first (non-aggregate pass) and doesn't fetch
-                        // anything. condition sources are isWaitFor:false (they ARE the
-                        // condition, not a prerequisite of it).
-                        {"isWaitFor": false, "condition": true, "index": 1},
-                        {"isWaitFor": false, "condition": true, "index": 2},
-                        {"isWaitFor": false, "condition": true, "index": 3},
-                        {"isWaitFor": false, "condition": true, "index": 4}
-                    ]
+                  "column": "array_d_scalar_i2",
+                  "aggregate": true,
+                  "objects": [
+                    {
+                      "column": true,
+                      "index": 12,
+                      "isWaitFor": true
+                    },
+                    {
+                      "column": true,
+                      "index": 19,
+                      "isWaitFor": false
+                    }
+                  ]
                 },
                 {
-                    "column": "array_d_entity_i1",
-                    "aggregate": true,
-                    "objects": [
-                        {"index": 10, "isWaitFor": true, "column": true},
-                        {"index": 16, "isWaitFor": false, "column": true},
-                        {"index": 27, "isWaitFor": true, "column": true},
-                        {"index": 30, "isWaitFor": true, "column": true},
-                    ]
+                  "column": "array_d_entity_i2",
+                  "aggregate": true,
+                  "objects": [
+                    {
+                      "column": true,
+                      "index": 17,
+                      "isWaitFor": false
+                    }
+                  ]
                 },
                 {
-                    "column": "max_i1",
-                    "aggregate": true,
-                    "objects": [
-                        {"index": 10, "isWaitFor": true, "column": true},
-                        {"index": 26, "isWaitFor": false, "column": true}
-                    ]
+                  "column": "cnt_d_i2",
+                  "aggregate": true,
+                  "objects": [
+                    {
+                      "column": true,
+                      "index": 17,
+                      "isWaitFor": true
+                    },
+                    {
+                      "column": true,
+                      "index": 23,
+                      "isWaitFor": false
+                    }
+                  ]
                 },
                 {
-                    "column": "array_d_scalar_i2",
-                    "aggregate": true,
-                    "objects": [
-                        {"index": 12, "isWaitFor": true, "column": true},
-                        {"index": 19, "isWaitFor": false, "column": true}
-                    ]
+                  "column": "max_i2",
+                  "aggregate": true,
+                  "objects": [
+                    {
+                      "column": true,
+                      "index": 19,
+                      "isWaitFor": true
+                    },
+                    {
+                      "column": true,
+                      "index": 27,
+                      "isWaitFor": false
+                    },
+                    {
+                      "column": true,
+                      "index": 28,
+                      "isWaitFor": true
+                    },
+                    {
+                      "column": true,
+                      "index": 29,
+                      "isWaitFor": true
+                    },
+                    {
+                      "column": true,
+                      "index": 30,
+                      "isWaitFor": true
+                    }
+                  ]
                 },
                 {
-                    "column": "array_d_entity_i2",
-                    "aggregate": true,
-                    "objects": [
-                        {"index": 17, "isWaitFor": false, "column": true}
-                    ]
+                  "column": "cnt_i2",
+                  "aggregate": true,
+                  "objects": [
+                    {
+                      "column": true,
+                      "index": 21,
+                      "isWaitFor": false
+                    },
+                    {
+                      "column": true,
+                      "index": 23,
+                      "isWaitFor": true
+                    },
+                    {
+                      "column": true,
+                      "index": 25,
+                      "isWaitFor": true
+                    },
+                    {
+                      "condition": true,
+                      "index": 2,
+                      "isWaitFor": true
+                    },
+                    {
+                      "condition": true,
+                      "index": 3,
+                      "isWaitFor": true
+                    }
+                  ]
                 },
                 {
-                    "column": "cnt_d_i2",
-                    "aggregate": true,
-                    "objects": [
-                        {"index": 17, "isWaitFor": true, "column": true},
-                        {"index": 23, "isWaitFor": false, "column": true}
-                    ]
+                  "column": "array_d_entity_i3",
+                  "aggregate": true,
+                  "objects": [
+                    {
+                      "column": true,
+                      "index": 21,
+                      "isWaitFor": true
+                    },
+                    {
+                      "column": true,
+                      "index": 35,
+                      "isWaitFor": false
+                    }
+                  ]
                 },
                 {
-                    "column": "max_i2",
-                    "aggregate": true,
-                    "objects": [
-                        {"index": 19, "isWaitFor": true, "column": true},
-                        {"index": 27, "isWaitFor": false, "column": true},
-                        {"index": 28, "isWaitFor": true, "column": true},
-                        {"index": 29, "isWaitFor": true, "column": true},
-                        {"index": 30, "isWaitFor": true, "column": true}
-                    ]
+                  "column": "cnt_d_i1",
+                  "aggregate": true,
+                  "objects": [
+                    {
+                      "column": true,
+                      "index": 22,
+                      "isWaitFor": false
+                    }
+                  ]
                 },
                 {
-                    "column": "cnt_i2",
-                    "aggregate": true,
-                    "objects": [
-                        {"index": 21, "isWaitFor": false,"column": true},
-                        {"index": 23, "isWaitFor": true, "column": true},
-                        {"index": 25, "isWaitFor": true, "column": true},
-                        // wait_for of conditions on groups 2 (cond_has_inbound1_show on col 32)
-                        // and 3 (inline cnt_i1 + condition_pattern on col 33). still isWaitFor:true
-                        // — wait_fors of conditions ARE prerequisites.
-                        {"isWaitFor": true, "condition": true, "index": 2},
-                        {"isWaitFor": true, "condition": true, "index": 3}
-                    ]
+                  "column": "array_d_scalar_i4",
+                  "aggregate": true,
+                  "objects": [
+                    {
+                      "column": true,
+                      "index": 23,
+                      "isWaitFor": true
+                    },
+                    {
+                      "column": true,
+                      "index": 27,
+                      "isWaitFor": true
+                    }
+                  ]
                 },
                 {
-                    "column": "array_d_entity_i3",
-                    "aggregate": true,
-                    "objects": [
-                        {"index": 21, "isWaitFor": true, "column": true}
-                    ]
+                  "column": "min_i1",
+                  "aggregate": true,
+                  "objects": [
+                    {
+                      "column": true,
+                      "index": 24,
+                      "isWaitFor": false
+                    }
+                  ]
                 },
                 {
-                    "column": "cnt_d_i1",
-                    "aggregate": true,
-                    "objects": [
-                        {"index": 22, "isWaitFor": false, "column": true}
-                    ]
+                  "column": "min_i2",
+                  "aggregate": true,
+                  "objects": [
+                    {
+                      "column": true,
+                      "index": 25,
+                      "isWaitFor": false
+                    }
+                  ]
                 },
                 {
-                    "column": "array_d_scalar_i4",
-                    "aggregate": true,
-                    "objects": [
-                        {"index": 23, "isWaitFor": true, "column": true},
-                        {"index": 27, "isWaitFor": true, "column": true}
-                    ]
+                  "related": true,
+                  "index": 0,
+                  "objects": [
+                    {
+                      "citation": true,
+                      "isWaitFor": true
+                    }
+                  ]
                 },
                 {
-                    "column": "min_i1",
-                    "aggregate": true,
-                    "objects": [
-                        {"index": 24, "isWaitFor": false,"column": true}
-                    ]
+                  "column": "array_d_entity_i4",
+                  "aggregate": true,
+                  "objects": [
+                    {
+                      "related": true,
+                      "index": 0,
+                      "isWaitFor": true
+                    }
+                  ]
                 },
                 {
-                    "column": "min_i2",
-                    "aggregate": true,
-                    "objects": [
-                        {"index": 25, "isWaitFor": false, "column": true}
-                    ]
+                  "related": true,
+                  "index": 1
                 },
                 {
-                    "column": "entity_set_i3",
-                    "entityset": true,
-                    "objects": [
-                        {"column": true, "isWaitFor": true, "index": 28},
-                        {"column": true, "isWaitFor": true, "index": 29}
-                    ]
+                  "related": true,
+                  "index": 2
                 },
                 {
-                    "related": true,
-                    "index": 0
+                  "related": true,
+                  "index": 3,
+                  "objects": [
+                    {
+                      "inline": true,
+                      "index": 8,
+                      "isWaitFor": true
+                    },
+                    {
+                      "related": true,
+                      "index": 1,
+                      "isWaitFor": true
+                    }
+                  ]
                 },
                 {
-                    "column": "array_d_entity_i4",
-                    "aggregate": true,
-                    "objects": [
-                        {"related": true, "isWaitFor": true, "index": 0}
-                    ]
-                },
-                {
-                    "related": true,
-                    "index": 1
-                },
-                {
-                    "related": true,
-                    "index": 2
+                  "related": true,
+                  "index": 4,
+                  "objects": [
+                    {
+                      "condition": true,
+                      "index": 5,
+                      "isWaitFor": false
+                    }
+                  ]
                 }
             ],
             allOutBounds: [

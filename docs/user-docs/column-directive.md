@@ -677,6 +677,10 @@ Visibility is a two-step decision: first determine whether the condition result 
 
 For example, a no-source `condition_pattern` of `{{#if (isUserInAcl "admin")}}show{{/if}}` renders non-empty for admins and empty for everyone else. With `on_empty: "hide"` (default), admins see the column; with `on_empty: "show"`, the visibility is inverted (everyone except admins sees it).
 
+**Entity-set sources see only the first page:**
+
+When a with-source condition's source is an entity set (an inbound path in entity mode, no aggregate), the condition is evaluated against the first page of that entity set, and it is evaluated once on load (it is not re-evaluated when the user paginates the related table). This is fine for a "does it have any rows" check, because the first page is empty exactly when the table is empty. It is **not** reliable for a `condition_pattern` that iterates `$self` looking for a specific row (for example "is there a row where `term=one`") once the table can have more rows than the page size, because rows beyond the first page are not visible to the template. For a condition that must consider the whole table, use an [`aggregate`](#aggregate) source (for example a `cnt` with a filter) instead. The entity-set condition source exists to reuse the read that already happens to display the related table, so it does not widen the page or perform an unbounded read.
+
 <a name="condition_key"></a>
 #### condition_key
 

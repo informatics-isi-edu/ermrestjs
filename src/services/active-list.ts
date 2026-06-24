@@ -68,6 +68,18 @@ export type ActiveListRelatedEntityRequest = {
   related?: boolean;
   /** the index of the related entity in the reference.related array */
   index: number;
+  /**
+   * the source hash (pseudo-column name) of the displayed entity set. Set so the
+   * consolidation pass can match data consumers (values, wait_fors, citation,
+   * condition sources) of the same source onto this display request.
+   */
+  entitysetSourceName?: string;
+  /**
+   * consumers folded onto this display request by the consolidation pass. When
+   * present, chaise routes the display read's page to these consumers instead of
+   * issuing a separate fetch. Mirrors `ActiveListRequest.objects`.
+   */
+  objects?: Array<ActiveListRequestObject>;
 };
 
 /**
@@ -333,7 +345,7 @@ export class ActiveListBuilder {
    */
   addInline(col: VisibleColumn, i: number): void {
     if (isRelatedColumn(col)) {
-      this.requests.push({ inline: true, index: i });
+      this.requests.push({ inline: true, index: i, entitysetSourceName: col.name });
     } else {
       this.addCol(col, false, ActiveListRequestTypes.COLUMN, i);
     }
@@ -346,7 +358,7 @@ export class ActiveListBuilder {
   /** Same as addInline but adds to dependent requests in a conditional group */
   addInlineToDependent(dependentRequests: Array<ActiveListRequest | ActiveListRelatedEntityRequest>, col: VisibleColumn, i: number): void {
     if (isRelatedColumn(col)) {
-      dependentRequests.push({ inline: true, index: i });
+      dependentRequests.push({ inline: true, index: i, entitysetSourceName: col.name });
     } else {
       this.addColToDependent(dependentRequests, col, false, ActiveListRequestTypes.COLUMN, i);
     }
@@ -424,9 +436,89 @@ export class ActiveListBuilder {
   }
 
   /**
+   * consolidates the requests in this.requests and this.conditionalGroups.dependentRequests
+   * to avoid duplicate reads for the same source.
+   *
+   * - Uses similar dedup logic as `consideredSets` / `consideredAggregates`
+   * (group by source hash, first request wins, the rest attach their `objects`),
+   * plus one clause: a display (visible inline or related entities) wins when one exists,
+   * so a source that is both displayed and consumed is read once.
+   * - Runs as a final pass rather than an inline map because related displays are registered
+   * after the consumers that reference them, so at consumer time the display does not exist yet.
+   * - A fold removes the duplicate from wherever it lives (`requests` or a group's
+   * `dependentRequests`); a deferred merge target is promoted into `requests` when any
+   * request for its source is unconditional, so the read happens on load. Nothing is ever
+   * added to a group's `dependentRequests`.
+   */
+  private consolidateRequests(): void {
+    if (!this.isDetailed) return;
+
+    type LocatedRequest = {
+      requestList: Array<ActiveListRequest | ActiveListRelatedEntityRequest>;
+      req: ActiveListRequest & ActiveListRelatedEntityRequest;
+      isRelatedOrInline: boolean;
+      isUnconditional: boolean;
+    };
+
+    // capture all the requests that we have (conditioned + unconditioned).
+    // null-prototype so a schema-controlled source hash like `__proto__` is a plain key.
+    const requestsBySource: { [hash: string]: LocatedRequest[] } = Object.create(null);
+    const collect = (requestList: Array<ActiveListRequest | ActiveListRelatedEntityRequest>, isUnconditional: boolean) => {
+      requestList.forEach((r) => {
+        const req = r as ActiveListRequest & ActiveListRelatedEntityRequest;
+        const isRelatedOrInline = !!(req.inline || req.related);
+        const hash = isRelatedOrInline ? req.entitysetSourceName : req.column?.name;
+        if (typeof hash !== 'string') return;
+        if (!(hash in requestsBySource)) requestsBySource[hash] = [];
+        requestsBySource[hash].push({ requestList, req, isRelatedOrInline, isUnconditional });
+      });
+    };
+    collect(this.requests, true);
+    this.conditionalGroups.forEach((group) => collect(group.dependentRequests, false));
+
+    Object.keys(requestsBySource).forEach((hash) => {
+      const entries = requestsBySource[hash];
+      if (entries.length < 2) return;
+
+      /**
+       * Prefer a display as the merge target (even a conditional one): it renders the
+       * table AND yields the rows the data consumers need, so everyone reuses its read.
+       * A conditional display is promoted to run on load below when needed. With no
+       * display and no unconditional consumer there is no safe target, so skip: e.g.
+       * condition A gates column X and condition B gates column Y, both X and Y valued
+       * from the same entity set `H`. Folding B's `H` onto A would gate Y behind A, so
+       * if A is false but B is true, Y loses its data. Leave them as two reads.
+       */
+      const displays = entries.filter((e) => e.isRelatedOrInline);
+      const mergeTarget = displays.find((e) => e.isUnconditional) || displays[0] || entries.find((e) => e.isUnconditional);
+      if (!mergeTarget) return;
+
+      const anyUnconditional = entries.some((e) => e.isUnconditional);
+      entries.forEach((e) => {
+        if (e === mergeTarget) return;
+        // when the merge target is deferred, only fold unconditional requests or ones in
+        // the merge target's own list (never another group's dependent)
+        if (!mergeTarget.isUnconditional && !e.isUnconditional && e.requestList !== mergeTarget.requestList) return;
+        if (!mergeTarget.req.objects) mergeTarget.req.objects = [];
+        if (Array.isArray(e.req.objects)) mergeTarget.req.objects.push(...e.req.objects);
+        const idx = e.requestList.indexOf(e.req);
+        if (idx !== -1) e.requestList.splice(idx, 1);
+      });
+
+      // a deferred merge target that has an unconditional request must run on load.
+      if (!mergeTarget.isUnconditional && anyUnconditional) {
+        const idx = mergeTarget.requestList.indexOf(mergeTarget.req);
+        if (idx !== -1) mergeTarget.requestList.splice(idx, 1);
+        this.requests.push(mergeTarget.req);
+      }
+    });
+  }
+
+  /**
    * Return the built ActiveList object. After calling this method, the builder should not be used anymore.
    */
   build(): ActiveList {
+    this.consolidateRequests();
     return {
       requests: this.requests,
       conditionalGroups: this.conditionalGroups,
