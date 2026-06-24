@@ -460,8 +460,9 @@ export class ActiveListBuilder {
       isUnconditional: boolean;
     };
 
-    // capture all the requests that we have (conditioned + unconditioned)
-    const requestsBySource: { [hash: string]: LocatedRequest[] } = {};
+    // capture all the requests that we have (conditioned + unconditioned).
+    // null-prototype so a schema-controlled source hash like `__proto__` is a plain key.
+    const requestsBySource: { [hash: string]: LocatedRequest[] } = Object.create(null);
     const collect = (requestList: Array<ActiveListRequest | ActiveListRelatedEntityRequest>, isUnconditional: boolean) => {
       requestList.forEach((r) => {
         const req = r as ActiveListRequest & ActiveListRelatedEntityRequest;

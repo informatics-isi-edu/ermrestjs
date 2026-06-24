@@ -508,7 +508,7 @@ exports.execute = function (options) {
             });
 
             describe("consolidation (one read per source), ", function () {
-                it ("should not leave any standalone entityset request for a displayed source.", function () {
+                it ("no standalone entityset request for a displayed source", function () {
                     // every entity set in this schema is displayed (inline or vis-fk), so the data
                     // consumers (values, wait_fors, citation, condition) are folded onto the matching
                     // display request and no standalone entityset request remains.
@@ -519,7 +519,7 @@ exports.execute = function (options) {
                         "no standalone entityset requests should remain after consolidation");
                 });
 
-                it ("should not have two top-level requests sharing the same source hash.", function () {
+                it ("no two top-level requests share a source hash", function () {
                     // a display (entitysetSourceName) and a data request (column.name) must never both
                     // exist for the same source — that pair was the duplicate read this change removes.
                     var seen = {};
@@ -533,7 +533,7 @@ exports.execute = function (options) {
                     });
                 });
 
-                it ("should promote a self-referential conditioned display into main requests (read once).", function () {
+                it ("promotes a self-referential conditioned display to main requests", function () {
                     // entity_set_i8 vis-fk is gated by cond_self_i8 whose source IS entity_set_i8. The
                     // condition source folds onto the display and the display is promoted to a main
                     // request tagged with a condition object — so it is read once, not twice.

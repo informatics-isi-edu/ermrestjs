@@ -936,7 +936,7 @@ export class Reference {
         const relSourceName = rel.pseudoColumn ? rel.pseudoColumn.name : (_sourceColumnHelpers.generateForeignKeyName(rel.origFKR, true) as string);
         /**
          * if there's a condition, we have to capture the requests generated for the related entity as its dependencies.
-         * So when the condition is evaludated, we can decide whether to run those requests or not.
+         * So when the condition is evaluated, we can decide whether to run those requests or not.
          */
         const addRelatedToDeps = (deps: Array<ActiveListRequest | ActiveListRelatedEntityRequest>) => {
           deps.push({ related: true, index: i, entitysetSourceName: relSourceName });
