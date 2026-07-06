@@ -23,7 +23,8 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false, // TODO change this back
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+    "types": ["node"]
   },
   "include": ["src"]
 }
