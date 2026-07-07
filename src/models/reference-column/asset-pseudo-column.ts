@@ -41,6 +41,7 @@ type AssetMetadata = {
  * @property {(Column|boolean|null)} md5 if it's string, then it is the name of column we want to store md5 inside of it. If it's true, that means we must use md5.
  * @property {(Column|boolean|null)} sha256 if it's string, then it is the name of column we want to store sha256 inside of it. If it's true, that means we must use sha256.
  * @property {(string[]|null)} filenameExtFilter set of filename extension filters for use by upload agents to indicate to the user the acceptable filename patterns.
+ * @property {boolean} allowEmptyFile whether empty (0-byte) file uploads are allowed. Defaults to false.
  *
  * @desc
  * Constructor for AssetPseudoColumn.
@@ -73,6 +74,7 @@ export class AssetPseudoColumn extends ReferenceColumn {
   private _filenamePattern?: string;
   private _filenameExtFilter?: string[];
   private _filenameExtRegexp?: string[];
+  private _allowEmptyFile?: boolean;
   private _displayImagePreview?: boolean;
   private _filePreview?: FilePreviewConfig | null;
 
@@ -436,6 +438,17 @@ export class AssetPseudoColumn extends ReferenceColumn {
       }
     }
     return this._filenameExtRegexp;
+  }
+
+  /**
+   * Whether empty (0-byte) file uploads are allowed for this asset column.
+   * Defaults to false, meaning empty files are rejected.
+   */
+  get allowEmptyFile(): boolean {
+    if (this._allowEmptyFile === undefined) {
+      this._allowEmptyFile = this._annotation.allow_empty_file === true;
+    }
+    return this._allowEmptyFile;
   }
 
   /**

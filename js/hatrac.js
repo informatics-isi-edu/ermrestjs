@@ -4,7 +4,7 @@ import { ArrayBuffer } from 'spark-md5';
 
 // models
 // import DeferredPromise from '@isrd-isi-edu/ermrestjs/src/models/deferred-promise';
-import { MalformedURIError } from '@isrd-isi-edu/ermrestjs/src/models/errors';
+import { InvalidInputError, MalformedURIError } from '@isrd-isi-edu/ermrestjs/src/models/errors';
 
 // services
 import ErrorService from '@isrd-isi-edu/ermrestjs/src/services/error';
@@ -231,7 +231,7 @@ Upload.prototype.validateURL = function (row, linkedData, templateVariables) {
     // TODO is this needed?
     // make sure to add raw columns too.
     ignoredColumns.forEach(function (col) {
-      ignoredColumns.push("_" + col);
+      ignoredColumns.push('_' + col);
     });
 
     var keyValues = _getFormattedKeyValues(this.reference.table, this.reference._context, row, linkedData);
@@ -503,7 +503,12 @@ Upload.prototype.start = function (startChunkIdx, onProgress) {
     this.chunks = [];
 
     if (this.file.size === 0) {
-      deferred.resolve(this.url);
+      // empty (0-byte) uploads are rejected unless the asset annotation opts in via allow_empty_file
+      if (this.column.allowEmptyFile) {
+        deferred.resolve(this.url);
+      } else {
+        deferred.reject(new InvalidInputError('The file "' + this.file.name + '" is empty (0 bytes). Empty files cannot be uploaded.'));
+      }
       return deferred.promise;
     } else {
       while (start < this.file.size) {
