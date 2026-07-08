@@ -403,6 +403,49 @@ exports.execute = function (options) {
       });
     });
 
+    describe('for an empty (0-byte) file, ', function () {
+      var emptyFile = { name: 'testfile0kb.txt', size: 0 };
+      var emptyFilePath, emptyUploadObj;
+
+      beforeAll(function () {
+        emptyFilePath = 'test/specs/upload/files/' + emptyFile.name;
+        // size 0 => `"\x01" x 0` is the empty string => a genuine 0-byte file
+        exec('perl -e \'print "\\x01" x ' + emptyFile.size + "' > " + emptyFilePath);
+        emptyFile.file = uploadUtils.createMockFile(emptyFilePath);
+        emptyUploadObj = new options.ermRest.Upload(emptyFile.file, {
+          column: column,
+          reference: reference,
+          chunkSize: chunkSize,
+        });
+      });
+
+      it('allowEmptyFile should default to false when the annotation is not set.', function () {
+        expect(column.allowEmptyFile).toBe(false, 'allowEmptyFile should default to false');
+      });
+
+      it('start() should reject with an InvalidInputError.', function (done) {
+        emptyUploadObj
+          .start()
+          .then(
+            function () {
+              done.fail('start() should have rejected the empty file');
+            },
+            function (err) {
+              expect(err instanceof options.ermRest.InvalidInputError).toBe(true, 'error is not an InvalidInputError');
+              done();
+            },
+          )
+          .catch(function (err) {
+            console.dir(err);
+            done.fail();
+          });
+      });
+
+      afterAll(function () {
+        exec('rm ' + emptyFilePath);
+      });
+    });
+
     // TODO: Upload.pause(), Upload.resume(), and Upload.cancel() are not tested.
     // we can't interrupt a promise even during the notify callback. We will have to look into
     // a way to mock the upload endpoint and change the Synchronization so it is ignored

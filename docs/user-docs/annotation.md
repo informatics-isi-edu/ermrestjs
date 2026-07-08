@@ -17,7 +17,7 @@ documentation on their use and interpretation.
 ## Notation and Usage
 
 Each annotation key is defined in a section of this document and shown
-as a literal string.  We prepend a date in each key name and promise
+as a literal string. We prepend a date in each key name and promise
 not to modify the semantics of an existing annotation key, once
 published to GitHub. We may publish typographical or other small
 textual clarifications, but if we need to change the proposed
@@ -47,34 +47,35 @@ TBD changes to propose for ERMrest:
 Some annotations are supported on multiple types of model element, so
 here is a quick matrix to locate them.
 
-| Annotation                                                               | Catalog | Schema | Table | Column | Key | FKR | Summary                                                        |
-|--------------------------------------------------------------------------|---------|--------|-------|--------|-----|-----|----------------------------------------------------------------|
-| [2015 Display](#tag-2015-display)                                        | X       | X      | X     | X      | X   | -   | Display options                                                |
-| [2016 Table Alternatives](#tag-2016-table-alternatives)                  | -       | -      | X     | -      | _   | _   | Table abstracts another table                                  |
-| [2016 Column Display](#tag-2016-column-display)                          | -       | -      | -     | X      | -   | -   | Column-specific display options                                |
-| [2017 Key Display](#tag-2017-key-display)                                | -       | -      | -     | -      | X   | -   | Key augmentation                                               |
-| [2016 Foreign Key](#tag-2016-foreign-key)                                | -       | -      | -     | -      | -   | X   | Foreign key augmentation                                       |
-| [2016 Generated](#tag-2016-generated)                                    | X       | X      | X     | X      | -   | -   | Generated model element                                        |
-| [2016 Immutable](#tag-2016-immutable)                                    | X       | X      | X     | X      | -   | -   | Immutable model element                                        |
-| [2016 Non Deletable](#tag-2016-non-deletable)                            | X       | X      | X     | -      | -   | -   | Non-deletable model element                                    |
-| [2016 App Links](#tag-2016-app-links)                                    | -       | X      | X     | -      | -   | -   | Intra-Chaise app links                                         |
-| [2016 Table Display](#tag-2016-table-display)                            | -       | -      | X     | -      | -   | -   | Table-specific display options                                 |
-| [2016 Visible Columns](#tag-2016-visible-columns)                        | -       | -      | X     | -      | -   | -   | Column visibility and presentation order                       |
-| [2016 Visible Foreign Keys](#tag-2016-visible-foreign-keys)              | -       | -      | X     | -      | -   | -   | Foreign key visibility and presentation order                  |
-| [2017 Asset](#tag-2017-asset)                                            | -       | -      | -     | X      | -   | -   | Describes assets                                               |
-| [2018 Citation](#tag-2018-citation)                                      | -       | -      | X     | -      | -   | -   | Describes citation                                             |
-| [2018 Required](#tag-2018-required)                                      | -       | -      | -     | X      | -   | X   | Required model element                                         |
-| [2018 Indexing Preferences](#tag-2018-indexing-preferences)              | -       | -      | X     | X      | -   | -   | Specify database indexing preferences                          |
-| [2019 Export](#tag-2019-export)                                          | X       | X      | X     | -      | -   | -   | Describes export templates                                     |
-| [2021 Export Fragment Definitions](#tag-2021-export-fragment-definitions)| X       | X      | X     | -      | -   | -   | Describe export fragments that may be used in export anotation |
-| [2019 Chaise Config](#tag-2019-chaise-config)                            | X       | -      | -     | -      | -   | -   | Properties to configure chaise app UX                          |
-| [2019 Source Definitions](#tag-2019-source-definitions)                  | -       | -      | X     | -      | -   | -   | Describe source definitions                                    |
-| [2021 Google Dataset](#tag-2021-google-dataset)                          | -       | -      | X     | -      | -   | -   | Describe metadata for rich results in Google Dataset           |
-| [2021 Table Config](#tag-2021-table-config)                              | -       | -      | X     | -      | -   | -   | Describe Table Config                                          |
-| [2023 Column Defaults](#tag-2023-column-defaults)                        | X       | X      | X     | -      | -   | -   | Define column-level annotations based on type or name          |
+| Annotation                                                                | Catalog | Schema | Table | Column | Key | FKR | Summary                                                        |
+| ------------------------------------------------------------------------- | ------- | ------ | ----- | ------ | --- | --- | -------------------------------------------------------------- |
+| [2015 Display](#tag-2015-display)                                         | X       | X      | X     | X      | X   | -   | Display options                                                |
+| [2016 Table Alternatives](#tag-2016-table-alternatives)                   | -       | -      | X     | -      | \_  | \_  | Table abstracts another table                                  |
+| [2016 Column Display](#tag-2016-column-display)                           | -       | -      | -     | X      | -   | -   | Column-specific display options                                |
+| [2017 Key Display](#tag-2017-key-display)                                 | -       | -      | -     | -      | X   | -   | Key augmentation                                               |
+| [2016 Foreign Key](#tag-2016-foreign-key)                                 | -       | -      | -     | -      | -   | X   | Foreign key augmentation                                       |
+| [2016 Generated](#tag-2016-generated)                                     | X       | X      | X     | X      | -   | -   | Generated model element                                        |
+| [2016 Immutable](#tag-2016-immutable)                                     | X       | X      | X     | X      | -   | -   | Immutable model element                                        |
+| [2016 Non Deletable](#tag-2016-non-deletable)                             | X       | X      | X     | -      | -   | -   | Non-deletable model element                                    |
+| [2016 App Links](#tag-2016-app-links)                                     | -       | X      | X     | -      | -   | -   | Intra-Chaise app links                                         |
+| [2016 Table Display](#tag-2016-table-display)                             | -       | -      | X     | -      | -   | -   | Table-specific display options                                 |
+| [2016 Visible Columns](#tag-2016-visible-columns)                         | -       | -      | X     | -      | -   | -   | Column visibility and presentation order                       |
+| [2016 Visible Foreign Keys](#tag-2016-visible-foreign-keys)               | -       | -      | X     | -      | -   | -   | Foreign key visibility and presentation order                  |
+| [2017 Asset](#tag-2017-asset)                                             | -       | -      | -     | X      | -   | -   | Describes assets                                               |
+| [2018 Citation](#tag-2018-citation)                                       | -       | -      | X     | -      | -   | -   | Describes citation                                             |
+| [2018 Required](#tag-2018-required)                                       | -       | -      | -     | X      | -   | X   | Required model element                                         |
+| [2018 Indexing Preferences](#tag-2018-indexing-preferences)               | -       | -      | X     | X      | -   | -   | Specify database indexing preferences                          |
+| [2019 Export](#tag-2019-export)                                           | X       | X      | X     | -      | -   | -   | Describes export templates                                     |
+| [2021 Export Fragment Definitions](#tag-2021-export-fragment-definitions) | X       | X      | X     | -      | -   | -   | Describe export fragments that may be used in export annotation |
+| [2019 Chaise Config](#tag-2019-chaise-config)                             | X       | -      | -     | -      | -   | -   | Properties to configure chaise app UX                          |
+| [2019 Source Definitions](#tag-2019-source-definitions)                   | -       | -      | X     | -      | -   | -   | Describe source definitions                                    |
+| [2021 Google Dataset](#tag-2021-google-dataset)                           | -       | -      | X     | -      | -   | -   | Describe metadata for rich results in Google Dataset           |
+| [2021 Table Config](#tag-2021-table-config)                               | -       | -      | X     | -      | -   | -   | Describe Table Config                                          |
+| [2023 Column Defaults](#tag-2023-column-defaults)                         | X       | X      | X     | -      | -   | -   | Define column-level annotations based on type or name          |
 
 For brevity, the annotation keys are listed above by their section
 name within this documentation. The actual key URI follows one of these formats:
+
 - `tag:misd.isi.edu,` _date_ `:` _key_
 - `tag:isrd.isi.edu,` _date_ `:` _key_
 
@@ -99,7 +100,7 @@ Supported JSON payload patterns:
 - `{`... `"show_key_link":` `{` _context_ `:` _keylink_ `,` ... `}`: Whether default display of keys (self link) should include link to the row.
 - `{`... `"show_foreign_key_link":` `{` _context_ `:` _fklink_ `,` ... `}`: Whether default display of foreign keys should include link to the row.
 - `{`... `"hide_row_count":` `{` _context_ `:` _rowcount_ `,` ... `}`: Whether we should display the total row count. Since the request to fetch total row count is expensive, you can use this to signal to client to skip the request (and therefore do not display it to users.)
-- `{`... `"max_facet_depth":` `{` _context_ `:` _maxfacetdepth_ `,`  ...`}`: How many levels of facet popups we should allow.
+- `{`... `"max_facet_depth":` `{` _context_ `:` _maxfacetdepth_ `,` ...`}`: How many levels of facet popups we should allow.
 - `{`... `"show_saved_query":` _savedquery_ ...`}`: Whether we want to display the saved query UI features or not. By default, this feature is turned off (set to false).
 - `{`... `"bulk_create_foreign_key"`: _bulkfk_ ... `}`: Use this property to control the bulk selection of foreign key values in `entry/create` context when there is a prefill query parameter. By default, the heuristics will be used to determine if this feature will be used. This can be defined on each of the catalog, schema, and table model elements.
 - `{`... `"visible_cell_height":` `{` _context_ `:` _visiblecellheight_ `,` ... `}`: Limit the height of displayed cells. Currently only supported in the `detailed` context (record page).
@@ -172,25 +173,25 @@ Supported JSON _maxfacetdepth_ patterns:
 - `2`: Facet panel is displayed for two levels. Both once the main table is opened and when the facet popup is opened for any of the facets.
 - Any number bigger than 2 will be treated the same as defining `2`.
 
-
 Supported JSON _visiblecellheight_ patterns:
 
 - Any positive number (in pixels): The cell values in the record page will be limited to the given height. `300` is the recommended starting value for most content.
 - `false`: Disable the feature and show all the contents. If this property is missing or is invalid, this is the default behavior.
 
 Supported JSON _context_ patterns:
+
 - See [Context Names](#context-names) section for the list of supported JSON _context_ patterns.
 
 #### Tag: 2015 Display Settings Hierarchy
 
 - Comment related settings:
-  - The `"comment"` setting applies *only* to the model element which is annotated.
+  - The `"comment"` setting applies _only_ to the model element which is annotated.
   - The `"comment_render_markdown": false` should be used if you don't want us to treat the comment as a markdown value. By default we're assuming all comments are markdown.
   - Using the `"inline"` value for `"table_comment_display"` is currently only supported in the following scenarios:
     - The recordset page title (`compact` context).
     - The inline entities and related entities displayed on the record page (`detailed` context is used in both cases).
   - Using the `"inline"` value for `"column_comment_display"` is currently only supported in the `entry` context (recordedit app) and `detailed` context (record app).
-- The `"name"` and `"markdown_name"` setting applies *only* to the model element which is annotated. They bypass the `name_style` controls which only apply to actual model names.
+- The `"name"` and `"markdown_name"` setting applies _only_ to the model element which is annotated. They bypass the `name_style` controls which only apply to actual model names.
   - The `"markdown_name"` setting takes precedence if both are specified.
 - The `"name_style"` setting applies to the annotated model element and is also the default for any nested element.
 - The `"show_null"` settings applies to the annotated model element and is also the default for any nested element.
@@ -198,21 +199,21 @@ Supported JSON _context_ patterns:
   - The annotation is allowed on schemas in order to set the default for all tables in the schema.
   - Each _context_ `:` _nshow_ instruction overrides the inherited instruction for the same _context_ while still deferring to the inherited annotation for any unspecified _context_. The `"*"` wildcard _context_ allows masking of any inherited instruction.
   - A global default is assumed: `{`... `"show_null": { "detailed": false, "*": true` ... `}`
-- The `"show_foreign_key_link"` and `"show_key_link"`  settings applies to the annotated model element and is also the default for any nested element.
+- The `"show_foreign_key_link"` and `"show_key_link"` settings applies to the annotated model element and is also the default for any nested element.
   - The annotation is allowed on catalog in order to set the default for all schemas in the catalog.
   - The annotation is allowed on schemas in order to set the default for all tables in the schema.
   - Each _context_ `:` _fklink_ instruction overrides the inherited instruction for the same _context_ while still deferring to the inherited annotation for any unspecified _context_. The `"*"` wildcard _context_ allows masking of any inherited instruction.
   - A global default is assumed:
     ```json
     {
-        "show_key_link": {
-            "*": true,
-            "compact/select": false
-        },
-        "show_foreign_key_link": {
-            "*": true,
-            "compact/select": false
-        }
+      "show_key_link": {
+        "*": true,
+        "compact/select": false
+      },
+      "show_foreign_key_link": {
+        "*": true,
+        "compact/select": false
+      }
     }
     ```
 - The `"show_saved_query"` settings applies to the annotated model element and is also the default for any nested element.
@@ -227,23 +228,29 @@ This annotation provides an override guidance for Chaise applications using a hi
 4. Schema-level name_style.
 
 Note:
-- An explicit setting of `null` will turn *off* inheritence and restore default behavior for that modele element and any of its nested elements.
+
+- An explicit setting of `null` will turn _off_ inheritance and restore default behavior for that model element and any of its nested elements.
 - The name_style has to be derived separately for each field e.g. one can set `underline_space=true` at the schema-level and doesn't have to set this again.
 
 #### Heuristics
 
 1. In the absence of an `internal` assertion, assume all keys are potentially meaningful to users.
 2. In the absence of a `term` assertion
-  - Try to find a single-column key named `term`
-  - Try to find a single-column key named `name`
-  - If no term column is found table SHOULD NOT be interpreted as a vocabulary.
+
+- Try to find a single-column key named `term`
+- Try to find a single-column key named `name`
+- If no term column is found table SHOULD NOT be interpreted as a vocabulary.
+
 3. In the absence of an `id` assertion
-  - Try to find a column named `id`
-  - Try to find an unambiguous single-column numeric key
-  - If no `id` column is found, use the term column as the preferred compact identifier.
+
+- Try to find a column named `id`
+- Try to find an unambiguous single-column numeric key
+- If no `id` column is found, use the term column as the preferred compact identifier.
+
 4. In the absence of a `description` assertion
-  - Try to find a column named `description`
-  - If no description column is found, proceed as if there is no description or use some other detailed or composite view of the table rows as a long-form presentation.
+
+- Try to find a column named `description`
+- If no description column is found, proceed as if there is no description or use some other detailed or composite view of the table rows as a long-form presentation.
 
 In the preceding, an "unambiguous" key means that there is only one
 key matching the specified type and column count.
@@ -266,7 +273,7 @@ should be used for presentation in different context.
 Supported JSON payload patterns:
 
 - `{` ... _context_ `:` _app name_ `,` ... `}`: An _app name_ to be linked to in a different _context_ name.
-  * _app name_ is one of the following chaise apps:
+  - _app name_ is one of the following chaise apps:
     - `tag:isrd.isi.edu,2016:chaise:record`,
     - `tag:isrd.isi.edu,2016:chaise:record-two`,
     - `tag:isrd.isi.edu,2016:chaise:viewer`,
@@ -280,8 +287,10 @@ This annotation provides an override guidance for Chaise applications
 using a hierarchical scoping mode:
 
 1. Hard-coded default behavior in Chaise codebase:
-  - `detailed` `:` `tag:isrd.isi.edu,2016:chaise:record`,
-  - `compact` `:` `tag:isrd.isi.edu,2016:chaise:resultset`
+
+- `detailed` `:` `tag:isrd.isi.edu,2016:chaise:record`,
+- `compact` `:` `tag:isrd.isi.edu,2016:chaise:resultset`
+
 2. Server-level configuration in `chaise-config.js` on web server overrides hard-coded default.
 3. Schema-level annotation overrides server-level or codebase behaviors.
 4. Table-level annotation overrides schema-level, server-level, or codebase behaviors.
@@ -294,7 +303,6 @@ This key indicates that the values for a given model element may not be mutated
 (changed) once set.
 
 This key is allowed on any number of columns, tables, schemas, and catalogs. If a catalog is marked as immutable, all the schemas in that catalog will also inherit this setting. To avoid this on a schema, you can define the immutable annotation and use the special `false` value (The same is true about schemas, tables, and columns).
-
 
 ### Tag: 2016 Generated
 
@@ -336,8 +344,7 @@ Supported _columnlist_ patterns:
   - Ignore listed _columndirective_ values that do not correspond to content from the table.
   - Do not present table columns that are not specified in the list. Please refer to [column directive](#column-directive) section for more information.
   - A list without any valid _columndirective_ will be treated the same as empty array `[]`. Client will not show any columns in this case.
-- Any non-string, non-array value (e.g., `null`): The client will use the default heuristics for generating list of visbile columns.
-
+- Any non-string, non-array value (e.g., `null`): The client will use the default heuristics for generating list of visible columns.
 
 Supported _facetlist_ pattern:
 
@@ -361,13 +368,14 @@ You need to define one of these attributes which will refer to the source of the
 Constraint attributes (optional):
 
 You can use these attributes to define default preselected facets (Combination of these attributes are not supported yet, you cannot have both `choices` and `ranges` specified on a facet).
+
 - `choices`: Discrete choice e.g. maps to a checklist or similar UX. Its value MUST be an array of values.
 - `ranges`: Half-open or closed intervals, e.g. maps to a slider or similar UX. Its value MUST be an array of JSON payload, with `min` and `max` attributes. The `min` and `max` values will translate into inclusive range filters. In order to force exclusive range, you can use `min_exclusive: true`, or `max_exclusive: true`.
 - `not_null`: Match any record that has a value other than `null`. Its value MUST be `true`. If you have this constraint defined in your annotation, other constraints will be ignored (other than `"choice": [null]`. In this case both of the filters will be ignored).
 <!-- - `search`: Substring search, e.g. maps to a search box UX. -->
 
-
 Configuration attributes (optional):
+
 - `entity`: If the facet can be treated as entity (the column that is being used for facet is key of the table), setting this attribute to `false` will force the facet to show scalar mode.
 - `fast_filter_source`: An alternative source that will be used for filtering values. You MUST make sure the projected column of `fast_filter_source` is compatiple with the main source of this facet. Please refer to [this document](facet.md#fast-filter-source) for more information.
 - `markdown_name`: The markdown to use in place of the default heuristics for facet title.
@@ -377,7 +385,7 @@ Configuration attributes (optional):
 - `hide_null_choice` and `hide_not_null_choice`: By default, we are going to add `null` and `not-null` options in the `choices` UX mode. Setting any of these variables to `true`, will hide its respective option.
 - `bar_plot`: This attribute is meant to be an object of properties that control the display of the histogram in `ranges` UX mode. Setting this attribute to `false` will force the histogram to not be shown in the facet in the facet panel. If unspecified, default is `true` (or show the histogram). If defined as an object, available attributes are:
   - `n_bins`: Used to define the number of bins the histogram uses to fetch and display data. If undefined, default is 30 bins.
-- `hide_num_occurrences`: Applicaple only to scalar facets in `choices` UX mode. In the facet popup for a scalar facet, we're showing the "Number of occurences" for each individual values. Setting this value to `false` will hide the "Number of occurences" column.
+- `hide_num_occurrences`: Applicable only to scalar facets in `choices` UX mode. In the facet popup for a scalar facet, we're showing the "Number of occurences" for each individual values. Setting this value to `false` will hide the "Number of occurences" column.
 - `order`: Control how the values in the scalar facets for `choices` UX mode should be sorted. This follows the same syntax as `column_order` and the following is the default value of this attribute:
   ```json
   [
@@ -393,7 +401,6 @@ Configuration attributes (optional):
   ```
   This means that the values are sorted in a desencing order of "Number of occurences" (frequency), and tie breaking is done based on the ascending value of the scalar column.
   You can modify this to sort based on other columns of the table that the scalar column belongs to. Or use the `"num_occurrences": true` to refer to the "Number of occurences" column.
-
 
 The following is an example of visible-columns annotation payload for defining facets. Please refer to [this document](facet.md) to learn more about the structure of facet and find more examples.
 
@@ -427,14 +434,12 @@ Supported display _option_ syntax:
 - `"show_key_link": true`: Override the inherited behavior of key display and add a link to the referred row.
 - `"show_key_link": false`: Override the inherited behavior of key display by not adding any the extra.
 
-
 Supported _columnorder_key_ syntax:
 
 - `{ "column":` _columnname_ `, "descending": true }`: Sort according to the values in the _columnname_ column opposite of the order of current sort. For instance if asked to sort the key in descending order, sorting will be based on the ascending values of _columnname_ column.
 - `{ "column":` _columnname_ `, "descending": false }`: Sort according to the values in the _columnname_ column.
 - `{ "column":` _columnname_ `}`: If omitted, the `"descending"` field defaults to `false` as per above.
 - _columnname_: A bare _columnname_ is a short-hand for `{ "column":` _columnname_ `}`.
-
 
 Key sorting heuristics (use first applicable rule):
 
@@ -459,9 +464,9 @@ Supported JSON payload patterns:
 - `{` ... `"comment_render_markdown":` _boolean_value_ ... `}`: The _boolean_value_ dictates whether the comments for this foreignkey should be treated as markdown or not. If not defined, its value will be inherited from the table (which could be inherited from the schema or the catalog. If it's not defined on any of the models, the default behavior is to treat comments as markdown).
 - `{` ... `"to_comment":` _comment_ ... `}`: The _comment_ string is a preferred comment for the set of entities containing keys described by this constraint.
 - `{` ... `"from_comment_display":` _comment_display_ ... `}`: The display mode for the tooltip. Set to `inline` to show it as text or `tooltip` to show as a hover tooltip.
-    - Currently the `comment_display` is only supported for foreign key relationships in detailed context when they are part of `visible-columns` or `visible-foreign-keys`.
+  - Currently the `comment_display` is only supported for foreign key relationships in detailed context when they are part of `visible-columns` or `visible-foreign-keys`.
 - `{` ... `"to_comment_display":` _comment_display_ ... `}`: The display mode for the tooltip. Set to `inline` to show it as text or `tooltip` to show as a hover tooltip.
-    - Currently the `comment_display` is only supported for foreign key relationships in detailed context when they are part of `visible-columns` or `visible-foreign-keys`.
+  - Currently the `comment_display` is only supported for foreign key relationships in detailed context when they are part of `visible-columns` or `visible-foreign-keys`.
 - `{` ... `"display": {` _context_`:` _option_ ...`}` ... `}`: Apply each _option_ to the presentation of referenced content for any number of _context_ names.
 - `{` ... `"domain_filter_pattern":` _pathpattern_ ...`}` (_deprecated_): The _pathpattern_ yields a _filter_ via [Pattern Expansion](#pattern-expansion). The domain filter will be used while selecting a value for this particular foreign key in the entry contexts. This syntax has been deprecated in favor of the next syntax (`domain_filter`). The new syntax allows you to provide the visual presentation of the filter.
 - `{` ... `"domain_filter":` _domainfilter_ ...`}`: The domain filter that will be used while selecting a value for this particular foreign key in the entry contexts. This attribute can be used to limit the available options to the user.
@@ -478,7 +483,7 @@ Supported display _option_ syntax:
 - `"show_foreign_key_link": true`: Override the inherited behavior of foreign key display and add a link to the referred row.
 - `"show_foreign_key_link": false`: Override the inherited behavior of foreign key display by not adding any the extra.
 - `"selector_ux_mode"`: The display mode for the recordedit input field when this foreign key relationship is part of the visible columns. Supported values are `"facet-search-popup"` and `"simple-search-dropdown"`, with `"facet-search-popup"` being the default. Currently only supported in `entry` contexts.
-- `"bulk_create_foreign_key"`:  Use this property to control the bulk selection of foreign key values in `entry/create` context when there is a prefill query parameter. Supported values are a foreign key `name` in the format of `['schema_name', 'foreign_key_name']` from the schema document, `false`, or `null`. Using a foreign key name will use that foreign key as the one being bulk selected if that foreign key is in the visible columns list.  `false` turns off the heuristics that trigger this feature. `null` will override inheritance for this property and use the default heuristics. This will override the `bulk_create_foreign_key_candidates` property defined in the table-display annotation. Currently only supported in `entry/create` context.
+- `"bulk_create_foreign_key"`: Use this property to control the bulk selection of foreign key values in `entry/create` context when there is a prefill query parameter. Supported values are a foreign key `name` in the format of `['schema_name', 'foreign_key_name']` from the schema document, `false`, or `null`. Using a foreign key name will use that foreign key as the one being bulk selected if that foreign key is in the visible columns list. `false` turns off the heuristics that trigger this feature. `null` will override inheritance for this property and use the default heuristics. This will override the `bulk_create_foreign_key_candidates` property defined in the table-display annotation. Currently only supported in `entry/create` context.
 
 Supported _columnorder_key_ syntax:
 
@@ -488,20 +493,21 @@ Supported _columnorder_key_ syntax:
 - _columnname_: A bare _columnname_ is a short-hand for `{ "column":` _columnname_ `}`. _columnname_ can be the name of any columns from the table that the foreign key is referring to.
 
 Supported _domainfilter_ syntax:
+
 - `{ "ermrest_path_pattern":` _pathpattern_ `}`: The _pathpattern_ yields a _filter_ via [Pattern Expansion](#pattern-expansion). With this syntax, the applied filter will be hidden from the user.
 - `{ "ermrest_path_pattern":` _pathpattern_ `, "pattern_sources":` _columnlist_ `}`: The added `pattern_sources` allows the client to display more meaningful errors to users.
 - `{ "ermrest_path_pattern":` _pathpattern_ `, "display_markdown_pattern":` _displaypattern_ `}`: The _pathpattern_ yields a _filter_ via [Pattern Expansion](#pattern-expansion). _displaypattern_ will provide the visual presentation of the filter which will be computed by performing [Pattern Expansion](#pattern-expansion) to obtain a markdown-formatted text value which MAY be rendered using a markdown-aware renderer.
   - If the computed _filter_ is an empty string, the _domain_filter_ will be ignored, and the client behaves as if this annotation is not even defined. Therefore, while rendering the list of allowed foreign key rows in recordedit, users will see the whole list.
-- `{ "ermrest_path_pattern":` _pathpattern_ `, "display_markdown_pattern":` _displaypattern_ `, "pattern_sources":` _columnlist_ `}`:  The added `pattern_sources` allows the client to proceed more meaningful errors to users.
+- `{ "ermrest_path_pattern":` _pathpattern_ `, "display_markdown_pattern":` _displaypattern_ `, "pattern_sources":` _columnlist_ `}`: The added `pattern_sources` allows the client to proceed more meaningful errors to users.
 
 Supported _columnlist_ patterns:
 
- - `[` ... _columndirective_ `,` ... `]`: The list of [columns directives](#column-directive) that are used in the `ermrest_path_pattern`. Make sure to use the same column directive as visible columns. For example if you've used column named `fk_col` in the pattern, but the foreign key that this column is part of visible, you should include the foreign key column here (and not the `fk_col` itself).
+- `[` ... _columndirective_ `,` ... `]`: The list of [columns directives](#column-directive) that are used in the `ermrest_path_pattern`. Make sure to use the same column directive as visible columns. For example if you've used column named `fk_col` in the pattern, but the foreign key that this column is part of visible, you should include the foreign key column here (and not the `fk_col` itself).
 
 Supported _filter_ syntax:
 
 - The _filter_ is a URL substring that can be applied to the referenced table.
-The defined _filter_ will be appended directly to the reference URI sent to ERMrest. Therefore,
+  The defined _filter_ will be appended directly to the reference URI sent to ERMrest. Therefore,
   - must be properly URL encoded (chaise WILL NOT apply additional URL encoding);
   - supports any ERMrest-supported [path filters](https://docs.derivacloud.org/ermrest/api-doc/data/naming.html#path-filters) (simple predicate filters, e.g., `col=value`) or [entity links](https://docs.derivacloud.org/ermrest/api-doc/data/naming.html#entity-links) (join with other tables) as long as the projected table stays the same.
 
@@ -511,28 +517,31 @@ The defined _filter_ will be appended directly to the reference URI sent to ERMr
       - use `M` alias for referring to the referenced table.
 
     - The following is a summary of supported path filters in ERMrest:
-        - Grouping: `(` _filter_ `)`
-        - Disjunction: _filter_ `;` _filter_
-        - Conjunction: _filter_ `&` _filter_
-        - Negation: `!` _filter_
-        - Unary predicates: _column_ `::null::`
-        - Binary predicates: _column_ _op_ _value_
-          - Equality: `=`
-          - Inequality: `::gt::`, `::lt::`, `::geq::`, `::leq::`
-          - Regular expressions: `::regexp::`, `::ciregexp::`
+      - Grouping: `(` _filter_ `)`
+      - Disjunction: _filter_ `;` _filter_
+      - Conjunction: _filter_ `&` _filter_
+      - Negation: `!` _filter_
+      - Unary predicates: _column_ `::null::`
+      - Binary predicates: _column_ _op_ _value_
+        - Equality: `=`
+        - Inequality: `::gt::`, `::lt::`, `::geq::`, `::leq::`
+        - Regular expressions: `::regexp::`, `::ciregexp::`
 
 - The leading and trailing slash that you might have defined
-in _filter_ value will be stripped off and ignored.
+  in _filter_ value will be stripped off and ignored.
 
 Set-naming heuristics (use first applicable rule):
 
 1. A set of "related entities" make foreign key reference to a presentation context:
-  - The _fname_ is a preferred name for the related entity set.
-  - The name of the table containing the related entities may be an appropriate name for the set, particularly if the table has no other relationship to the context.
-  - The name of the table can be composed with other contextual information, e.g. "Tablename having columnname = value".
+
+- The _fname_ is a preferred name for the related entity set.
+- The name of the table containing the related entities may be an appropriate name for the set, particularly if the table has no other relationship to the context.
+- The name of the table can be composed with other contextual information, e.g. "Tablename having columnname = value".
+
 2. To name a set of "related entities" linked to a presentation context by an association table:
-  - The _tname_ of the foreign key from association table to related entities is a preferred name for the related entity set.
-  - The name of the table containing the related entities may be an appropriate name for the set, particularly if the table has no other relationship to the context.
+
+- The _tname_ of the foreign key from association table to related entities is a preferred name for the related entity set.
+- The name of the table containing the related entities may be an appropriate name for the set, particularly if the table has no other relationship to the context.
 
 Foreign key sorting heuristics (use first applicable rule):
 
@@ -603,14 +612,14 @@ Supported JSON _option_ payload patterns:
 - `"hide_column_header":` `_boolean_`: Controls whether the column names headers and separators between column values are shown (only supported in `detailed` context).
 - `"page_markdown_pattern"`: _pagepattern_: Render the page by composing a markdown representation only when `page_markdown_pattern` is non-null.
   - Expand _pagepattern_ to obtain a markdown representation of whole page of dat via [Pattern Expansion](#pattern-expansion). In the pattern, you have access to a `$page` object that has the following properties:
-      - `rows`: An array of objects. Each object represents the row data and has the following properties:
-        - `values`: The raw and formatted values of each column (e.g., `{{{$page.rows.0.values.RID}}}` returns the value of `RID` column for the first row).
-        - `rowName`: Row-name of the represented row (e.g., `{{{$page.rows.1.rowName}}}` returns the row-name of the second row).
-        - `uri.detailed`: a uri to the row in `detailed` context (e.g., `{{{$page.rows.0.uri.detailed}}}` returns the link to the detailed page for the first row).
-      - `parent`: This variable is available when used for getting table content of related entities. Currently the `page_markdown_pattern` in `compact` context is used to provide a brief summary of table data. When used in this context, you can access the parent properties under `$page.parent`. The properties are:
-        - `values`: the parent data (e.g., `{{{$page.parent.values.RID}}}` returns the value of `RID` column of the main record).
-        - `table`: the parent table name (e.g., `{{{$page.parent.table}}}` returns the name of the main table).
-        - `schema`: the parent schema name (e.g., `{{{$page.parent.schema}}}` return the schema of the main table).
+    - `rows`: An array of objects. Each object represents the row data and has the following properties:
+      - `values`: The raw and formatted values of each column (e.g., `{{{$page.rows.0.values.RID}}}` returns the value of `RID` column for the first row).
+      - `rowName`: Row-name of the represented row (e.g., `{{{$page.rows.1.rowName}}}` returns the row-name of the second row).
+      - `uri.detailed`: a uri to the row in `detailed` context (e.g., `{{{$page.rows.0.uri.detailed}}}` returns the link to the detailed page for the first row).
+    - `parent`: This variable is available when used for getting table content of related entities. Currently the `page_markdown_pattern` in `compact` context is used to provide a brief summary of table data. When used in this context, you can access the parent properties under `$page.parent`. The properties are:
+      - `values`: the parent data (e.g., `{{{$page.parent.values.RID}}}` returns the value of `RID` column of the main record).
+      - `table`: the parent table name (e.g., `{{{$page.parent.table}}}` returns the name of the main table).
+      - `schema`: the parent schema name (e.g., `{{{$page.parent.schema}}}` return the schema of the main table).
 - `"row_markdown_pattern":` _rowpattern_: Render the row by composing a markdown representation only when `row_markdown_pattern` is non-null.
   - Expand _rowpattern_ to obtain a markdown representation of each row via [Pattern Expansion](#pattern-expansion).
   - The pattern has access to column values **after** any processing implied by [2016 Column Display](#tag-2016-column-display).
@@ -628,8 +637,8 @@ Supported JSON _option_ payload patterns:
   - If _pathsuffix_ is omitted, use the ERMrest `/entity/` API and a data path denoting the desired set of entities.
   - If _pathsuffix_ is specified, use the ERMrest `/attribute/` API and append _pathsuffix_ to a data path denoting the desired set of entities and which binds `S` as the table alias for this entire entity set.
     - The provided _pathsuffix_ MUST provide the appropriate projection-list to form a valid `/attribute/` API URI.
-	- The _pathsuffix_ MAY join additional tables to the path and MAY project from these tables as well as the table bound to the `S` table alias.
-	- The _pathsuffix_ SHOULD reset the path context to `$S` if it has joined other tables.
+  - The _pathsuffix_ MAY join additional tables to the path and MAY project from these tables as well as the table bound to the `S` table alias.
+  - The _pathsuffix_ SHOULD reset the path context to `$S` if it has joined other tables.
 - `"selector_ux_mode"`: The display mode for the recordedit input field when this table is part of a foreignkey relationship as the `outbound` table. Supported values are `"facet-search-popup"` and `"simple-search-dropdown"`, with `"facet-search-popup"` being the default. Currently only supported in `entry` contexts.
 - `"bulk_create_foreign_key_candidates"`: Use this property to control the bulk selection of foreign key values in `entry/create` context when there is a prefill query parameter. Supported value is an array of foreign key `names` in the format of `[['schema_name', 'foreign_key_name'], ...]`. This will override the `bulk_create_foreign_key` property defined in the display annotation. Currently only supported in `entry/create` context.
 
@@ -659,8 +668,8 @@ For presentation contexts which are not listed in the annotation, or when the an
 Supported _fkeylist_ patterns:
 
 - `[` ... _columndirective_ `,` ... `]`: Present content correspondign to each _columndirective_, in the order specified in the list.
-  -  Ignore _columndirective_ that do not correspond to a valid path from the table.
-  -  Do not present foreign keys that are not mentioned in the list. Please refer to [column directive](#column-directive) section for more information. The defined column directive MUST be in entity mode and have at least an `inbound` node in its relationship to the current table.
+  - Ignore _columndirective_ that do not correspond to a valid path from the table.
+  - Do not present foreign keys that are not mentioned in the list. Please refer to [column directive](#column-directive) section for more information. The defined column directive MUST be in entity mode and have at least an `inbound` node in its relationship to the current table.
   - A list without any valid _columndirective_ will be treated the same as empty array `[]`. Client will not display any related entities.
 - `[]`: Client will not display any related entities.
 
@@ -691,30 +700,35 @@ Supported JSON payload patterns:
 - `{` ... _context1_ `:` _context2_ ... `}`: Short-hand to allow _context1_ to use the same templates configured for _context2_.
 
 Supported _template_ patterns:
-- `{ "fragment_key": ` _fragment_key_  `}`: _fragment_key_ is the string literal that refers to the export fragments defined in the [`export fragment definitions` annotation](#tag-2021-export-fragment-definitions).
+
+- `{ "fragment_key": ` _fragment_key_ `}`: _fragment_key_ is the string literal that refers to the export fragments defined in the [`export fragment definitions` annotation](#tag-2021-export-fragment-definitions).
 - A JSON object with the following properties:
   - `{` ... `"displayname:"` _displayname_ ... `}`: The display name that will be used to populate the Chaise export drop-down for this _template_.
   - `{` ... `"type:"` _type_ ... `}` One of two keywords; _"FILE"_ or _"BAG"_, used to determine the container format for results.
   - `{`... `"outputs":` `[`_output_`]` ... `}`: An array of _output_ objects.
 
 Supported _displayname_ patterns:
+
 - A string literal that will be displayed in Chaise.
-- `{ "fragment_key": ` _fragment_key_  `}`: _fragment_key_ is the string literal that refers to the export fragments defined in the [`export fragment definitions` annotation](#tag-2021-export-fragment-definitions).
+- `{ "fragment_key": ` _fragment_key_ `}`: _fragment_key_ is the string literal that refers to the export fragments defined in the [`export fragment definitions` annotation](#tag-2021-export-fragment-definitions).
 
 Supported _output_ patterns:
-- `{ "fragment_key": ` _fragment_key_  `}`: _fragment_key_ is the string literal that refers to the export fragments defined in the [`export fragment definitions` annotation](#tag-2021-export-fragment-definitions).
+
+- `{ "fragment_key": ` _fragment_key_ `}`: _fragment_key_ is the string literal that refers to the export fragments defined in the [`export fragment definitions` annotation](#tag-2021-export-fragment-definitions).
 - A JSON object with the following properties:
   - `{`... `"source:"` _sourceentry_ ... `}`: An object that contains parameters used to generate source data by querying ERMrest.
-  - `{`... `"destination":` _destinationentry_  ... `}`: An object that contains parameters used to render the results of the source query into a specified destination format.
+  - `{`... `"destination":` _destinationentry_ ... `}`: An object that contains parameters used to render the results of the source query into a specified destination format.
 
 Supported _sourceentry_ patterns:
+
 - `{` ... `"api:"` _api_ ... `}`: The type of ERMrest query projection to perform. Valid values are _entity_, _attribute_, and _attributegroup_.
 - `{` ... `"path":` _path_ ... `}`: An optional ERMrest path predicate. The string MUST be escaped according to [RFC 3986](https://tools.ietf.org/html/rfc3986) if it contains user-generated identifiers that use the reserved character set. See the [ERMRest URL conventions](https://github.com/informatics-isi-edu/ermrest/blob/master/docs/api-doc/index.md#url-conventions) for additional information.
 
 Supported _destinationentry_ patterns:
+
 - `{` ... `"name":` _name_ ... `}`: The base name to use for the output file.
 - `{` ... `"type":` _type_ ... `}`: A type keyword that determines the output format. Supported values are dependent on the `template`.`type` selected. For the `FILE` type, the values `csv`, `json`, are currently supported. For the `BAG` type, the values `csv`, `json`, `fetch` and `download` are currently supported.
-- `{` ... `"params":` _params_ ... `}`: An optional object containing destination format-specific parameters.  Some destination formats (particularly those that require some kind of post-processing or data transformation), may require additional parameters  to be specified.
+- `{` ... `"params":` _params_ ... `}`: An optional object containing destination format-specific parameters. Some destination formats (particularly those that require some kind of post-processing or data transformation), may require additional parameters to be specified.
 
 #### Export Annotation Hierarchy
 
@@ -739,6 +753,7 @@ Supported JSON payload patterns:
 - `{`... `"url_pattern": ` _pattern_ ...`}`: A desired upload location can be derived by [Pattern Expansion](#pattern-expansion) on _pattern_. This attribute is required for browser upload and if it is not specified the client will not provide the browser upload feature. See implementation notes below.
 - `{`... `"wait_for":` _waitForList_ ... `}`: List of column directive [`sourcekey`](#tag-2019-source-definitions)s that are used in `url_pattern`. Currently only paths that start with an outbound foreign-key are supported.
 - `{`... `"browser_upload": ` `false` ... `}`: If `url_pattern` is available and valid browser upload feature will be enabled. If you want to force disabling this feature set it to `false`.
+- `{`... `"allow_empty_file": ` `true` ... `}`: By default, selecting an empty (0-byte) file for upload is rejected. Set this to `true` to allow empty file uploads for this asset column.
 - `{`... `"filename_column": ` _column_ ...`}`: The _column_ stores the filename of the asset.
 - `{`... `"byte_count_column": ` _column_ ...`}`: The _column_ stores the file size in bytes of the asset. It SHOULD be an integer typed column.
 - `{`... `"md5": ` _column_ | `true` ...`}`: If _column_, then the _column_ stores the checksum generated by the 'md5' cryptographic hash function. It MUST be ASCII/UTF-8 hexadecimal encoded. If `true`, then the client SHOULD generate a 'md5' checksum and communicate it to the asset storage service according to its protocol.
@@ -766,6 +781,7 @@ Supported display _displayoption_ JSON payload patterns:
     - `false` to disable the preview for that given content-type.
 
     For instance:
+
     ```json
     {
       "content_type_mapping": {
@@ -775,6 +791,7 @@ Supported display _displayoption_ JSON payload patterns:
       }
     }
     ```
+
   - `{` ... `"filename_ext_mapping": ` _fileextmapping_ ... `}`: Map other filename extensions to the supported preview types. _fileextmapping_ must be an object with the file extension as key and the desired preview type (`"text"`, `"json"`, `"markdown"`, `"image"`, `"csv"`, `"tsv"`) or `false` as its value. By using `false`, file preview will not be presented for that partictular file.
     ```json
     {
@@ -795,6 +812,7 @@ Supported display _displayoption_ JSON payload patterns:
   - `{` ... `"prefetch_bytes": ` _prefetchbytes_ ... `}`: how many bytes we should fetch for servers that support range requests. _prefetchbytes_ follows the same syntax as _prefetchmaxsize_. By default 524288 or 512 KB will be used.
 
 Default heuristics:
+
 - The `2017 Asset` annotation explicitly indicates that the associated column is the asset location.
 - `url_pattern` MUST be specified for browser upload. If it is not specified or if it produces a null value, the browser upload will be disabled.
 - Column MUST be `text` typed. Otherwise the asset annotation will be ignored.
@@ -813,11 +831,13 @@ Default heuristics:
 - Nothing may be inferred without additional payload patterns present.
 
 Protocol-specific metadata retrieval MAY be applied once an asset location is known. How to present or reconcile contradictions in metadata found in multiple sources is beyond the scope of this specification.
+
 - Some applications may treat ERMrest data as prefetched or cached metadata.
 - Some applications may treat ERMrest data as authoritative metadata registries.
 - Some location schemes may define authoritative metadata resolution procedures.
 
 At present, the Chaise implementation of the asset annotation has the following limitations:
+
 1. 'generated' column(s) participating in the `url_pattern` are only supported in the `entry/edit` context and _not_ in the `entry/create` context. This is because the `generated` column values are usually generated by the server during the record creation and will not be available to Chaise while the users are supplying information. If you wish to use 'generated' column(s) in the `url_pattern`, you will need to use the [2016 Visible Columns](#tag-2016-visible-columns) annotation and leave the asset column out of the list of visible columns for its `entry/create` context.
 2. `sha256` is not presently supported.
 3. If `url_pattern` is not available or `browser_upload` is `false` Chaise will show a disabled form field for the asset column. It will still provide the download button in read-only contexts.
@@ -843,13 +863,15 @@ Supported _waitForList_ pattern:
 - `[` ... _sourcekey_ `,` ... `]`: _sourcekey_ is the string literal that refers to the sources defined in the [`source-definitions` annotation](#tag-2019-source-definitions) of the table.
 
 Default heuristics:
--  Apart from the main table data, all-outbound foreignkeys, and listed psuedo-columns in the `wait_for`, the pattern has access to a `$self` object that has the following attributes:
-  - `rowName`: Row-name of the represented row.
-  - `uri.detailed`: a uri to the row in `detailed` context.
+
+- Apart from the main table data, all-outbound foreignkeys, and listed psuedo-columns in the `wait_for`, the pattern has access to a `$self` object that has the following attributes:
+- `rowName`: Row-name of the represented row.
+- `uri.detailed`: a uri to the row in `detailed` context.
 - `journal_pattern`, `year_pattern`, and `url_pattern` MUST be specified for citation. If any of the 3 are not specified or if one of them produces a null value, citation will be disabled.
 - If any of the other values are not present or produce a null value, it is up to the client to decide how to display the citation.
 
 At present, the Chaise implementation of the citation annotation has the following limitations:
+
 1. If `journal_pattern`, `year_pattern`, or `url_pattern` is not available, Chaise will not show a Citation list option in the Share dialog.
 2. Chaise will try to show the 3 non-required fields if they are present and their templates don't produce a null value.
 
@@ -867,14 +889,17 @@ the system. This key is allowed on any number of columns or foreign keys. There 
 This key indicates that the annotated table or column should follow a different indexing strategy. At the time of writing, this is the only annotation recognized by ERMrest which affects service behavior (all others are opaque key-value storage only affecting clients).
 
 Meaning on different model elements:
+
 - On tables: requests a table-wide indexing strategy
 - On columns: requests a column-specific indexing strategy (may override table-wide preferences)
 
 Supported JSON payload patterns:
+
 - `{`... `"btree"`: _preference_ ...`}`: Specifies a preference for PostgreSQL `btree` indexing.
 - `{`... `"trgm"`: _preference_ ...`}`: Specifies a preference for PostgreSQL `pg_trgm` (text tri-gram) indexing.
 
 Supported _preference_ patterns:
+
 - `true`: An index is desired.
 - `false`: An index is not desired.
 - `null` (or field absent): The default is desired (currently all indexing is enabled by default).
@@ -891,14 +916,16 @@ This key indicates that the annotated catalog has a specific [chaise configurati
 
 Supported JSON payload patterns:
 The json object follows the same rules as [chaise-config.js](https://github.com/informatics-isi-edu/chaise/blob/master/chaise-config-sample.js). All properties can be defined at the root of the annotation, i.e:
-  - `{`... `"<chaise-config-property>"`: _value_ ...`}`
+
+- `{`... `"<chaise-config-property>"`: _value_ ...`}`
 
 The `chaise-config` property `configRules`, behaves the same way on the annotation that it does with the server wide config (`chaise-config.js`). The `configRules` will be checked for a match and apply and use those `chaise-config` properties over any other values defined for that same property. The order that the properties will be checked and then applied are as follows:
-  1. Default values defined in [chaise configuration document](https://github.com/informatics-isi-edu/chaise/blob/master/docs/user-docs/chaise-config.md).
-  2. Any properties defined at the root of the object returned from [chaise-config.js](https://github.com/informatics-isi-edu/chaise/blob/master/chaise-config-sample.js).
-  3. Any matching `configRules` in the order they appear in the `configRules` array. Properties in the last matching rule will take precedence
-  4. Any properties defined at the root of the object returned from this annotation.
-  5. Step 3 from above, but with the `configRules` from this annotation.
+
+1. Default values defined in [chaise configuration document](https://github.com/informatics-isi-edu/chaise/blob/master/docs/user-docs/chaise-config.md).
+2. Any properties defined at the root of the object returned from [chaise-config.js](https://github.com/informatics-isi-edu/chaise/blob/master/chaise-config-sample.js).
+3. Any matching `configRules` in the order they appear in the `configRules` array. Properties in the last matching rule will take precedence
+4. Any properties defined at the root of the object returned from this annotation.
+5. Step 3 from above, but with the `configRules` from this annotation.
 
 This means that as the `configRules` are checked, properties set in step 1 will be overridden by properties defined in step 2 that have the same name. This allows the server wide configuration to be a base configuration for the chaise apps and allows for further configuration based on a combination of hostname and catalog id.
 
@@ -916,7 +943,6 @@ Using this key you can,
 - Define `conditions` that can be referenced by column directives via `condition_key`. See [condition and condition_key](column-directive.md#condition) for more information.
 - Modify the behavior of main search box in recordset page.
 
-
 > ⚠️ **REQUIRED ATTRIBUTES**
 >
 > When defining this annotation, you **MUST** always include both `columns` and `fkeys` attributes, even if you are only adding this annotation to define `sources` or `conditions`.
@@ -924,7 +950,6 @@ Using this key you can,
 > If you don't need to customize which columns/fkeys are available, simply set them to `true`: `"columns": true, "fkeys": true`
 >
 > If you do not provide values for `columns` and `fkeys`, Chaise will **NOT** provide data for any columns or outbound foreign keys in templating environments.
-
 
 Example:
 
@@ -978,15 +1003,14 @@ Supported JSON payload patterns:
 - `{` ... `"sources":` _sourcedefinitions_ `,` ... `}`: the source definitions that will allow you to refer to them by just using the defined _sourcekey_.
 - `{` ... `"conditions":` _conditiondefinitions_ `,` ... `}`: reusable condition definitions that can be referenced by column directives via `condition_key`. See [condition and condition_key](column-directive.md#condition) for more information.
 - `{` ... `"search-box": { "or": [` _searchcolumn_ `,` ... `]} }`: Configure list of search columns.
-- `{` ... `"fkeys":` _fkeylist_  `,` ... `}`: Array of foreign key constraints that will be mapped into `$fkey_schema_contraint` key in templating environments.
-- `{` ... `"columns":` _columns_  `,` ... `}`: Array of column names that their data will be available in templating environments.
-
+- `{` ... `"fkeys":` _fkeylist_ `,` ... `}`: Array of foreign key constraints that will be mapped into `$fkey_schema_constraint` key in templating environments.
+- `{` ... `"columns":` _columns_ `,` ... `}`: Array of column names that their data will be available in templating environments.
 
 Supported _conditiondefinitions_ patterns:
 
 - `{` ... `"` _conditionkey_ `":` _conditionobject_ ... `}`: where _conditionkey_ is a name that will be used to refer to the defined condition. Each _conditionobject_ must define one of:
-    - `source` or `sourcekey` (the **with-source** form): visibility is driven by data from a separate fetch (only honored in `detailed` context).
-    - `condition_pattern` alone (no `source`/`sourcekey`/`wait_for`) (the **no-source** form): visibility is driven by a pure template evaluated against the catalog's [template environment](handlebars.md#using-pre-defined-attributes), useful for ACL-driven visibility via [`isUserInAcl`](handlebars.md#access-control-acl-check) (honored in every context).
+  - `source` or `sourcekey` (the **with-source** form): visibility is driven by data from a separate fetch (only honored in `detailed` context).
+  - `condition_pattern` alone (no `source`/`sourcekey`/`wait_for`) (the **no-source** form): visibility is driven by a pure template evaluated against the catalog's [template environment](handlebars.md#using-pre-defined-attributes), useful for ACL-driven visibility via [`isUserInAcl`](handlebars.md#access-control-acl-check) (honored in every context).
 
   See the [condition documentation](column-directive.md#condition) for the full list of properties and a no-source example.
 
@@ -995,55 +1019,57 @@ Supported _sourcedefinitions_ patterns:
 - `{` ... `"` _sourcekey_ `":` _column_directive_ ... `}`: where _sourcekey_ is a name that will be used to refer to the defined _column_directive_. Please refer to the [Column Directive](#column-directive) section for more information (You can use any of the column-directive optional parameters that the syntax allows (e.g., `aggregate`, `entity`, `display`, `markdown_name`).
 
 Supported _sourcekey_ pattern:
- - A string literal that,
-    - Cannot start with `$`.
-    - Should not be any of the table's column names.
-    - `search-box` is a reserved _sourcekey_ and cannot be used.
+
+- A string literal that,
+  - Cannot start with `$`.
+  - Should not be any of the table's column names.
+  - `search-box` is a reserved _sourcekey_ and cannot be used.
 
 Supported _searchcolumn_ pattern:
-  -  _searchcolumn_ supports the same patterns as _sourceentry_. Since the column directive defined here is special, you can only use the following optional parameters:
-      - `markdown_name`: The client will show the displayname of columns as placeholder in the search box. To modify this default behavior, you can use this attribute.
 
-      While processing the list of given column directives, any invalid definition (invalid column names or paths), will be ignored. If none of the columns are valid, the client will fall back to the default search (searching all the local columns). Also, because of performance limitations, only the following combination of search columns are supported:
+- _searchcolumn_ supports the same patterns as _sourceentry_. Since the column directive defined here is special, you can only use the following optional parameters:
+  - `markdown_name`: The client will show the displayname of columns as placeholder in the search box. To modify this default behavior, you can use this attribute.
 
-      - A list containing only one column directive.
-        ```javascript
-          {
-            "or": [
-              {"source": <any valid path>}
-            ]
-          }
-          ```
-      - A list of local columns.
-        ```javascript
-        {
-          "or": [
-            {"source": "col1"}, {"source": "col2"}
-          ]
-        }
-        ```
-      - A list of column directives that use the same _sourcekey prefix_.
-        ```javascript
-        {
-          "or": [
-            {"source": [{"sourcekey": "some_defined_path"}, "col1"]},
-            {"source": [{"sourcekey": "some_defined_path"}, "col2"]}
-          ]
-        }
-        ```
-      - A list of column directives that we can safely use inner join for each one of them. This includes,
-        - Local columns
-        - All outbound paths that all the columns used in the foreign key relationships cannot be `null`. This means that the columns are `"nullok": false` per model and the user has static `select` access to the column.
-        ```javascript
-        {
-          "or": [
-            {"source": "col1"},
-            {"source": [{"outbound": ["schema", "const1"]}, "RID"]},
-            {"source": [{"outbound": ["schema", "const2"]}, {"outbound": ["schema", "const2"]}, "id"]},
-          ]
-        }
-        ```
-        > If `search-box` consists of multiple column directives that are not local or using the same _sourcekey prefix_, we will ignore the ones that are not inner join safe. And if none of the columns are inner join safe, the client will fall back to the default search (searching all the local columns).
+  While processing the list of given column directives, any invalid definition (invalid column names or paths), will be ignored. If none of the columns are valid, the client will fall back to the default search (searching all the local columns). Also, because of performance limitations, only the following combination of search columns are supported:
+
+  - A list containing only one column directive.
+    ```javascript
+      {
+        "or": [
+          {"source": <any valid path>}
+        ]
+      }
+    ```
+  - A list of local columns.
+    ```javascript
+    {
+      "or": [
+        {"source": "col1"}, {"source": "col2"}
+      ]
+    }
+    ```
+  - A list of column directives that use the same _sourcekey prefix_.
+    ```javascript
+    {
+      "or": [
+        {"source": [{"sourcekey": "some_defined_path"}, "col1"]},
+        {"source": [{"sourcekey": "some_defined_path"}, "col2"]}
+      ]
+    }
+    ```
+  - A list of column directives that we can safely use inner join for each one of them. This includes,
+    - Local columns
+    - All outbound paths that all the columns used in the foreign key relationships cannot be `null`. This means that the columns are `"nullok": false` per model and the user has static `select` access to the column.
+    ```javascript
+    {
+      "or": [
+        {"source": "col1"},
+        {"source": [{"outbound": ["schema", "const1"]}, "RID"]},
+        {"source": [{"outbound": ["schema", "const2"]}, {"outbound": ["schema", "const2"]}, "id"]},
+      ]
+    }
+    ```
+    > If `search-box` consists of multiple column directives that are not local or using the same _sourcekey prefix_, we will ignore the ones that are not inner join safe. And if none of the columns are inner join safe, the client will fall back to the default search (searching all the local columns).
 
 Supported _fkeylist_ patterns:
 
@@ -1058,33 +1084,31 @@ Supported _columns_ patterns:
 - _Any other values_ : In this case chaise will not provide any foreign key data in templating environments.
 
 ### Tag: 2021 Google Dataset
+
 `tag:isrd.isi.edu,2021:google-dataset`
 
 This key indicates the metadata that will be converted to valid and well-formed JSON-LD referencing a table. In terms of SEO, JSON-LD is implemented leveraging the Schema.org vocabulary, which is a unified structured data vocabulary for the web. [Google Dataset Search](https://datasetsearch.research.google.com/) discovers datasets when a valid JSON-LD of type [Dataset](https://www.schema.org/Dataset) is added to the HTML page.
-
 
 Supported JSON payload pattern:
 
 - `{` ... _context_ `:` `"dataset":` _jsonld_ ... `}` : Configure JSON-LD to be used for this context.
 - `{` ... _context1_ `:` _context2_ ... `}`: Short-hand to allow _context1_ to use the same configuration that is used for _context2_.
 
-
 Supported _jsonld_ payload pattern:
 
-
 - JSON-LD keywords:
-    - `@context`: It is a schema for your data, not only defining the property datatypes but also the classes of json resources. Default applied if none exists is `http://schema.org`.
-    - `@type`: Used to set the data type of a node or typed value. At the top level, only a value of `Dataset` is supported. Default applied if none exists is `Dataset`.
+  - `@context`: It is a schema for your data, not only defining the property datatypes but also the classes of json resources. Default applied if none exists is `http://schema.org`.
+  - `@type`: Used to set the data type of a node or typed value. At the top level, only a value of `Dataset` is supported. Default applied if none exists is `Dataset`.
 - Schema.org volabulary: The supported attributes and types are [here](https://github.com/informatics-isi-edu/ermrestjs/blob/master/js/utils/json_ld_schema.js). This is a subset of the original vocabulary provided by schema.org. All the properties support [pattern expansion](#pattern-expansion) and the `template_engine` property should be defined outside the `dataset` definition. Apart from the main table data and all-outbound foreignkeys the pattern has access to a `$self` object that has the following attributes:
   - `rowName`: Row-name of the represented row.
   - `uri.detailed`: a uri to the row in `detailed` context.
 
-
 After generating the JSON-LD based on the given specifications, the client will validate it. If the generated JSON-LD has any of the following issues, the given JSON-LD will be completely invalidated and ignored:
- - Incorrect value of `@context` (Must refer to `schema.org`.)
- - Incorrect value of `@type` (Must be `Dataset`.)
- - Missing or empty value of mandatory attribute `name`
- - Missing or empty value of mandatory attribute `description`
+
+- Incorrect value of `@context` (Must refer to `schema.org`.)
+- Incorrect value of `@type` (Must be `Dataset`.)
+- Missing or empty value of mandatory attribute `name`
+- Missing or empty value of mandatory attribute `description`
 
 In all remaining scenarios, the problematic attribute (attributes that don't follow the expected structure or type) will simply be ignored and the reason for that will be logged in the browser console.
 
@@ -1117,26 +1141,29 @@ The following is an example of this annotation. You can also find more informati
   }
 }
 ```
+
 ### Tag: 2021 Table Config
+
 `tag:isrd.isi.edu,2021:table-config`
 
 This key indicates that the annotated table has a specific configuration options that modify the behavior of the table when accessing the APIs.
 
 Supported JSON payload patterns:
-- `{`... `"user_favorites":` `{` _favoritesentry_ `}`:  Defines the user favorites configuration based on  _favoritesentry_. Attributes that this JSON document can have are:
+
+- `{`... `"user_favorites":` `{` _favoritesentry_ `}`: Defines the user favorites configuration based on _favoritesentry_. Attributes that this JSON document can have are:
   - `"storage_table":` `{` _storageconfig_ `}`: An object containing the names of model elements for creating the ermrest path for creation and deletion. Teh _storageconfig_ has the following properties.
     - `catalog`: Required. String value of the catalog id
     - `schema`: Required. String value of the schema name
     - `table`: Required. String value of the table name
 - `{`... `"stable_key_columns":` `[` _column name_ `,` ... `]` ... `}`: Define a list of not-null columns that should be used as "stable key".
 - `{`... `"stable_key":` `[` _schema name_ `,` _constraint name_ `]` ... `}`: An alternative syntax to `"stable_key_columns"` that allows you to refer to an existing key instead of defining your own list of columns.
-- `{`... `"aggressive_facet_lookup":` _boolean_ ... `}`:  Whether we should lookup the facets in the URL or not. By default this feature is turned off. This flag is currently EXPERIMENTAL and used to enable [the fast filter feature in facets](facet.md#fast-filter-source).
+- `{`... `"aggressive_facet_lookup":` _boolean_ ... `}`: Whether we should lookup the facets in the URL or not. By default this feature is turned off. This flag is currently EXPERIMENTAL and used to enable [the fast filter feature in facets](facet.md#fast-filter-source).
 
 Note:
+
 - If both `stable_key_columns` and `stable_key` are defined, `stable_key_columns` will be used.
 - Current implementation of `stable_key_columns` (and `stable_key`) DOES NOT allow composite keys, and only single column is allowed.
 - "Stable key" is used to provide a more stable and presistent value for entity facets and used in combination of "save query" feature. In some cases the model might change and the facet definitions are optimized to be performant and not stable/persistence. In these circumstances you can define a "stable key" for the table and Chaise will store value of stable key instead.
-
 
 ### Tag: 2021 Export Fragment Definitions
 
@@ -1145,6 +1172,7 @@ Note:
 By using this key you can define an object that can be referred to while writing [export annotation](#tag-2019-export). The value of this key MUST be an object, otherwise it will be ignored. Please refer to [Export annotation document](export.md) for more details.
 
 Note:
+
 - In the first level object, you cannot define any keys that start with `$`. This is done to preserve the namespace for default values that ERMrestJS is adding. For example if you define
   ```js
   "tag:isrd.isi.edu,2021:export-fragment-definitions": {
@@ -1165,11 +1193,12 @@ Note:
 This key allows defining column-level annotations on catalog, schema, or tables.
 
 Supported JSON payload patterns:
+
 - `{`... `"by_name":` `{` _by_name_definition_ `,` ... `}`: Define annotations for columns with specific names.
 - `{`... `"by_type":` `{` _by_type_definition_ `,` ... `}`: Define annotations for columns with specific names.
 - `{`... `"asset":` `{` _asset_definition_ `,` ... `}`: Define annotations for specific asset columns.
 
-Where _by_name_definition_  is a JSON payload with the following pattern:
+Where _by_name_definition_ is a JSON payload with the following pattern:
 
 - `{` ... _column_name_ `:` _annot_payload_ `,` ... `}`: Define annotations (_annot_payload_) for columns with _column_name_ name.
 
@@ -1248,6 +1277,7 @@ For example,
 ```
 
 Notes:
+
 - `by_type` should match exactly with the `typename` of the column. So, for example, for array columns, we would have to use `"timestamp[]"`.
 - While determining annotations for a column, the more specific one will be used. Annotations defined on the column have the highest priority. Then `asset` is used if the column has asset annotation or is used as a metadata for another asset column. Then by the `by_name` annotations on table, schema, and catalog will be used. And after that, we will look at `by_type` annotations on the table, schema, and catalog.
 - To implement this feature, we start by creating an empty JSON payload. On each step, we will add the annotations to the object (and if the annotation key is already defined on the object, it will be merged by the new value). To be more precise, the following is how the `annotations` JSON payload for a column is created and used:
@@ -1260,6 +1290,7 @@ Notes:
   6. Any annotation defined directly on the column will override the annotations of the previous steps.
 
   For instance, if you have the following column-defaults on the schema
+
   ```json
   {
     "tag:isrd.isi.edu,2023:column-defaults": {
@@ -1275,11 +1306,13 @@ Notes:
           },
           "tag:isrd.isi.edu,2016:immutable": null
         }
-      },
+      }
     }
   }
   ```
+
   And the following annotation on the column named `my_column`:
+
   ```json
   {
     "tag:isrd.isi.edu,2016:column-display": {
@@ -1289,10 +1322,12 @@ Notes:
       "detailed": {
         "markdown_pattern": "customized detailed: ${{{$_self}}}"
       }
-    },
+    }
   }
   ```
+
   The following annotations will be applied to the column:
+
   ```json
   {
     "tag:isrd.isi.edu,2016:column-display": {
@@ -1309,7 +1344,6 @@ Notes:
     "tag:isrd.isi.edu,2016:immutable": null
   }
   ```
-
 
 ## Context Names
 
@@ -1348,17 +1382,17 @@ If more than one _context_ name in the annotation payload matches, the _options_
 
 The following matrix illustrates which context is meaningful in which annotation.
 
-| Annotation                                                  | compact | compact/brief | compact/brief/inline | compact/select | detailed | entry | entry/edit | entry/create | export | filter | row_name | * |
-|-------------------------------------------------------------|---------|---------------|----------------------|----------------|----------|-------|------------|--------------|--------|--------|----------|---|
-| [2015 Display](#tag-2015-display)                           | X       | X             | X                    | X              | X        | -     | -          | -            | -      | -      | -        | X |
-| [2016 Visible Columns](#tag-2016-visible-columns)           | X       | X             | X                    | X              | X        | X     | X          | X            | X      | X      | -        | X |
-| [2017 Key Display](#tag-2017-key-display)                   | X       | X             | X                    | X              | X        | -     | -          | -            |        | -      | -        | X |
-| [2016 Column Display](#tag-2016-column-display)             | X       | X             | X                    | X              | X        | X     | X          | X            | -      | -      | -        | X |
-| [2016 Table Display](#tag-2016-table-display)               | X       | X             | X                    | X              | X        | -     | -          | -            | -      | -      | X        | X |
-| [2016 Visible Foreign Keys](#tag-2016-visible-foreign-keys) | -       | -             | -                    | -              | X        | -     | -          | -            | -      | -      | -        | X |
-| [2016 Table Alternatives](#tag-2016-table-alternatives)     | X       | X             | X                    | X              | X        | X     | X          | X            | -      | -      | -        | X |
-| [2019 Export](#tag-2019-export)                             | X       | -             | -                    | -              | X        | -     | -          | -            | -      | -      | -        | - |
-| [2021 Google Dataset](#tag-2021-google-dataset)                             | -       | -             | -                    | -              | X        | -     | -          | -            | -      | -      | -        | - |
+| Annotation                                                  | compact | compact/brief | compact/brief/inline | compact/select | detailed | entry | entry/edit | entry/create | export | filter | row_name | \*  |
+| ----------------------------------------------------------- | ------- | ------------- | -------------------- | -------------- | -------- | ----- | ---------- | ------------ | ------ | ------ | -------- | --- |
+| [2015 Display](#tag-2015-display)                           | X       | X             | X                    | X              | X        | -     | -          | -            | -      | -      | -        | X   |
+| [2016 Visible Columns](#tag-2016-visible-columns)           | X       | X             | X                    | X              | X        | X     | X          | X            | X      | X      | -        | X   |
+| [2017 Key Display](#tag-2017-key-display)                   | X       | X             | X                    | X              | X        | -     | -          | -            |        | -      | -        | X   |
+| [2016 Column Display](#tag-2016-column-display)             | X       | X             | X                    | X              | X        | X     | X          | X            | -      | -      | -        | X   |
+| [2016 Table Display](#tag-2016-table-display)               | X       | X             | X                    | X              | X        | -     | -          | -            | -      | -      | X        | X   |
+| [2016 Visible Foreign Keys](#tag-2016-visible-foreign-keys) | -       | -             | -                    | -              | X        | -     | -          | -            | -      | -      | -        | X   |
+| [2016 Table Alternatives](#tag-2016-table-alternatives)     | X       | X             | X                    | X              | X        | X     | X          | X            | -      | -      | -        | X   |
+| [2019 Export](#tag-2019-export)                             | X       | -             | -                    | -              | X        | -     | -          | -            | -      | -      | -        | -   |
+| [2021 Google Dataset](#tag-2021-google-dataset)             | -       | -             | -                    | -              | X        | -     | -          | -            | -      | -      | -        | -   |
 
 ## Pattern Expansion
 
@@ -1383,7 +1417,6 @@ A web user agent that consumes this annotation and the related table data would 
 </p>
 ```
 
-
 ## Column Directive
 
 Column directive allows instruction of a data source and modification of its presentation. Column directives are defined relative to the table that they are part of. They can be used in [`visible-columns`](#tag-2016-visible-columns) or [`visible-foreign-keys`](#tag-2016-visible-foreign-keys) annotations, or defined as part of [`source-definitions`](#tag-2019-source-definitions) annotation.
@@ -1398,7 +1431,7 @@ As it was described, column directives are meant to instruct the data source and
 
 1. **Column directive with `source`**: In this category, you use the `source` property to define the data source of the column directive in place. Other source related properties (i.e. `entity`, `aggregate`) can be used in combination with `source` to change the nature of the column directive.
 2. **Column directive with `sourcekey`**: In this category, the `sourcekey` proprety is used to refer to one of the defines sources in the [`source-definitions` annotations](annotation.md#tag-2019-source-definitions).
-3. **Column directive without any source** (_Applicaple only to read-only non-filter context of `visible-columns` annotation_): If you want to have a column directive that its value is made up of multiple column directives, you don't need to define any `source` or `sourcekey`. The only required attributes for these types of columns (we call them virtual columns) are `markdown_name` that is used for generating the display name, and `markdown_pattern` under `display` to get the value.
+3. **Column directive without any source** (_Applicable only to read-only non-filter context of `visible-columns` annotation_): If you want to have a column directive that its value is made up of multiple column directives, you don't need to define any `source` or `sourcekey`. The only required attributes for these types of columns (we call them virtual columns) are `markdown_name` that is used for generating the display name, and `markdown_pattern` under `display` to get the value.
 
 While the general syntax of column directives is defining a JSON object, depending on where the column directive is used, you can use the simpler syntax which heavily relies on heuristics. The following are other acceptable ways of defining column directives:
 
@@ -1464,6 +1497,7 @@ While the general syntax of column directives is defining a JSON object, dependi
   ```
 
 ### Properties
+
 #### 1. Data source properties
 
 These sets of properties change the nature of the column directive, as they will affect the communication with server. To detect duplicate column-directives we only look for these properties.
@@ -1471,10 +1505,10 @@ These sets of properties change the nature of the column directive, as they will
 - `source`: The source path. It can either be a column or a foreign key path to a column in another table. You can find more information in [the column directive document](column-directive.md#source).
 - `sourcekey`: Allows referring to any of the defined `sources` in the [`source-definitions`](#tag-2019-source-definitions) annotation.
 - `entity`: If the source column is key of the table, setting this attribute to `false` will force the scalar mode. Otherwise the column directive will be in entity mode.
-- `aggregate`: The aggregate function that should be used for getting an aggregated result. Applicaple only to read-only non-filter context of `visible-columns` annotation. The available aggregate functions are `min`, `max`, `cnt`, `cnt_d`, `array`, and `array_d`.
-    - `array` will return ALL the values including duplicates associated with the specified columns. For data types that are sortable (e.g integer, text), the values will be sorted alphabetically or numerically. Otherwise, it displays values in the order that it receives from ERMrest. There is no paging mechanism to limit what's shown in the aggregate column, therefore please USE WITH CARE as it can incur performance overhead and ugly presentation.
-    - `array_d` will return distinct values. It has the same performance overhead as `array`, so pleas USE WITH CARE.
-    - Using `array` or `array_d` aggregate in entity mode will provide an array of row-names instead of just the value of the column. Row-names will be derived from the `row_name/compact` context.
+- `aggregate`: The aggregate function that should be used for getting an aggregated result. Applicable only to read-only non-filter context of `visible-columns` annotation. The available aggregate functions are `min`, `max`, `cnt`, `cnt_d`, `array`, and `array_d`.
+  - `array` will return ALL the values including duplicates associated with the specified columns. For data types that are sortable (e.g integer, text), the values will be sorted alphabetically or numerically. Otherwise, it displays values in the order that it receives from ERMrest. There is no paging mechanism to limit what's shown in the aggregate column, therefore please USE WITH CARE as it can incur performance overhead and ugly presentation.
+  - `array_d` will return distinct values. It has the same performance overhead as `array`, so please USE WITH CARE.
+  - Using `array` or `array_d` aggregate in entity mode will provide an array of row-names instead of just the value of the column. Row-names will be derived from the `row_name/compact` context.
 
 #### 2. Presentation properties
 
@@ -1486,26 +1520,26 @@ The following attributes can be used to manipulate the presentation settings of 
 - `comment_display`: The display mode for the tooltip. Set to `inline` to show it as text or `tooltip` to show as a hover tooltip.
   - Currently `comment_display` is only supported for related tables in `detailed` context and `visible-columns` in `entry` context.
 - `hide_column_header`: Hide the column header (and still show the value). This is only supported in `detailed` context of `visible-columns` annotation.
-- `self-link`: If you want to show a self-link to the current row, you need to make sure the source is based on a not-null unique column of the current table and add the `"self_link": true` to the definition. Applicaple only to read-only non-filter context of `visible-columns` annotation.
+- `self-link`: If you want to show a self-link to the current row, you need to make sure the source is based on a not-null unique column of the current table and add the `"self_link": true` to the definition. Applicable only to read-only non-filter context of `visible-columns` annotation.
 - `display`: A JSON object that describes the display settings for generating the value for this column. Please refer to [column-directive display document](column-directive-display.md) for more information. This object can have the following properties:
   - `markdown_pattern`: The markdown pattern that will be used for generating the value.
     - In case of related tables, the given markdown pattern will be used for the "custom display" mode. If this is missing, we're going to provided `row_markdown_pattern` in the `table-display` annotation for the custom display. And if it's missing from that annotation as well, Chaise will not provide any custom display.
   - `template_engine`: The template enginge that should be used for the `markdown_pattern`.
   - `wait_for`: List of column directive [`sourcekey`](#tag-2019-source-definitions)s that used in `markdown_pattern`. You should list all the all-outbound, aggregates, and entity sets that you want to use in your `markdown_pattern`. Entity sets (column directives with `inbound` path and no `aggregate` attribute) are only acceptable in `detailed` context.
-  - `show_foreign_key_link`: Applicaple only to read-only non-filter context of `visible-columns` annotation. If the given data source properties represent an all-outbound foreign key path, this property will override the inherited behavior of adding a link to the referred row. Set it to `false`, to avoid adding extra link to the foreign key display, or `true` to ensure the link will be added regardless of inherited behavior.
-  - `show_key_link`: Applicaple only to read-only non-filter context of `visible-columns` annotation. If the given data source properties represent a key (self link), this property will override the inherited behavior of adding a link to the referred row. Set it to `false`, to avoid adding extra link to the key display, or `true` to ensure the link will be added regardless of inherited behavior.
-  - `array_ux_mode`: Applicaple only to read-only non-filter context of `visible-columns` annotation. If you have `"aggregate": "array"` or `"aggregate": "array_d"` in the column directive definition, a comma-seperated value will be presented to the user. You can use `array_ux_mode` attribute to change that. The available options are,
-      - `olist` for ordered bullet list.
-      - `ulist` for unordered bullet list.
-      - `csv` for comma-seperated values.
-      - `raw` for space-seperated values.
+  - `show_foreign_key_link`: Applicable only to read-only non-filter context of `visible-columns` annotation. If the given data source properties represent an all-outbound foreign key path, this property will override the inherited behavior of adding a link to the referred row. Set it to `false`, to avoid adding extra link to the foreign key display, or `true` to ensure the link will be added regardless of inherited behavior.
+  - `show_key_link`: Applicable only to read-only non-filter context of `visible-columns` annotation. If the given data source properties represent a key (self link), this property will override the inherited behavior of adding a link to the referred row. Set it to `false`, to avoid adding extra link to the key display, or `true` to ensure the link will be added regardless of inherited behavior.
+  - `array_ux_mode`: Applicable only to read-only non-filter context of `visible-columns` annotation. If you have `"aggregate": "array"` or `"aggregate": "array_d"` in the column directive definition, a comma-seperated value will be presented to the user. You can use `array_ux_mode` attribute to change that. The available options are,
+    - `olist` for ordered bullet list.
+    - `ulist` for unordered bullet list.
+    - `csv` for comma-seperated values.
+    - `raw` for space-seperated values.
   - `"selector_ux_mode"`: The display mode for the recordedit input field when this column directive is a foreign key relationship. Supported values are `"facet-search-popup"` and `"simple-search-dropdown"`, with `"facet-search-popup"` being the default. Currently only supported in `entry` contexts.
   - `"required"`: Use this property to force the required (nullok) check for this visible column. This property is only used in the `entry` contexts. If set to `true`, users cannot leave the input empty. And if set to `false`, the input becomes optional.
   - `"bulk_create_foreign_key"`: Use this property to control the bulk selection of foreign key values in `entry/create` context when there is a prefill query parameter. Supported values are a foreign key `name` in the format of `['schema_name', 'foreign_key_name']` from the schema document, `false`, or `null`. Using a foreign key name will use that foreign key as the one being bulk selected if that foreign key is in the visible columns list. `false` turns off the heuristics that trigger this feature. `null` will override inheritance for this property and use the default heuristics. This will override the `bulk_create_foreign_key` property defined in the display property of the foreign-key annotation. Currently only supported in `entry/create` context.
 - `array_display`: This property is _deprecated_. It is the same as `array_ux_mode` that is defined above under `display` property.
-- `array_options`: Applicaple only to read-only non-filter context of `visible-columns` annotation. This property is meant to be an object of properties that control the display of `array` or `array_d` aggregate column. These options will only affect the display (and templating environment) and have no effect on the generated ERMrest query. The available options are:
-    - `order`: An alternative sort method to apply when a client wants to semantically sort by key values. It follows the same syntax as `column_order`. In scalar array aggregate, you cannot sort based on other columns values, you can only sort based on the scalar value of the column.
-    - `max_length`: `<number>` A number that defines the maximum number of elements that should be displayed.
-- `input_iframe`: Applicaple only to entry contexts. A JSON object that describes the settings for showing "input iframe" in entry apps. Please refer to the [input iframe document](input-iframe.md) for more information about this property.
+- `array_options`: Applicable only to read-only non-filter context of `visible-columns` annotation. This property is meant to be an object of properties that control the display of `array` or `array_d` aggregate column. These options will only affect the display (and templating environment) and have no effect on the generated ERMrest query. The available options are:
+  - `order`: An alternative sort method to apply when a client wants to semantically sort by key values. It follows the same syntax as `column_order`. In scalar array aggregate, you cannot sort based on other columns values, you can only sort based on the scalar value of the column.
+  - `max_length`: `<number>` A number that defines the maximum number of elements that should be displayed.
+- `input_iframe`: Applicable only to entry contexts. A JSON object that describes the settings for showing "input iframe" in entry apps. Please refer to the [input iframe document](input-iframe.md) for more information about this property.
 - `condition`: A JSON object that defines a condition controlling whether this column or related entity is displayed. The **with-source** form (`source` or `sourcekey` set) references a data source whose result determines visibility and is only honored in the `detailed` context. The **no-source** form (with `condition_pattern` set) is a pure template evaluated against the catalog's template environment, useful for ACL-driven visibility, and is honored in every context (including `filter` facets). Please refer to the [condition documentation](column-directive.md#condition) for more information.
 - `condition_key`: A string that references a reusable condition defined in the [`conditions`](#tag-2019-source-definitions) section of the `source-definitions` annotation. The same context rules as `condition` apply (with-source only in `detailed`; no-source in every context). If both `condition` and `condition_key` are defined, `condition_key` takes precedence.

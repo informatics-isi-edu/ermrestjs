@@ -1,470 +1,445 @@
 {
-    "tables": {
-        "file": {
-            "comment": "asset/object",
-            "kind": "table",
-            "keys": [
-                {
-                    "comment": null,
-                    "annotations": {},
-                    "unique_columns": [
-                        "id"
-                    ]
-                }
-            ],
-            "entityCount": 0,
-            "foreign_keys": [{
-                "comment": null,
-                "foreign_key_columns": [
-                    {
-                        "table_name": "file",
-                        "schema_name": "upload",
-                        "column_name": "fk_id"
-                    }
-                ],
-                "annotations": {},
-                "referenced_columns": [
-                    {
-                        "table_name": "referee",
-                        "schema_name": "upload",
-                        "column_name": "id"
-                    }
-                ]
-            }],
-            "table_name": "file",
-            "schema_name": "upload",
-            "column_definitions": [
-                {
-                    "comment": null,
-                    "name": "id",
-                    "default": null,
-                    "nullok": false,
-                    "type": {
-                        "typename": "serial4"
-                    },
-                    "annotations": {}
-                },
-                {
-                    "comment": null,
-                    "name": "fk_id",
-                    "default": null,
-                    "nullok": true,
-                    "type": {
-                        "typename": "int8"
-                    },
-                    "annotations": {}
-                },
-                {
-                    "comment": null,
-                    "name": "timestamp",
-                    "default": null,
-                    "nullok": true,
-                    "type": {
-                        "typename": "timestamp"
-                    },
-                    "annotations": {}
-                },
-                {
-                    "comment": null,
-                    "name": "filename",
-                    "default": null,
-                    "nullok": true,
-                    "type": {
-                        "typename": "text"
-                    },
-                    "annotations": {}
-                },
-                {
-                    "comment": "asset/reference",
-                    "name": "uri",
-                    "default": null,
-                    "nullok": true,
-                    "type": {
-                        "typename": "text"
-                    },
-                    "annotations": {
-                        "tag:isrd.isi.edu,2017:asset": {
-                            "url_pattern" : "/hatrac/js/ermrestjs/{{{_timestamp}}}/{{{_uri.md5_hex}}}",
-                            "filename_column" : "filename",
-                            "byte_count_column" : "bytes",
-                            "md5" : "checksum"
-                        }
-                    }
-                },
-                {
-                    "comment": null,
-                    "name": "bytes",
-                    "default": null,
-                    "nullok": true,
-                    "type": {
-                        "typename": "int8"
-                    },
-                    "annotations": {}
-                },
-                {
-                    "comment": null,
-                    "name": "checksum",
-                    "default": null,
-                    "nullok": true,
-                    "type": {
-                        "typename": "text"
-                    },
-                    "annotations": {}
-                },
-                {
-                    "comment": "asset column with url_pattern that doesn't start with hatrac",
-                    "name": "uri_wo_hatrac",
-                    "default": null,
-                    "nullok": true,
-                    "type": {
-                        "typename": "text"
-                    },
-                    "annotations": {
-                        "tag:isrd.isi.edu,2017:asset": {
-                            "url_pattern" : "/ermrestjs/{{{_timestamp}}}/{{{_uri_wo_hatrac}}"
-                        }
-                    }
-                }
-            ],
-            "annotations": {
-                "tag:isrd.isi.edu,2016:visible-columns" : {
-                    "*" : ["id", "uri", "fk_id", "uri_wo_hatrac"]
-                }
-            }
-        },
-        "file_update_table": {
-            "comment": "table with 2 files to upload",
-            "kind": "table",
-            "keys": [
-                {
-                    "comment": null,
-                    "annotations": {},
-                    "unique_columns": [
-                        "key"
-                    ]
-                }
-            ],
-            "foreign_keys": [],
-            "table_name": "file_update_table",
-            "schema_name": "upload",
-            "column_definitions": [
-                {
-                    "name": "key",
-                    "nullok": false,
-                    "type": {
-                        "typename": "int"
-                    }
-                },
-                {
-                    "comment": null,
-                    "name": "timestamp",
-                    "default": null,
-                    "nullok": true,
-                    "type": {
-                        "typename": "timestamp"
-                    },
-                    "annotations": {}
-                },
-                {
-                    "comment": null,
-                    "name": "file1_bytes",
-                    "default": null,
-                    "nullok": true,
-                    "type": {
-                        "typename": "int4"
-                    },
-                    "annotations": {}
-                },
-                {
-                    "comment": null,
-                    "name": "file1_MD5",
-                    "default": null,
-                    "nullok": true,
-                    "type": {
-                        "typename": "text"
-                    },
-                    "annotations": {}
-                },
-                {
-                    "comment": null,
-                    "name": "file1_name",
-                    "default": null,
-                    "nullok": true,
-                    "type": {
-                        "typename": "text"
-                    },
-                    "annotations": {
-                        "comment": [
-                            "hidden"
-                        ],
-                        "tag:misd.isi.edu,2015:display": {
-                            "name": "Thumbnail"
-                        }
-                    }
-                },
-                {
-                    "comment": "asset/reference",
-                    "name": "file1_uri",
-                    "default": null,
-                    "nullok": true,
-                    "type": {
-                        "typename": "text"
-                    },
-                    "annotations": {
-                        "comment": [
-                            "thumbnail",
-                            "download"
-                        ],
-                        "tag:isrd.isi.edu,2017:asset": {
-                            "byte_count_column": "file1_bytes",
-                            "url_pattern": "{{#if true}}/hatrac/js/ermrestjs/{{{_timestamp}}}/{{{_file1_uri.filename_ext}}}/{{{_file1_MD5}}}{{/if}}",
-                            "template_engine": "handlebars",
-                            "md5": "file1_MD5",
-                            "filename_column": "file1_name"
-                        }
-                    }
-                },
-                {
-                    "comment": null,
-                    "name": "file2_bytes",
-                    "default": null,
-                    "nullok": true,
-                    "type": {
-                        "typename": "int4"
-                    },
-                    "annotations": {}
-                },
-                {
-                    "comment": null,
-                    "name": "file2_MD5",
-                    "default": null,
-                    "nullok": true,
-                    "type": {
-                        "typename": "text"
-                    },
-                    "annotations": {}
-                },
-                {
-                    "comment": null,
-                    "name": "file2_name",
-                    "default": null,
-                    "nullok": false,
-                    "type": {
-                        "typename": "text"
-                    },
-                    "annotations": {
-                        "comment": [
-                            "hidden"
-                        ],
-                        "tag:misd.isi.edu,2015:display": {
-                            "name": "Thumbnail"
-                        }
-                    }
-                },
-                {
-                    "comment": "asset/reference",
-                    "name": "file2_uri",
-                    "default": null,
-                    "nullok": false,
-                    "type": {
-                        "typename": "text"
-                    },
-                    "annotations": {
-                        "comment": [
-                            "thumbnail",
-                            "download"
-                        ],
-                        "tag:isrd.isi.edu,2017:asset": {
-                            "byte_count_column": "file2_bytes",
-                            "url_pattern": "/hatrac/js/ermrestjs/{{{_timestamp}}}/{{{_file2_uri.filename_ext}}}/{{{_file2_MD5}}}",
-                            "md5": "file2_MD5",
-                            "filename_column": "file2_name",
-                            "filename_ext_regexp": [".whatever", ".omni.tiff", ".tiff"] 
-                        }
-                    }
-                },
-                {
-                    "comment": null,
-                    "name": "file3_bytes",
-                    "default": null,
-                    "nullok": true,
-                    "type": {
-                        "typename": "int4"
-                    },
-                    "annotations": {}
-                },
-                {
-                    "comment": null,
-                    "name": "file3_MD5",
-                    "default": null,
-                    "nullok": true,
-                    "type": {
-                        "typename": "text"
-                    },
-                    "annotations": {}
-                },
-                {
-                    "comment": null,
-                    "name": "file3_name",
-                    "default": null,
-                    "nullok": false,
-                    "type": {
-                        "typename": "text"
-                    },
-                    "annotations": {
-                        "comment": [
-                            "hidden"
-                        ],
-                        "tag:misd.isi.edu,2015:display": {
-                            "name": "Thumbnail"
-                        }
-                    }
-                },
-                {
-                    "comment": "asset/reference",
-                    "name": "file3_uri",
-                    "default": null,
-                    "nullok": false,
-                    "type": {
-                        "typename": "text"
-                    },
-                    "annotations": {
-                        "comment": [
-                            "thumbnail",
-                            "download"
-                        ],
-                        "tag:isrd.isi.edu,2017:asset": {
-                            "byte_count_column": "file3_bytes",
-                            "url_pattern": "/hatrac/js/ermrestjs/{{{_timestamp}}}/{{{_file3_uri.filename_ext}}}/{{{_file3_MD5}}}",
-                            "md5": "file3_MD5",
-                            "filename_column": "file3_name",
-                            "filename_ext_filter": [".some.extension", ".txt"]
-                        }
-                    }
-                }
-            ],
-            "annotations" : {
-                "tag:isrd.isi.edu,2016:visible-columns" : {
-                    "*" : ["key", "file1_uri", "file2_uri", "file3_uri"]
-                }
-            }
-        },
-        "referee": {
-            "comment": null,
-            "kind": "table",
-            "keys": [
-                {
-                    "comment": null,
-                    "annotations": {},
-                    "unique_columns": [
-                        "id"
-                    ]
-                }
-            ],
-            "table_name": "referee",
-            "schema_name": "upload",
-            "foreign_keys": [],
-            "column_definitions": [
-                {
-                    "comment": null,
-                    "name": "id",
-                    "default": null,
-                    "nullok": false,
-                    "type": {
-                        "typename": "int8"
-                    },
-                    "annotations": {}
-                }
-            ],
-            "annotations" : {}
-        },
-        "file_custom_filename": {
-            "comment": "asset/object with stored_filename_pattern in asset annotation",
-            "kind": "table",
-            "keys": [
-                {
-                    "comment": null,
-                    "annotations": {},
-                    "unique_columns": [
-                        "id"
-                    ]
-                }
-            ],
-            "foreign_keys": [],
-            "table_name": "file_custom_filename",
-            "schema_name": "upload",
-            "column_definitions": [
-                {
-                    "name": "id",
-                    "nullok": false,
-                    "type": {
-                        "typename": "serial4"
-                    },
-                    "annotations": {}
-                },
-                {
-                    "name": "timestamp",
-                    "nullok": true,
-                    "type": {
-                        "typename": "timestamp"
-                    },
-                    "annotations": {}
-                },
-                {
-                    "name": "filename",
-                    "nullok": true,
-                    "type": {
-                        "typename": "text"
-                    },
-                    "annotations": {}
-                },
-                {
-                    "comment": "asset/reference",
-                    "name": "uri",
-                    "nullok": true,
-                    "type": {
-                        "typename": "text"
-                    },
-                    "annotations": {
-                        "tag:isrd.isi.edu,2017:asset": {
-                            "url_pattern" : "/hatrac/js/ermrestjs/{{{_uri.filename_basename}}}/{{{_uri.md5_hex}}}",
-                            "filename_column" : "filename",
-                            "byte_count_column" : "bytes",
-                            "md5" : "checksum",
-                            "stored_filename_pattern": "{{{_timestamp}}}{{{_uri.filename_ext}}}"
-                        }
-                    }
-                },
-                {
-                    "name": "bytes",
-                    "nullok": true,
-                    "type": {
-                        "typename": "int8"
-                    },
-                    "annotations": {}
-                },
-                {
-                    "name": "checksum",
-                    "nullok": true,
-                    "type": {
-                        "typename": "text"
-                    },
-                    "annotations": {}
-                }
-            ],
-            "annotations": {
-                "tag:isrd.isi.edu,2016:visible-columns" : {
-                    "*" : ["id", "uri"]
-                }
-            }
+  "tables": {
+    "file": {
+      "comment": "asset/object",
+      "kind": "table",
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": ["id"]
         }
+      ],
+      "entityCount": 0,
+      "foreign_keys": [
+        {
+          "comment": null,
+          "foreign_key_columns": [
+            {
+              "table_name": "file",
+              "schema_name": "upload",
+              "column_name": "fk_id"
+            }
+          ],
+          "annotations": {},
+          "referenced_columns": [
+            {
+              "table_name": "referee",
+              "schema_name": "upload",
+              "column_name": "id"
+            }
+          ]
+        }
+      ],
+      "table_name": "file",
+      "schema_name": "upload",
+      "column_definitions": [
+        {
+          "comment": null,
+          "name": "id",
+          "default": null,
+          "nullok": false,
+          "type": {
+            "typename": "serial4"
+          },
+          "annotations": {}
+        },
+        {
+          "comment": null,
+          "name": "fk_id",
+          "default": null,
+          "nullok": true,
+          "type": {
+            "typename": "int8"
+          },
+          "annotations": {}
+        },
+        {
+          "comment": null,
+          "name": "timestamp",
+          "default": null,
+          "nullok": true,
+          "type": {
+            "typename": "timestamp"
+          },
+          "annotations": {}
+        },
+        {
+          "comment": null,
+          "name": "filename",
+          "default": null,
+          "nullok": true,
+          "type": {
+            "typename": "text"
+          },
+          "annotations": {}
+        },
+        {
+          "comment": "asset/reference",
+          "name": "uri",
+          "default": null,
+          "nullok": true,
+          "type": {
+            "typename": "text"
+          },
+          "annotations": {
+            "tag:isrd.isi.edu,2017:asset": {
+              "url_pattern": "/hatrac/js/ermrestjs/{{{_timestamp}}}/{{{_uri.md5_hex}}}",
+              "filename_column": "filename",
+              "byte_count_column": "bytes",
+              "md5": "checksum"
+            }
+          }
+        },
+        {
+          "comment": null,
+          "name": "bytes",
+          "default": null,
+          "nullok": true,
+          "type": {
+            "typename": "int8"
+          },
+          "annotations": {}
+        },
+        {
+          "comment": null,
+          "name": "checksum",
+          "default": null,
+          "nullok": true,
+          "type": {
+            "typename": "text"
+          },
+          "annotations": {}
+        },
+        {
+          "comment": "asset column with url_pattern that doesn't start with hatrac",
+          "name": "uri_wo_hatrac",
+          "default": null,
+          "nullok": true,
+          "type": {
+            "typename": "text"
+          },
+          "annotations": {
+            "tag:isrd.isi.edu,2017:asset": {
+              "url_pattern": "/ermrestjs/{{{_timestamp}}}/{{{_uri_wo_hatrac}}"
+            }
+          }
+        }
+      ],
+      "annotations": {
+        "tag:isrd.isi.edu,2016:visible-columns": {
+          "*": ["id", "uri", "fk_id", "uri_wo_hatrac"]
+        }
+      }
     },
-    "table_names": [
-        "file",
-        "file_update_table",
-        "referee",
-        "file_custom_filename"
-    ],
-    "comment": null,
-    "schema_name": "upload"
+    "file_update_table": {
+      "comment": "table with 2 files to upload",
+      "kind": "table",
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": ["key"]
+        }
+      ],
+      "foreign_keys": [],
+      "table_name": "file_update_table",
+      "schema_name": "upload",
+      "column_definitions": [
+        {
+          "name": "key",
+          "nullok": false,
+          "type": {
+            "typename": "int"
+          }
+        },
+        {
+          "comment": null,
+          "name": "timestamp",
+          "default": null,
+          "nullok": true,
+          "type": {
+            "typename": "timestamp"
+          },
+          "annotations": {}
+        },
+        {
+          "comment": null,
+          "name": "file1_bytes",
+          "default": null,
+          "nullok": true,
+          "type": {
+            "typename": "int4"
+          },
+          "annotations": {}
+        },
+        {
+          "comment": null,
+          "name": "file1_MD5",
+          "default": null,
+          "nullok": true,
+          "type": {
+            "typename": "text"
+          },
+          "annotations": {}
+        },
+        {
+          "comment": null,
+          "name": "file1_name",
+          "default": null,
+          "nullok": true,
+          "type": {
+            "typename": "text"
+          },
+          "annotations": {
+            "comment": ["hidden"],
+            "tag:misd.isi.edu,2015:display": {
+              "name": "Thumbnail"
+            }
+          }
+        },
+        {
+          "comment": "asset/reference",
+          "name": "file1_uri",
+          "default": null,
+          "nullok": true,
+          "type": {
+            "typename": "text"
+          },
+          "annotations": {
+            "comment": ["thumbnail", "download"],
+            "tag:isrd.isi.edu,2017:asset": {
+              "byte_count_column": "file1_bytes",
+              "url_pattern": "{{#if true}}/hatrac/js/ermrestjs/{{{_timestamp}}}/{{{_file1_uri.filename_ext}}}/{{{_file1_MD5}}}{{/if}}",
+              "template_engine": "handlebars",
+              "md5": "file1_MD5",
+              "filename_column": "file1_name"
+            }
+          }
+        },
+        {
+          "comment": null,
+          "name": "file2_bytes",
+          "default": null,
+          "nullok": true,
+          "type": {
+            "typename": "int4"
+          },
+          "annotations": {}
+        },
+        {
+          "comment": null,
+          "name": "file2_MD5",
+          "default": null,
+          "nullok": true,
+          "type": {
+            "typename": "text"
+          },
+          "annotations": {}
+        },
+        {
+          "comment": null,
+          "name": "file2_name",
+          "default": null,
+          "nullok": false,
+          "type": {
+            "typename": "text"
+          },
+          "annotations": {
+            "comment": ["hidden"],
+            "tag:misd.isi.edu,2015:display": {
+              "name": "Thumbnail"
+            }
+          }
+        },
+        {
+          "comment": "asset/reference",
+          "name": "file2_uri",
+          "default": null,
+          "nullok": false,
+          "type": {
+            "typename": "text"
+          },
+          "annotations": {
+            "comment": ["thumbnail", "download"],
+            "tag:isrd.isi.edu,2017:asset": {
+              "byte_count_column": "file2_bytes",
+              "url_pattern": "/hatrac/js/ermrestjs/{{{_timestamp}}}/{{{_file2_uri.filename_ext}}}/{{{_file2_MD5}}}",
+              "md5": "file2_MD5",
+              "filename_column": "file2_name",
+              "filename_ext_regexp": [".whatever", ".omni.tiff", ".tiff"]
+            }
+          }
+        },
+        {
+          "comment": null,
+          "name": "file3_bytes",
+          "default": null,
+          "nullok": true,
+          "type": {
+            "typename": "int4"
+          },
+          "annotations": {}
+        },
+        {
+          "comment": null,
+          "name": "file3_MD5",
+          "default": null,
+          "nullok": true,
+          "type": {
+            "typename": "text"
+          },
+          "annotations": {}
+        },
+        {
+          "comment": null,
+          "name": "file3_name",
+          "default": null,
+          "nullok": false,
+          "type": {
+            "typename": "text"
+          },
+          "annotations": {
+            "comment": ["hidden"],
+            "tag:misd.isi.edu,2015:display": {
+              "name": "Thumbnail"
+            }
+          }
+        },
+        {
+          "comment": "asset/reference",
+          "name": "file3_uri",
+          "default": null,
+          "nullok": false,
+          "type": {
+            "typename": "text"
+          },
+          "annotations": {
+            "comment": ["thumbnail", "download"],
+            "tag:isrd.isi.edu,2017:asset": {
+              "byte_count_column": "file3_bytes",
+              "url_pattern": "/hatrac/js/ermrestjs/{{{_timestamp}}}/{{{_file3_uri.filename_ext}}}/{{{_file3_MD5}}}",
+              "md5": "file3_MD5",
+              "filename_column": "file3_name",
+              "filename_ext_filter": [".some.extension", ".txt"],
+              "allow_empty_file": true
+            }
+          }
+        }
+      ],
+      "annotations": {
+        "tag:isrd.isi.edu,2016:visible-columns": {
+          "*": ["key", "file1_uri", "file2_uri", "file3_uri"]
+        }
+      }
+    },
+    "referee": {
+      "comment": null,
+      "kind": "table",
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": ["id"]
+        }
+      ],
+      "table_name": "referee",
+      "schema_name": "upload",
+      "foreign_keys": [],
+      "column_definitions": [
+        {
+          "comment": null,
+          "name": "id",
+          "default": null,
+          "nullok": false,
+          "type": {
+            "typename": "int8"
+          },
+          "annotations": {}
+        }
+      ],
+      "annotations": {}
+    },
+    "file_custom_filename": {
+      "comment": "asset/object with stored_filename_pattern in asset annotation",
+      "kind": "table",
+      "keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "unique_columns": ["id"]
+        }
+      ],
+      "foreign_keys": [],
+      "table_name": "file_custom_filename",
+      "schema_name": "upload",
+      "column_definitions": [
+        {
+          "name": "id",
+          "nullok": false,
+          "type": {
+            "typename": "serial4"
+          },
+          "annotations": {}
+        },
+        {
+          "name": "timestamp",
+          "nullok": true,
+          "type": {
+            "typename": "timestamp"
+          },
+          "annotations": {}
+        },
+        {
+          "name": "filename",
+          "nullok": true,
+          "type": {
+            "typename": "text"
+          },
+          "annotations": {}
+        },
+        {
+          "comment": "asset/reference",
+          "name": "uri",
+          "nullok": true,
+          "type": {
+            "typename": "text"
+          },
+          "annotations": {
+            "tag:isrd.isi.edu,2017:asset": {
+              "url_pattern": "/hatrac/js/ermrestjs/{{{_uri.filename_basename}}}/{{{_uri.md5_hex}}}",
+              "filename_column": "filename",
+              "byte_count_column": "bytes",
+              "md5": "checksum",
+              "stored_filename_pattern": "{{{_timestamp}}}{{{_uri.filename_ext}}}"
+            }
+          }
+        },
+        {
+          "name": "bytes",
+          "nullok": true,
+          "type": {
+            "typename": "int8"
+          },
+          "annotations": {}
+        },
+        {
+          "name": "checksum",
+          "nullok": true,
+          "type": {
+            "typename": "text"
+          },
+          "annotations": {}
+        }
+      ],
+      "annotations": {
+        "tag:isrd.isi.edu,2016:visible-columns": {
+          "*": ["id", "uri"]
+        }
+      }
+    }
+  },
+  "table_names": ["file", "file_update_table", "referee", "file_custom_filename"],
+  "comment": null,
+  "schema_name": "upload"
 }
