@@ -66,7 +66,7 @@ here is a quick matrix to locate them.
 | [2018 Required](#tag-2018-required)                                       | -       | -      | -     | X      | -   | X   | Required model element                                         |
 | [2018 Indexing Preferences](#tag-2018-indexing-preferences)               | -       | -      | X     | X      | -   | -   | Specify database indexing preferences                          |
 | [2019 Export](#tag-2019-export)                                           | X       | X      | X     | -      | -   | -   | Describes export templates                                     |
-| [2021 Export Fragment Definitions](#tag-2021-export-fragment-definitions) | X       | X      | X     | -      | -   | -   | Describe export fragments that may be used in export anotation |
+| [2021 Export Fragment Definitions](#tag-2021-export-fragment-definitions) | X       | X      | X     | -      | -   | -   | Describe export fragments that may be used in export annotation |
 | [2019 Chaise Config](#tag-2019-chaise-config)                             | X       | -      | -     | -      | -   | -   | Properties to configure chaise app UX                          |
 | [2019 Source Definitions](#tag-2019-source-definitions)                   | -       | -      | X     | -      | -   | -   | Describe source definitions                                    |
 | [2021 Google Dataset](#tag-2021-google-dataset)                           | -       | -      | X     | -      | -   | -   | Describe metadata for rich results in Google Dataset           |
@@ -229,7 +229,7 @@ This annotation provides an override guidance for Chaise applications using a hi
 
 Note:
 
-- An explicit setting of `null` will turn _off_ inheritence and restore default behavior for that modele element and any of its nested elements.
+- An explicit setting of `null` will turn _off_ inheritance and restore default behavior for that model element and any of its nested elements.
 - The name_style has to be derived separately for each field e.g. one can set `underline_space=true` at the schema-level and doesn't have to set this again.
 
 #### Heuristics
@@ -344,7 +344,7 @@ Supported _columnlist_ patterns:
   - Ignore listed _columndirective_ values that do not correspond to content from the table.
   - Do not present table columns that are not specified in the list. Please refer to [column directive](#column-directive) section for more information.
   - A list without any valid _columndirective_ will be treated the same as empty array `[]`. Client will not show any columns in this case.
-- Any non-string, non-array value (e.g., `null`): The client will use the default heuristics for generating list of visbile columns.
+- Any non-string, non-array value (e.g., `null`): The client will use the default heuristics for generating list of visible columns.
 
 Supported _facetlist_ pattern:
 
@@ -385,7 +385,7 @@ Configuration attributes (optional):
 - `hide_null_choice` and `hide_not_null_choice`: By default, we are going to add `null` and `not-null` options in the `choices` UX mode. Setting any of these variables to `true`, will hide its respective option.
 - `bar_plot`: This attribute is meant to be an object of properties that control the display of the histogram in `ranges` UX mode. Setting this attribute to `false` will force the histogram to not be shown in the facet in the facet panel. If unspecified, default is `true` (or show the histogram). If defined as an object, available attributes are:
   - `n_bins`: Used to define the number of bins the histogram uses to fetch and display data. If undefined, default is 30 bins.
-- `hide_num_occurrences`: Applicaple only to scalar facets in `choices` UX mode. In the facet popup for a scalar facet, we're showing the "Number of occurences" for each individual values. Setting this value to `false` will hide the "Number of occurences" column.
+- `hide_num_occurrences`: Applicable only to scalar facets in `choices` UX mode. In the facet popup for a scalar facet, we're showing the "Number of occurences" for each individual values. Setting this value to `false` will hide the "Number of occurences" column.
 - `order`: Control how the values in the scalar facets for `choices` UX mode should be sorted. This follows the same syntax as `column_order` and the following is the default value of this attribute:
   ```json
   [
@@ -1003,7 +1003,7 @@ Supported JSON payload patterns:
 - `{` ... `"sources":` _sourcedefinitions_ `,` ... `}`: the source definitions that will allow you to refer to them by just using the defined _sourcekey_.
 - `{` ... `"conditions":` _conditiondefinitions_ `,` ... `}`: reusable condition definitions that can be referenced by column directives via `condition_key`. See [condition and condition_key](column-directive.md#condition) for more information.
 - `{` ... `"search-box": { "or": [` _searchcolumn_ `,` ... `]} }`: Configure list of search columns.
-- `{` ... `"fkeys":` _fkeylist_ `,` ... `}`: Array of foreign key constraints that will be mapped into `$fkey_schema_contraint` key in templating environments.
+- `{` ... `"fkeys":` _fkeylist_ `,` ... `}`: Array of foreign key constraints that will be mapped into `$fkey_schema_constraint` key in templating environments.
 - `{` ... `"columns":` _columns_ `,` ... `}`: Array of column names that their data will be available in templating environments.
 
 Supported _conditiondefinitions_ patterns:
@@ -1431,7 +1431,7 @@ As it was described, column directives are meant to instruct the data source and
 
 1. **Column directive with `source`**: In this category, you use the `source` property to define the data source of the column directive in place. Other source related properties (i.e. `entity`, `aggregate`) can be used in combination with `source` to change the nature of the column directive.
 2. **Column directive with `sourcekey`**: In this category, the `sourcekey` proprety is used to refer to one of the defines sources in the [`source-definitions` annotations](annotation.md#tag-2019-source-definitions).
-3. **Column directive without any source** (_Applicaple only to read-only non-filter context of `visible-columns` annotation_): If you want to have a column directive that its value is made up of multiple column directives, you don't need to define any `source` or `sourcekey`. The only required attributes for these types of columns (we call them virtual columns) are `markdown_name` that is used for generating the display name, and `markdown_pattern` under `display` to get the value.
+3. **Column directive without any source** (_Applicable only to read-only non-filter context of `visible-columns` annotation_): If you want to have a column directive that its value is made up of multiple column directives, you don't need to define any `source` or `sourcekey`. The only required attributes for these types of columns (we call them virtual columns) are `markdown_name` that is used for generating the display name, and `markdown_pattern` under `display` to get the value.
 
 While the general syntax of column directives is defining a JSON object, depending on where the column directive is used, you can use the simpler syntax which heavily relies on heuristics. The following are other acceptable ways of defining column directives:
 
@@ -1505,9 +1505,9 @@ These sets of properties change the nature of the column directive, as they will
 - `source`: The source path. It can either be a column or a foreign key path to a column in another table. You can find more information in [the column directive document](column-directive.md#source).
 - `sourcekey`: Allows referring to any of the defined `sources` in the [`source-definitions`](#tag-2019-source-definitions) annotation.
 - `entity`: If the source column is key of the table, setting this attribute to `false` will force the scalar mode. Otherwise the column directive will be in entity mode.
-- `aggregate`: The aggregate function that should be used for getting an aggregated result. Applicaple only to read-only non-filter context of `visible-columns` annotation. The available aggregate functions are `min`, `max`, `cnt`, `cnt_d`, `array`, and `array_d`.
+- `aggregate`: The aggregate function that should be used for getting an aggregated result. Applicable only to read-only non-filter context of `visible-columns` annotation. The available aggregate functions are `min`, `max`, `cnt`, `cnt_d`, `array`, and `array_d`.
   - `array` will return ALL the values including duplicates associated with the specified columns. For data types that are sortable (e.g integer, text), the values will be sorted alphabetically or numerically. Otherwise, it displays values in the order that it receives from ERMrest. There is no paging mechanism to limit what's shown in the aggregate column, therefore please USE WITH CARE as it can incur performance overhead and ugly presentation.
-  - `array_d` will return distinct values. It has the same performance overhead as `array`, so pleas USE WITH CARE.
+  - `array_d` will return distinct values. It has the same performance overhead as `array`, so please USE WITH CARE.
   - Using `array` or `array_d` aggregate in entity mode will provide an array of row-names instead of just the value of the column. Row-names will be derived from the `row_name/compact` context.
 
 #### 2. Presentation properties
@@ -1520,15 +1520,15 @@ The following attributes can be used to manipulate the presentation settings of 
 - `comment_display`: The display mode for the tooltip. Set to `inline` to show it as text or `tooltip` to show as a hover tooltip.
   - Currently `comment_display` is only supported for related tables in `detailed` context and `visible-columns` in `entry` context.
 - `hide_column_header`: Hide the column header (and still show the value). This is only supported in `detailed` context of `visible-columns` annotation.
-- `self-link`: If you want to show a self-link to the current row, you need to make sure the source is based on a not-null unique column of the current table and add the `"self_link": true` to the definition. Applicaple only to read-only non-filter context of `visible-columns` annotation.
+- `self-link`: If you want to show a self-link to the current row, you need to make sure the source is based on a not-null unique column of the current table and add the `"self_link": true` to the definition. Applicable only to read-only non-filter context of `visible-columns` annotation.
 - `display`: A JSON object that describes the display settings for generating the value for this column. Please refer to [column-directive display document](column-directive-display.md) for more information. This object can have the following properties:
   - `markdown_pattern`: The markdown pattern that will be used for generating the value.
     - In case of related tables, the given markdown pattern will be used for the "custom display" mode. If this is missing, we're going to provided `row_markdown_pattern` in the `table-display` annotation for the custom display. And if it's missing from that annotation as well, Chaise will not provide any custom display.
   - `template_engine`: The template enginge that should be used for the `markdown_pattern`.
   - `wait_for`: List of column directive [`sourcekey`](#tag-2019-source-definitions)s that used in `markdown_pattern`. You should list all the all-outbound, aggregates, and entity sets that you want to use in your `markdown_pattern`. Entity sets (column directives with `inbound` path and no `aggregate` attribute) are only acceptable in `detailed` context.
-  - `show_foreign_key_link`: Applicaple only to read-only non-filter context of `visible-columns` annotation. If the given data source properties represent an all-outbound foreign key path, this property will override the inherited behavior of adding a link to the referred row. Set it to `false`, to avoid adding extra link to the foreign key display, or `true` to ensure the link will be added regardless of inherited behavior.
-  - `show_key_link`: Applicaple only to read-only non-filter context of `visible-columns` annotation. If the given data source properties represent a key (self link), this property will override the inherited behavior of adding a link to the referred row. Set it to `false`, to avoid adding extra link to the key display, or `true` to ensure the link will be added regardless of inherited behavior.
-  - `array_ux_mode`: Applicaple only to read-only non-filter context of `visible-columns` annotation. If you have `"aggregate": "array"` or `"aggregate": "array_d"` in the column directive definition, a comma-seperated value will be presented to the user. You can use `array_ux_mode` attribute to change that. The available options are,
+  - `show_foreign_key_link`: Applicable only to read-only non-filter context of `visible-columns` annotation. If the given data source properties represent an all-outbound foreign key path, this property will override the inherited behavior of adding a link to the referred row. Set it to `false`, to avoid adding extra link to the foreign key display, or `true` to ensure the link will be added regardless of inherited behavior.
+  - `show_key_link`: Applicable only to read-only non-filter context of `visible-columns` annotation. If the given data source properties represent a key (self link), this property will override the inherited behavior of adding a link to the referred row. Set it to `false`, to avoid adding extra link to the key display, or `true` to ensure the link will be added regardless of inherited behavior.
+  - `array_ux_mode`: Applicable only to read-only non-filter context of `visible-columns` annotation. If you have `"aggregate": "array"` or `"aggregate": "array_d"` in the column directive definition, a comma-seperated value will be presented to the user. You can use `array_ux_mode` attribute to change that. The available options are,
     - `olist` for ordered bullet list.
     - `ulist` for unordered bullet list.
     - `csv` for comma-seperated values.
@@ -1537,9 +1537,9 @@ The following attributes can be used to manipulate the presentation settings of 
   - `"required"`: Use this property to force the required (nullok) check for this visible column. This property is only used in the `entry` contexts. If set to `true`, users cannot leave the input empty. And if set to `false`, the input becomes optional.
   - `"bulk_create_foreign_key"`: Use this property to control the bulk selection of foreign key values in `entry/create` context when there is a prefill query parameter. Supported values are a foreign key `name` in the format of `['schema_name', 'foreign_key_name']` from the schema document, `false`, or `null`. Using a foreign key name will use that foreign key as the one being bulk selected if that foreign key is in the visible columns list. `false` turns off the heuristics that trigger this feature. `null` will override inheritance for this property and use the default heuristics. This will override the `bulk_create_foreign_key` property defined in the display property of the foreign-key annotation. Currently only supported in `entry/create` context.
 - `array_display`: This property is _deprecated_. It is the same as `array_ux_mode` that is defined above under `display` property.
-- `array_options`: Applicaple only to read-only non-filter context of `visible-columns` annotation. This property is meant to be an object of properties that control the display of `array` or `array_d` aggregate column. These options will only affect the display (and templating environment) and have no effect on the generated ERMrest query. The available options are:
+- `array_options`: Applicable only to read-only non-filter context of `visible-columns` annotation. This property is meant to be an object of properties that control the display of `array` or `array_d` aggregate column. These options will only affect the display (and templating environment) and have no effect on the generated ERMrest query. The available options are:
   - `order`: An alternative sort method to apply when a client wants to semantically sort by key values. It follows the same syntax as `column_order`. In scalar array aggregate, you cannot sort based on other columns values, you can only sort based on the scalar value of the column.
   - `max_length`: `<number>` A number that defines the maximum number of elements that should be displayed.
-- `input_iframe`: Applicaple only to entry contexts. A JSON object that describes the settings for showing "input iframe" in entry apps. Please refer to the [input iframe document](input-iframe.md) for more information about this property.
+- `input_iframe`: Applicable only to entry contexts. A JSON object that describes the settings for showing "input iframe" in entry apps. Please refer to the [input iframe document](input-iframe.md) for more information about this property.
 - `condition`: A JSON object that defines a condition controlling whether this column or related entity is displayed. The **with-source** form (`source` or `sourcekey` set) references a data source whose result determines visibility and is only honored in the `detailed` context. The **no-source** form (with `condition_pattern` set) is a pure template evaluated against the catalog's template environment, useful for ACL-driven visibility, and is honored in every context (including `filter` facets). Please refer to the [condition documentation](column-directive.md#condition) for more information.
 - `condition_key`: A string that references a reusable condition defined in the [`conditions`](#tag-2019-source-definitions) section of the `source-definitions` annotation. The same context rules as `condition` apply (with-source only in `detailed`; no-source in every context). If both `condition` and `condition_key` are defined, `condition_key` takes precedence.

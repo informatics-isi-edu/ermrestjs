@@ -507,7 +507,7 @@ Upload.prototype.start = function (startChunkIdx, onProgress) {
       if (this.column.allowEmptyFile) {
         deferred.resolve(this.url);
       } else {
-        deferred.reject(new InvalidInputError('The file "' + this.file.name + '" is empty (0 bytes). Empty files cannot be uploaded.'));
+        deferred.reject(new InvalidInputError(`The file "${this.file.name}" is empty (0 bytes). Empty files are not allowed.`));
       }
       return deferred.promise;
     } else {
