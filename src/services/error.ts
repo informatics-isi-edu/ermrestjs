@@ -139,7 +139,8 @@ export default class ErrorService {
       const newMessage = `The requested snapshot time ${formattedTime ? '(' + formattedTime + ') ' : ''}is older than any available history.`;
 
       return new SnapshotNotFoundError(errorStatusText, newMessage);
-    } else if (generatedErrMessage.indexOf('violates foreign key constraint') > -1 && actionFlag === _operationsFlag.DELETE) {
+      /* postgres 18+ says "violates RESTRICT setting of foreign key constraint" for ON DELETE RESTRICT fkeys */
+    } else if (/violates (RESTRICT setting of )?foreign key constraint/.test(generatedErrMessage) && actionFlag === _operationsFlag.DELETE) {
       let referenceTable: any = '';
 
       let detail: string | number = generatedErrMessage.search(/DETAIL:/g);
