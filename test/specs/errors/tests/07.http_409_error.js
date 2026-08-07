@@ -20,6 +20,9 @@ exports.execute = function (options) {
             'The request conflicts with the state of the server. update or delete on table "dataset" violates foreign key constraint "dataset_human_age_dataset_id_fkey" on table "dataset_human_age" DETAIL:  Key (id)=(269) is still referenced from table "dataset_human_age".';
         var integrityErrorServerResponseArb = '409 Conflict\nThe request conflicts with the state of the server. ' +
                 'The request conflicts with the state of the server. update or delete on table "1dataset" violates foreign key constraint "1dataset_human_age_dataset_id_fkey" on table "1dataset_human_age" DETAIL:  Key (id)=(269) is still referenced from table "1dataset_human_age".';
+        /* postgres 18+ wording for ON DELETE RESTRICT fkeys: mentions the RESTRICT setting and drops "still" from the detail */
+        const integrityErrorServerResponseArbRestrict = '409 Conflict\nThe request conflicts with the state of the server. ' +
+            'The request conflicts with the state of the server. update or delete on table "1dataset" violates RESTRICT setting of foreign key constraint "1dataset_human_age_dataset_id_fkey" on table "1dataset_human_age" DETAIL:  Key (id)=(269) is referenced from table "1dataset_human_age".';
         var duplicateErrorServerResponse = '409 Conflict\nThe request conflicts with the state of the server. ' +
             'Input data violates model. ERROR:  duplicate key value violates unique constraint "dataset_pkey" DETAIL:  Key (id)=(269) already exists.';
 
@@ -158,22 +161,29 @@ exports.execute = function (options) {
               done.fail();
           });
         });
-        it("if it's an integrity error and no displayName was found then use table name passed by ermrest using mock", function (done) {
-          var mockUri = "/ermrest/catalog/"+catalog_id+"/entity/M:=" + schemaName + ":" + tableNameWithoutDisplayName;
+        /* both wordings must map to the same message, since the server's postgres version dictates which one we get */
+        [
+            { desc: 'pre-18 postgres message', response: integrityErrorServerResponseArb },
+            { desc: 'postgres 18+ RESTRICT message', response: integrityErrorServerResponseArbRestrict },
+        ].forEach(({ desc, response }) => {
+            it(`if it's an integrity error and no displayName was found then use table name passed by ermrest (${desc})`, (done) => {
+                const mockUri = `/ermrest/catalog/${catalog_id}/entity/M:=${schemaName}:${tableNameWithoutDisplayName}`;
 
-          nock(url, ops)
-              .delete(mockUri)
-              .reply(409, integrityErrorServerResponseArb)
-              .persist();
-          reference2.delete().then(null, function (err) {
-              expect(err.status).toBe("Conflict", "invalid error status message");
-              expect(err.message).toBe(integrityErrorMappedSiteAdminMessage, "invalid error message");
-              done();
-          }).catch(function(err) {
-              console.log(err);
-              done.fail();
-          });
+                nock.cleanAll();
+                nock(url, ops)
+                    .delete(mockUri)
+                    .reply(409, response)
+                    .persist();
 
+                reference2.delete().then(null, (err) => {
+                    expect(err.status).toBe("Conflict", "invalid error status message");
+                    expect(err.message).toBe(integrityErrorMappedSiteAdminMessage, "invalid error message");
+                    done();
+                }).catch((err) => {
+                    console.log(err);
+                    done.fail();
+                });
+            });
         });
 
         it("if it's an integrity error without deletion flag passed then we should allow the ermrest error to the client.", function (done) {
