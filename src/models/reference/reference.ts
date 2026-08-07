@@ -2529,7 +2529,7 @@ export class Reference {
 
           for (let k = 0; k < shortestKeyNames.length; k++) {
             keyName = shortestKeyNames[k];
-            if (tuples[i].data[keyName] === successfulPage.tuples[j].data[keyName]) {
+            if (tuples[i].data[keyName] !== successfulPage.tuples[j].data[keyName]) {
               // these keys don't match, go for the next tuple
               keyMatch = false;
               break;

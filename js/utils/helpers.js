@@ -1233,7 +1233,7 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
 
         var result = []; // computed, keyData
 
-        var keyData = [], filter = '', currentPath = '', keyColName, keyColVal, keyColumnsData;
+        var keyData = [], filter, currentPath = '', keyColName, keyColVal, keyColumnsData;
         for (var rowIndex = 0; rowIndex < data.length; rowIndex++) {
             var rowData = data[rowIndex];
             if (canUseQuantified) {
@@ -1288,8 +1288,10 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
                 filter += keyColumns.length > 1 ? ')' : '';
 
                 // check url length limit if not first one;
+                // +1 is for the `;` that we're going to add
+                // <pathOffset/><filter>;<filter>
                 if (rowIndex != 0 && pathOffsetLength >= 0 &&
-                    (pathOffsetLength + currentPath.length + (rowIndex != 0 ? ';' : '') + filter).length > pathLimit) {
+                    (pathOffsetLength + currentPath.length + 1 + filter.length) > pathLimit) {
                     // any more filters will go over the url length limit so save the current path and count
                     // then clear both to start creating a new path
                     result.push({
