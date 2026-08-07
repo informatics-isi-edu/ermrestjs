@@ -1233,7 +1233,7 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
 
         var result = []; // computed, keyData
 
-        var keyData = [], filter = '', currentPath = '', keyColName, keyColVal, keyColumnsData;
+        var keyData = [], filter, currentPath = '', keyColName, keyColVal, keyColumnsData;
         for (var rowIndex = 0; rowIndex < data.length; rowIndex++) {
             var rowData = data[rowIndex];
             if (canUseQuantified) {
