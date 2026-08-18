@@ -143,7 +143,7 @@ export function processAggregateValue(rawValue: any, pseudoColumn: any, aggFn: s
     }
 
     // populate templateVariables
-    let templateVariables = {};
+    let templateVariables;
     if (!isRow) {
       templateVariables = { $self: res, $_self: val };
     } else {
@@ -248,7 +248,7 @@ export function createPseudoColumn(
   if (!sourceObjectWrapper.hasPath) {
     // make sure the column is unique not-null
     if (sourceObject.self_link === true && column && column.isUniqueNotNull) {
-      return new KeyPseudoColumn(reference, column.uniqueNotNullKey, sourceObjectWrapper, name);
+      return new KeyPseudoColumn(reference, column.uniqueNotNullKey!, sourceObjectWrapper, name);
     }
 
     // no path, scalar, asset

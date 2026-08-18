@@ -5,7 +5,8 @@ import type { CommentType } from '@isrd-isi-edu/ermrestjs/src/models/comment';
 import type { DisplayName } from '@isrd-isi-edu/ermrestjs/src/models/display-name';
 
 import { _sourceColumnHelpers, _compressSource } from '@isrd-isi-edu/ermrestjs/js/utils/pseudocolumn_helpers';
-import { ForeignKeyRef, Table } from '@isrd-isi-edu/ermrestjs/js/core';
+import type { ForeignKeyRef } from '@isrd-isi-edu/ermrestjs/src/models/foreign-key';
+import type { Table } from '@isrd-isi-edu/ermrestjs/src/models/table';
 /**
  * @class
  * @param {Reference} reference column's reference

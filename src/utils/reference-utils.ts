@@ -55,7 +55,9 @@ import {
   _processColumnOrderList,
   _isEntryContext,
 } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
-import type { ForeignKeyRef, Column, Key } from '@isrd-isi-edu/ermrestjs/js/core';
+import type { ForeignKeyRef } from '@isrd-isi-edu/ermrestjs/src/models/foreign-key';
+import type { Column } from '@isrd-isi-edu/ermrestjs/src/models/column';
+import type { Key } from '@isrd-isi-edu/ermrestjs/src/models/key';
 
 export interface ReadPathResult {
   value: string;
@@ -587,11 +589,11 @@ export function generateColumnsList(
       // as part of heuristics, treat the asset filename the same as the asset itself.
       // and only add one of them.
       if (column.isAssetFilename) {
-        if (column.assetURLColumnName in consideredColumns) {
+        if (column.assetURLColumnName! in consideredColumns) {
           return;
         }
-        consideredColumns[column.assetURLColumnName] = true;
-        _addAssetColumn(reference.table.columns.get(column.assetURLColumnName), sourceObjectWrapper, name, heuristics);
+        consideredColumns[column.assetURLColumnName!] = true;
+        _addAssetColumn(reference.table.columns.get(column.assetURLColumnName!), sourceObjectWrapper, name, heuristics);
         return;
       }
 
@@ -778,8 +780,7 @@ export function generateColumnsList(
             ignore = false;
             // keep track of the columns used in the mapping
             const usedColumns: { [key: string]: boolean } = {};
-            let iframeColIndex = 0;
-            for (iframeColIndex = 0; iframeColIndex < inputIframeRes.columns.length; iframeColIndex++) {
+            for (let iframeColIndex = 0; iframeColIndex < inputIframeRes.columns.length; iframeColIndex++) {
               usedColumns[inputIframeRes.columns[iframeColIndex].name] = true;
             }
             Object.assign(usedIframeInputMappings, usedColumns);
@@ -959,7 +960,7 @@ export function generateColumnsList(
       if (col.memberOfForeignKeys.length === 0) {
         addColumn(col, undefined, undefined, true);
       } else {
-        let colFKs: ForeignKeyRef[] = [];
+        let colFKs: ForeignKeyRef[];
 
         // sort foreign keys of a column
         if (col.memberOfForeignKeys.length > 1) {
@@ -1192,7 +1193,7 @@ export function generateFacetColumns(
        * related entities to the main table instead of alternative, this should be changed.
        */
       if (detailedRef.table !== compactRef.table && !detailedRef.table._isAlternativeTable() && compactRef.table._isAlternativeTable()) {
-        fcObj.source.unshift({ outbound: compactRef.table._altForeignKey.constraint_names[0] });
+        fcObj.source.unshift({ outbound: compactRef.table._altForeignKey!.constraint_names[0] });
       }
       facetObjectWrappers.push(new SourceObjectWrapper(fcObj, reference.table, true));
     });
@@ -1212,9 +1213,10 @@ export function generateFacetColumns(
         const childIndexes: number[] = [];
         fo.children.forEach((child) => {
           // if the function returns false, it couldn't handle that case, and therefore we are ignoring it.
-          if (!helpers.checkForAlternative(child, usedAnnotation, reference.table)) return;
+          const altRes = helpers.checkForAlternative(child, usedAnnotation, reference.table);
+          if (typeof altRes === 'boolean' && !altRes) return;
           const usedIndex = facetColumns.length;
-          facetColumns.push(new FacetColumn(reference, usedIndex, child, structureIndex));
+          facetColumns.push(new FacetColumn(reference, usedIndex, typeof altRes === 'boolean' ? child : altRes, structureIndex));
           childIndexes.push(usedIndex);
         });
         if (childIndexes.length === 0) return; // if there wasn't any valid child, ignore the group
@@ -1223,9 +1225,11 @@ export function generateFacetColumns(
       // individual facet column
       else {
         // if the function returns false, it couldn't handle that case, and therefore we are ignoring it.
-        if (!helpers.checkForAlternative(fo, usedAnnotation, reference.table)) return;
+        const altRes = helpers.checkForAlternative(fo, usedAnnotation, reference.table);
+        if (typeof altRes === 'boolean' && !altRes) return;
+
         const usedIndex = facetColumns.length;
-        facetColumns.push(new FacetColumn(reference, usedIndex, fo));
+        facetColumns.push(new FacetColumn(reference, usedIndex, typeof altRes === 'boolean' ? fo : altRes));
         facetColumnsStructure.push(usedIndex);
       }
     });

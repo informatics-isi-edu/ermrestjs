@@ -1,6 +1,6 @@
 import { InvalidInputError } from '@isrd-isi-edu/ermrestjs/src/models/errors';
 
-export function isDefinedAndNotNull(obj: unknown): boolean {
+export function isDefinedAndNotNull<T>(obj: T): obj is NonNullable<T> {
   return obj !== undefined && obj !== null;
 }
 

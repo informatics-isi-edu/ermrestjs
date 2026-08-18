@@ -23,7 +23,8 @@ import { createPseudoColumn } from '@isrd-isi-edu/ermrestjs/src/utils/column-uti
 
 // legacy imports that need to be accessed
 import { _facetColumnHelpers, _sourceColumnHelpers } from '@isrd-isi-edu/ermrestjs/js/utils/pseudocolumn_helpers';
-import type { Column, Table } from '@isrd-isi-edu/ermrestjs/js/core';
+import type { Column } from '@isrd-isi-edu/ermrestjs/src/models/column';
+import type { Table } from '@isrd-isi-edu/ermrestjs/src/models/table';
 
 export type FilterPropsType = {
   /**
@@ -248,7 +249,7 @@ export default class SourceObjectWrapper {
     }
 
     let colName: string;
-    let col: Column | undefined = undefined;
+    let col: Column | undefined;
     let colTable = table;
     const source = sourceObject.source;
     let sourceObjectNodes: SourceObjectNode[] = [];
@@ -496,10 +497,9 @@ export default class SourceObjectWrapper {
     if (!isObjectAndNotNull(tuple)) return null;
     let i: number;
     const filters: any[] = [];
-    let filterSource: any[] = [];
 
     // create the reverse path
-    filterSource = this.getRawSourcePath(true, outAlias);
+    const filterSource = this.getRawSourcePath(true, outAlias);
 
     // add the filter data
     for (i = 0; i < rootTable.shortestKey.length; i++) {

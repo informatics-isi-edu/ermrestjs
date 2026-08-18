@@ -32,7 +32,8 @@ import {
   ENV_IS_NODE,
 } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
 import { parse } from '@isrd-isi-edu/ermrestjs/js/parser';
-import { Column, Key } from '@isrd-isi-edu/ermrestjs/js/core';
+import { Column } from '@isrd-isi-edu/ermrestjs/src/models/column';
+import { Key } from '@isrd-isi-edu/ermrestjs/src/models/key';
 import HandlebarsService from '@isrd-isi-edu/ermrestjs/src/services/handlebars';
 import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
 
@@ -161,7 +162,7 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
      * @return {String} sanitized filename
      */
     export function _sanitizeFilename(str, replacement) {
-        replacement = (typeof replacement == "string") ? replacement : '_';
+        replacement = (typeof replacement === 'string') ? replacement : '_';
 
         var illegalRe = /[\/\?<>\\:\*\|":]/g;
         var controlRe = /[\x00-\x1f\x80-\x9f]/g;
@@ -267,6 +268,7 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
             val = obj[k];
 
             // we don't accept custom type objects (we're not detecting circular reference)
+            // eslint-disable-next-line eqeqeq
             if (isObject(val) && (val.constructor && val.constructor != Object)) continue;
 
             newK = k;
@@ -388,7 +390,8 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
      */
     export function _getRecursiveAnnotationValue(context, annotation, dontUseDefaultContext) {
         var contextedAnnot = _getAnnotationValueByContext(context, annotation, dontUseDefaultContext);
-        if (contextedAnnot !== -1) { // found the context
+      if (contextedAnnot !== -1) { // found the context
+          // eslint-disable-next-line eqeqeq
             if (typeof contextedAnnot == "object" || (_contextArray.indexOf(contextedAnnot) === -1) ) {
                 return contextedAnnot;
             } else {

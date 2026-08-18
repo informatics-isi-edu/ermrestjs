@@ -4,7 +4,7 @@ import { Reference, Tuple } from '@isrd-isi-edu/ermrestjs/src/models/reference';
 // legacy
 import validateJSONLD from '@isrd-isi-edu/ermrestjs/js/json_ld_validator';
 import { _renderTemplate } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
-import { Table } from '@isrd-isi-edu/ermrestjs/js/core';
+import type { Table } from '@isrd-isi-edu/ermrestjs/src/models/table';
 
 /**
  * Constructs the Google Dataset metadata for the given tuple.

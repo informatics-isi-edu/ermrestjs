@@ -25,7 +25,8 @@ import {
 } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
 
 // legacy
-import { Column, Key } from '@isrd-isi-edu/ermrestjs/js/core';
+import type { Column } from '@isrd-isi-edu/ermrestjs/src/models/column';
+import type { Key } from '@isrd-isi-edu/ermrestjs/src/models/key';
 import { parse } from '@isrd-isi-edu/ermrestjs/js/parser';
 import {
   _isEntryContext,
@@ -325,7 +326,7 @@ export class PseudoColumn extends ReferenceColumn {
         page.tuples.map((t) => t.data),
         mainTable.schema.catalog,
         (basePath + pathToCol + projection).length,
-        mainTable.displayname.value,
+        mainTable.displayname.value!,
       );
 
       if (!keyValueRes.successful || !keyValueRes.filters) {

@@ -27,7 +27,7 @@ import {
 
 // legacy imports
 import { parse } from '@isrd-isi-edu/ermrestjs/js/parser';
-import { Column } from '@isrd-isi-edu/ermrestjs/js/core';
+import type { Column } from '@isrd-isi-edu/ermrestjs/src/models/column';
 import { type AttributeGroupReference } from '@isrd-isi-edu/ermrestjs/js/ag_reference';
 import { _processColumnOrderList, _processSourceObjectComment } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
 import { _compressSource } from '@isrd-isi-edu/ermrestjs/js/utils/pseudocolumn_helpers';
@@ -567,8 +567,8 @@ export class FacetColumn {
         }
         // use the table name if it was not defined
         else {
-          value = self.column.table.displayname.value;
-          unformatted = self.column.table.displayname.unformatted;
+          value = self.column.table.displayname.value!;
+          unformatted = self.column.table.displayname.unformatted!;
           isHTML = self.column.table.displayname.isHTML;
 
           if (!self.isEntityMode) {

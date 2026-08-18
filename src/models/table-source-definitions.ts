@@ -6,7 +6,9 @@ import SourceObjectWrapper from '@isrd-isi-edu/ermrestjs/src/models/source-objec
 import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
 
 // legacy
-import { Column, ForeignKeyRef, Table } from '@isrd-isi-edu/ermrestjs/js/core';
+import type { Column } from '@isrd-isi-edu/ermrestjs/src/models/column';
+import type { ForeignKeyRef } from '@isrd-isi-edu/ermrestjs/src/models/foreign-key';
+import type { Table } from '@isrd-isi-edu/ermrestjs/src/models/table';
 
 /**
  * Defines a condition that controls visibility of a column or related entity.

@@ -386,7 +386,7 @@ const createDiscardedFacetSubMessage = (obj: any, onlyChoices?: boolean) => {
 const generateBatchDeleteMessage = (successTupleData: any, failedTupleData: any, isUnlink: boolean) => {
   const totalSuccess = successTupleData.length,
     totalFail = failedTupleData.length;
-  let message = '';
+  let message: string;
   const checkDetails = ' Check the error details below to see more information.';
   const verb = isUnlink ? 'unlinked' : 'deleted';
   const adj = isUnlink ? 'chosen' : 'displayed';

@@ -23,7 +23,9 @@ import { buildSelfTemplateVariables } from '@isrd-isi-edu/ermrestjs/src/utils/te
 import { Reference } from '@isrd-isi-edu/ermrestjs/src/models/reference';
 
 // legacy
-import { Column, ForeignKeyRef, Table } from '@isrd-isi-edu/ermrestjs/js/core';
+import type { Column } from '@isrd-isi-edu/ermrestjs/src/models/column';
+import type { ForeignKeyRef } from '@isrd-isi-edu/ermrestjs/src/models/foreign-key';
+import type { Table } from '@isrd-isi-edu/ermrestjs/src/models/table';
 import {
   _generateTupleUniqueId,
   _getFormattedKeyValues,
@@ -235,8 +237,8 @@ export class ForeignKeyPseudoColumn extends ReferenceColumn {
     let isNull = false;
     let i: number;
 
-    const fkValues: any = {};
-    let ref = null;
+    const fkValues: Record<string, any> = {};
+    let ref;
 
     // make sure we have all the values and map them to the referred table
     for (i = 0; i < fkColumns.length; i++) {
@@ -501,9 +503,9 @@ export class ForeignKeyPseudoColumn extends ReferenceColumn {
         value = unformatted = toName;
         isHTML = false;
       } else if (foreignKey.simple) {
-        value = this.baseColumns[0].displayname.value;
+        value = this.baseColumns[0].displayname.value!;
         isHTML = this.baseColumns[0].displayname.isHTML;
-        unformatted = this.baseColumns[0].displayname.unformatted;
+        unformatted = this.baseColumns[0].displayname.unformatted!;
 
         // disambiguate
         const otherSimpleFks = this.baseColumns[0].memberOfForeignKeys.some((fk: ForeignKeyRef) => {
@@ -516,9 +518,9 @@ export class ForeignKeyPseudoColumn extends ReferenceColumn {
           isHTML = tableName.isHTML || isHTML;
         }
       } else {
-        value = foreignKey.key.table.displayname.value;
+        value = foreignKey.key.table.displayname.value!;
         isHTML = foreignKey.key.table.displayname.isHTML;
-        unformatted = foreignKey.key.table.displayname.unformatted;
+        unformatted = foreignKey.key.table.displayname.unformatted!;
 
         // disambiguate
         const tableCount = foreignKey._table.foreignKeys.all().filter((fk: ForeignKeyRef) => {

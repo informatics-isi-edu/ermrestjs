@@ -29,7 +29,7 @@ import { _isValidSortElement, _extends } from '@isrd-isi-edu/ermrestjs/js/utils/
 import { _formatValueByType } from '@isrd-isi-edu/ermrestjs/src/utils/format-utils';
 import { _compressFacetObject } from '@isrd-isi-edu/ermrestjs/js/utils/pseudocolumn_helpers';
 
-import { Type } from '@isrd-isi-edu/ermrestjs/js/core';
+import { Type } from '@isrd-isi-edu/ermrestjs/src/models/type';
 
 
 /**

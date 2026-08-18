@@ -79,7 +79,7 @@ export class Tuple {
         uri = uri + fixedEncodeURIComponent(baseTable.schema.name) + ':' + fixedEncodeURIComponent(baseTable.name) + '/';
 
         // convert filter columns to base table columns using shared key
-        const fkey = this._pageRef.table._altForeignKey;
+        const fkey = this._pageRef.table._altForeignKey!;
         fkey.mapping.domain().forEach((altColumn: any, index: number) => {
           const baseCol = fkey.mapping.get(altColumn);
           if (index === 0) {
@@ -602,7 +602,7 @@ export class Tuple {
     const associationRef = relRef.derivedAssociationReference;
     const encoder = fixedEncodeURIComponent;
     const newFilter: string[] = [];
-    let missingData = false;
+    let missingData;
 
     const addFilter = (fkr: any, data: Record<string, any>): boolean => {
       const keyCols = fkr.colset.columns;

@@ -68,7 +68,13 @@ import {
 
 // legacy imports (these will need to be properly typed later)
 import { parse, Location } from '@isrd-isi-edu/ermrestjs/js/parser';
-import { type Server, ermrestFactory, type Catalog, type Table, type Column, type ForeignKeyRef, Type } from '@isrd-isi-edu/ermrestjs/js/core';
+import { ermrestFactory } from '@isrd-isi-edu/ermrestjs/src/services/ermrest-factory';
+import type { Server } from '@isrd-isi-edu/ermrestjs/src/models/server';
+import type { Catalog } from '@isrd-isi-edu/ermrestjs/src/models/catalog';
+import type { Table } from '@isrd-isi-edu/ermrestjs/src/models/table';
+import type { Column } from '@isrd-isi-edu/ermrestjs/src/models/column';
+import type { ForeignKeyRef } from '@isrd-isi-edu/ermrestjs/src/models/foreign-key';
+import { Type } from '@isrd-isi-edu/ermrestjs/src/models/type';
 import { onload } from '@isrd-isi-edu/ermrestjs/js/setup/node';
 import {
   _getPagingValues,
@@ -136,7 +142,7 @@ export const resolve = async (uri: string, contextHeaderParams?: unknown): Promi
 
   const server = ermrestFactory.getServer(loc.service, contextHeaderParams);
 
-  const catalog = await server.catalogs.get(loc.catalog);
+  const catalog = await server.catalogs!.get(loc.catalog);
 
   return new Reference(loc, catalog);
 };
@@ -461,7 +467,7 @@ export class Reference {
       throw new Error('`appLinkFn` function is not defined.');
     }
     const tag = this._context ? this._table._getAppLink(this._context) : this.table._getAppLink();
-    return ConfigService.appLinkFn(tag, this._location, this._context);
+    return ConfigService.appLinkFn(tag as string, this._location, this._context);
   }
 
   /**
@@ -786,16 +792,16 @@ export class Reference {
     }
 
     for (let i = 0; i < visibleFKs.length; i++) {
-      let fkr = visibleFKs[i];
+      const entry = visibleFKs[i];
       let relatedRef: RelatedReference, fkName: string;
-      if (fkr.isPath) {
+      if (entry.isPath) {
         // since we're sure that the pseudoColumn either going to be
         // general pseudoColumn or InboundForeignKeyPseudoColumn then it will have reference
-        const pseudoCol = createPseudoColumn(this, fkr.sourceObjectWrapper, tuple) as PseudoColumn | InboundForeignKeyPseudoColumn;
+        const pseudoCol = createPseudoColumn(this, entry.sourceObjectWrapper!, tuple) as PseudoColumn | InboundForeignKeyPseudoColumn;
         relatedRef = pseudoCol.reference as RelatedReference;
         fkName = relatedRef.pseudoColumn!.name;
       } else {
-        fkr = fkr.foreignKey;
+        const fkr = entry.foreignKey!;
 
         // make sure that this fkr is not from an alternative table to self
         if (
@@ -1716,7 +1722,7 @@ export class Reference {
   checkPermissions(permission: string): boolean {
     // Return true if permission is null
     if (this._table.rights[permission] === null) return true;
-    return this._table.rights[permission];
+    return this._table.rights[permission] as boolean;
   }
 
   _generateContextHeader(contextHeaderParams: Record<string, unknown>): Record<string, unknown> {
@@ -2009,8 +2015,7 @@ export class Reference {
 
     const etag = HTTPService.getResponseHeader(response).etag;
 
-    let hasPrevious,
-      hasNext = false;
+    let hasPrevious, hasNext;
     if (!this._location.paging) {
       // first page
       hasPrevious = false;
@@ -2501,7 +2506,7 @@ export class Reference {
       pageData,
       this.table.schema.catalog,
       -1, // we don't want to check the url length here, chaise will check it
-      this.table.displayname.value,
+      this.table.displayname.value!,
     );
     // NOTE this will not happen since ermrest only accepts not-null keys,
     // but added here for completeness
