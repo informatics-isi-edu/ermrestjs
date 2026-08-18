@@ -39,7 +39,7 @@ export class Server {
    */
   pid?: string;
 
-  catalogs: Catalogs | null;
+  catalogs: Catalogs;
 
   /**
    * @param uri URI of the ERMrest service.
