@@ -381,7 +381,7 @@ export class Page {
       });
 
       if (pattern === null || pattern.trim() === '') {
-        pattern = ref.table._getNullValue(ref.context);
+        pattern = ref.table._getNullValue(ref.context)!;
       }
 
       return renderMarkdown(pattern, false);
@@ -429,7 +429,7 @@ export class Page {
       });
 
       if (pattern === null || pattern.trim() === '') {
-        pattern = ref.table._getNullValue(ref.context);
+        pattern = ref.table._getNullValue(ref.context)!;
       }
 
       return renderMarkdown(pattern, false);
@@ -451,7 +451,7 @@ export class Page {
 
         // If value is null or empty, return value on basis of `show_null`
         if (value === null || value.trim() === '') {
-          value = ref.table._getNullValue(ref.context);
+          value = ref.table._getNullValue(ref.context)!;
         }
         // If final value is not null then push it in values array
         if (value !== null) {

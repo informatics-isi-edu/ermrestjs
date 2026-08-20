@@ -400,6 +400,7 @@ export const _warningMessages = Object.freeze({
   INVALID_FK: 'given foreignkey definition is invalid.',
   INVALID_FK_NO_INBOUND: 'given foreignkey path definiton cannot be all-outbound.',
   AGG_NOT_ALLOWED: 'aggregate functions are not allowed here.',
+  SCALAR_NOT_ALLOWED: 'scalar column directives are not allowed here.',
   MULTI_SCALAR_NEED_AGG: 'aggregate functions are required for scalar inbound-included paths.',
   MULTI_ENT_NEED_AGG: 'aggregate functions are required for entity inbound-included paths in non-detailed contexts.',
   NO_AGG_IN_ENTRY: 'aggregate functions are not allowed in entry contexts.',

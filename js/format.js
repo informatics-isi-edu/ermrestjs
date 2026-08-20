@@ -167,7 +167,7 @@ var printf_parse = function (fmt) {
         arg_names |= 1;
         var field_list = [],
           replacement_field = match[1],
-          field_match = [];
+          field_match;
         if ((field_match = re.key.exec(replacement_field)) !== null) {
           field_list.push(field_match[1]);
           while ((replacement_field = replacement_field.substring(field_match[0].length)) !== '') {

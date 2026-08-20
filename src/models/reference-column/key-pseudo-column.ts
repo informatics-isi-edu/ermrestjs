@@ -11,7 +11,8 @@ import { isValidVisibleCellHeight, isStringAndNotEmpty } from '@isrd-isi-edu/erm
 import { buildSelfTemplateVariables } from '@isrd-isi-edu/ermrestjs/src/utils/template-utils';
 
 // legacy
-import { Key, Table } from '@isrd-isi-edu/ermrestjs/js/core';
+import type { Key } from '@isrd-isi-edu/ermrestjs/src/models/key';
+import type { Table } from '@isrd-isi-edu/ermrestjs/src/models/table';
 import {
   _determineDisplayName,
   _generateKeyPresentation,

@@ -23,7 +23,9 @@ import { buildSelfTemplateVariables } from '@isrd-isi-edu/ermrestjs/src/utils/te
 import ActiveListCondition from '@isrd-isi-edu/ermrestjs/src/models/active-list-condition';
 
 // legacy
-import { Column, Table, Type } from '@isrd-isi-edu/ermrestjs/js/core';
+import type { Column } from '@isrd-isi-edu/ermrestjs/src/models/column';
+import type { Table } from '@isrd-isi-edu/ermrestjs/src/models/table';
+import { Type } from '@isrd-isi-edu/ermrestjs/src/models/type';
 import {
   _getFormattedKeyValues,
   _isEntryContext,
@@ -316,7 +318,7 @@ export class ReferenceColumn {
       } else {
         this._comment = _processSourceObjectComment(
           this.sourceObject,
-          comment ? comment.unformatted : null,
+          (comment ? comment.unformatted : null) as string | undefined,
           commentRenderMarkdown,
           commentDisplayMode,
         );
@@ -536,7 +538,7 @@ export class ReferenceColumn {
       if (!isStringAndNotEmpty(context)) {
         context = this._context;
       }
-      return this.baseColumns[0].formatvalue(data, context!, options);
+      return this.baseColumns[0].formatvalue(data, context!, options) as string | string[];
     }
     return data.toString();
   }

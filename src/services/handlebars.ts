@@ -21,7 +21,7 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
 import { isObjectAndNotNull } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
 import { fixedEncodeURIComponent } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
 import printf from '@isrd-isi-edu/ermrestjs/js/format';
-import { type Catalog } from '@isrd-isi-edu/ermrestjs/js/core';
+import type { Catalog } from '@isrd-isi-edu/ermrestjs/src/models/catalog';
 
 export default class HandlebarsService {
   private static _setupDone = false;

@@ -1,13 +1,14 @@
-import { ForeignKeyRef, Key } from '@isrd-isi-edu/ermrestjs/js/core';
+import type { ForeignKeyRef } from '@isrd-isi-edu/ermrestjs/src/models/foreign-key';
+import type { Key } from '@isrd-isi-edu/ermrestjs/src/models/key';
 import { _constraintTypes } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
 
 export default class CatalogService {
   private static constraintNames: Record<
     string,
-    Record<string, Record<string, { subject: _constraintTypes; object: Key | ForeignKeyRef; RID: string }>>
+    Record<string, Record<string, { subject: _constraintTypes; object: Key | ForeignKeyRef; RID: string | undefined }>>
   > = {};
 
-  static addConstraintName(catalogId: string, schemaName: string, constraintName: string, obj: any, subject: _constraintTypes) {
+  static addConstraintName(catalogId: string, schemaName: string, constraintName: string, obj: Key | ForeignKeyRef, subject: _constraintTypes) {
     if (!(catalogId in CatalogService.constraintNames)) {
       CatalogService.constraintNames[catalogId] = {};
     }

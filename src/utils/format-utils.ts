@@ -256,7 +256,8 @@ function _durationWrapTooltip(visible: string, absMs: number): string {
  * @returns `"true"`, `"false"`, or `""` for null
  */
 export function printBoolean(value: any, options?: any): string {
-  options = typeof options === 'undefined' ? {} : options;
+  // uncomment the following if options is needed
+  // options = typeof options === 'undefined' ? {} : options;
   if (value === null) {
     return '';
   }
@@ -272,7 +273,8 @@ export function printBoolean(value: any, options?: any): string {
  * @returns the comma-separated integer string
  */
 export function printInteger(value: any, options?: any): string {
-  options = typeof options === 'undefined' ? {} : options;
+  // uncomment the following if options is needed
+  // options = typeof options === 'undefined' ? {} : options;
   if (value === null) {
     return '';
   }
@@ -293,7 +295,8 @@ export function printInteger(value: any, options?: any): string {
  * @returns the formatted timestamp, or `""` when the input is invalid/null
  */
 export function printTimestamp(value: any, options?: any): string {
-  options = typeof options === 'undefined' ? {} : options;
+  // uncomment the following if options is needed
+  // options = typeof options === 'undefined' ? {} : options;
   if (value === null) {
     return '';
   }
@@ -323,7 +326,8 @@ export function printTimestamp(value: any, options?: any): string {
  * @returns the formatted date, or `""` when the input is invalid/null
  */
 export function printDate(value: any, options?: any): string {
-  options = typeof options === 'undefined' ? {} : options;
+  // uncomment the following if options is needed
+  // options = typeof options === 'undefined' ? {} : options;
   if (value === null) {
     return '';
   }
@@ -391,7 +395,8 @@ export function printFloat(value: any, options?: any): string {
  * @returns the value as a string
  */
 export function printText(value: any, options?: any): string {
-  options = typeof options === 'undefined' ? {} : options;
+  // uncomment the following if options is needed
+  // options = typeof options === 'undefined' ? {} : options;
   if (value === null) {
     return '';
   }
@@ -547,7 +552,8 @@ export function printArray(value: any, options?: any): any {
  * @returns the markdown swatch + label, or `""` when the input is not a valid hex color
  */
 export function printColor(value: any, options?: any): string {
-  options = typeof options === 'undefined' ? {} : options;
+  // uncomment the following if options is needed
+  // options = typeof options === 'undefined' ? {} : options;
 
   if (!isValidColorRGBHex(value)) {
     return '';

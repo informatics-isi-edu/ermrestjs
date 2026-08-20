@@ -15,7 +15,7 @@ import { getFilename } from '@isrd-isi-edu/ermrestjs/src/utils/file-utils';
 // legacy
 import { _getAnnotationValueByContext, _isEntryContext, _renderTemplate, _isSameHost } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
 import { _processWaitForList } from '@isrd-isi-edu/ermrestjs/js/utils/pseudocolumn_helpers';
-import type { Column } from '@isrd-isi-edu/ermrestjs/js/core';
+import type { Column } from '@isrd-isi-edu/ermrestjs/src/models/column';
 
 type AssetMetadata = {
   url: string;

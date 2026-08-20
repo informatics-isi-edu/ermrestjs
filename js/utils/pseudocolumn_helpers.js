@@ -46,7 +46,6 @@ import {
 
 // legacy
 import { generateKeyValueFilters, renameKey, _renderTemplate, _isEntryContext } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
-import { Table, Catalog } from '@isrd-isi-edu/ermrestjs/js/core';
 import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/parser';
 
 /**
@@ -1068,11 +1067,12 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
          * @param {SourceObjectWrapper} facetObjectWrapper the facet object
          * @param {boolean} usedAnnotation the annotation that was used to create this facet (if any)
          * @param {Table} table the current table that we want to make sure the facetObject is valid for.
-         * @returns {boolean} whether the facetObjectWrapper is valid for this table.
+         * @returns {boolean | SourceObjectWrapper} if boolean, whether the facetObjectWrapper is valid for this table.
+         *  if it returned a new object, that one should be used instead of the passed facetObjectWrapper
          */
         checkForAlternative: function (facetObjectWrapper, usedAnnotation, table) {
-            var currTable = facetObjectWrapper.column.table;
-            var compactSelectTable = currTable._baseTable._getAlternativeTable(_contexts.COMPACT_SELECT);
+            const currTable = facetObjectWrapper.column.table;
+            const compactSelectTable = currTable._baseTable._getAlternativeTable(_contexts.COMPACT_SELECT);
 
             // there's no alternative table
             if (currTable === compactSelectTable) {
@@ -1108,8 +1108,7 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
                 }
 
                 // update the object and all its properties.
-                // TODO can this be improved?
-                facetObjectWrapper = new SourceObjectWrapper(sourceObject, table, true);
+                return new SourceObjectWrapper(sourceObject, table, true);
             }
 
             return true;
@@ -1381,7 +1380,7 @@ import { parse, _convertSearchTermToFilter } from '@isrd-isi-edu/ermrestjs/js/pa
             };
 
             var i, fkAlias, constraint, isInbound, fkObj, fk, colTable = rootTable, hasInbound = false, firstForeignKeyNode, lastForeignKeyNode,
-                foreignKeyPathLength = 0, sourceObjectNodes = [], hasPrefix = false, hasOnlyPrefix = false, prefix, isAlternativeJoin = false,
+                foreignKeyPathLength = 0, sourceObjectNodes = [], hasPrefix = false, hasOnlyPrefix = false, prefix, isAlternativeJoin,
                 isAllOutboundNotNull = true, isAllOutboundNotNullPerModel = true;
             let isFiltered = false, filterProps = {
                 isFilterProcessed: true, hasRootFilter: false, hasFilterInBetween: false, leafFilterString: ''

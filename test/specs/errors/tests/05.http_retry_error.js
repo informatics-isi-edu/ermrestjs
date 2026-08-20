@@ -82,7 +82,7 @@ exports.execute = function (options) {
 	    });
 
 
-	    it("should make 3 http retry with initial 500ms delay and then call success callback for entity delete", function(done) {
+	    it("should make 3 http retry with initial 500ms delay and then call success callback for delete", function(done) {
 
         	server.http.max_retries = 3;
         	server.http.initial_delay = 500;
@@ -107,8 +107,10 @@ exports.execute = function (options) {
             	enableNet();
             }, delay);
 
-	        var filter = new ermRest.BinaryPredicate(table.columns.get("id"), "=", "8001");
-            table.entity.delete(filter).then(function() {
+            // drive the retried DELETE through the reference api (the legacy entity api was removed)
+            ermRest.resolve(options.url + "/catalog/" + catalog.id + "/entity/error_schema:valid_table_name/id=8001").then(function(reference) {
+                return reference.delete();
+            }).then(function() {
             	expect((new Date().getTime()) - startTime).toBeGreaterThan(delay);
             	done();
             }, function(err) {

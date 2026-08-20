@@ -633,7 +633,6 @@ function _bindCustomMarkdownTags(md: typeof MarkdownIt) {
               flag = true,
               posTop = true;
             let videoText = '';
-            let infoHTML = '';
 
             // Add all attributes to the video
             openingLink.attrs!.forEach(function (attr) {
@@ -662,7 +661,7 @@ function _bindCustomMarkdownTags(md: typeof MarkdownIt) {
              * With visibility hidden eventhough the element is invisibile, it will still take up space,
              * and will add extra unnecessary space between the iframe and fullscreen button.
              */
-            infoHTML = '<span class="' + _classNames.showInPrintMode + '" style="display:none;">' + videoText + '</span>';
+            const infoHTML = '<span class="' + _classNames.showInPrintMode + '" style="display:none;">' + videoText + '</span>';
 
             let captionHTML = '';
             // If the next attribute is not a closing link then iterate

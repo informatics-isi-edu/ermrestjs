@@ -53,7 +53,7 @@ import { Checksum, Upload } from '@isrd-isi-edu/ermrestjs/js/hatrac';
 import { onload, getElapsedTime } from '@isrd-isi-edu/ermrestjs/js/setup/node';
 import printf from '@isrd-isi-edu/ermrestjs/js/format';
 import { resolve, _createPage } from '@isrd-isi-edu/ermrestjs/src/models/reference';
-import { ermrestFactory } from '@isrd-isi-edu/ermrestjs/js/core';
+import { ermrestFactory } from '@isrd-isi-edu/ermrestjs/src/services/ermrest-factory';
 import { parse, createPath, createSearchPath, createLocation } from '@isrd-isi-edu/ermrestjs/js/parser';
 import {
   _currDate,
@@ -72,8 +72,6 @@ import {
   AttributeGroupLocation,
   BucketAttributeGroupReference,
 } from '@isrd-isi-edu/ermrestjs/js/ag_reference';
-import { BinaryPredicate } from '@isrd-isi-edu/ermrestjs/js/filters';
-import { DataPath } from '@isrd-isi-edu/ermrestjs/js/datapath';
 import HandlebarsService from '@isrd-isi-edu/ermrestjs/src/services/handlebars';
 import { Exporter } from '@isrd-isi-edu/ermrestjs/js/export';
 import validateJSONLD from '@isrd-isi-edu/ermrestjs/js/json_ld_validator.js';
@@ -204,7 +202,5 @@ export {
   encodeFacetString,
   _validateMustacheTemplate,
   _currDate,
-  BinaryPredicate,
-  DataPath,
   validateJSONLD,
 };

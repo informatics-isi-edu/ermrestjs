@@ -1,6 +1,6 @@
 import { isObjectAndNotNull, isStringAndNotEmpty } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
 import { _specialSourceDefinitions } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
-import { Table } from '@isrd-isi-edu/ermrestjs/js/core';
+import type { Table } from '@isrd-isi-edu/ermrestjs/src/models/table';
 
 /**
  * This class is used for the shared prefix logic.

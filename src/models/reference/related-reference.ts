@@ -13,7 +13,9 @@ import { _facetFilterTypes, _parserAliases } from '@isrd-isi-edu/ermrestjs/src/u
 import { _compressSource } from '@isrd-isi-edu/ermrestjs/js/utils/pseudocolumn_helpers';
 import { fixedEncodeURIComponent } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
 
-import { Catalog, ForeignKeyRef, Table } from '@isrd-isi-edu/ermrestjs/js/core';
+import type { Catalog } from '@isrd-isi-edu/ermrestjs/src/models/catalog';
+import type { ForeignKeyRef } from '@isrd-isi-edu/ermrestjs/src/models/foreign-key';
+import type { Table } from '@isrd-isi-edu/ermrestjs/src/models/table';
 import { Location } from '@isrd-isi-edu/ermrestjs/js/parser';
 import { _isValidModelCommentDisplay, _processSourceObjectComment, generateKeyValueFilters } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
 
@@ -285,7 +287,7 @@ export const generateRelatedReference = (
 
   if (checkForAssociation && fkrTable.isPureBinaryAssociation) {
     // find the other foreignkey
-    const pureBinaryFKs = fkrTable.pureBinaryForeignKeys;
+    const pureBinaryFKs = fkrTable.pureBinaryForeignKeys!;
     let otherFK: ForeignKeyRef;
     for (let j = 0; j < pureBinaryFKs.length; j++) {
       if (pureBinaryFKs[j] !== fkr) {
@@ -456,7 +458,7 @@ export const generateRelatedReference = (
     _compressSource(dataSource),
     mainTuple,
     displayname,
-    _processSourceObjectComment(sourceObject, comment, commentRenderMarkdown, commentDisplayMode),
+    _processSourceObjectComment(sourceObject, comment as string | undefined, commentRenderMarkdown, commentDisplayMode),
   );
 
   if (derivedAssociationReference) {

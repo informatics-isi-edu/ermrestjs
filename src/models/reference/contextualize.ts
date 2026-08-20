@@ -217,7 +217,7 @@ export class Contextualize {
           if (!source.location.lastJoin.hasColumnMapping) return false;
 
           const joinCols = source.location.lastJoin.toCols;
-          const keyCols = source.table._baseTable._altSharedKey.colset.columns;
+          const keyCols = source.table._baseTable._altSharedKey!.colset.columns;
 
           if (joinCols.length !== keyCols.length) {
             return false;
@@ -249,7 +249,7 @@ export class Contextualize {
             col = source.table.columns.get(currJoin.toCols[i]);
 
             // map the column from source table to alternative table
-            col = newTable._altForeignKey.mapping.getFromColumn(col);
+            col = newTable._altForeignKey!.mapping.getFromColumn(col);
 
             // the first column must have schema and table name
             newRightCols.push(i === 0 ? col.toString() : fixedEncodeURIComponent(col.name));
@@ -322,7 +322,7 @@ export class Contextualize {
               if (!Array.isArray(facetFilter.source)) {
                 facetFilter.source = [facetFilter.source];
               }
-              facetFilter.source.unshift({ outbound: newTable._altForeignKey.constraint_names[0] });
+              facetFilter.source.unshift({ outbound: newTable._altForeignKey!.constraint_names[0] });
             }
             return facetFilter;
           });
@@ -339,7 +339,7 @@ export class Contextualize {
               if (!Array.isArray(facetFilter.source)) {
                 facetFilter.source = [facetFilter.source];
               }
-              facetFilter.source.unshift({ inbound: source.table._altForeignKey.constraint_names[0] });
+              facetFilter.source.unshift({ inbound: source.table._altForeignKey!.constraint_names[0] });
             }
             return facetFilter;
           });
@@ -348,14 +348,14 @@ export class Contextualize {
         else {
           modifyFacetFilters((facetFilter: any, firstFk: any) => {
             if (firstFk && !firstFk.isInbound && firstFk.obj.key.table === newTable._baseTable) {
-              facetFilter.source[0] = { outbound: newTable._altForeignKey.constraint_names[0] };
+              facetFilter.source[0] = { outbound: newTable._altForeignKey!.constraint_names[0] };
             } else {
               if (!Array.isArray(facetFilter.source)) {
                 facetFilter.source = [facetFilter.source];
               }
               facetFilter.source.unshift(
-                { outbound: newTable._altForeignKey.constraint_names[0] },
-                { inbound: source.table._altForeignKey.constraint_names[0] },
+                { outbound: newTable._altForeignKey!.constraint_names[0] },
+                { inbound: source.table._altForeignKey!.constraint_names[0] },
               );
             }
             return facetFilter;
@@ -391,7 +391,7 @@ export class Contextualize {
           // or a conjunction of binary predicate that is a key of the alternative tables
 
           // use base table's alt shared key
-          const sharedKey = source.table._baseTable._altSharedKey;
+          const sharedKey = source.table._baseTable._altSharedKey!;
           const filter = source.location.filter;
           let filterString: string;
 
@@ -399,12 +399,12 @@ export class Contextualize {
           if (filter.type === FILTER_TYPES.BINARYPREDICATE && filter.operator === '=' && sharedKey.colset.length() === 1) {
             // filter using shared key
             if (
-              (source.table._isAlternativeTable() && filter.column === source.table._altForeignKey.colset.columns[0].name) ||
+              (source.table._isAlternativeTable() && filter.column === source.table._altForeignKey!.colset.columns[0].name) ||
               (!source.table._isAlternativeTable() && filter.column === sharedKey.colset.columns[0].name)
             ) {
               if (newTable._isAlternativeTable()) {
                 // to alternative table
-                filterString = fixedEncodeURIComponent(newTable._altForeignKey.colset.columns[0].name) + '=' + filter.value;
+                filterString = fixedEncodeURIComponent(newTable._altForeignKey!.colset.columns[0].name) + '=' + filter.value;
               } else {
                 // to base table
                 filterString = fixedEncodeURIComponent(sharedKey.colset.columns[0].name) + '=' + filter.value;
@@ -427,7 +427,7 @@ export class Contextualize {
             // check that filter is shared key
             let keyColNames: string[];
             if (source.table._isAlternativeTable()) {
-              keyColNames = source.table._altForeignKey.colset.columns.map((column: any) => {
+              keyColNames = source.table._altForeignKey!.colset.columns.map((column: any) => {
                 return column.name;
               });
             } else {
@@ -458,20 +458,20 @@ export class Contextualize {
                 if (!source.table._isAlternativeTable() && newTable._isAlternativeTable()) {
                   // base to alternative
                   sharedKey.colset.columns.forEach((column) => {
-                    newCol = newTable._altForeignKey.mapping.getFromColumn(column);
+                    newCol = newTable._altForeignKey!.mapping.getFromColumn(column);
                     mapping[column.name] = newCol.name;
                   });
                 } else if (source.table._isAlternativeTable() && !newTable._isAlternativeTable()) {
                   // alternative to base
-                  source.table._altForeignKey.colset.columns.forEach((column) => {
-                    newCol = source.table._altForeignKey.mapping.get(column);
+                  source.table._altForeignKey!.colset.columns.forEach((column) => {
+                    newCol = source.table._altForeignKey!.mapping.get(column);
                     mapping[column.name] = newCol.name;
                   });
                 } else {
                   // alternative to alternative
-                  source.table._altForeignKey.colset.columns.forEach((column) => {
-                    const baseCol = source.table._altForeignKey.mapping.get(column); // alt 1 col -> base col
-                    newCol = newTable._altForeignKey.mapping.getFromColumn(baseCol); // base col -> alt 2
+                  source.table._altForeignKey!.colset.columns.forEach((column) => {
+                    const baseCol = source.table._altForeignKey!.mapping.get(column); // alt 1 col -> base col
+                    newCol = newTable._altForeignKey!.mapping.getFromColumn(baseCol); // base col -> alt 2
                     mapping[column.name] = newCol.name;
                   });
                 }
@@ -506,13 +506,13 @@ export class Contextualize {
         // all other cases (2.2., 3.2.2), use join
         let join: string;
         if (source.table._isAlternativeTable() && newTable._isAlternativeTable()) {
-          join = source.table._altForeignKey.toString(true) + '/' + newTable._altForeignKey.toString();
+          join = source.table._altForeignKey!.toString(true) + '/' + newTable._altForeignKey!.toString();
         } else if (!source.table._isAlternativeTable()) {
           // base to alternative
-          join = newTable._altForeignKey.toString();
+          join = newTable._altForeignKey!.toString();
         } else {
           // alternative to base
-          join = source.table._altForeignKey.toString(true);
+          join = source.table._altForeignKey!.toString(true);
         }
         newLocationString = source.location.compactUri + '/' + join;
       }

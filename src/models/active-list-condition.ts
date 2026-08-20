@@ -95,7 +95,7 @@ export default class ActiveListCondition {
       }
       this.column = createPseudoColumn(this._reference, condSourceWrapper!, this._tuple);
     } catch (e: unknown) {
-      throw new Error('failed to create condition column: ' + (e instanceof Error ? e.message : String(e)));
+      throw new Error('failed to create condition column: ' + (e instanceof Error ? e.message : String(e)), { cause: e });
     }
 
     this.isAsync = condSourceWrapper.hasInbound || condSourceWrapper.hasAggregate;

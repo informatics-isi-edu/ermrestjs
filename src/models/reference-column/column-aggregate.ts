@@ -14,7 +14,8 @@ import { fixedEncodeURIComponent } from '@isrd-isi-edu/ermrestjs/src/utils/value
 import { _contexts, _dataFormats, _histogramSupportedTypes } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
 
 // legacy
-import { Column, Type } from '@isrd-isi-edu/ermrestjs/js/core';
+import type { Column } from '@isrd-isi-edu/ermrestjs/src/models/column';
+import { Type } from '@isrd-isi-edu/ermrestjs/src/models/type';
 import {
   AttributeGroupColumn,
   AttributeGroupReference,
@@ -139,7 +140,7 @@ export class ColumnGroupAggregateFn {
           col,
           displayname,
           null,
-          col.getDisplay(context).comment,
+          col.getDisplay(context).comment as unknown as string,
           true,
           isVisible,
         ),

@@ -27,7 +27,7 @@ import { fixedEncodeURIComponent } from '@isrd-isi-edu/ermrestjs/src/utils/value
 // legacy
 
 import { parse } from '@isrd-isi-edu/ermrestjs/js/parser';
-import { ermrestFactory } from '@isrd-isi-edu/ermrestjs/js/core';
+import { ermrestFactory } from '@isrd-isi-edu/ermrestjs/src/services/ermrest-factory';
 import HistoryService from '@isrd-isi-edu/ermrestjs/src/services/history';
 
 export default class ErrorService {
