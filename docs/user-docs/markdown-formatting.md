@@ -804,7 +804,7 @@ This is not part of commonMark specification and it will result in a [block](#in
 ```sh
 # :::dropdown CPATION [LINKCAPTION1](URL1){download} [LINKCAPTION2](URL2){download}
 ::: dropdown DROPDOWNCAPTION [CAPTION1](https://example.com/chaise/search){download}                     [CAPTION2](https://example.com/chaise/search){download}  \n:::
-# OUTPUT: <div class="btn-group markdown-dropdown"><button type="button"  class="btn btn-primary ">DROPDOWNCAPTION</button><button type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"  class="btn btn-primary dropdown-toggle "><span class="caret"></span><span class="sr-only">Toggle Dropdown</span></button><ul class="dropdown-menu"><li><a href="https://example.com/chaise/search" download="" >CAPTION1</a></li><li><a href="https://example.com/chaise/search" download="" >CAPTION2</a></li></ul></div>
+# OUTPUT: <div class="btn-group markdown-dropdown"><button type="button"  class="btn btn-primary ">DROPDOWNCAPTION</button><button type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"  class="btn btn-primary dropdown-toggle "><span class="caret"></span><span class="visually-hidden">Toggle Dropdown</span></button><ul class="dropdown-menu"><li><a href="https://example.com/chaise/search" download="" >CAPTION1</a></li><li><a href="https://example.com/chaise/search" download="" >CAPTION2</a></li></ul></div>
 ```
 
 The button has an appearance similar to the [Bootstrap dropdown button](http://getbootstrap.com/components/#btn-dropdowns-split)

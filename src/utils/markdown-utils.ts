@@ -449,7 +449,7 @@ function _bindCustomMarkdownTags(md: typeof MarkdownIt) {
               buttonDDHtml +=
                 ' class="btn btn-primary dropdown-toggle ' +
                 classes.join(' ') +
-                '"><span class="caret"></span><span class="sr-only">Toggle Dropdown</span></button>';
+                '"><span class="caret"></span><span class="visually-hidden">Toggle Dropdown</span></button>';
 
               // Build unordered list
               const lists = [];
