@@ -330,7 +330,7 @@ export function execute (options) {
         var dropdownMarkdown =
           '::: dropdown MYCAPTION{.btn-lg} [CAPTION1](https://example.org/chaise/search){.btn .btn-danger} [CAPTION2](https://example.org/chaise/search) [CAPTION3](https://example.org/chaise/search) \n:::';
         var dropdownHTML =
-          '<div class="btn-group markdown-dropdown"><button type="button"  class="btn btn-primary btn-lg">MYCAPTION</button><button type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"  class="btn btn-primary dropdown-toggle btn-lg"><span class="caret"></span><span class="sr-only">Toggle Dropdown</span></button><ul class="dropdown-menu"><li><a href="https://example.org/chaise/search" class="btn btn-danger" >CAPTION1</a></li><li><a href="https://example.org/chaise/search" >CAPTION2</a></li><li><a href="https://example.org/chaise/search" >CAPTION3</a></li></ul></div>';
+          '<div class="btn-group markdown-dropdown"><button type="button"  class="btn btn-primary btn-lg">MYCAPTION</button><button type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"  class="btn btn-primary dropdown-toggle btn-lg"><span class="caret"></span><span class="visually-hidden">Toggle Dropdown</span></button><ul class="dropdown-menu"><li><a href="https://example.org/chaise/search" class="btn btn-danger" >CAPTION1</a></li><li><a href="https://example.org/chaise/search" >CAPTION2</a></li><li><a href="https://example.org/chaise/search" >CAPTION3</a></li></ul></div>';
         expect(printMarkdown(dropdownMarkdown)).toBe(dropdownHTML, 'case 12');
 
         // 13: Check for iframe followed by a dropdown using markdown for both
