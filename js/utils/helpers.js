@@ -1800,7 +1800,10 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
      * @param  {Object} data     the key-value pair of data
      * @param  {Table} table    the table object
      * @param  {String} context  context string
-     * @param  {Object} options
+     * @param  {Object} options  the options passed to _renderTemplate, plus:
+     *   - isInline: whether the markdown should be rendered inline.
+     *   - ignoreShowNull: if the template renders empty, return an empty string instead of
+     *     the table's show_null value.
      * @return {{isHTML: boolean, value: string, unformatted: string}}          An object with `isHTML` and `value` attributes.
      * @memberof ERMrest
      * @function processMarkdownPattern
@@ -1809,7 +1812,7 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
         var res = _renderTemplate(template, data, table ? table.schema.catalog : null, options);
 
         if (res === null || res.trim() === '') {
-            res = table ? table._getNullValue(context) : "";
+            res = table && !(options && options.ignoreShowNull) ? table._getNullValue(context) : "";
             return {isHTML: false, value: res, unformatted: res};
         }
         var isInline = options && options.isInline ? true : false;

@@ -1006,5 +1006,108 @@ exports.execute = function (options) {
           .catch((err) => done.fail(err));
       });
     });
+
+    /**
+     * instructions are only supported in entry contexts, so most of these tables use
+     * entry, entry/create, and entry/edit as three separate scenarios.
+     */
+    describe('display.instructions', () => {
+      const tableNames = [
+        'table_w_instructions',
+        'table_w_instructions_all_contexts',
+        'table_w_invalid_instructions',
+        'table_w_instructions_show_null',
+        'table_w_instructions_inline_condition',
+        'table_w_instructions_condition_key',
+        'table_w_instructions_ignored_condition',
+      ];
+      const refs = {};
+
+      const compute = (ref) => ref.display.instructions.compute();
+      const html = (text) => '<p>' + text + '</p>\n';
+
+      beforeAll((done) => {
+        Promise.all(
+          tableNames.map((t) => {
+            return options.ermRest.resolve(options.url + '/catalog/' + catalog_id + '/entity/' + schemaName + ':' + t, { cid: 'test' });
+          }),
+        )
+          .then((res) => {
+            res.forEach((ref, i) => {
+              refs[tableNames[i]] = ref;
+            });
+            done();
+          })
+          .catch((err) => done.fail(err));
+      });
+
+      it('is defined in entry contexts', () => {
+        const ref = refs.table_w_instructions;
+        const expectedValue = '<p>Catalog <strong>' + catalog_id + '</strong></p>\n';
+        [
+          ['entry', ref.contextualize.entry],
+          ['entry/create', ref.contextualize.entryCreate],
+          ['entry/edit', ref.contextualize.entryEdit],
+        ].forEach(([context, contextRef]) => {
+          const res = compute(contextRef);
+          expect(res.isHTML).toBe(true, context + ': isHTML mismatch');
+          expect(res.value).toBe(expectedValue, context + ': value mismatch');
+        });
+      });
+
+      it('is not defined outside entry contexts', () => {
+        // table_w_instructions_all_contexts defines it for `*`, so this also covers the entry context check
+        ['table_w_instructions', 'table_w_instructions_all_contexts'].forEach((t) => {
+          expect(refs[t].contextualize.compact.display.instructions).toBeUndefined(t + ': compact mismatch');
+          expect(refs[t].contextualize.detailed.display.instructions).toBeUndefined(t + ': detailed mismatch');
+        });
+      });
+
+      it('supports handlebars', () => {
+        const res = compute(refs.table_w_instructions_all_contexts.contextualize.entryCreate);
+        expect(res.value).toBe(html('Catalog ' + catalog_id), 'value mismatch');
+      });
+
+      it('ignores invalid definitions', () => {
+        const ref = refs.table_w_invalid_instructions;
+        expect(ref.contextualize.entryCreate.display.instructions).toBeUndefined('missing markdown_pattern mismatch');
+        expect(ref.contextualize.entryEdit.display.instructions).toBeUndefined('null instructions mismatch');
+        expect(ref.contextualize.entry.display.instructions).toBeUndefined('empty markdown_pattern mismatch');
+      });
+
+      it('ignores show_null when the pattern is empty', () => {
+        const ref = refs.table_w_instructions_show_null.contextualize.entry;
+        expect(compute(ref).value).toBe('', 'instructions mismatch');
+
+        // processMarkdownPattern itself should still use show_null unless asked not to
+        const pattern = '{{{missing_var}}}';
+        expect(options.ermRest.processMarkdownPattern(pattern, {}, ref.table, 'entry', {}).value).toBe('N/A', 'without ignoreShowNull mismatch');
+        expect(options.ermRest.processMarkdownPattern(pattern, {}, ref.table, 'entry', { ignoreShowNull: true }).value).toBe(
+          '',
+          'with ignoreShowNull mismatch',
+        );
+      });
+
+      it('honors inline no-source conditions', () => {
+        const ref = refs.table_w_instructions_inline_condition;
+        expect(compute(ref.contextualize.entryCreate).value).toBe(html('create instructions'), 'user in acl mismatch');
+        expect(compute(ref.contextualize.entryEdit).value).toBe('', 'user not in acl mismatch');
+        expect(compute(ref.contextualize.entry).value).toBe(html('entry instructions'), 'on_empty show mismatch');
+      });
+
+      it('honors condition_key', () => {
+        const ref = refs.table_w_instructions_condition_key;
+        expect(compute(ref.contextualize.entryCreate).value).toBe('', 'hide key mismatch');
+        expect(compute(ref.contextualize.entryEdit).value).toBe(html('edit instructions'), 'key over inline condition mismatch');
+        expect(compute(ref.contextualize.entry).value).toBe(html('entry instructions'), 'unknown key mismatch');
+      });
+
+      it('ignores unsupported conditions', () => {
+        const ref = refs.table_w_instructions_ignored_condition;
+        expect(compute(ref.contextualize.entryCreate).value).toBe(html('create instructions'), 'with-source mismatch');
+        expect(compute(ref.contextualize.entryEdit).value).toBe(html('edit instructions'), 'empty pattern mismatch');
+        expect(compute(ref.contextualize.entry).value).toBe(html('entry instructions'), 'wait_for without source mismatch');
+      });
+    });
   });
 };
