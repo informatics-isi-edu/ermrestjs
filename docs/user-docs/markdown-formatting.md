@@ -167,6 +167,12 @@ The following is the list of special class names that you can use:
   - `.chaise-btn-primary`
   - `.chaise-btn-secondary`
   - `.chaise-btn-tertiary`
+- `.chaise-alert`: Displays the content as an alert box, which makes it stand out. You should use it in conjunction with one of the following classes to pick its color:
+  - `.chaise-alert-primary`, `.chaise-alert-secondary`, `.chaise-alert-success`, `.chaise-alert-info`, `.chaise-alert-warning`, `.chaise-alert-danger`, `.chaise-alert-light`, `.chaise-alert-dark`
+
+  Since the alert is a block, use it with the [`:::div`](#18-div-custom-container) block. For example, `:::div {.chaise-alert .chaise-alert-warning}\nThis content stands out.\n:::`.
+
+  The alert looks the same as Bootstrap's alert with the matching color. See [Bootstrap alerts](https://getbootstrap.com/docs/5.3/components/alerts/) for a preview. Only the base class and the color classes are supported, so the other alert features on that page (like headings, links, or dismissible alerts) are not available.
 - `.download-alt`: Used to represent a download button. `.download` is the old and alternative class for it.
 - `.asset-permission`: If used on a link element, chaise will validate whether the user can download the asset before a download is attempted.
 - `.external-link`: By adding this to links, chaise shows a notification to the user when they are being navigated away from chaise for external links and assets hosted elsewhere.
@@ -807,7 +813,7 @@ This is not part of commonMark specification and it will result in a [block](#in
 # OUTPUT: <div class="btn-group markdown-dropdown"><button type="button"  class="btn btn-primary ">DROPDOWNCAPTION</button><button type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"  class="btn btn-primary dropdown-toggle "><span class="caret"></span><span class="visually-hidden">Toggle Dropdown</span></button><ul class="dropdown-menu"><li><a href="https://example.com/chaise/search" download="" >CAPTION1</a></li><li><a href="https://example.com/chaise/search" download="" >CAPTION2</a></li></ul></div>
 ```
 
-The button has an appearance similar to the [Bootstrap dropdown button](http://getbootstrap.com/components/#btn-dropdowns-split)
+The button has an appearance similar to the [Bootstrap split dropdown button](https://getbootstrap.com/docs/5.3/components/dropdowns/#split-button)
 
 You can test the `markdown_pattern` string [here](https://tonicdev.com/chiragsanghvi/57b4b5f94c7bbd13004b43f6). Just scroll down and change the `markdown_pattern` string and `obj` object according to your requirement.
 
@@ -1302,6 +1308,19 @@ When a div contains only a single element (like an image, heading, or link), the
     ```
 
     See how the inner div has four `:`s.
+
+- Chaise alert example:
+    ```
+    :::div {.chaise-alert .chaise-alert-warning}\n**Note:** Records cannot be edited after they are released.\n:::
+    ```
+    Output:
+    ```html
+    <div class="chaise-alert chaise-alert-warning">
+      <p><strong>Note:</strong> Records cannot be edited after they are released.</p>
+    </div>
+    ```
+
+    See [special classes](#special-classes) for the other `.chaise-alert` colors.
 
 - Div containing other custom blocks (iframe):
     ```

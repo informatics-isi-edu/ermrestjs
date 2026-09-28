@@ -702,6 +702,187 @@
               }
             }
         }
+    },
+    "table_w_instructions": {
+      "table_name": "table_w_instructions",
+      "schema_name": "schema_table_display",
+      "kind": "table",
+      "keys": [{"unique_columns": ["id"]}],
+      "foreign_keys": [],
+      "column_definitions": [
+        {"name": "id", "nullok": false, "type": {"typename": "integer"}},
+        {"name": "text_col", "type": {"typename": "text"}}
+      ],
+      "annotations": {
+        "tag:isrd.isi.edu,2016:table-display": {
+          "entry": {
+            "instructions": {"markdown_pattern": "Catalog **{{{$catalog.id}}}**"}
+          }
+        }
+      }
+    },
+    "table_w_instructions_all_contexts": {
+      "table_name": "table_w_instructions_all_contexts",
+      "schema_name": "schema_table_display",
+      "kind": "table",
+      "keys": [{"unique_columns": ["id"]}],
+      "foreign_keys": [],
+      "column_definitions": [
+        {"name": "id", "nullok": false, "type": {"typename": "integer"}},
+        {"name": "text_col", "type": {"typename": "text"}}
+      ],
+      "annotations": {
+        "tag:isrd.isi.edu,2016:table-display": {
+          "*": {
+            "instructions": {
+              "markdown_pattern": "{{#if $catalog.id}}Catalog {{$catalog.id}}{{/if}}",
+              "template_engine": "handlebars"
+            }
+          }
+        }
+      }
+    },
+    "table_w_invalid_instructions": {
+      "table_name": "table_w_invalid_instructions",
+      "schema_name": "schema_table_display",
+      "kind": "table",
+      "keys": [{"unique_columns": ["id"]}],
+      "foreign_keys": [],
+      "column_definitions": [
+        {"name": "id", "nullok": false, "type": {"typename": "integer"}},
+        {"name": "text_col", "type": {"typename": "text"}}
+      ],
+      "annotations": {
+        "tag:isrd.isi.edu,2016:table-display": {
+          "entry/create": {"instructions": {}},
+          "entry/edit": {"instructions": null},
+          "entry": {"instructions": {"markdown_pattern": ""}}
+        }
+      }
+    },
+    "table_w_instructions_show_null": {
+      "table_name": "table_w_instructions_show_null",
+      "schema_name": "schema_table_display",
+      "kind": "table",
+      "keys": [{"unique_columns": ["id"]}],
+      "foreign_keys": [],
+      "column_definitions": [
+        {"name": "id", "nullok": false, "type": {"typename": "integer"}},
+        {"name": "text_col", "type": {"typename": "text"}}
+      ],
+      "annotations": {
+        "tag:misd.isi.edu,2015:display": {
+          "show_null": {"*": "N/A"}
+        },
+        "tag:isrd.isi.edu,2016:table-display": {
+          "entry": {
+            "instructions": {"markdown_pattern": "{{{missing_var}}}"}
+          }
+        }
+      }
+    },
+    "table_w_instructions_inline_condition": {
+      "table_name": "table_w_instructions_inline_condition",
+      "schema_name": "schema_table_display",
+      "kind": "table",
+      "keys": [{"unique_columns": ["id"]}],
+      "foreign_keys": [],
+      "column_definitions": [
+        {"name": "id", "nullok": false, "type": {"typename": "integer"}},
+        {"name": "text_col", "type": {"typename": "text"}}
+      ],
+      "annotations": {
+        "tag:isrd.isi.edu,2016:table-display": {
+          "entry/create": {
+            "instructions": {
+              "markdown_pattern": "create instructions",
+              "condition": {
+                "condition_pattern": "{{#if (isUserInAcl \"*\")}}yes{{/if}}",
+                "template_engine": "handlebars"
+              }
+            }
+          },
+          "entry/edit": {
+            "instructions": {
+              "markdown_pattern": "edit instructions",
+              "condition": {
+                "condition_pattern": "{{#if (isUserInAcl \"https://invalid-group\")}}yes{{/if}}",
+                "template_engine": "handlebars"
+              }
+            }
+          },
+          "entry": {
+            "instructions": {
+              "markdown_pattern": "entry instructions",
+              "condition": {
+                "condition_pattern": "{{#missing_var}}x{{/missing_var}}",
+                "on_empty": "show"
+              }
+            }
+          }
+        }
+      }
+    },
+    "table_w_instructions_condition_key": {
+      "table_name": "table_w_instructions_condition_key",
+      "schema_name": "schema_table_display",
+      "kind": "table",
+      "keys": [{"unique_columns": ["id"]}],
+      "foreign_keys": [],
+      "column_definitions": [
+        {"name": "id", "nullok": false, "type": {"typename": "integer"}},
+        {"name": "text_col", "type": {"typename": "text"}}
+      ],
+      "annotations": {
+        "tag:isrd.isi.edu,2019:source-definitions": {
+          "conditions": {
+            "cond_show": {"condition_pattern": "yes"},
+            "cond_hide": {"condition_pattern": "{{#missing_var}}x{{/missing_var}}"}
+          }
+        },
+        "tag:isrd.isi.edu,2016:table-display": {
+          "entry/create": {
+            "instructions": {"markdown_pattern": "create instructions", "condition_key": "cond_hide"}
+          },
+          "entry/edit": {
+            "instructions": {
+              "markdown_pattern": "edit instructions",
+              "condition_key": "cond_show",
+              "condition": {"condition_pattern": "{{#missing_var}}x{{/missing_var}}"}
+            }
+          },
+          "entry": {
+            "instructions": {"markdown_pattern": "entry instructions", "condition_key": "does_not_exist"}
+          }
+        }
+      }
+    },
+    "table_w_instructions_ignored_condition": {
+      "table_name": "table_w_instructions_ignored_condition",
+      "schema_name": "schema_table_display",
+      "kind": "table",
+      "keys": [{"unique_columns": ["id"]}],
+      "foreign_keys": [],
+      "column_definitions": [
+        {"name": "id", "nullok": false, "type": {"typename": "integer"}},
+        {"name": "text_col", "type": {"typename": "text"}}
+      ],
+      "annotations": {
+        "tag:isrd.isi.edu,2016:table-display": {
+          "entry/create": {
+            "instructions": {"markdown_pattern": "create instructions", "condition": {"source": "text_col"}}
+          },
+          "entry/edit": {
+            "instructions": {"markdown_pattern": "edit instructions", "condition": {"condition_pattern": ""}}
+          },
+          "entry": {
+            "instructions": {
+              "markdown_pattern": "entry instructions",
+              "condition": {"condition_pattern": "yes", "wait_for": ["x"]}
+            }
+          }
+        }
+      }
     }
   },
   "schema_name": "schema_table_display",

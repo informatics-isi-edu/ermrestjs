@@ -5,6 +5,8 @@ import { MalformedURIError } from '@isrd-isi-edu/ermrestjs/src/models/errors';
 import { Schema, Schemas } from '@isrd-isi-edu/ermrestjs/src/models/schema';
 import type { Server } from '@isrd-isi-edu/ermrestjs/src/models/server';
 import type { Table } from '@isrd-isi-edu/ermrestjs/src/models/table';
+import { ForeignKeyRef } from '@isrd-isi-edu/ermrestjs/src/models/foreign-key';
+import { Key } from '@isrd-isi-edu/ermrestjs/src/models/key';
 
 // services
 import CatalogService from '@isrd-isi-edu/ermrestjs/src/services/catalog';
@@ -17,8 +19,6 @@ import { isObjectAndNotNull, isStringAndNotEmpty } from '@isrd-isi-edu/ermrestjs
 
 // legacy
 import { _determineDisplayName, _processACLAnnotation } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
-import { ForeignKeyRef } from './foreign-key';
-import { Key } from './key';
 
 /**
  * Container of the Catalog objects of a server, keyed by catalog id.

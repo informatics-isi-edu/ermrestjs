@@ -641,6 +641,7 @@ Supported JSON _option_ payload patterns:
   - The _pathsuffix_ SHOULD reset the path context to `$S` if it has joined other tables.
 - `"selector_ux_mode"`: The display mode for the recordedit input field when this table is part of a foreignkey relationship as the `outbound` table. Supported values are `"facet-search-popup"` and `"simple-search-dropdown"`, with `"facet-search-popup"` being the default. Currently only supported in `entry` contexts.
 - `"bulk_create_foreign_key_candidates"`: Use this property to control the bulk selection of foreign key values in `entry/create` context when there is a prefill query parameter. Supported value is an array of foreign key `names` in the format of `[['schema_name', 'foreign_key_name'], ...]`. This will override the `bulk_create_foreign_key` property defined in the display annotation. Currently only supported in `entry/create` context.
+- `"instructions":` _instructions_: Instructions that are displayed under the page title to guide users through the page. Chaise displays them under the title of the form, but not on the results page that is shown after a successful submission. Currently only supported in `entry` contexts.
 
 It is not meaningful to use `page_markdown_pattern`, `row_markdown_pattern`, and `module` in for the same _context_. If they co-exist, the application will prefer `module` over `page_markdown_pattern` and `page_markdown_pattern` over `row_markdown_pattern`.
 
@@ -650,6 +651,37 @@ Supported JSON _sortkey_ patterns:
 - `{ "column":` _columnname_ `, "descending": false }`: Sort according to the values in the _columnname_ column in ascending order. This is equivalent to the ERMrest sort specifier `@sort(` _columnname_ `)`.
 - `{ "column":` _columnname_ `}`: If omitted, the `"descending"` field defaults to `false` as per above.
 - _columnname_: A bare _columnname_ is a short-hand for `{ "column":` _columnname_ `}`.
+
+Supported JSON _instructions_ patterns:
+
+- `{`... `"markdown_pattern":` _pattern_ ...`}`: The instructions are derived by [Pattern Expansion](#pattern-expansion) on _pattern_. Since there isn't any row data in `entry` contexts, the pattern only has access to the [pre-defined template variables](handlebars.md#using-pre-defined-attributes) (e.g., `$session`, `$catalog`, `$moment`). If the pattern renders to an empty string, no instructions are displayed. This attribute is required, and if it is not specified, the instructions will not be displayed.
+  - To make the instructions stand out, you can wrap them in a [`:::div`](markdown-formatting.md#18-div-custom-container) block with the [`.chaise-alert`](markdown-formatting.md#special-classes) classes. For example, `:::div {.chaise-alert .chaise-alert-warning}\nPlease read the following before submitting.\n:::`.
+- `{`... `"template_engine":` _engine_ ...`}`: The template engine that should be used for _pattern_.
+- `{`... `"condition":` _condition_ ...`}`: A condition controlling whether the instructions are displayed. Only the **no-source** form (with `condition_pattern` set and no `source` or `sourcekey`) is supported, which is useful for ACL-driven instructions. With-source conditions are ignored. Please refer to the [condition documentation](column-directive.md#condition) for more information.
+- `{`... `"condition_key":` _conditionkey_ ...`}`: A reference to a reusable condition defined in the [`conditions`](#tag-2019-source-definitions) section of the `source-definitions` annotation. The same rules as `condition` apply. If both `condition` and `condition_key` are defined, `condition_key` takes precedence.
+
+Example:
+
+```json
+"tag:isrd.isi.edu,2016:table-display": {
+    "entry/create": {
+        "instructions": {
+            "markdown_pattern": ":::div {.chaise-alert .chaise-alert-info}\nFill in **all** the required fields before saving.\n:::"
+        }
+    },
+    "entry/edit": {
+        "instructions": {
+            "markdown_pattern": "Please update the **Status** column after reviewing the record.",
+            "condition": {
+                "condition_pattern": "{{#if (isUserInAcl \"https://group-id-for-curators\")}}show{{/if}}",
+                "template_engine": "handlebars"
+            }
+        }
+    }
+}
+```
+
+Everyone creating a record sees the first instructions in an info alert, while the second is only shown to members of the curators group when they edit a record.
 
 ### Tag: 2016 Visible Foreign Keys
 

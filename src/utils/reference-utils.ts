@@ -20,6 +20,10 @@ import {
   type VisibleColumn,
 } from '@isrd-isi-edu/ermrestjs/src/models/reference';
 import ActiveListCondition from '@isrd-isi-edu/ermrestjs/src/models/active-list-condition';
+import type { ForeignKeyRef } from '@isrd-isi-edu/ermrestjs/src/models/foreign-key';
+import type { Column } from '@isrd-isi-edu/ermrestjs/src/models/column';
+import type { Key } from '@isrd-isi-edu/ermrestjs/src/models/key';
+import { Instructions } from '@isrd-isi-edu/ermrestjs/src/models/reference/instructions';
 
 // services
 import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
@@ -55,9 +59,6 @@ import {
   _processColumnOrderList,
   _isEntryContext,
 } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
-import type { ForeignKeyRef } from '@isrd-isi-edu/ermrestjs/src/models/foreign-key';
-import type { Column } from '@isrd-isi-edu/ermrestjs/src/models/column';
-import type { Key } from '@isrd-isi-edu/ermrestjs/src/models/key';
 
 export interface ReadPathResult {
   value: string;
@@ -161,6 +162,10 @@ export type ReferenceDisplay = {
    * the template engine to use with the source markdown pattern
    */
   sourceTemplateEngine?: string;
+  /**
+   * the instructions displayed under the page title (only supported in `entry` contexts for now)
+   */
+  instructions?: Instructions;
 };
 
 /**
@@ -1647,6 +1652,13 @@ export function computeReferenceDisplay(reference: Reference): ReferenceDisplay 
 
         // Insert suffix markdown after the last rowpattern expansion when presenting row sets. (Default empty string "".)
         display._suffix = typeof annotation.suffix_markdown === 'string' ? annotation.suffix_markdown : '';
+      }
+    }
+
+    if (_isEntryContext(reference.context) && isObjectAndNotNull(annotation.instructions)) {
+      const instrct = annotation.instructions;
+      if (isStringAndNotEmpty(instrct.markdown_pattern)) {
+        display.instructions = new Instructions(reference, instrct);
       }
     }
   }
