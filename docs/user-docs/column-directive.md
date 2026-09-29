@@ -49,6 +49,7 @@ Column directive allows instruction of a data source and modification of its pre
   - [Visible Column List](#visible-column-list)
   - [Visible ForeignKey List](#visible-foreignkey-list)
   - [Alternative syntax](#alternative-syntax)
+  - [Remind Curators about the missing data](#remind-curators-about-the-missing-data)
 
 ## Overall structure
 
@@ -202,6 +203,14 @@ This property allows the definition of "source path". As column directive is def
   - A column in table that has a valid foreign key relationship with the current table.
 
 > Even if the column directive is used in "entity" mode where it's suppsoed to represent the row and not just a column, we must record this column choice explicitly in the column directive so that we can use an unambiguous column while communicating with ERMrest.
+
+> 💡 **BEST PRACTICE:** If the source path includes inbound/outbound foreign keys and you want the column directive to represent the whole row rather than a particular column, end the path with `RID`. Choose a different end column only when you specifically want to fetch that column.
+>
+> When the end column is a key of the table, the column directive is in "entity" mode and Chaise fetches the whole row instead of just that column. So in a visible column with an outbound path, changing the end column from `RID` to another key column doesn't change the behavior. But the end column matters elsewhere:
+> 1. In facets, the end column is the one used for filtering, so `RID` ensures an efficient and consistent URL.
+> 2. The "Explore" button of related tables generates its URL by reversing the path and ending it in `RID`. Using `RID` in your facets lets Chaise match that filter with your existing facet. See [facet documentation](facet.md#source-path) for more information.
+>
+> So for consistency, always end entity paths with `RID`.
 
 Therefore the following are acceptable ways of defining source path:
 
@@ -859,3 +868,54 @@ As we mentioned, you can define the specific column directive using the general 
   ["S", "main_key_constraint"] ==  {"source": "id"}
   ["S", "main_key_constraint"] =/= {"source": "id", "entity": false}
   ```
+
+### Remind Curators about the missing data
+
+When curators create a new record, we can use "virtual column directives" to remind them about the required/missing related entities. To do so, we just need to add a column directive without any source that conditionally shows different messages to curators.
+
+In this example, let's assume we have an `Investigation` table that has a many-to-many relationship to the `Program` table, and the sourcekey `program_fkey` is the visible-column for it on the `Investigation` record page. To create new data, they must first create an `Investigation` and then add at least one `Program` to the `Investigation`. To remind them about the missing data, we can add the following column directives to the `Investigation` table:
+
+```js
+{
+  // required by chaise, but users don't see this value:
+  "markdown_name": "warn-about-missing-data",
+
+  // hide the column header:
+  "hide_column_header": true,
+
+  // show if program is missing:
+  "condition": {
+    "sourcekey": "program_fkey",
+    "on_empty": "show",
+  },
+
+  "display": {
+    "markdown_pattern": ":::div {style=\"font-size:16px;margin-bottom:-8px !important;\"}\n:span::/span:{.fa-solid .fa-triangle-exclamation style=\"margin-right:4px;font-size:20px;color:orange !important;\"} **Warning: There is no Program linked to this Investigation.** **Make sure at least a Program is linked**. \n:::"
+  }
+},
+```
+
+If your record page has multiple required related entities, you can either add multiple column directives with different `condition` and `markdown_pattern`, or use the same entry for all, like the following (assume `study_fkey` is another required related entity):
+
+```js
+{
+  // required by chaise, but users don't see this value:
+  "markdown_name": "warn-about-missing-data",
+
+  // hide the column header:
+  "hide_column_header": true,
+
+  // show if program or study are missing:
+  "condition": {
+    "sourcekey": "program_fkey",
+    "wait_for": ["study_fkey"],
+    "markdown_pattern": "{{#unless (or program_fkey study_fkey)}}show{{/unless}}",
+    "template_engine": "handlebars"
+  },
+
+  // display different messages based on which related entity is missing:
+  "display": {
+    "markdown_pattern": "{{#if study_fkey}}Program is missing{{else if program_fkey}}Study is missing{{else}}Program and Study are missing{{/if}}"
+  }
+},
+```
