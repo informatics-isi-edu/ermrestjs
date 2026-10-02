@@ -149,30 +149,20 @@ exports.execute = function (options) {
             },
           );
 
-          it('should show progress on calculation of checksum as well as calculate correct hash in hex and base64 format with correct url', function (done) {
-            uploadObj
-              .calculateChecksum(validRow, function (uploadedSize) {
-                uploaded = uploadedSize;
-              })
-              .then(
-                function (url) {
-                  expect(uploadObj.hash instanceof ermRest.Checksum).toBeTruthy('Upload object hash is not of type ermRest.Checksum');
+          it('should show progress on calculation of checksum as well as calculate correct hash in hex and base64 format with correct url', async () => {
+            let uploaded = 0;
+            const url = await uploadObj.calculateChecksum(validRow, undefined, undefined, (uploadedSize) => {
+              uploaded = uploadedSize;
+            });
 
-                  expect(url).toBe('/hatrac/js/ermrestjs/' + currentTime + '/' + file.hash, 'File generated url is not the same');
+            expect(uploaded).toBe(file.size);
+            expect(uploadObj.hash instanceof ermRest.Checksum).toBe(true);
+            expect(url).toBe(`/hatrac/js/ermrestjs/${currentTime}/${file.hash}`);
 
-                  // values that are attached to the row
-                  expect(validRow.filename).toBe(file.name, 'valid row filename is incorrect');
-                  expect(validRow.bytes).toBe(file.size, 'valid row bytes is incorrect');
-                  expect(validRow.checksum).toBe(file.hash, 'valid row checksum is incorrect');
-
-                  done();
-                },
-                function (e) {
-                  console.dir(e);
-                  expect(file).toBe('');
-                  done.fail();
-                },
-              );
+            // values that are attached to the row
+            expect(validRow.filename).toBe(file.name);
+            expect(validRow.bytes).toBe(file.size);
+            expect(validRow.checksum).toBe(file.hash);
           });
 
           it('should have the checksum properly defined.', function () {
@@ -284,31 +274,21 @@ exports.execute = function (options) {
       },
     );
 
-    it('should calculate correct hash in hex and base64 format with correct url and generated filename', function (done) {
-      uploadObj
-        .calculateChecksum(validRow, function (uploadedSize) {
-          uploaded = uploadedSize;
-        })
-        .then(
-          function (url) {
-            expect(uploadObj.hash instanceof ermRest.Checksum).toBeTruthy('Upload object hash is not of type ermRest.Checksum');
+    it('should calculate correct hash in hex and base64 format with correct url and generated filename', async () => {
+      let uploaded = 0;
+      const url = await uploadObj.calculateChecksum(validRow, undefined, undefined, (uploadedSize) => {
+        uploaded = uploadedSize;
+      });
 
-            expect(url).toBe('/hatrac/js/ermrestjs/testfile500kb.png/' + file.hash, 'File generated url is not the same');
+      expect(uploaded).toBe(file.size);
+      expect(uploadObj.hash instanceof ermRest.Checksum).toBe(true);
+      expect(url).toBe(`/hatrac/js/ermrestjs/testfile500kb.png/${file.hash}`);
 
-            // values that are attached to the row
-            expect(validRow.filename).not.toBe(file.name, "valid row filename is the same as original file's name");
-            expect(validRow.filename).toBe(time + '.zip', 'valid row filename was not generated properly');
-            expect(validRow.bytes).toBe(file.size, 'valid row bytes is incorrect');
-            expect(validRow.checksum).toBe(file.hash, 'valid row checksum is incorrect');
-
-            done();
-          },
-          function (e) {
-            console.dir(e);
-            expect(file).toBe('');
-            done.fail();
-          },
-        );
+      // values that are attached to the row
+      expect(validRow.filename).not.toBe(file.name);
+      expect(validRow.filename).toBe(`${time}.zip`);
+      expect(validRow.bytes).toBe(file.size);
+      expect(validRow.checksum).toBe(file.hash);
     });
 
     it('should have the checksum properly defined.', function () {
@@ -317,6 +297,38 @@ exports.execute = function (options) {
       expect(checksum.file).toEqual(uploadObj.file, 'file is incorrect');
       expect(checksum.md5_hex).toBe(file.hash, 'md5 hex is incorrect');
       expect(checksum.md5_base64).toBe(file.hash_64, 'md5 base64 is incorrect');
+    });
+  });
+
+  describe('For an asset with a url_pattern that is not under /hatrac/, ', () => {
+    let testFile;
+    let reference;
+    let column;
+
+    beforeAll(async () => {
+      testFile = uploadUtils.createTestFile('testfile_wo_hatrac.png', 1000);
+
+      const uri = `${options.url}/catalog/${process.env.DEFAULT_CATALOG}/entity/upload:file`;
+      const response = await options.ermRest.resolve(uri, { cid: 'test' });
+      reference = response.contextualize.entryCreate;
+      column = reference.columns.find((c) => c.name === 'uri_wo_hatrac');
+    });
+
+    afterAll(() => {
+      uploadUtils.removeTestFile(testFile.path);
+    });
+
+    it('calculateChecksum rejects with MalformedURIError', async () => {
+      const upload = new options.ermRest.Upload(testFile.file, { column, reference });
+
+      let error;
+      try {
+        await upload.calculateChecksum({ timestamp: Date.now(), uri_wo_hatrac: {} });
+      } catch (err) {
+        error = err;
+      }
+
+      expect(error instanceof options.ermRest.MalformedURIError).toBe(true);
     });
   });
 };
