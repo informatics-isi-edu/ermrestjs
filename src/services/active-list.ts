@@ -300,8 +300,7 @@ export class ActiveListBuilder {
     if ((col as PseudoColumn).isPathColumn && (col as PseudoColumn).hasAggregate) {
       // check if already in dependentRequests
       const existing = dependentRequests.find((r) => (r as ActiveListRequest).column?.name === col.name && (r as ActiveListRequest).aggregate) as
-        | ActiveListRequest
-        | undefined;
+        ActiveListRequest | undefined;
       if (existing) {
         existing.objects.push(obj);
         return;
@@ -313,8 +312,7 @@ export class ActiveListBuilder {
     // entitysets
     if (isRelatedColumn(col)) {
       const existing = dependentRequests.find((r) => (r as ActiveListRequest).column?.name === col.name && (r as ActiveListRequest).entityset) as
-        | ActiveListRequest
-        | undefined;
+        ActiveListRequest | undefined;
       if (existing) {
         existing.objects.push(obj);
         return;

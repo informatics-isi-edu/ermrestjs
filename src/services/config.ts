@@ -166,7 +166,7 @@ export default class ConfigService {
       // find the link value
       const hrefIndex = token.attrIndex('href');
       if (hrefIndex < 0 || !token || !token.attrs) return;
-      const href = token.attrs[hrefIndex][1];
+      const href = token.attrs[hrefIndex][1] as string;
 
       // only add the class if it's not the same origin
       if (_isSameHost(href) === false) {
