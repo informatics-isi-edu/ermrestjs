@@ -17,6 +17,12 @@ import MarkdownItContainer from '@isrd-isi-edu/ermrestjs/vendor/markdown-it-cont
 // npm package (replaces the previously vendored markdown-it-attrs)
 import markdownItAttrs from 'markdown-it-attrs';
 
+/**
+ * markdown-it types attribute values as `string | number`. The attributes we read here come from
+ * parsed markdown (the link href and markdown-it-attrs), so their values are always strings.
+ */
+type ParsedTokenAttrs = [name: string, value: string][];
+
 let _markdownItDefaultImageRenderer: any = null;
 export const MarkdownIt = markdownit({ typographer: true, breaks: true })
   .use(markdownItSub)
@@ -160,7 +166,7 @@ function _bindCustomMarkdownTags(md: typeof MarkdownIt) {
               iframeClasses: Array<string> = [];
 
             // Add all attributes to the iframe
-            openingLink!.attrs!.forEach(function (attr) {
+            (openingLink!.attrs as ParsedTokenAttrs).forEach(function (attr) {
               switch (attr[0]) {
                 case 'href':
                   isYTlink = attr[1].match('^(http(s)?://)?((w){3}.)?youtu(be|.be)?(.com)?/.+') != null;
@@ -278,7 +284,7 @@ function _bindCustomMarkdownTags(md: typeof MarkdownIt) {
                 if (attrs[0].children[i].type == 'text') {
                   captionHTML += md.renderInline(attrs[0].children[i].content);
                 } else if (attrs[0].children[i].type !== 'link_close') {
-                  captionHTML += md.renderer.renderToken(attrs[0].children, i, {});
+                  captionHTML += md.renderer.renderToken(attrs[0].children, i, md.options);
                 } else {
                   break;
                 }
@@ -427,7 +433,7 @@ function _bindCustomMarkdownTags(md: typeof MarkdownIt) {
 
               // If the caption has any attrs add them to the button
               if (cTokens[0].attrs) {
-                cTokens[0].attrs.forEach(function (a) {
+                (cTokens[0].attrs as ParsedTokenAttrs).forEach(function (a) {
                   if (a[0] === 'class') {
                     classes.push(a[1]);
                   } else {
@@ -522,7 +528,7 @@ function _bindCustomMarkdownTags(md: typeof MarkdownIt) {
             let imageClass = _classNames.imageFallback;
 
             // Add all attributes to the image
-            openingLink.attrs!.forEach(function (attr) {
+            (openingLink.attrs as ParsedTokenAttrs).forEach(function (attr) {
               switch (attr[0]) {
                 case 'figure-style':
                   figureStyle = attr[1];
@@ -559,7 +565,7 @@ function _bindCustomMarkdownTags(md: typeof MarkdownIt) {
                 if (attrs[0].children[i].type == 'text') {
                   captionHTML += md.renderInline(attrs[0].children[i].content);
                 } else if (attrs[0].children[i].type !== 'link_close') {
-                  captionHTML += md.renderer.renderToken(attrs[0].children, i, {});
+                  captionHTML += md.renderer.renderToken(attrs[0].children, i, md.options);
                 } else {
                   break;
                 }
@@ -635,7 +641,7 @@ function _bindCustomMarkdownTags(md: typeof MarkdownIt) {
             let videoText = '';
 
             // Add all attributes to the video
-            openingLink.attrs!.forEach(function (attr) {
+            (openingLink.attrs as ParsedTokenAttrs).forEach(function (attr) {
               if (attr[0] == 'href') {
                 if (attr[1] == '') {
                   flag = false;
@@ -672,7 +678,7 @@ function _bindCustomMarkdownTags(md: typeof MarkdownIt) {
                 if (attrs[0].children[i].type == 'text') {
                   captionHTML += md.renderInline(attrs[0].children[i].content);
                 } else if (attrs[0].children[i].type !== 'link_close') {
-                  captionHTML += md.renderer.renderToken(attrs[0].children, i, {});
+                  captionHTML += md.renderer.renderToken(attrs[0].children, i, md.options);
                 } else {
                   break;
                 }
@@ -725,7 +731,7 @@ function _bindCustomMarkdownTags(md: typeof MarkdownIt) {
 
         // get the attributes of the container
         if (Array.isArray(attrs[0].attrs)) {
-          attrs[0].attrs.forEach(function (attr) {
+          (attrs[0].attrs as ParsedTokenAttrs).forEach(function (attr) {
             switch (attr[0]) {
               case 'class':
                 if (attr[1].length > 0 && containerClasses.indexOf(attr[1]) === -1) {
@@ -797,7 +803,7 @@ function _bindCustomMarkdownTags(md: typeof MarkdownIt) {
             let prefetchMaxFileSize = '';
 
             // Extract attributes
-            openingLink!.attrs!.forEach(function (attr) {
+            (openingLink!.attrs as ParsedTokenAttrs).forEach(function (attr) {
               switch (attr[0]) {
                 case 'href':
                   fileUrl = attr[1];
