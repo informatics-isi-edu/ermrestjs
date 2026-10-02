@@ -60,7 +60,7 @@
     "lz-string": "^1.5.0",
     "markdown-it": "15.0.2",
     "markdown-it-attrs": "5.0.0",
-    "moment": "2.29.4",
+    "moment": "2.31.0",
     "moment-timezone": "0.5.48",
     "mustache": "x",
     "q": "1.5.1",
