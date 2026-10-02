@@ -1,5 +1,5 @@
 import { resolve } from 'path';
-import { defineConfig, UserConfig } from 'vite';
+import { defineConfig, type UserConfig } from 'vite';
 import { compression } from 'vite-plugin-compression2';
 // import dts from 'vite-plugin-dts';
 
@@ -27,7 +27,7 @@ export default defineConfig(async (): Promise<UserConfig> => {
     const { visualizer } = await import(/* @vite-ignore */ 'rollup-plugin-visualizer');
     plugins.push(
       visualizer({
-        filename: resolve(__dirname, 'dist', 'stats.html'),
+        filename: resolve(import.meta.dirname, 'dist', 'stats.html'),
       }),
     );
   }
@@ -42,7 +42,7 @@ export default defineConfig(async (): Promise<UserConfig> => {
       reportCompressedSize: false,
       sourcemap: isDev,
       lib: {
-        entry: resolve(__dirname, 'src/index.ts'),
+        entry: resolve(import.meta.dirname, 'src/index.ts'),
         fileName: 'ermrest',
       },
       rollupOptions: {
@@ -81,14 +81,7 @@ export default defineConfig(async (): Promise<UserConfig> => {
     },
     resolve: {
       alias: {
-        '@isrd-isi-edu/ermrestjs': resolve(__dirname),
-        /**
-         * markdown-it imports the deprecated Node `punycode` builtin. In a browser
-         * build that gets externalized to a stub and logs a warning. markdown-it only
-         * calls it inside try/catch for hostname normalization, so an empty shim is
-         * safe (ASCII URLs unaffected) and silences the warning.
-         */
-        punycode: resolve(__dirname, 'vendor/punycode-shim.js'),
+        '@isrd-isi-edu/ermrestjs': resolve(import.meta.dirname),
       },
     },
     plugins,
