@@ -35,6 +35,7 @@ import {
   BatchDeleteResponse,
   UnsupportedFilters,
 } from '@isrd-isi-edu/ermrestjs/src/models/errors';
+import { Checksum, Upload } from '@isrd-isi-edu/ermrestjs/src/models/hatrac';
 
 // services
 import CatalogService from '@isrd-isi-edu/ermrestjs/src/services/catalog';
@@ -49,7 +50,6 @@ import { fixedEncodeURIComponent } from '@isrd-isi-edu/ermrestjs/src/utils/value
 import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils';
 
 // legacy imports
-import { Checksum, Upload } from '@isrd-isi-edu/ermrestjs/js/hatrac';
 import { onload, getElapsedTime } from '@isrd-isi-edu/ermrestjs/js/setup/node';
 import printf from '@isrd-isi-edu/ermrestjs/js/format';
 import { resolve, _createPage } from '@isrd-isi-edu/ermrestjs/src/models/reference';

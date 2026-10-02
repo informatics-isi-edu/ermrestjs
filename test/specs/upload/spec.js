@@ -4,7 +4,9 @@ require('./../../utils/starter.spec.js').runTests({
         "/upload/tests/01.checksum.js",
         "/upload/tests/02.upload_obj.js",
         "/upload/tests/03.update_w_upload.js",
-        "/upload/tests/04.create_w_upload.js"
+        "/upload/tests/04.create_w_upload.js",
+        "/upload/tests/05.pause_cancel.js",
+        "/upload/tests/06.existing_file.js"
     ],
     schemaConfigurations: [
         "/upload/conf/upload.conf.json"

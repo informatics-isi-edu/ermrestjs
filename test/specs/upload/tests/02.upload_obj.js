@@ -99,7 +99,6 @@ exports.execute = function (options) {
       // initial values
       expect(uploadObj.isPaused).toBeFalsy('is paused is incorrect');
       expect(uploadObj.chunks).toBeDefined('chunks is incorrect');
-      expect(uploadObj.log).toEqual(console.log, 'log is incorrect');
     });
 
     it('should have a file the same as the one that was uploaded.', function () {
@@ -200,57 +199,28 @@ exports.execute = function (options) {
         });
     });
 
-    it('should verify we can get notified as the job is running after each chunk is uploaded.', function (done) {
-      // keeps track of each time notify is called, should be once per chunk
-      var counter = 1;
+    it('reports the progress until all the chunks are uploaded', async () => {
+      let progressCalls = 0;
+      let lastUploaded = 0;
+      const url = await uploadObj.start(0, (uploaded, fileSize) => {
+        progressCalls++;
+        lastUploaded = uploaded;
+        expect(fileSize).toBe(file.size);
+        expect(uploaded).toBeLessThanOrEqual(file.size);
+      });
 
-      uploadObj
-        .start()
-        .then(
-          function (response) {
-            expect(response).toBe(serverFilePath, 'Upload job file path is incorrect');
-            expect(uploadObj.isPaused).toBeFalsy('Upload job is paused');
+      expect(url).toBe(serverFilePath);
+      expect(uploadObj.isPaused).toBe(false);
+      expect(uploadObj.completed).toBe(true);
+      expect(uploadObj.chunks.length).toBe(file.size / chunkSize);
+      uploadObj.chunks.forEach((chunk) => {
+        expect(chunk.completed).toBe(true);
+        expect(chunk.progress).toBe(chunkSize);
+      });
 
-            done();
-          },
-          function (err) {
-            console.dir(err);
-            done.fail();
-          },
-          function notify() {
-            var chunks = uploadObj.chunks;
-            // we get notified by updateProgressBar() after the chunk is PUT to the hatrac server
-            expect(chunks.length).toBe(file.size / chunkSize, 'Upload job chunks is incorrect');
-
-            // verify completed chunks
-            var numCompleteChunks = 0;
-            var numIncompleteChunks = 0;
-            // the chunks get added in a random order in the array. sometimes chunk[2] is uploaded before chunk[1]
-            for (var i = 0; i < chunks.length; i++) {
-              if (chunks[i].completed) {
-                expect(chunks[i].progress).toBe(chunkSize, 'Chunk progress is not the same as chunk size after completion');
-                numCompleteChunks++;
-              } else {
-                expect(chunks[i].progress).toBe(0, "Chunk progress has started even though it's not complete");
-                numIncompleteChunks++;
-              }
-            }
-            expect(numCompleteChunks).toBe(counter, 'Not enough chunks completed');
-            expect(numIncompleteChunks).toBe(chunks.length - counter, 'Too many chunks completed');
-
-            // verify the file is uploaded or not
-            if (counter == chunks.length) {
-              expect(uploadObj.completed).toBeTruthy('File not yet created');
-            } else {
-              expect(uploadObj.completed).toBeFalsy('File has been created');
-            }
-            counter++;
-          },
-        )
-        .catch(function (err) {
-          console.dir(err);
-          done.fail();
-        });
+      // called after each chunk is uploaded (and while the chunks are being uploaded)
+      expect(progressCalls).toBeGreaterThanOrEqual(uploadObj.chunks.length);
+      expect(lastUploaded).toBe(file.size);
     });
 
     it('should complete the upload.', function (done) {
@@ -290,7 +260,6 @@ exports.execute = function (options) {
         // initial values
         expect(uploadObjDiffName.isPaused).toBeFalsy('is paused is incorrect');
         expect(uploadObjDiffName.chunks).toBeDefined('chunks is incorrect');
-        expect(uploadObjDiffName.log).toEqual(console.log, 'log is incorrect');
       });
 
       it('should have a file the same as the one that was uploaded.', function () {
@@ -369,9 +338,6 @@ exports.execute = function (options) {
       });
 
       it("should return since file didn't need to be uploaded and is marked complete already.", function (done) {
-        // keeps track of each time notify is called, should be once per chunk
-        var counter = 1;
-
         uploadObjDiffName
           .start()
           .then(function (response) {
@@ -389,8 +355,8 @@ exports.execute = function (options) {
       it('should complete the upload.', function (done) {
         uploadObjDiffName.completeUpload().then(
           function (response) {
-            // no ':' appended since it's not a versioned url for the response
-            expect(response.startsWith(serverFilePath)).toBeTruthy('Upload job file path is incorrect');
+            // the versioned url of the existing file (its metadata was updated in place)
+            expect(response.startsWith(serverFilePath + ':')).toBeTruthy('Upload job file path is incorrect');
             expect(uploadObjDiffName.jobDone).toBeTruthy('Upload job is not complete');
 
             done();
@@ -446,9 +412,7 @@ exports.execute = function (options) {
       });
     });
 
-    // TODO: Upload.pause(), Upload.resume(), and Upload.cancel() are not tested.
-    // we can't interrupt a promise even during the notify callback. We will have to look into
-    // a way to mock the upload endpoint and change the Synchronization so it is ignored
+    // pause, resume, and cancel are tested in 05.pause_cancel.js
 
     afterAll(function (done) {
       // removes the file from the chaise folder
