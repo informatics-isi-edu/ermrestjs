@@ -1,3 +1,4 @@
+import { isCancel } from 'axios';
 import { Deferred } from 'q';
 
 // models
@@ -181,6 +182,14 @@ export default class HTTPService {
               });
             },
             function (error: any) {
+              // the request was aborted by the caller (e.g. pausing a file upload), so we shouldn't retry it
+              if (isCancel(error)) {
+                onload().then(function () {
+                  deferred.reject(error);
+                });
+                return;
+              }
+
               /**
                * in axios, network error doesn't have proper status code,
                * so this will make sure we're treating it the same as response.status=-1

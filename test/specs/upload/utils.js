@@ -104,3 +104,60 @@ exports.uploadFileForTests = function (file, fileNumber, validRow, uploadURL, up
       });
   });
 };
+
+/**
+ * Creates a file with the given size in the files folder (filled with the same byte), and returns its path and the mock file object.
+ * @param {string} name - the name of the file
+ * @param {number} size - the size of the file in bytes
+ */
+exports.createTestFile = (name, size) => {
+  const path = `test/specs/upload/files/${name}`;
+  fs.writeFileSync(path, Buffer.alloc(size, 1));
+  return { path, file: createMockFile(path) };
+};
+
+/**
+ * Removes the file that was created by createTestFile.
+ * @param {string} path - the path of the file
+ */
+exports.removeTestFile = (path) => {
+  fs.rmSync(path, { force: true });
+};
+
+/**
+ * @param {number} ms - the number of milliseconds to wait
+ */
+exports.delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Waits until the given condition is true. Rejects if it takes longer than the timeout.
+ * @param {() => boolean} condition - the condition that should become true
+ * @param {number} timeout - the maximum time to wait in milliseconds
+ */
+exports.waitFor = async (condition, timeout = 5000) => {
+  const startTime = Date.now();
+  while (!condition()) {
+    if (Date.now() - startTime > timeout) {
+      throw new Error(`Condition was not met after ${timeout}ms`);
+    }
+    await exports.delay(10);
+  }
+};
+
+/**
+ * Returns an object whose `state` shows whether the promise is still pending, resolved, or rejected.
+ * It also handles the rejection, so a promise that is expected to never settle won't cause an unhandled rejection.
+ * @param {Promise} promise - the promise to track
+ */
+exports.trackPromise = (promise) => {
+  const tracked = { state: 'pending' };
+  promise.then(
+    () => {
+      tracked.state = 'resolved';
+    },
+    () => {
+      tracked.state = 'rejected';
+    },
+  );
+  return tracked;
+};
