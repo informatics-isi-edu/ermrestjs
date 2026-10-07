@@ -343,7 +343,7 @@ export class Upload {
    * @param templateVariables - other template variables that should be available
    * @param onProgress - a callback function to be called for progress
    * @returns A promise resolved with a url where we will upload the file
-   * or rejected with error if unable to calculate checkum
+   * or rejected with error if unable to calculate checksum
    */
   async calculateChecksum(
     row: UploadRow,
