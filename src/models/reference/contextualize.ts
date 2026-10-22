@@ -129,10 +129,10 @@ export class Contextualize {
   }
 
   /**
-   * The _entry/compact_ context of this reference.
+   * The _resultset_ context of this reference (the resultset shown after create/edit).
    */
-  get compactEntry(): Reference {
-    return this._contextualize(_contexts.COMPACT_ENTRY);
+  get resultset(): Reference {
+    return this._contextualize(_contexts.RESULTSET);
   }
 
   /**

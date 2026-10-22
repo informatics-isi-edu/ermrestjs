@@ -1,0 +1,15 @@
+{
+    "catalog": {},
+    "schema": {
+        "name": "resultset_schema",
+        "createNew": true,
+        "path": "test/specs/reference/conf/resultset_schema/schema.json"
+    },
+    "tables": {
+        "createNew": true
+    },
+    "entities": {
+        "createNew": true,
+        "path": "test/specs/reference/conf/resultset_schema/data"
+    }
+}

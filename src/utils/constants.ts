@@ -76,7 +76,7 @@ export const _contexts = {
   COMPACT: 'compact',
   COMPACT_BRIEF: 'compact/brief',
   COMPACT_BRIEF_INLINE: 'compact/brief/inline',
-  COMPACT_ENTRY: 'compact/entry', // post create/edit for multiple rows
+  COMPACT_RESULTSET: 'compact/resultset', // values of the resultset shown after create/edit
   COMPACT_SELECT: 'compact/select',
   COMPACT_SELECT_ASSOCIATION: 'compact/select/association',
   COMPACT_SELECT_ASSOCIATION_LINK: 'compact/select/association/link',
@@ -93,6 +93,7 @@ export const _contexts = {
   EXPORT_COMPACT: 'export/compact',
   EXPORT_DETAILED: 'export/detailed',
   FILTER: 'filter',
+  RESULTSET: 'resultset', // columns of the resultset shown after create/edit
   DEFAULT: '*',
   ROWNAME: 'row_name',
 };
@@ -110,7 +111,7 @@ export const _dataFormats = {
 export const _contextArray = [
   'compact',
   'compact/brief',
-  'compact/entry',
+  'compact/resultset',
   'compact/select',
   'compact/select/association',
   'compact/select/association/link',
@@ -123,12 +124,14 @@ export const _contextArray = [
   'entry/edit',
   'entry',
   'filter',
+  'resultset',
   '*',
   'row_name',
   'compact/brief/inline',
 ];
 
-export const _entryContexts = [_contexts.CREATE, _contexts.EDIT, _contexts.ENTRY];
+// resultset follows the entry rules since its list can only show what the create/update response has (its values use compact/resultset)
+export const _entryContexts = [_contexts.CREATE, _contexts.EDIT, _contexts.ENTRY, _contexts.RESULTSET];
 export const _compactContexts = [
   _contexts.COMPACT,
   _contexts.COMPACT_BRIEF,
@@ -140,7 +143,6 @@ export const _compactContexts = [
   _contexts.COMPACT_SELECT_FOREIGN_KEY,
   _contexts.COMPACT_SELECT_SAVED_QUERIES,
   _contexts.COMPACT_SELECT_SHOW_MORE,
-  _contexts.COMPACT_ENTRY,
 ];
 
 // NOTE: array is in order from parent context to more specific sub contexts for purposes of inheritence checking

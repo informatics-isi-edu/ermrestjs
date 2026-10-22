@@ -364,7 +364,8 @@ export class ForeignKeyPseudoColumn extends ReferenceColumn {
       });
     }
 
-    return this.formatPresentation(mainTuple.linkedData[this.name], mainTuple.page.reference.context, null, { skipWaitFor: true });
+    const valueContext = mainTuple.page.valueContext ?? mainTuple.page.reference.context;
+    return this.formatPresentation(mainTuple.linkedData[this.name], valueContext, null, { skipWaitFor: true });
   }
 
   _determineSortable(): void {

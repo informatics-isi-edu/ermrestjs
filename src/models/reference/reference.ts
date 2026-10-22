@@ -53,6 +53,7 @@ import {
 } from '@isrd-isi-edu/ermrestjs/src/utils/reference-utils';
 import { isObject, isObjectAndNotNull, isStringAndNotEmpty, verify } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
 import { fixedEncodeURIComponent, simpleDeepCopy } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
+import { buildResultsetLinkedData } from '@isrd-isi-edu/ermrestjs/src/utils/resultset-utils';
 import {
   _annotations,
   _contexts,
@@ -2067,6 +2068,80 @@ export class Reference {
   }
 
   /**
+   * The context of the result of create/update: resultset if the table defines a list for it
+   * (same check as export), otherwise the context of the form (entry/create or entry/edit).
+   */
+  private _getResultsetContext(): string {
+    if (this.table.annotations.contains(_annotations.VISIBLE_COLUMNS)) {
+      const list = _getRecursiveAnnotationValue(_contexts.RESULTSET, this.table.annotations.get(_annotations.VISIBLE_COLUMNS).content, true);
+      if (Array.isArray(list)) return _contexts.RESULTSET;
+    }
+    return this._context;
+  }
+
+  /**
+   * Returns the reference of the rows returned by create/update (see _getResultsetContext for its context).
+   * The filter is based on the shortest key of the given rows. Without any rows, the reference is unfiltered.
+   * @param rows the rows returned by create/update
+   */
+  private _generateResultReference(rows: Record<string, unknown>[]): Reference {
+    const encodedSchemaTableName = `${fixedEncodeURIComponent(this.table.schema.name)}:${fixedEncodeURIComponent(this.table.name)}`;
+    let refUri = [this._location.service, 'catalog', this.table.schema.catalog.id, 'entity', encodedSchemaTableName].join('/');
+
+    if (rows.length > 0) {
+      const keyValueRes = generateKeyValueFilters(
+        this.table.shortestKey,
+        rows,
+        this.table.schema.catalog,
+        -1, // we don't want to check the url length here, chaise will check it
+        this.table.displayname.value!,
+      );
+      // NOTE this will not happen since ermrest only accepts not-null keys,
+      // but added here for completeness
+      if (!keyValueRes.successful) {
+        throw new InvalidInputError(keyValueRes.message as string);
+      }
+      // with -1, the function returns exactly one filter
+      refUri += '/' + keyValueRes.filters![0].path;
+    }
+
+    const ref = new Reference(parse(refUri), this._table.schema.catalog);
+    /*
+     * set the context directly since contextualize might switch to an alternative (or base) table,
+     * while the rows belong to this table.
+     */
+    ref.setContext(this._getResultsetContext());
+    return ref;
+  }
+
+  /**
+   * Returns the page of rows returned by create/update. The values are formatted in the compact/resultset context.
+   * @param ref the result reference (see _generateResultReference)
+   * @param etag the etag of the response
+   * @param rows the rows returned by create/update
+   * @param formLinkedData the linked data of the submitted rows (see buildResultsetLinkedData)
+   */
+  private _createResultPage(ref: Reference, etag: string | null, rows: Record<string, unknown>[], formLinkedData?: Record<string, unknown>[]): Page {
+    /*
+     * the data is already stored at this point, so an issue in matching the foreign key rows shouldn't
+     * turn a successful create/update into a failure. without the linked data, Page only uses the key values.
+     */
+    let linked: Partial<ReturnType<typeof buildResultsetLinkedData>> = {};
+    try {
+      linked = buildResultsetLinkedData(this, ref, rows, formLinkedData);
+    } catch (exp) {
+      $log.warn('could not match the foreign key rows of the result:', exp);
+    }
+
+    return new Page(ref, etag, rows, false, false, undefined, {
+      valueContext: _contexts.COMPACT_RESULTSET,
+      // this page doesn't go through the secondary requests
+      skipWaitFor: true,
+      ...linked,
+    });
+  }
+
+  /**
    * Creates a set of tuples in the references relation. Note, this
    * operation sets the `defaults` list according to the table
    * specification, and not according to the contents of in the input
@@ -2074,17 +2149,20 @@ export class Reference {
    * @param data The array of data to be created as new tuples.
    * @param contextHeaderParams the object that we want to log.
    * @param skipOnConflict if true, it will not complain about conflict
-   * @returns A promise resolved with a object containing `successful` and `failure` attributes.
-   * Both are {@link Page} of results.
+   * @param linkedData the foreign key data of each row in the form of `{ [columnName]: row }`.
+   * Used for showing the row names of foreign keys in the result (only when the values match).
+   * @returns A promise resolved with `{ successful, failed: null, disabled: null }`, where `successful` is the
+   * {@link Page} of created rows. Its reference is in the `resultset` context if the table defines a list for it,
+   * otherwise in `entry/create`. Its values are formatted in `compact/resultset`.
    * or rejected with any of the following errors:
    * - {@link InvalidInputError}: If `data` is not valid, or reference is not in `entry/create` context.
-   * - {@link InvalidInputError}: If `limit` is invalid.
    * - ERMrestjs corresponding http errors, if ERMrest returns http error.
    */
   create(
     data: Record<string, unknown>[],
     contextHeaderParams?: any,
     skipOnConflict?: boolean,
+    linkedData?: Record<string, unknown>[],
   ): Promise<{ successful: Page; failed: Page | null; disabled: Page | null }> {
     try {
       // verify: data is not null, data has non empty tuple set
@@ -2123,32 +2201,10 @@ export class Reference {
           .post(uri, data, config)
           .then((response: any) => {
             const etag = HTTPService.getResponseHeader(response).etag;
-            // new page will have a new reference (uri that filters on a disjunction of ids of these tuples)
-            let uri = this._location.compactUri + '/';
-            let keyName: string;
 
-            // loop through each returned Row and get the key value
-            for (let j = 0; j < response.data.length; j++) {
-              if (j !== 0) uri += ';';
-              // shortest key is made up from one column
-              if (this._shortestKey.length == 1) {
-                keyName = this._shortestKey[0].name;
-                uri += fixedEncodeURIComponent(keyName) + '=' + fixedEncodeURIComponent(response.data[j][keyName]);
-              } else {
-                uri += '(';
-                for (let k = 0; k < this._shortestKey.length; k++) {
-                  if (k !== 0) uri += '&';
-                  keyName = this._shortestKey[k].name;
-                  uri += fixedEncodeURIComponent(keyName) + '=' + fixedEncodeURIComponent(response.data[j][keyName]);
-                }
-                uri += ')';
-              }
-            }
-
-            const ref = new Reference(parse(uri), this._table.schema.catalog);
-            const contextualizedRef = response.data.length > 1 ? ref.contextualize.compactEntry : ref.contextualize.compact;
-            // make a page of tuples of the results (unless error)
-            const page = new Page(contextualizedRef, etag, response.data, false, false);
+            // with onconflict=skip, the response might not have all (or any) of the rows
+            const ref = this._generateResultReference(response.data);
+            const page = this._createResultPage(ref, etag, response.data, linkedData);
 
             // resolve the promise, passing back the page
             resolve({
@@ -2172,15 +2228,27 @@ export class Reference {
    * tuple.data has the new data
    * tuple._oldData has the data before changes were made
    * @param contextHeaderParams the object that we want to log.
+   * @param linkedData the foreign key data of each row in the form of `{ [columnName]: row }`.
+   * Used for showing the row names of foreign keys in the result (only when the values match).
    * @returns A promise resolved with a object containing:
    *  -  `successful`: Page of results that were stored.
-   *  -  `failed`: Page of results that failed to be stored.
+   *  -  `failed`: Page of the submitted rows that ermrest didn't return (i.e. not updated). Currently this happens
+   *     when rows are deleted after they were read, since ermrest skips them instead of returning a conflict error.
    *  -  `disabled`: Page of results that were not sent to ermrest (because of acl)
+   * The references of these pages are in the `resultset` context if the table defines a list for it,
+   * otherwise in `entry/edit`. Their values are formatted in `compact/resultset`.
    * or rejected with any of these errors:
-   * - {@link InvalidInputError}: If `limit` is invalid or reference is not in `entry/edit` context.
+   * - {@link InvalidInputError}: If the reference is not in `entry/edit` context.
+   * - {@link NoDataChangedError}: If nothing was changed.
+   * - {@link ForbiddenError}: If ermrest didn't update any rows (also the case when all the rows were deleted).
+   * - {@link InvalidServerResponse}: If none of the returned rows could be matched with the submitted ones.
    * - ERMrestjs corresponding http errors, if ERMrest returns http error.
    */
-  async update(tuples: Tuple[], contextHeaderParams?: any): Promise<{ successful: Page; failed: Page | null; disabled: Page | null }> {
+  async update(
+    tuples: Tuple[],
+    contextHeaderParams?: any,
+    linkedData?: Record<string, unknown>[],
+  ): Promise<{ successful: Page; failed: Page | null; disabled: Page | null }> {
     verify(Array.isArray(tuples), "'tuples' must be specified");
 
     // store the ones that cannot be updated and filter them out
@@ -2211,7 +2279,6 @@ export class Reference {
     const allOldData: any[] = [];
     let newData: any;
     const allNewData: any[] = [];
-    let keyName: string;
 
     // add column name into list of column projections if not in column projections set and data has changed
     const addProjection = (colName: string, colType: Type) => {
@@ -2449,116 +2516,65 @@ export class Reference {
     }
 
     const etag = HTTPService.getResponseHeader(response).etag;
-    const pageData: any[] = [];
 
-    // loop through each returned Row and get the key value
-    for (let j = 0; j < response.data.length; j++) {
-      // response.data is sometimes in a different order
-      // so collecting the data could be incorrect if we don't make sure the response data and tuple data are in the same order
-      // the entity is updated properly just the data returned from this request is in a different order sometimes
-      let rowIndexInSubData = -1;
-
-      for (let t = 0; t < tuples.length && rowIndexInSubData === -1; t++) {
-        // used to verify the number of matches for each shortest key value
-        let matchCt = 0;
-        for (let n = 0; n < shortestKeyNames.length; n++) {
-          const shortKey = shortestKeyNames[n];
-          const responseVal = getAliasedKeyVal(response.data[j], shortKey);
-
-          // if the value is the same, use this t index for the pageData object
-          if (tuples[t].data[shortKey] == responseVal) {
-            // this comes into play when the shortest key is a set of column names
-            // if the values match increase te counter
-            matchCt++;
-          }
-        }
-        // if our counter is the same length as the list of shortest key names, it's an exact match to the t tuple
-        if (matchCt === shortestKeyNames.length) {
-          rowIndexInSubData = t;
-        }
+    /*
+     * match the returned rows with the submitted tuples.
+     * response.data might be in a different order, and might be missing rows that were not updated
+     * (e.g. deleted after they were read).
+     */
+    const matchedRows: { tupleIndex: number; data: Record<string, unknown> }[] = [];
+    const matchedTupleIndexes = new Set<number>();
+    response.data.forEach((responseRow: any) => {
+      const tupleIndex = tuples.findIndex((t) => {
+        // loose equality to match the previous implementation
+        // eslint-disable-next-line eqeqeq
+        return shortestKeyNames.every((shortKey) => t.data[shortKey] == getAliasedKeyVal(responseRow, shortKey));
+      });
+      if (tupleIndex === -1 || matchedTupleIndexes.has(tupleIndex)) {
+        $log.warn('update: could not match one of the returned rows with the submitted ones.');
+        return;
       }
+      matchedTupleIndexes.add(tupleIndex);
 
-      pageData[rowIndexInSubData] = {};
-
-      // unalias the keys for the page data
-      Object.keys(response.data[j]).forEach((columnAlias) => {
+      // unalias the columns
+      const rowData: Record<string, unknown> = {};
+      Object.keys(responseRow).forEach((columnAlias) => {
         if (columnAlias.endsWith(newAlias)) {
           // alias is always at end and length 2
-          const columnName = columnAlias.slice(0, columnAlias.length - newAlias.length);
-          pageData[rowIndexInSubData][columnName] = response.data[j][columnAlias];
+          rowData[columnAlias.slice(0, columnAlias.length - newAlias.length)] = responseRow[columnAlias];
         }
       });
+
+      /*
+       * ermrest only returns the updated columns, so use the old data for the rest.
+       * TODO the old data is stale for columns that the server changes on update (RMT, RMB, and
+       * trigger-computed columns). reading the rows back after update would fix this.
+       */
+      const tupleOldData = tuples[tupleIndex]._oldData || {};
+      Object.keys(tupleOldData).forEach((colName) => {
+        if (!(colName in rowData)) rowData[colName] = tupleOldData[colName];
+      });
+
+      matchedRows.push({ tupleIndex, data: rowData });
+    });
+
+    // the update went through but we cannot tell which rows were updated
+    if (matchedRows.length === 0) {
+      throw new InvalidServerResponse(updateRequestURL, JSON.stringify(response.data), contextHeaderParams.action);
     }
 
-    // NOTE: ermrest returns only some of the column data.
-    // make sure that pageData has all the submitted and updated data
-    for (let i = 0; i < tuples.length; i++) {
-      for (const j in tuples[i]._oldData) {
-        if (!Object.prototype.hasOwnProperty.call(tuples[i]._oldData, j)) continue;
-        if (j in pageData[i]) continue; // pageData already has this data
-        pageData[i][j] = tuples[i]._oldData![j]; // add the missing data
-      }
-    }
+    // keep the order of the submitted tuples
+    matchedRows.sort((a, b) => a.tupleIndex - b.tupleIndex);
+    const successfulPageData = matchedRows.map((r) => r.data);
 
-    // build the url using the helper function
-    const keyValueRes = generateKeyValueFilters(
-      this.table.shortestKey,
-      pageData,
-      this.table.schema.catalog,
-      -1, // we don't want to check the url length here, chaise will check it
-      this.table.displayname.value!,
-    );
-    // NOTE this will not happen since ermrest only accepts not-null keys,
-    // but added here for completeness
-    if (!keyValueRes.successful) {
-      throw new InvalidInputError(keyValueRes.message as string);
-    }
+    const ref = this._generateResultReference(successfulPageData);
+    const successfulPage = this._createResultPage(ref, etag, successfulPageData, linkedData);
 
-    let refUri = `${this._location.service}/catalog/${this.table.schema.catalog.id}/entity/${encodedSchemaTableName}`;
-    refUri += '/' + keyValueRes.filters!.map((f) => f.path).join('/');
-    let ref = new Reference(parse(refUri), this._table.schema.catalog).contextualize.compactEntry;
-    ref = response.data.length > 1 ? ref.contextualize.compactEntry : ref.contextualize.compact;
-    const successfulPage = new Page(ref, etag, pageData, false, false);
-    let failedPage = null,
-      disabledPage = null;
+    // the submitted tuples that ermrest didn't return were not updated
+    const failedPageData = tuples.filter((t, i) => !matchedTupleIndexes.has(i)).map((t) => t.data);
+    const failedPage = failedPageData.length > 0 ? this._createResultPage(ref, etag, failedPageData, linkedData) : null;
 
-    // if the returned page is smaller than the initial page,
-    // then some of the columns failed to update.
-    if (tuples.length > successfulPage.tuples.length) {
-      const failedPageData = [];
-      for (let i = 0; i < tuples.length; i++) {
-        let rowMatch = false;
-
-        for (let j = 0; j < successfulPage.tuples.length; j++) {
-          let keyMatch = true;
-
-          for (let k = 0; k < shortestKeyNames.length; k++) {
-            keyName = shortestKeyNames[k];
-            if (tuples[i].data[keyName] !== successfulPage.tuples[j].data[keyName]) {
-              // these keys don't match, go for the next tuple
-              keyMatch = false;
-              break;
-            }
-          }
-
-          if (keyMatch) {
-            // all the key columns match, then rows match.
-            rowMatch = true;
-            break;
-          }
-        }
-
-        if (!rowMatch) {
-          // didn't find a match, so add as failed
-          failedPageData.push(tuples[i].data);
-        }
-      }
-      failedPage = new Page(ref, etag, failedPageData, false, false);
-    }
-
-    if (disabledPageData.length > 0) {
-      disabledPage = new Page(ref, etag, disabledPageData, false, false);
-    }
+    const disabledPage = disabledPageData.length > 0 ? this._createResultPage(ref, etag, disabledPageData, linkedData) : null;
 
     return {
       successful: successfulPage,

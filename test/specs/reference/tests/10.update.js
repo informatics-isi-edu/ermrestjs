@@ -206,7 +206,7 @@ exports.execute = function (options) {
             .then(function (response) {
               response = response.successful;
               expect(response._data.length).toBe(1, 'response data is not the same size as given.');
-              expect(response.reference._context).toEqual('compact', 'page reference is not in the correct context.');
+              expect(response.reference._context).toEqual('entry/edit', 'page reference is not in the correct context.');
 
               utils.checkPageValues(response._data, tuples, sortBy);
 
@@ -2220,7 +2220,7 @@ exports.execute = function (options) {
           .then(function (response) {
             response = response.successful;
             expect(response._data.length).toBe(1, 'response data is not the same size as given.');
-            expect(response.reference._context).toEqual('compact', 'page reference is not in the correct context.');
+            expect(response.reference._context).toEqual('entry/edit', 'page reference is not in the correct context.');
 
             utils.checkPageValues(response._data, tuples, sortBy);
 

@@ -216,7 +216,7 @@ exports.execute = function (options) {
       'isPathColumn',
     ];
 
-    var mainRef, mainRefDetailed, invalidRef, mainRefEntry, mainRefCompactEntry, detailedCols, detailedColsWTuple, mainTuple, mainPage;
+    var mainRef, mainRefDetailed, invalidRef, mainRefEntry, mainRefResultset, detailedCols, detailedColsWTuple, mainTuple, mainPage;
     let mainRefEntryEdit, entryEditCols;
 
     beforeAll(function (done) {
@@ -230,7 +230,7 @@ exports.execute = function (options) {
           mainRefEntry = response.contextualize.entryCreate;
           mainRefEntryEdit = response.contextualize.entryEdit;
           entryEditCols = mainRefEntryEdit.columns;
-          mainRefCompactEntry = response.contextualize.compactEntry;
+          mainRefResultset = response.contextualize.resultset;
           return options.ermRest.resolve(invalidEntityUri, { cid: 'test' });
         })
         .then(function (response) {
@@ -363,23 +363,13 @@ exports.execute = function (options) {
         ]);
       });
 
-      it('in compact entry context, should ignore the pseudoColumns that are not supported.', function () {
-        expect(mainRefCompactEntry.columns.length).toBe(9, 'length missmatch.');
-
+      it('in resultset context, should ignore the pseudoColumns that are not supported in entry.', () => {
+        // same list as entry/create (both point to detailed), so the same entry rules apply
+        expect(mainRefResultset.columns.length).toBe(4, 'length missmatch.');
         checkReferenceColumns([
           {
-            ref: mainRefCompactEntry,
-            expected: [
-              'main_table_id_col',
-              'col',
-              ['pseudo_column_schema', 'main_key1'].join('_'),
-              ['pseudo_column_schema', 'main_fk1'].join('_'),
-              [{ outbound: ['pseudo_column_schema', 'main_fk1'] }, 'id'],
-              'asset',
-              'asset_filename',
-              '$virtual-column-1',
-              '$virtual-column-1-1',
-            ],
+            ref: mainRefResultset,
+            expected: ['main_table_id_col', 'col', ['pseudo_column_schema', 'main_fk1'].join('_'), 'asset'],
           },
         ]);
       });

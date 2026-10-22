@@ -64,6 +64,13 @@ export class Tuple {
   }
 
   /**
+   * The context used for formatting values, row names, and template variables.
+   */
+  private get _valueContext(): string {
+    return this._page.valueContext ?? this._pageRef.context;
+  }
+
+  /**
    * This is the reference of the Tuple
    */
   get reference(): Reference {
@@ -357,24 +364,32 @@ export class Tuple {
         return !this.checkPermissions(_ERMrestACLs.COLUMN_UPDATE, col.name);
       };
 
+      // based on the reference context (not the value context), since it's about the columns and not how the values are formatted
+      if (_isEntryContext(this._pageRef.context)) {
+        this._pageRef.columns.forEach((column, i) => {
+          // if user cannot update any of the base_columns then the column should be disabled
+          this._canUpdateValues![i] = !column.baseColumns.some(checkUpdateColPermission);
+        });
+      }
+
       // key value pair of formmated values, to be used in formatPresentation
       const keyValues = this.templateVariables.values;
 
+      const context = this._valueContext;
+      const formatOptions = this._page.skipWaitFor ? { skipWaitFor: true } : undefined;
+
       // If context is entry
-      if (_isEntryContext(this._pageRef.context)) {
+      if (_isEntryContext(context)) {
         // Return raw values according to the visibility and sequence of columns
         for (let i = 0; i < this._pageRef.columns.length; i++) {
           const column = this._pageRef.columns[i];
 
-          // if user cannot update any of the base_columns then the column should be disabled
-          this._canUpdateValues[i] = !column.baseColumns.some(checkUpdateColPermission);
-
           if (column.isPseudo) {
             let presentation;
             if (isAllOutboundColumn(column)) {
-              presentation = column.formatPresentation(this._linkedData[column.name], this._pageRef.context, keyValues);
+              presentation = column.formatPresentation(this._linkedData[column.name], context, keyValues, formatOptions);
             } else {
-              presentation = column.formatPresentation(this._data, this._pageRef.context, keyValues);
+              presentation = column.formatPresentation(this._data, context, keyValues, formatOptions);
             }
             this._values[i] = presentation.value;
             this._isHTML[i] = presentation.isHTML;
@@ -400,12 +415,12 @@ export class Tuple {
           const column = this._pageRef.columns[i];
           if (column.isPseudo) {
             if (isAllOutboundColumn(column)) {
-              values[i] = column.formatPresentation(this._linkedData[column.name], this._pageRef.context, keyValues);
+              values[i] = column.formatPresentation(this._linkedData[column.name], context, keyValues, formatOptions);
             } else {
-              values[i] = column.formatPresentation(this._data, this._pageRef.context, keyValues);
+              values[i] = column.formatPresentation(this._data, context, keyValues, formatOptions);
             }
           } else {
-            values[i] = column.formatPresentation(this._data, this._pageRef.context, keyValues);
+            values[i] = column.formatPresentation(this._data, context, keyValues, formatOptions);
 
             if (column.type.name === 'gene_sequence') {
               values[i].isHTML = true;
@@ -469,7 +484,7 @@ export class Tuple {
    */
   get displayname(): DisplayName {
     if (this._displayname === undefined) {
-      this._displayname = _generateRowName(this._pageRef.table, this._pageRef.context, this._data, this._linkedData, true);
+      this._displayname = _generateRowName(this._pageRef.table, this._valueContext, this._data, this._linkedData, true);
     }
     return this._displayname;
   }
@@ -487,7 +502,7 @@ export class Tuple {
    */
   get rowName(): DisplayName {
     if (this._rowName === undefined) {
-      this._rowName = _generateRowName(this._pageRef.table, this._pageRef.context, this._data, this._linkedData, false);
+      this._rowName = _generateRowName(this._pageRef.table, this._valueContext, this._data, this._linkedData, false);
     }
     return this._rowName;
   }
@@ -512,7 +527,7 @@ export class Tuple {
    */
   get templateVariables(): any {
     if (this._templateVariables === undefined) {
-      const context = this._pageRef.context;
+      const context = this._valueContext;
       const keyValues = _getRowTemplateVariables(this._pageRef.table, context, this._data, this._linkedData);
 
       // TODO should we move these to the _getFormattedKeyValues?
