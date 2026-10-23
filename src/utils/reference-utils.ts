@@ -534,7 +534,6 @@ export function generateColumnsList(
   const context = reference.context;
   const isEntry = _isEntryContext(context);
   const isCompact = typeof context === 'string' && context.startsWith(_contexts.COMPACT);
-  const isCompactEntry = typeof context === 'string' && context.startsWith(_contexts.COMPACT_ENTRY);
 
   // create a map of tableColumns to make it easier to find one
   reference.table.columns.all().forEach((c: any) => {
@@ -811,19 +810,11 @@ export function generateColumnsList(
               });
             }
 
-            // 2 conditions:
-            // isEntry && (refCol.isPathColumn || refCol.isInboundForeignKey || refCol.isKey)
-            // OR
-            // isCompactEntry && (refCol.hasWaitFor || refCol.hasAggregate || (refCol.isPathColumn && refCol.foreignKeyPathLength > 1)
             const removePseudo =
-              (isEntry &&
-                ((refCol as PseudoColumn).isPathColumn ||
-                  (refCol as InboundForeignKeyPseudoColumn).isInboundForeignKey ||
-                  (refCol as KeyPseudoColumn).isKey)) ||
-              (isCompactEntry &&
-                ((refCol as PseudoColumn).hasWaitFor ||
-                  (refCol as PseudoColumn).hasAggregate ||
-                  ((refCol as PseudoColumn).isPathColumn && refCol.foreignKeyPathLength !== undefined && refCol.foreignKeyPathLength > 1)));
+              isEntry &&
+              ((refCol as PseudoColumn).isPathColumn ||
+                (refCol as InboundForeignKeyPseudoColumn).isInboundForeignKey ||
+                (refCol as KeyPseudoColumn).isKey);
 
             // in entry mode, pseudo-column, inbound fk, and key are not allowed
             if (!removePseudo) {

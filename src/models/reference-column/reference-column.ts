@@ -726,7 +726,8 @@ export class ReferenceColumn {
     // rest of the cases
     // NOTE by passing the given templateVariables instead of the one attached to the main tuple, we're supporting wait_for in column and key display.
     // (in combination with the wait_for logic that looks for the one that is defined on column/key display)
-    const pres = this.formatPresentation(mainTuple.data, mainTuple.page.reference.context, templateVariables, { skipWaitFor: true });
+    const valueContext = mainTuple.page.valueContext ?? mainTuple.page.reference.context;
+    const pres = this.formatPresentation(mainTuple.data, valueContext, templateVariables, { skipWaitFor: true });
     if (this.type.name === 'gene_sequence') {
       pres.isHTML = true;
     }

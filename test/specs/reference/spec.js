@@ -20,7 +20,8 @@ require('./../../utils/starter.spec.js').runTests({
         "/reference/tests/16.disabled_system_columns.js",
         "/reference/tests/17.reference_pre_format_values.js",
         "/reference/tests/18.comment_display_inline.js",
-        "/reference/tests/19.comment_display_related.js"
+        "/reference/tests/19.comment_display_related.js",
+        "/reference/tests/21.resultset.js"
     ],
     schemaConfigurations: [
         "/reference/conf/generated.conf.json",
@@ -37,6 +38,7 @@ require('./../../utils/starter.spec.js').runTests({
         "/reference/conf/permission.conf.json",
         "/reference/conf/search.conf.json",
         "/reference/conf/comment_display_inline.conf.json",
-        "/reference/conf/comment_display_related.conf.json"
+        "/reference/conf/comment_display_related.conf.json",
+        "/reference/conf/resultset.conf.json"
     ]
 });

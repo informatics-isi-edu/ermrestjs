@@ -488,8 +488,9 @@ exports.execute = function (options) {
           .create(rows)
           .then(function (response) {
             var page = response.successful;
-            var context = rows.length > 1 ? 'compact/entry' : 'compact';
-            expect(page.reference._context).toEqual(context, 'page reference is not in the correct context.');
+            // the table doesn't define a resultset list, so the result uses the form's context
+            expect(page.reference._context).toEqual('entry/create', 'page reference is not in the correct context.');
+            expect(page.valueContext).toEqual('compact/resultset', 'page value context missmatch.');
             expect(page._data.length).toBe(expectedData.length, 'data length missmatch.');
             expectedData.forEach(function (data, i) {
               for (var k in data) {

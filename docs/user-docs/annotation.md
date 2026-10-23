@@ -289,7 +289,7 @@ using a hierarchical scoping mode:
 1. Hard-coded default behavior in Chaise codebase:
 
 - `detailed` `:` `tag:isrd.isi.edu,2016:chaise:record`,
-- `compact` `:` `tag:isrd.isi.edu,2016:chaise:resultset`
+- `compact` `:` `tag:isrd.isi.edu,2016:chaise:recordset`
 
 2. Server-level configuration in `chaise-config.js` on web server overrides hard-coded default.
 3. Schema-level annotation overrides server-level or codebase behaviors.
@@ -1384,6 +1384,7 @@ List of _context_ names that are used in ERMrest:
 - `"compact"`: Any compact, tabular presentation of data from multiple entities.
   - `"compact/brief"`: A limited compact, tabular presentation of data from multiple entities to be shown under the `detailed` context. In this context, only a page of data will be shown with a link to the access the `compact` context for more detail (related entities section).
   - `"compact/brief/inline"`: A limited inline, compact, tabular presentation of data from multiple entities to be shown under the `detailed` context. In this context, only a page of data will be shown with a link to the access the `compact` context for more detail (inline related entities section).
+  - `"compact/resultset"`: A sub-context of `compact` used for formatting the values (and row names) of the records shown after creating or editing multiple records. The list of columns is controlled by the `resultset` context (or the form, if `resultset` is not defined).
   - `"compact/select"`: A sub-context of `compact` that is used for selecting entities, e.g. when prompting the user for choosing a foreign key or facet value.
     - `"compact/select/association"`: A sub-context of `compact/select` used for selecting entities to link to or unlink from the main record.
       - `"compact/select/association/link"`: A sub-context of `compact/select/association` used for selecting entities to link to the main record.
@@ -1400,6 +1401,7 @@ List of _context_ names that are used in ERMrest:
   - `"export/compact"`: A sub-context of `export` that controls presentations related to the export in `compact` context.
   - `"export/detailed"`: A sub-context of `export` that controls presentations related to the export in `detailed` context.
 - `"filter"`: Any data-filtering control context, i.e. when prompting the user for column constraints or facets.
+- `"resultset"`: The tabular presentation of the records shown after creating or editing multiple records. If the visible-columns annotation doesn't define a list for `resultset`, the columns of the form are used (`entry/create` after creating, `entry/edit` after editing). Since the records are not read again after the submission, the same restrictions as the `entry` context apply (e.g. no aggregates or inbound paths). The values are formatted using the `compact/resultset` context.
 - `"row_name"`: Any abbreviated title-like presentation context.
   - `"row_name/title"`: A sub-context of `row_name` that only applies to title of page.
   - `"row_name/compact"`: A sub-context of `row_name` that only applies to compact, tabular presentation of a row (When a foreignkey value is displayed in a tabular presentation. Or when displaying an entity array aggregate column directive).
@@ -1414,17 +1416,19 @@ If more than one _context_ name in the annotation payload matches, the _options_
 
 The following matrix illustrates which context is meaningful in which annotation.
 
-| Annotation                                                  | compact | compact/brief | compact/brief/inline | compact/select | detailed | entry | entry/edit | entry/create | export | filter | row_name | \*  |
-| ----------------------------------------------------------- | ------- | ------------- | -------------------- | -------------- | -------- | ----- | ---------- | ------------ | ------ | ------ | -------- | --- |
-| [2015 Display](#tag-2015-display)                           | X       | X             | X                    | X              | X        | -     | -          | -            | -      | -      | -        | X   |
-| [2016 Visible Columns](#tag-2016-visible-columns)           | X       | X             | X                    | X              | X        | X     | X          | X            | X      | X      | -        | X   |
-| [2017 Key Display](#tag-2017-key-display)                   | X       | X             | X                    | X              | X        | -     | -          | -            |        | -      | -        | X   |
-| [2016 Column Display](#tag-2016-column-display)             | X       | X             | X                    | X              | X        | X     | X          | X            | -      | -      | -        | X   |
-| [2016 Table Display](#tag-2016-table-display)               | X       | X             | X                    | X              | X        | -     | -          | -            | -      | -      | X        | X   |
-| [2016 Visible Foreign Keys](#tag-2016-visible-foreign-keys) | -       | -             | -                    | -              | X        | -     | -          | -            | -      | -      | -        | X   |
-| [2016 Table Alternatives](#tag-2016-table-alternatives)     | X       | X             | X                    | X              | X        | X     | X          | X            | -      | -      | -        | X   |
-| [2019 Export](#tag-2019-export)                             | X       | -             | -                    | -              | X        | -     | -          | -            | -      | -      | -        | -   |
-| [2021 Google Dataset](#tag-2021-google-dataset)             | -       | -             | -                    | -              | X        | -     | -          | -            | -      | -      | -        | -   |
+| Annotation                                                  | compact | compact/brief | compact/brief/inline | compact/select | detailed | entry | entry/edit | entry/create | export | filter | resultset | row_name | \*  |
+| ----------------------------------------------------------- | ------- | ------------- | -------------------- | -------------- | -------- | ----- | ---------- | ------------ | ------ | ------ | --------- | -------- | --- |
+| [2015 Display](#tag-2015-display)                           | X       | X             | X                    | X              | X        | -     | -          | -            | -      | -      | -         | -        | X   |
+| [2016 Visible Columns](#tag-2016-visible-columns)           | X       | X             | X                    | X              | X        | X     | X          | X            | X      | X      | X         | -        | X   |
+| [2017 Key Display](#tag-2017-key-display)                   | X       | X             | X                    | X              | X        | -     | -          | -            |        | -      | -         | -        | X   |
+| [2016 Column Display](#tag-2016-column-display)             | X       | X             | X                    | X              | X        | X     | X          | X            | -      | -      | -         | -        | X   |
+| [2016 Table Display](#tag-2016-table-display)               | X       | X             | X                    | X              | X        | -     | -          | -            | -      | -      | -         | X        | X   |
+| [2016 Visible Foreign Keys](#tag-2016-visible-foreign-keys) | -       | -             | -                    | -              | X        | -     | -          | -            | -      | -      | -         | -        | X   |
+| [2016 Table Alternatives](#tag-2016-table-alternatives)     | X       | X             | X                    | X              | X        | X     | X          | X            | -      | -      | -         | -        | X   |
+| [2019 Export](#tag-2019-export)                             | X       | -             | -                    | -              | X        | -     | -          | -            | -      | -      | -         | -        | -   |
+| [2021 Google Dataset](#tag-2021-google-dataset)             | -       | -             | -                    | -              | X        | -     | -          | -            | -      | -      | -         | -        | -   |
+
+The values of the `resultset` context are formatted using the `compact/resultset` context, so the column-display, key-display, and table-display (`row_name`) annotations of `compact` apply to them.
 
 ## Pattern Expansion
 

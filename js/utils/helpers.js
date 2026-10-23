@@ -385,17 +385,22 @@ import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
      * @param {string} context the context that we want the value of.
      * @param {Annotation} annotation the annotation object.
      * @param {Boolean=} dontUseDefaultContext Whether we should use the default (*) context
+     * @param {string[]=} visitedContexts (internal) the contexts already followed through redirects
      * @desc This function returns the list that should be used for the given context.
      * Used for visible columns and visible foreign keys.
      */
-    export function _getRecursiveAnnotationValue(context, annotation, dontUseDefaultContext) {
+    export function _getRecursiveAnnotationValue(context, annotation, dontUseDefaultContext, visitedContexts = [context]) {
         var contextedAnnot = _getAnnotationValueByContext(context, annotation, dontUseDefaultContext);
       if (contextedAnnot !== -1) { // found the context
           // eslint-disable-next-line eqeqeq
             if (typeof contextedAnnot == "object" || (_contextArray.indexOf(contextedAnnot) === -1) ) {
                 return contextedAnnot;
             } else {
-                return _getRecursiveAnnotationValue(contextedAnnot, annotation, dontUseDefaultContext); // go to next level
+                // avoid infinite recursion on redirect cycles (e.g. `{"compact": "detailed", "detailed": "compact"}`)
+                if (visitedContexts.includes(contextedAnnot)) {
+                    return -1;
+                }
+                return _getRecursiveAnnotationValue(contextedAnnot, annotation, dontUseDefaultContext, [...visitedContexts, contextedAnnot]); // go to next level
             }
         }
 

@@ -1,0 +1,173 @@
+{
+  "schema_name": "resultset_schema",
+  "comment": "used for testing the result of create and update (resultset)",
+  "annotations": {},
+  "table_names": ["ref_table", "ref_composite", "table_w_resultset", "table_wo_resultset", "table_w_redirect_cycle"],
+  "tables": {
+    "ref_table": {
+      "comment": "referenced by the simple foreign keys",
+      "kind": "table",
+      "table_name": "ref_table",
+      "schema_name": "resultset_schema",
+      "keys": [{ "comment": null, "annotations": {}, "unique_columns": ["id"] }],
+      "foreign_keys": [],
+      "column_definitions": [
+        { "name": "id", "nullok": false, "type": { "typename": "int4" } },
+        { "name": "name", "nullok": true, "type": { "typename": "text" } }
+      ],
+      "annotations": {
+        "tag:isrd.isi.edu,2016:table-display": {
+          "row_name": { "row_markdown_pattern": "{{{name}}}" }
+        }
+      }
+    },
+    "ref_composite": {
+      "comment": "referenced by the composite foreign key",
+      "kind": "table",
+      "table_name": "ref_composite",
+      "schema_name": "resultset_schema",
+      "keys": [{ "comment": null, "annotations": {}, "unique_columns": ["id_1", "id_2"] }],
+      "foreign_keys": [],
+      "column_definitions": [
+        { "name": "id_1", "nullok": false, "type": { "typename": "int4" } },
+        { "name": "id_2", "nullok": false, "type": { "typename": "int4" } },
+        { "name": "name", "nullok": true, "type": { "typename": "text" } }
+      ],
+      "annotations": {
+        "tag:isrd.isi.edu,2016:table-display": {
+          "row_name": { "row_markdown_pattern": "{{{name}}}" }
+        }
+      }
+    },
+    "table_w_resultset": {
+      "comment": "defines a resultset list",
+      "kind": "table",
+      "table_name": "table_w_resultset",
+      "schema_name": "resultset_schema",
+      "keys": [{ "comment": null, "annotations": {}, "unique_columns": ["id"] }],
+      "foreign_keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "names": [["resultset_schema", "table_w_resultset_ref_fk"]],
+          "foreign_key_columns": [{ "schema_name": "resultset_schema", "table_name": "table_w_resultset", "column_name": "ref_id" }],
+          "referenced_columns": [{ "schema_name": "resultset_schema", "table_name": "ref_table", "column_name": "id" }]
+        },
+        {
+          "comment": "comp_b -> id_1 and comp_a -> id_2, so the sorted column orders of the fk and key differ",
+          "annotations": {},
+          "names": [["resultset_schema", "table_w_resultset_comp_fk"]],
+          "foreign_key_columns": [
+            { "schema_name": "resultset_schema", "table_name": "table_w_resultset", "column_name": "comp_b" },
+            { "schema_name": "resultset_schema", "table_name": "table_w_resultset", "column_name": "comp_a" }
+          ],
+          "referenced_columns": [
+            { "schema_name": "resultset_schema", "table_name": "ref_composite", "column_name": "id_1" },
+            { "schema_name": "resultset_schema", "table_name": "ref_composite", "column_name": "id_2" }
+          ]
+        }
+      ],
+      "column_definitions": [
+        { "name": "id", "nullok": false, "type": { "typename": "int4" } },
+        {
+          "name": "name",
+          "nullok": true,
+          "type": { "typename": "text" },
+          "annotations": {
+            "tag:isrd.isi.edu,2016:column-display": {
+              "compact": { "markdown_pattern": "**{{{name}}}**" }
+            }
+          }
+        },
+        { "name": "extra", "nullok": true, "type": { "typename": "text" } },
+        { "name": "ref_id", "nullok": true, "type": { "typename": "int4" } },
+        { "name": "comp_a", "nullok": true, "type": { "typename": "int4" } },
+        { "name": "comp_b", "nullok": true, "type": { "typename": "int4" } }
+      ],
+      "annotations": {
+        "tag:isrd.isi.edu,2016:visible-columns": {
+          "entry/create": [
+            "id",
+            "name",
+            "extra",
+            ["resultset_schema", "table_w_resultset_ref_fk"],
+            ["resultset_schema", "table_w_resultset_comp_fk"]
+          ],
+          "entry/edit": [
+            "id",
+            "name",
+            "extra",
+            ["resultset_schema", "table_w_resultset_ref_fk"],
+            ["resultset_schema", "table_w_resultset_comp_fk"]
+          ],
+          "resultset": ["name", ["resultset_schema", "table_w_resultset_ref_fk"], ["resultset_schema", "table_w_resultset_comp_fk"]]
+        }
+      }
+    },
+    "table_wo_resultset": {
+      "comment": "doesn't define a resultset list, and has different create and edit forms",
+      "kind": "table",
+      "table_name": "table_wo_resultset",
+      "schema_name": "resultset_schema",
+      "keys": [{ "comment": null, "annotations": {}, "unique_columns": ["id"] }],
+      "foreign_keys": [
+        {
+          "comment": null,
+          "annotations": {},
+          "names": [["resultset_schema", "table_wo_resultset_ref_fk"]],
+          "foreign_key_columns": [{ "schema_name": "resultset_schema", "table_name": "table_wo_resultset", "column_name": "ref_id" }],
+          "referenced_columns": [{ "schema_name": "resultset_schema", "table_name": "ref_table", "column_name": "id" }]
+        }
+      ],
+      "column_definitions": [
+        { "name": "id", "nullok": false, "type": { "typename": "int4" } },
+        {
+          "name": "name",
+          "nullok": true,
+          "type": { "typename": "text" },
+          "annotations": {
+            "tag:isrd.isi.edu,2016:column-display": {
+              "compact": { "markdown_pattern": "**{{{name}}}**" }
+            }
+          }
+        },
+        { "name": "extra", "nullok": true, "type": { "typename": "text" } },
+        { "name": "ref_id", "nullok": true, "type": { "typename": "int4" } }
+      ],
+      "annotations": {
+        "tag:isrd.isi.edu,2016:visible-columns": {
+          "entry/create": [
+            "id",
+            "name",
+            { "source": [{ "outbound": ["resultset_schema", "table_wo_resultset_ref_fk"] }, "id"] }
+          ],
+          "entry/edit": [
+            "id",
+            "name",
+            "extra",
+            { "source": [{ "outbound": ["resultset_schema", "table_wo_resultset_ref_fk"] }, "id"] }
+          ],
+          "*": ["name"]
+        }
+      }
+    },
+    "table_w_redirect_cycle": {
+      "comment": "the visible-columns contexts redirect to each other",
+      "kind": "table",
+      "table_name": "table_w_redirect_cycle",
+      "schema_name": "resultset_schema",
+      "keys": [{ "comment": null, "annotations": {}, "unique_columns": ["id"] }],
+      "foreign_keys": [],
+      "column_definitions": [
+        { "name": "id", "nullok": false, "type": { "typename": "int4" } },
+        { "name": "name", "nullok": true, "type": { "typename": "text" } }
+      ],
+      "annotations": {
+        "tag:isrd.isi.edu,2016:visible-columns": {
+          "resultset": "entry",
+          "entry": "resultset"
+        }
+      }
+    }
+  }
+}

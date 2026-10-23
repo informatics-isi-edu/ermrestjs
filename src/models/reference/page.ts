@@ -6,6 +6,29 @@ import { type PseudoColumn } from '@isrd-isi-edu/ermrestjs/src/models/reference-
 import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils';
 import { _ERMrestFeatures, _parserAliases } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
 import { _generateRowName, _getFormattedKeyValues, _getPagingValues, _renderTemplate } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
+
+export type PageOptions = {
+  /**
+   * the context used for formatting values, row names, and template variables.
+   * if missing, the reference's context is used.
+   */
+  valueContext?: string;
+  /**
+   * whether wait_for should be ignored while formatting values.
+   * useful when the page will not go through the secondary requests (e.g. the result of create/update).
+   */
+  skipWaitFor?: boolean;
+  /**
+   * the linked data of each row (same structure as Page._linkedData). when passed, the given data is
+   * treated as entity rows and the linked data is not extracted from the data.
+   */
+  linkedData?: Record<string, any>[];
+  /**
+   * the linked data RIDs of each row (same structure as Page._linkedDataRIDs)
+   */
+  linkedDataRIDs?: Record<string, any>[];
+};
+
 /**
  * Constructs a Page. A Page is a collection of Tuples. A page can contain no
  * data, but the reference is still valid. This is useful if you want to use
@@ -28,12 +51,24 @@ export class Page {
   private _length?: number;
   private _content?: string | null;
   private _templateVariables?: any[];
+  private _valueContext?: string;
+  private _skipWaitFor: boolean;
 
-  constructor(reference: Reference, etag: string | null, data: any[], hasPrevious: boolean, hasNext: boolean, extraData?: any) {
+  constructor(
+    reference: Reference,
+    etag: string | null,
+    data: any[],
+    hasPrevious: boolean,
+    hasNext: boolean,
+    extraData?: any,
+    options?: PageOptions,
+  ) {
     const hasExtraData = typeof extraData === 'object' && Object.keys(extraData).length !== 0;
 
     this._ref = reference;
     this._etag = etag;
+    this._valueContext = options?.valueContext;
+    this._skipWaitFor = !!options?.skipWaitFor;
 
     /*
      * This is the structure of this._linkedData
@@ -47,6 +82,17 @@ export class Page {
     this._data = [];
     this._rightsSummary = [];
     this._associationRightsSummary = [];
+
+    // the caller already has the linked data, so the data is just entity rows
+    if (options && Array.isArray(options.linkedData)) {
+      this._data = data;
+      this._linkedData = options.linkedData;
+      this._linkedDataRIDs = Array.isArray(options.linkedDataRIDs) ? options.linkedDataRIDs : [];
+      this._extraData = hasExtraData ? extraData : undefined;
+      this._hasNext = hasNext;
+      this._hasPrevious = hasPrevious;
+      return;
+    }
 
     const allOutBounds = reference.activeList.allOutBounds;
 
@@ -209,6 +255,24 @@ export class Page {
     return this._extraData;
   }
 
+  /**
+   * The context used for formatting values, row names, and template variables of the tuples.
+   * Undefined means the reference's context is used.
+   *
+   * NOTE a page on a `resultset` or entry reference without a valueContext follows the entry rules
+   * and therefore returns raw values.
+   */
+  get valueContext(): string | undefined {
+    return this._valueContext;
+  }
+
+  /**
+   * Whether wait_for should be ignored while formatting the values of the tuples.
+   */
+  get skipWaitFor(): boolean {
+    return this._skipWaitFor;
+  }
+
   get extraLinkedData(): any {
     return this._extraLinkedData;
   }
@@ -363,6 +427,7 @@ export class Page {
 
   getContent(templateVariables?: any): string | null {
     const ref = this._ref;
+    const valueContext = this._valueContext ?? ref.context;
 
     if (!this._data || !this._data.length) return null;
 
@@ -381,7 +446,7 @@ export class Page {
       });
 
       if (pattern === null || pattern.trim() === '') {
-        pattern = ref.table._getNullValue(ref.context)!;
+        pattern = ref.table._getNullValue(valueContext)!;
       }
 
       return renderMarkdown(pattern, false);
@@ -429,7 +494,7 @@ export class Page {
       });
 
       if (pattern === null || pattern.trim() === '') {
-        pattern = ref.table._getNullValue(ref.context)!;
+        pattern = ref.table._getNullValue(valueContext)!;
       }
 
       return renderMarkdown(pattern, false);
@@ -451,7 +516,7 @@ export class Page {
 
         // If value is null or empty, return value on basis of `show_null`
         if (value === null || value.trim() === '') {
-          value = ref.table._getNullValue(ref.context)!;
+          value = ref.table._getNullValue(valueContext)!;
         }
         // If final value is not null then push it in values array
         if (value !== null) {
@@ -467,7 +532,7 @@ export class Page {
     for (let i = 0; i < this.tuples.length; i++) {
       const tuple = this.tuples[i];
       const url = tuple.reference.contextualize.detailed.appLink;
-      const rowName = _generateRowName(ref.table, ref.context, tuple.data, tuple.linkedData, false);
+      const rowName = _generateRowName(ref.table, valueContext, tuple.data, tuple.linkedData, false);
 
       // don't add link if the rowname already has link
       if (rowName.value.match(/<a\b.+href=/)) {

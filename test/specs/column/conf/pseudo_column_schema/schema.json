@@ -354,6 +354,7 @@
                         }
                     ],
                     "entry/create": "detailed",
+                    "resultset": "detailed",
                     "entry/edit": [
                         {
                             "source": "main_table_id_col",
