@@ -611,6 +611,8 @@ Example:
 
 Keep in mind that `printf` doesn't check the validity of the given values. So for example if the value might not be a number, you cannot blindly use the `d` type and should guard against it.
 
+> ⚠️ **CAUTION:** When the value comes from a column, pass the [raw](#raw-values) (`_`-prefixed) value, e.g. `{{printf _col "%.2f"}}`. The formatted column value of a number can include thousands separators (e.g. `1,234.5000`), so the number types throw an error and the whole template fails to render.
+
 <a name="dates--timestamps"></a>
 ### Dates & timestamps
 

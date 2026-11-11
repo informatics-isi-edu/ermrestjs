@@ -20,7 +20,7 @@ import { _formatUtils } from '@isrd-isi-edu/ermrestjs/src/utils/format-utils';
 import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
 import { isObjectAndNotNull } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
 import { fixedEncodeURIComponent } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
-import printf from '@isrd-isi-edu/ermrestjs/js/format';
+import { printf } from '@isrd-isi-edu/ermrestjs/src/utils/printf';
 import type { Catalog } from '@isrd-isi-edu/ermrestjs/src/models/catalog';
 
 export default class HandlebarsService {

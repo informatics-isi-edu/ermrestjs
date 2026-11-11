@@ -48,10 +48,10 @@ import HTTPService from '@isrd-isi-edu/ermrestjs/src/services/http';
 import { contextHeaderName, ENV_IS_NODE } from '@isrd-isi-edu/ermrestjs/src/utils/constants';
 import { fixedEncodeURIComponent } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
 import { renderMarkdown } from '@isrd-isi-edu/ermrestjs/src/utils/markdown-utils';
+import { printf } from '@isrd-isi-edu/ermrestjs/src/utils/printf';
 
 // legacy imports
 import { onload, getElapsedTime } from '@isrd-isi-edu/ermrestjs/js/setup/node';
-import printf from '@isrd-isi-edu/ermrestjs/js/format';
 import { resolve, _createPage } from '@isrd-isi-edu/ermrestjs/src/models/reference';
 import { ermrestFactory } from '@isrd-isi-edu/ermrestjs/src/services/ermrest-factory';
 import { parse, createPath, createSearchPath, createLocation } from '@isrd-isi-edu/ermrestjs/js/parser';
