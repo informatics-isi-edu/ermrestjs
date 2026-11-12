@@ -44,9 +44,6 @@ export function isStringAndNotEmpty(value: unknown) {
 }
 
 /**
- * Whether the given value is a valid color_rgb_hex value
- */
-/**
  * Returns true if the given value is an IANA timezone name that moment-timezone knows (case-insensitive, e.g. `UTC`
  * or `America/Los_Angeles`). The type check is needed because moment.tz.zone throws for non-string values.
  */
@@ -54,6 +51,9 @@ export function isValidTimezone(value: unknown): value is string {
   return typeof value === 'string' && moment.tz.zone(value) !== null;
 }
 
+/**
+ * Whether the given value is a valid color_rgb_hex value
+ */
 export function isValidColorRGBHex(value: unknown) {
   return typeof value === 'string' && value.length > 0 && /#[0-9a-fA-F]{6}$/i.test(value);
 }

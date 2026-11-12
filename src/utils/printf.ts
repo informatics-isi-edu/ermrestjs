@@ -37,7 +37,7 @@ export type PrintfOptions = {
   bool_true_value?: string;
   bool_false_value?: string;
   // only used for date, timestamp, and timestamptz values
-  timezone?: string;
+  timezone?: string | null;
 };
 
 type PrintfPlaceholder = {
