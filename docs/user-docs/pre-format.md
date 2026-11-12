@@ -16,9 +16,10 @@ The annotation is represented as follows:
    }
 }
 ```
-The `pre_format` parameter of the annotation accepts an object with 3 properties.
+The `pre_format` parameter of the annotation accepts an object with 4 properties.
 1. **format**: (MANDATORY) It is the actual formatting string which is passed the column value and is mandatory. It uses a printf-style syntax based on [sprintf.js](https://github.com/alexei/sprintf.js). Each format is given a single value (the column value), so every placeholder formats that same value, unless it uses a [named argument](#named-arguments) to pick a part of it.
 2. **bool_true_value** and **bool_false_value**: (OPTIONAL) These properties help to swap values of boolean true and false with relevant string values.
+3. **timezone**: (OPTIONAL) Only used for `date`, `timestamp`, and `timestamptz` columns. An IANA timezone name like `UTC` or `America/New_York` to show the value in, instead of the viewer's timezone. Refer to [Timezones](#timezones) for more details.
 
 ## Syntax
 
@@ -250,3 +251,20 @@ Output => 'My name is John Doe. My age is 24 years and I study at USC located in
 | `s ss`     | `0..59`  | Seconds |
 | `S SS SSS` | `0..999` | Fractional seconds |
 | `Z ZZ`     | `+12:00` | Offset from UTC as `+-HH:mm` or `+-HHmm` |
+| `z zz`     | `PST`    | Timezone abbreviation. It's empty unless `timezone` is set, and some timezones only have a numeric one (e.g. `-03`) |
+
+### Timezones
+
+By default, the value is shown in the viewer's timezone. Use the `timezone` property to show it in a fixed timezone instead:
+
+```javascript
+"pre_format": {
+    "format": "YYYY-MM-DD HH:mm z",
+    "timezone": "UTC"
+}
+```
+
+- `timezone` accepts [IANA timezone names](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones), regardless of case. Prefer region names like `America/New_York`: abbreviations like `EST` are fixed offsets (`EST` is always `-05:00`, with no daylight saving time), and `Etc/GMT+5` means UTC-5.
+- If the name is not valid, the column falls back to its default display, and an error is logged in the browser console.
+- `timestamp` (without time zone) and `date` values don't have a timezone, so they're first read in the viewer's timezone and then converted, which means the result depends on who is viewing it. Avoid using `timezone` with `date` columns, since the date can move to the previous or next day.
+- Include `z` in the format, so readers can tell the time isn't in their own timezone.

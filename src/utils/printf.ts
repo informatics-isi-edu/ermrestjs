@@ -30,11 +30,14 @@
 import moment from 'moment-timezone';
 
 import $log from '@isrd-isi-edu/ermrestjs/src/services/logger';
+import { isDefinedAndNotNull, isValidTimezone } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
 
 export type PrintfOptions = {
   format: string;
   bool_true_value?: string;
   bool_false_value?: string;
+  // only used for date, timestamp, and timestamptz values
+  timezone?: string;
 };
 
 type PrintfPlaceholder = {
@@ -379,10 +382,11 @@ function printfParse(fmt: string): PrintfParseTree {
  *   placeholders isn't supported.
  *
  * @param options the format string, or an object with the format and the optional bool_true_value and bool_false_value
- *   used by the t type.
+ *   used by the t type, and timezone used by date types.
  * @param value the value to format
  * @param type the column type of the value. For date, timestamp, and timestamptz, the format is a moment.js format
- *   string (e.g. YYYY-MM-DD) instead of a printf one.
+ *   string (e.g. YYYY-MM-DD) instead of a printf one, and the value is shown in the timezone option when given
+ *   (an IANA name like UTC or America/Los_Angeles; an unknown name throws).
  */
 export function printf(options: string | PrintfOptions, value: unknown, type?: string): string {
   if (typeof options === 'string') {
@@ -392,7 +396,15 @@ export function printf(options: string | PrintfOptions, value: unknown, type?: s
     throw new SyntaxError("[printf] should be supplied with proper pre_format annotation with format string. Eg: { format: '%d' }");
   }
   if (type === 'date' || type === 'timestamp' || type === 'timestamptz') {
-    return moment(value as moment.MomentInput).format(options.format);
+    const m = moment(value as moment.MomentInput);
+    if (isDefinedAndNotNull(options.timezone)) {
+      // throwing makes the column fall back to its default display, like an invalid format does
+      if (!isValidTimezone(options.timezone)) {
+        throw new Error(`[printf] invalid timezone in pre_format annotation: ${options.timezone}`);
+      }
+      m.tz(options.timezone);
+    }
+    return m.format(options.format);
   } else {
     return printfFormat(printfParse(options.format), value, options);
   }

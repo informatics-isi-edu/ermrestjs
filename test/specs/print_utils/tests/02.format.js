@@ -193,6 +193,26 @@ exports.execute = function (options) {
       expect(printf({ format: '%(x)d' }, {})).toBe('NaN', '%(x)d should be NaN');
     });
 
+    it('formats dates in the given timezone', function () {
+      const tstz = '2016-11-22 12:26:08-08:00';
+      expect(printf({ format: 'YYYY-MM-DD HH:mm z', timezone: 'UTC' }, tstz, 'timestamptz')).toBe('2016-11-22 20:26 UTC', 'UTC');
+      expect(printf({ format: 'YYYY-MM-DD HH:mm Z', timezone: 'Asia/Kathmandu' }, tstz, 'timestamptz')).toBe('2016-11-23 02:11 +05:45', 'Kathmandu');
+
+      // values without a timezone are read in the viewer's timezone first
+      const format = 'YYYY-MM-DD HH:mm Z';
+      const ts = '2016-11-22 12:26:08';
+      expect(printf({ format, timezone: 'Asia/Kathmandu' }, ts, 'timestamp')).toBe(moment(ts).tz('Asia/Kathmandu').format(format), 'timestamp');
+      expect(printf({ format, timezone: 'Asia/Kathmandu' }, '2016-11-22', 'date')).toBe(
+        moment('2016-11-22').tz('Asia/Kathmandu').format(format),
+        'date',
+      );
+
+      // null is treated as no timezone
+      expect(printf({ format, timezone: null }, tstz, 'timestamptz')).toBe(printf({ format }, tstz, 'timestamptz'), 'null timezone');
+
+      expect(() => printf({ format, timezone: 'Bad/Zone' }, tstz, 'timestamptz')).toThrowError(Error);
+    });
+
     it('should format dates, timestamps, timestamptz values properly.', function () {
       const testTimeWithTimezone = (value, format, isTimestamp, message) => {
         const res = moment(value).format(format);

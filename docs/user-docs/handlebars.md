@@ -622,25 +622,34 @@ Format and convert between datetime values.
 
 > 📝 **NOTE:** This helper used to be called `formatDate` but was changed to the more accurate `formatDatetime` name. While both work, you should stop using `formatDate`.
 
-You can use the `formatDatetime` helper to take any `date`, `timestamp`, or `timestamptz` value and format it according to the [Pre Format Guide](pre-format.md#syntax-for-dates-and-timestamps).
+You can use the `formatDatetime` helper to take any `date`, `timestamp`, or `timestamptz` value and format it according to the [Pre Format Guide](pre-format.md#syntax-for-dates-and-timestamps). The format is required, and without it the helper returns an empty string.
+
+By default, the value is shown in the viewer's timezone. Pass `timezone` with an [IANA timezone name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `UTC` or `America/New_York`) to show it in a fixed timezone instead. Refer to [Timezones](pre-format.md#timezones) for which names work and how values without a timezone are handled. An unknown name returns an empty string, and a `null` value is treated as if `timezone` wasn't passed.
 
 Syntax:
 ```
 {{formatDatetime value format}}
+{{formatDatetime value format timezone="UTC"}}
 ```
 
 > ⚠️ **CAUTION:** When the value comes from a column, pass the [raw](#raw-values) (`_`-prefixed) value, e.g. `{{formatDatetime _col 'YYYY'}}`. The formatted column value of a `timestamp`/`timestamptz` drops the timezone offset and sub-second precision, so re-formatting it can produce an inaccurate result.
 
 Example:
 ```
-{{formatDatetime "30-08-2018' 'YYYY'}} ==> '2018'
+{{formatDatetime '2018-08-30' 'YYYY'}} ==> '2018'
 
-{{formatDatetime '30-08-2018' 'YYYY-MM-DD'}} ==> '2018-08-30'
+{{formatDatetime '2018-08-30' 'MM/DD/YYYY'}} ==> '08/30/2018'
 
-{{formatDatetime '2018-09-25T00:12:34.00-07:00' 'MM/DD/YYYY HH:mm A'}} ==> '09/25/2018 03:12 AM'
+{{formatDatetime '2018-09-25T00:12:34.00-07:00' 'MM/DD/YYYY HH:mm A'}} ==> '09/25/2018 03:12 AM' (for a viewer in US Eastern time)
+
+{{formatDatetime '2018-09-25T00:12:34.00-07:00' 'YYYY-MM-DD HH:mm z' timezone='UTC'}} ==> '2018-09-25 07:12 UTC'
+
+{{formatDatetime '2018-09-25T00:12:34.00-07:00' 'YYYY-MM-DD HH:mm z' timezone='America/New_York'}} ==> '2018-09-25 03:12 EDT'
 
 {{formatDatetime _RCT 'MM/DD/YYYY HH:mm A'}} ==> '09/25/2025 07:12 PM'
 ```
+
+The `z` token in the examples above prints the timezone abbreviation, so readers can tell the time isn't in their own timezone.
 
 #### datetimeToSnapshot helper
 
@@ -666,10 +675,13 @@ Example:
 
 `snapshotToDatetime` can be used to decode a snapshot value to a datetime value. If no format is provided, the output will be in the ISO format.
 
+Like `formatDatetime`, it accepts a `timezone`. It's only applied when a format is given, since without one the output is the ISO value in UTC. An unknown timezone returns an empty string.
+
 Syntax
 ```
 {{snapshotToDatetime value }}
 {{snapshotToDatetime value format }}
+{{snapshotToDatetime value format timezone="UTC" }}
 ```
 
 Example:
@@ -677,6 +689,8 @@ Example:
 {{snapshotToDatetime '33N-PFKM-4DR0'}} ==> 2025-07-26T19:20:30.000000+00:00
 
 {{snapshotToDatetime '33N-PFKM-4DR0' 'YYYY-MM-DD'}} ==> 2025-07-26
+
+{{snapshotToDatetime '33N-PFKM-4DR0' 'YYYY-MM-DD HH:mm z' timezone='America/Los_Angeles'}} ==> 2025-07-26 12:20 PDT
 ```
 
 #### datetimeDuration helper

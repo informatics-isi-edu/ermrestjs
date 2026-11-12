@@ -18,7 +18,7 @@ import {
 } from '@isrd-isi-edu/ermrestjs/js/utils/helpers';
 import { _formatUtils } from '@isrd-isi-edu/ermrestjs/src/utils/format-utils';
 import AuthnService from '@isrd-isi-edu/ermrestjs/src/services/authn';
-import { isObjectAndNotNull } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
+import { isDefinedAndNotNull, isObjectAndNotNull, isValidTimezone } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
 import { fixedEncodeURIComponent } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
 import { printf } from '@isrd-isi-edu/ermrestjs/src/utils/printf';
 import type { Catalog } from '@isrd-isi-edu/ermrestjs/src/models/catalog';
@@ -190,6 +190,25 @@ export default class HandlebarsService {
   }
 
   private static _injectCustomHandlebarHelpers() {
+    // used by both formatDatetime and its deprecated formatDate alias
+    const formatDatetime = function (value: unknown, format: unknown, options?: Handlebars.HelperOptions): string {
+      const m = moment(value as moment.MomentInput);
+      // if we don't validate, it will return "invalid date". the format is required, and without it handlebars
+      // passes its options object in its place.
+      if (!m.isValid() || typeof format !== 'string') {
+        return '';
+      }
+      const timezone = options?.hash?.timezone;
+      if (isDefinedAndNotNull(timezone)) {
+        if (!isValidTimezone(timezone)) {
+          $log.error(`invalid timezone passed to formatDatetime: ${timezone}`);
+          return '';
+        }
+        m.tz(timezone);
+      }
+      return m.format(format);
+    };
+
     // general purpose helpers
     Handlebars.registerHelper({
       /**
@@ -253,31 +272,18 @@ export default class HandlebarsService {
 
       /**
        * {{formatDatetime value format}}
+       * {{formatDatetime value format timezone="UTC"}}
        * @ignore
-       * @returns formatted string of `value` with corresponding `format`
+       * @returns formatted string of `value` with corresponding `format`, in `timezone` if given
        */
-      formatDatetime: function (value, format) {
-        const m = moment(value);
-        // if we don't validate, it will return "invalid date"
-        if (m.isValid()) {
-          return m.format(format);
-        }
-        return '';
-      },
+      formatDatetime,
 
       /**
        * {{formatDate value format}}
        * @deprecated use formatDatetime instead
-       * @returns formatted string of `value` with corresponding `format`
+       * @returns formatted string of `value` with corresponding `format`, in `timezone` if given
        */
-      formatDate: function (value, format) {
-        const m = moment(value);
-        // if we don't validate, it will return "invalid date"
-        if (m.isValid()) {
-          return m.format(format);
-        }
-        return '';
-      },
+      formatDate: formatDatetime,
 
       /**
        * {{#jsonStringify}}
@@ -487,12 +493,23 @@ export default class HandlebarsService {
       /**
        * {{snapshotToDatetime value}}
        * {{snapshotToDatetime value 'YYYY-MM-DD HH:mm:ss'}}
+       * {{snapshotToDatetime value 'YYYY-MM-DD HH:mm:ss z' timezone='UTC'}}
+       * timezone is only applied with a format. without one, the output is the ISO value in UTC.
        */
-      snapshotToDatetime: function (value: string, format?: string) {
+      snapshotToDatetime: function (value: string, format?: unknown, options?: Handlebars.HelperOptions) {
+        // without a format, handlebars passes its options object as the second argument
+        const hash = (typeof format === 'string' ? options : (format as Handlebars.HelperOptions | undefined))?.hash;
+        const timezone = hash?.timezone;
+        if (isDefinedAndNotNull(timezone) && !isValidTimezone(timezone)) {
+          $log.error(`invalid timezone passed to snapshotToDatetime: ${timezone}`);
+          return '';
+        }
         try {
           const iso = HistoryService.snapshotToDatetimeISO(value);
           if (typeof format === 'string') {
-            return moment(iso).format(format);
+            const m = moment(iso);
+            if (isDefinedAndNotNull(timezone)) m.tz(timezone);
+            return m.format(format);
           }
           return iso;
         } catch (e) {
