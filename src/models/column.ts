@@ -37,9 +37,9 @@ import {
   isValidVisibleCellHeight,
 } from '@isrd-isi-edu/ermrestjs/src/utils/type-utils';
 import { fixedEncodeURIComponent, escapeHTML, updateObject } from '@isrd-isi-edu/ermrestjs/src/utils/value-utils';
+import { printf } from '@isrd-isi-edu/ermrestjs/src/utils/printf';
 
 // legacy
-import printf from '@isrd-isi-edu/ermrestjs/js/format';
 import {
   _determineDisplayName,
   _getAnnotationValueByContext,

@@ -998,6 +998,54 @@ export function execute (options) {
         expect(module.renderHandlebarsTemplate("{{formatDate date 'YYYY'}}", { date: null })).toBe('');
       });
 
+      it('formatDatetime helper with timezone', function () {
+        const render = (template, obj) => module.renderHandlebarsTemplate(template, obj);
+        const format = 'YYYY-MM-DD HH:mm z';
+        const summer = '2025-07-26T19:20:30Z';
+
+        expect(render(`{{formatDatetime '${summer}' '${format}' timezone='UTC'}}`)).toBe('2025-07-26 19:20 UTC', 'UTC');
+        expect(render(`{{formatDatetime '${summer}' '${format}' timezone='America/Los_Angeles'}}`)).toBe('2025-07-26 12:20 PDT', 'LA summer');
+        expect(render(`{{formatDatetime '${summer}' '${format}' timezone='Asia/Kathmandu'}}`)).toBe('2025-07-27 01:05 +0545', 'Kathmandu');
+        expect(render(`{{formatDatetime '2025-01-15T12:00:00Z' '${format}' timezone='America/Los_Angeles'}}`)).toBe(
+          '2025-01-15 04:00 PST',
+          'LA winter',
+        );
+        // the hour repeated when daylight saving time ends
+        expect(render(`{{formatDatetime '2025-11-02T08:30:00Z' '${format}' timezone='America/Los_Angeles'}}`)).toBe(
+          '2025-11-02 01:30 PDT',
+          'DST end, first',
+        );
+        expect(render(`{{formatDatetime '2025-11-02T09:30:00Z' '${format}' timezone='America/Los_Angeles'}}`)).toBe(
+          '2025-11-02 01:30 PST',
+          'DST end, second',
+        );
+        expect(render(`{{formatDatetime '${summer}' '${format}' timezone='utc'}}`)).toBe('2025-07-26 19:20 UTC', 'case-insensitive');
+        expect(render(`{{formatDatetime '${summer}' '${format}' timezone='US/Pacific'}}`)).toBe('2025-07-26 12:20 PDT', 'alias');
+        expect(render(`{{formatDate '${summer}' '${format}' timezone='Asia/Kathmandu'}}`)).toBe('2025-07-27 01:05 +0545', 'formatDate');
+
+        // a value without a timezone is read in the viewer's timezone first
+        const naive = '2025-01-15T12:00:00';
+        expect(render(`{{formatDatetime '${naive}' '${format}' timezone='Asia/Kathmandu'}}`)).toBe(
+          moment(naive).tz('Asia/Kathmandu').format(format),
+          'no offset',
+        );
+
+        // null is treated as no timezone
+        expect(render(`{{formatDatetime date 'YYYY-MM-DD HH:mm Z' timezone=tz}}`, { date: summer, tz: null })).toBe(
+          moment(summer).format('YYYY-MM-DD HH:mm Z'),
+          'null timezone',
+        );
+
+        expect(render(`{{formatDatetime '${summer}' '${format}' timezone='Bad/Zone'}}`)).toBe('', 'unknown timezone');
+        expect(render(`{{formatDatetime '${summer}' '${format}' timezone=''}}`)).toBe('', 'empty timezone');
+        expect(render(`{{formatDatetime '${summer}' '${format}' timezone=5}}`)).toBe('', 'non-string timezone');
+        expect(render(`{{formatDatetime 'aaa' '${format}' timezone='UTC'}}`)).toBe('', 'invalid value');
+
+        // the format is required
+        expect(render(`{{formatDatetime '${summer}'}}`)).toBe('', 'no format');
+        expect(render(`{{formatDatetime '${summer}' timezone='UTC'}}`)).toBe('', 'no format with timezone');
+      });
+
       it('printf helper', function () {
         const render = (t, v) => module.renderHandlebarsTemplate(t, v);
         expect(render('{{printf 3.1415 "%.1f" }}', {})).toBe('3.1');
@@ -1299,6 +1347,22 @@ export function execute (options) {
 
         expected = moment('2016-04-16 09:08:54.414288+00').format('MM/DD/YYYY');
         runTest("{{snapshotToDatetime snap format}}", { snap: '2K1-5KT1-HKX0', format: 'MM/DD/YYYY' }, expected, 'test 12');
+      });
+
+      it('snapshotToDatetime helper with timezone', () => {
+        const render = (template) => module.renderHandlebarsTemplate(template);
+        expect(render("{{snapshotToDatetime '33N-PFKM-4DR0' 'YYYY-MM-DD HH:mm z' timezone='America/Los_Angeles'}}")).toBe(
+          '2025-07-26 12:20 PDT',
+          'LA',
+        );
+        expect(render("{{snapshotToDatetime '33N-PFKM-4DR0' 'YYYY-MM-DD HH:mm z' timezone='Asia/Kathmandu'}}")).toBe(
+          '2025-07-27 01:05 +0545',
+          'Kathmandu',
+        );
+        // without a format, the output stays the ISO value in UTC
+        expect(render("{{snapshotToDatetime '33N-PFKM-4DR0' timezone='Asia/Kathmandu'}}")).toBe('2025-07-26T19:20:30.000000+00:00', 'no format');
+        expect(render("{{snapshotToDatetime '33N-PFKM-4DR0' 'YYYY-MM-DD' timezone='Bad/Zone'}}")).toBe('', 'invalid timezone');
+        expect(render("{{snapshotToDatetime '33N-PFKM-4DR0' timezone='Bad/Zone'}}")).toBe('', 'invalid timezone without a format');
       });
 
       it('encodeFacet helper', function () {
